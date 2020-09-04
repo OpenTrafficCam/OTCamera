@@ -25,6 +25,12 @@ from helpers import log
 
 
 def shutdown():
+    """
+    Shuts down the Raspberry Pi if the power_switch is still pressed after blink ends
+    (2 seconds).
+    Tries to stop and close the camera object.
+    Writes messages to the logfile.
+    """
     # TODO: #10 reference hardware config
     try:
         log.write_msg("Shutdown by button in 2s", False)
@@ -65,6 +71,10 @@ def shutdown():
 
 
 def reboot():
+    """
+    Reboots the Raspberry Pi if any expection is raised.
+    Tries to close the camera object and writes to logfile.
+    """
     # TODO: #10 reference hardware config
     try:
         status.shutdownactive = True
@@ -92,6 +102,12 @@ def reboot():
 
 
 def wifi():
+    """
+    Switches the status of the Wifi-AP.
+    If status.wifiapon is False, a script is started to turn the AP on.
+    If status.wifiapon is True, it stops the AP after config.WIFIDELAY seconds.
+    Uses a LED to signalize the status.
+    """
     # TODO: #10 reference hardware config
     try:
         log.write_msg('Wifiswitch')
@@ -121,7 +137,10 @@ def wifi():
 
 
 def lowbattery():
-# TODO: #10 reference hardware config
+    """
+    Shuts down the Raspberry Pi if called and writes a message to the logfile.
+    """
+    # TODO: #10 reference hardware config
     try:
         log.write_msg("Low Battery", False)
         if camera.recording:
