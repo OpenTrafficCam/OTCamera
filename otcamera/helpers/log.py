@@ -18,10 +18,20 @@
 
 from helpers import name, rpi
 
+
 logfile = open(name.log(), "a")
 
 
 def write_msg(msg, reboot=True):
+    """
+    Takes a message, adds date and time and writes it to a logfile (name.log).
+    If msg is "#" date and time is not added and a series of '###' is written in the
+    log.
+
+    Args:
+        msg (str): Message to be written. Use "#" to add a break.
+        reboot (bool, optional): Perform reboot if logging fails. Defaults to True.
+    """
     try:
         if msg == "#":
             msg = "############################"
@@ -37,9 +47,17 @@ def write_msg(msg, reboot=True):
 
 
 def closefile():
+    """
+    Flush and close the logfile.
+    """
+    logfile.flush()
     logfile.close()
 
 
 def traceback():
+    """
+    Write the traceback message to the logfile.
+    """
+    # TODO: #11 Test traceback function.
     traceback.print_exc(file=logfile)
     logfile.write("\n")
