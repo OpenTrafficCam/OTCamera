@@ -1,4 +1,4 @@
-# OTCamera: static config file to be imported.
+# OTCamera: buttons config file to be imported.
 # Copyright (C) 2020 OpenTrafficCam Contributors
 # <https://github.com/OpenTrafficCam
 # <team@opentrafficcam.org>
@@ -17,26 +17,21 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-import socket
+from gpiozero import PWMLED
 
-STARTHOUR = 6
-ENDHOUR = 22
+POWERLEDPIN = 13
+WIFILEDPIN = 12
+RECLEDPIN = 5
 
-RESOLUTION = (1640, 1232)
-RESIZE = (800, 600)
-HOSTNAME = socket.gethostname()
+powerled = PWMLED(POWERLEDPIN)
+wifiled = PWMLED(WIFILEDPIN)
+recled = PWMLED(RECLEDPIN)
 
-MINFREESPACE = 1 #GB
-VIDEOPATH = '/home/pi/videos/'
-PREVIEWPATH = '/home/pi/webfiles/preview.jpg'
 
-DEBUG = False
+def init():
+    """[summary]
+    """
+    powerled.on()
+    wifiled.on()
+    recled.on()
 
-INTERVAL = 15
-FPS = 20
-PROFILE = 'high'
-LEVEL = '4'
-BITRATE = 600000
-QUALITY = 30
-
-WIFIDELAY = 900

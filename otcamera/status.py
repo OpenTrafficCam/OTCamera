@@ -36,3 +36,7 @@ def record_time():
 
 def preview_on():
     return wifiapon
+
+
+if __name__ == "__main__":
+    pass

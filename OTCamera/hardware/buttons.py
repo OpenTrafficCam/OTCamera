@@ -1,4 +1,4 @@
-# OTCamera: static config file to be imported.
+# OTCamera: buttons config file to be imported.
 # Copyright (C) 2020 OpenTrafficCam Contributors
 # <https://github.com/OpenTrafficCam
 # <team@opentrafficcam.org>
@@ -17,26 +17,21 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-import socket
+from gpiozero import Button
 
-STARTHOUR = 6
-ENDHOUR = 22
+POWERPIN = 6
+HOURPIN = 19
+WIFIPIN = 16
+LOWBATTERYPIN = 18
 
-RESOLUTION = (1640, 1232)
-RESIZE = (800, 600)
-HOSTNAME = socket.gethostname()
-
-MINFREESPACE = 1 #GB
-VIDEOPATH = '/home/pi/videos/'
-PREVIEWPATH = '/home/pi/webfiles/preview.jpg'
-
-DEBUG = False
-
-INTERVAL = 15
-FPS = 20
-PROFILE = 'high'
-LEVEL = '4'
-BITRATE = 600000
-QUALITY = 30
-
-WIFIDELAY = 900
+def init():
+    lowbattery_switch = Button(LOWBATTERYPIN, pull_up=True, hold_time=2, hold_repeat=False)
+    power_switch = Button(POWERPIN, pull_up=False, hold_time=2, hold_repeat=False)
+    hour_switch = Button(HOURPIN, pull_up=True, hold_time=2, hold_repeat=False)
+    wifi_switch = Button(WIFIPIN, pull_up=True, hold_time=2, hold_repeat=False)
+    lowbattery_switch.when_held = lowbattery
+    power_switch.when_released = shutdown_rpi
+    wifi_switch.when_held = wifi
+    wifi_switch.when_released = wifi
+    hour_switch.when_pressed = hour_switched
+    hour_switch.when_released = hour_switched
