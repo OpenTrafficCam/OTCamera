@@ -17,7 +17,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import datetime as dt
-import config
+from OTCamera import config
 
 shutdownactive = False
 noblink = False
