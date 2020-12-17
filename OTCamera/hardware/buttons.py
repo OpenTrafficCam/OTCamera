@@ -1,4 +1,4 @@
-# OTCamera: buttons config file to be imported.
+# OTCamera: Buttons and their functions.
 # Copyright (C) 2020 OpenTrafficCam Contributors
 # <https://github.com/OpenTrafficCam
 # <team@opentrafficcam.org>
@@ -17,21 +17,44 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
+import datetime as dt
+
+import config
+import helpers.rpi as rpi
 from gpiozero import Button
+from helpers import log
+
+import status
 
 POWERPIN = 6
 HOURPIN = 19
 WIFIPIN = 16
 LOWBATTERYPIN = 18
 
-def init():
-    lowbattery_switch = Button(LOWBATTERYPIN, pull_up=True, hold_time=2, hold_repeat=False)
-    power_switch = Button(POWERPIN, pull_up=False, hold_time=2, hold_repeat=False)
-    hour_switch = Button(HOURPIN, pull_up=True, hold_time=2, hold_repeat=False)
-    wifi_switch = Button(WIFIPIN, pull_up=True, hold_time=2, hold_repeat=False)
-    lowbattery_switch.when_held = lowbattery
-    power_switch.when_released = shutdown_rpi
-    wifi_switch.when_held = wifi
-    wifi_switch.when_released = wifi
-    hour_switch.when_pressed = hour_switched
-    hour_switch.when_released = hour_switched
+
+lowbattery = Button(LOWBATTERYPIN, pull_up=True, hold_time=2, hold_repeat=False)
+power = Button(POWERPIN, pull_up=False, hold_time=2, hold_repeat=False)
+hour = Button(HOURPIN, pull_up=True, hold_time=2, hold_repeat=False)
+wifi = Button(WIFIPIN, pull_up=True, hold_time=2, hold_repeat=False)
+lowbattery.when_held = rpi.lowbattery
+power.when_released = rpi.shutdown
+wifi.when_held = rpi.wifi
+wifi.when_released = rpi.wifi
+hour.when_pressed = rpi.hour_switched
+hour.when_released = rpi.hour_switched
+
+
+def its_record_time():
+    current_hour = dt.datetime.now().hour
+    record_time = (
+        (hour.is_pressed)
+        or (current_hour >= config.STARTHOUR and current_hour < config.ENDHOUR)
+    ) and (not status.SHUTDOWNACTIVE)
+    return record_time
+
+
+def hour_switched():
+    if hour.is_pressed:
+        log.write_msg("Hour Switch pressed")
+    elif not hour.is_pressed:
+        log.write_msg("Hour Switch released")
