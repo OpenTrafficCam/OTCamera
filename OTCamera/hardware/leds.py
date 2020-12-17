@@ -1,4 +1,4 @@
-# OTCamera: buttons config file to be imported.
+# OTCamera: LEDs and their functions.
 # Copyright (C) 2020 OpenTrafficCam Contributors
 # <https://github.com/OpenTrafficCam
 # <team@opentrafficcam.org>
@@ -23,15 +23,13 @@ POWERLEDPIN = 13
 WIFILEDPIN = 12
 RECLEDPIN = 5
 
-powerled = PWMLED(POWERLEDPIN)
-wifiled = PWMLED(WIFILEDPIN)
-recled = PWMLED(RECLEDPIN)
+power = PWMLED(POWERLEDPIN)
+wifi = PWMLED(WIFILEDPIN)
+rec = PWMLED(RECLEDPIN)
 
 
 def init():
-    """[summary]
-    """
-    powerled.on()
-    wifiled.on()
-    recled.on()
-
+    """[summary]"""
+    power.on()
+    wifi.on()
+    rec.on()
