@@ -256,27 +256,27 @@ try:
     print_date("#")
     print_date("Started script")
 
-    powerled = PWMLED(POWERLEDPIN)
-    wifiled = PWMLED(WIFILEDPIN)
-    recled = PWMLED(RECLEDPIN)
-    powerled.on()
-    wifiled.on()
-    recled.on()
+    # powerled = PWMLED(POWERLEDPIN)
+    # wifiled = PWMLED(WIFILEDPIN)
+    # recled = PWMLED(RECLEDPIN)
+    # powerled.on()
+    # wifiled.on()
+    # recled.on()
 
     delete_old_files()
 
-    lowbattery_switch = Button(
-        LOWBATTERYPIN, pull_up=True, hold_time=2, hold_repeat=False
-    )
-    power_switch = Button(POWERPIN, pull_up=False, hold_time=2, hold_repeat=False)
-    hour_switch = Button(HOURPIN, pull_up=True, hold_time=2, hold_repeat=False)
-    wifi_switch = Button(WIFIPIN, pull_up=True, hold_time=2, hold_repeat=False)
-    lowbattery_switch.when_held = lowbattery
-    power_switch.when_released = shutdown_rpi
-    wifi_switch.when_held = wifi
-    wifi_switch.when_released = wifi
-    hour_switch.when_pressed = hour_switched
-    hour_switch.when_released = hour_switched
+    # lowbattery_switch = Button(
+    #     LOWBATTERYPIN, pull_up=True, hold_time=2, hold_repeat=False
+    # )
+    # power_switch = Button(POWERPIN, pull_up=False, hold_time=2, hold_repeat=False)
+    # hour_switch = Button(HOURPIN, pull_up=True, hold_time=2, hold_repeat=False)
+    # wifi_switch = Button(WIFIPIN, pull_up=True, hold_time=2, hold_repeat=False)
+    # lowbattery_switch.when_held = lowbattery
+    # power_switch.when_released = shutdown_rpi
+    # wifi_switch.when_held = wifi
+    # wifi_switch.when_released = wifi
+    # hour_switch.when_pressed = hour_switched
+    # hour_switch.when_released = hour_switched
     print_date("Buttons connected")
 
     wifiled.blink(on_time=0.1, off_time=4.9, n=None, background=True)
@@ -291,8 +291,8 @@ try:
     # camera.drc_strength = "high"
     # camera.rotation = 180
     # print_date("Camera ready")
-    new_interval = False
-    new_preview = True
+    # new_interval = False
+    # new_preview = True
 
     powerled.off()
     recled.off()
