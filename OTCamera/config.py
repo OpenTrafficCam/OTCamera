@@ -19,23 +19,28 @@
 
 import socket
 
+DEBUG = False
+
 STARTHOUR = 6
 ENDHOUR = 22
 
-RESOLUTION = (1640, 1232)
-RESIZE = (800, 600)
 HOSTNAME = socket.gethostname()
 
-MINFREESPACE = 1 #GB
-VIDEOPATH = '/home/pi/videos/'
-PREVIEWPATH = '/home/pi/webfiles/preview.jpg'
+# file settings
 
-DEBUG = False
+MINFREESPACE = 1  # GB
+VIDEOPATH = "/home/pi/videos/"
+PREVIEWPATH = "/home/pi/webfiles/preview.jpg"
+
+
+# video settings
 
 INTERVAL = 15
 FPS = 20
-PROFILE = 'high'
-LEVEL = '4'
+RESOLUTION = (1640, 1232)
+RESIZE = (800, 600)
+PROFILE = "high"
+LEVEL = "4"
 BITRATE = 600000
 QUALITY = 30
 
