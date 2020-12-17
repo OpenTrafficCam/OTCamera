@@ -35,6 +35,8 @@ def write_msg(msg, reboot=True):
     try:
         if msg == "#":
             msg = "############################"
+        elif msg == "\n":
+            pass
         else:
             msg = "{t}: {msg}".format(t=name.current_t(), msg=msg)
         print(msg)
