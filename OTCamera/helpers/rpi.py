@@ -20,22 +20,25 @@ from subprocess import call
 from time import sleep
 
 import config
+import hardware.buttons as buttons
+import hardware.camera as cam
+import hardware.leds as leds
 import status
+
 from helpers import log
 
 
 def shutdown():
     """
-    Shuts down the Raspberry Pi if the power_switch is still pressed after blink ends
+    Shuts down the Raspberry Pi if the power button is still pressed after blink ends
     (2 seconds).
     Tries to stop and close the camera object.
     Writes messages to the logfile.
     """
-    # TODO: #10 reference hardware config
     try:
         log.write_msg("Shutdown by button in 2s", False)
         status.noblink = True
-        powerled.blink(
+        leds.power.blink(
             on_time=0.5,
             off_time=0.5,
             fade_in_time=0,
@@ -43,20 +46,20 @@ def shutdown():
             n=8,
             background=False,
         )
-        powerled.on()
-        wifiled.off()
+        leds.power.on()
+        leds.wifi.off()
         # sleep(2)
-        if power_switch.is_pressed:
+        if buttons.power.is_pressed:
             status.noblink = False
             log.write_msg("Shutdown cancelled", False)
             return
         else:
             status.shutdownactive = True
             try:
-                if camera.recording:
-                    camera.stop_recording()
-                    recled.off()
-                    camera.close()
+                if cam.recording:
+                    cam.stop_recording()
+                    leds.rec.off()
+                    cam.close()
                     log.write_msg("Stop record", False)
             except:
                 log.write_msg("No camera", False)
@@ -75,11 +78,10 @@ def reboot():
     Reboots the Raspberry Pi if any expection is raised.
     Tries to close the camera object and writes to logfile.
     """
-    # TODO: #10 reference hardware config
     try:
         status.shutdownactive = True
         status.noblink = True
-        powerled.blink(
+        leds.power.blink(
             on_time=0.1,
             off_time=0.1,
             fade_in_time=0,
@@ -91,7 +93,7 @@ def reboot():
         log.write_msg("Reboot", False)
         log.write_msg("#", False)
         log.closefile()
-        camera.close()
+        cam.close()
     except:
         log.write_msg("ERROR: Reboot error", False)
     finally:
@@ -108,31 +110,34 @@ def wifi():
     If status.wifiapon is True, it stops the AP after config.WIFIDELAY seconds.
     Uses a LED to signalize the status.
     """
-    # TODO: #10 reference hardware config
     try:
-        log.write_msg('Wifiswitch')
-        if wifi_switch.is_pressed and not status.wifiapon:
-            log.write_msg('Turn WifiAP on')
-            call('sudo /bin/bash /usr/local/bin/wifistart', shell=True)
-            log.write_msg('WifiAP on')
-            powerled.pulse(fade_in_time=0.25, fade_out_time=0.25, n=2, background=True)
-            wifiled.blink(on_time=0.1, off_time=4.9, n=None, background=True)
+        log.write_msg("Wifiswitch")
+        if buttons.wifi.is_pressed and not status.wifiapon:
+            log.write_msg("Turn WifiAP on")
+            call("sudo /bin/bash /usr/local/bin/wifistart", shell=True)
+            log.write_msg("WifiAP on")
+            leds.power.pulse(
+                fade_in_time=0.25, fade_out_time=0.25, n=2, background=True
+            )
+            leds.wifi.blink(on_time=0.1, off_time=4.9, n=None, background=True)
             status.wifiapon = True
-        elif not wifi_switch.is_pressed and status.wifiapon:
-            powerled.pulse(fade_in_time=0.25, fade_out_time=0.25, n=2, background=True)
+        elif not buttons.wifi.is_pressed and status.wifiapon:
+            leds.power.pulse(
+                fade_in_time=0.25, fade_out_time=0.25, n=2, background=True
+            )
             if not config.DEBUG:
                 sleep(config.WIFIDELAY)
-            if not wifi_switch.is_pressed and status.wifiapon:
-                log.write_msg('Turn WifiAP OFF')
-                call('sudo systemctl stop hostapd.service', shell=True)
-                call('sudo systemctl stop dnsmasq.service', shell=True)
-                call('sudo ifconfig uap0 down', shell=True)
-                log.write_msg('WifiAP OFF')
-                wifiled.off()
+            if not buttons.wifi.is_pressed and status.wifiapon:
+                log.write_msg("Turn WifiAP OFF")
+                call("sudo systemctl stop hostapd.service", shell=True)
+                call("sudo systemctl stop dnsmasq.service", shell=True)
+                call("sudo ifconfig uap0 down", shell=True)
+                log.write_msg("WifiAP OFF")
+                leds.wifi.off()
                 status.wifiapon = False
     except:
-        log.write_msg('#')
-        log.write_msg('ERROR: Wifi Switch not possible')
+        log.write_msg("#")
+        log.write_msg("ERROR: Wifi Switch not possible")
         reboot()
 
 
@@ -140,17 +145,16 @@ def lowbattery():
     """
     Shuts down the Raspberry Pi if called and writes a message to the logfile.
     """
-    # TODO: #10 reference hardware config
     try:
         log.write_msg("Low Battery", False)
-        if camera.recording:
-            camera.stop_recording()
+        if cam.recording:
+            cam.stop_recording()
             log.write_msg("Stop record", False)
         status.shutdownactive = True
         log.write_msg("#", False)
         log.write_msg("Shutdown", False)
         log.write_msg("#", False)
-        log.closefile(
+        log.closefile()
     except:
         log.write_msg("ERROR: Low Battery shutdown error", False)
     finally:
