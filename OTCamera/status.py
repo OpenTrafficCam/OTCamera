@@ -18,6 +18,7 @@
 
 import datetime as dt
 from OTCamera import config
+from hardware import buttons
 
 shutdownactive = False
 noblink = False
@@ -29,8 +30,7 @@ new_preview = True
 def record_time():
     current_hour = dt.datetime.now().hour
     record_time = (
-        # TODO: #10 reference hardware config
-        (hour_switch.is_pressed)
+        (buttons.hour.is_pressed)
         or (current_hour >= config.STARTHOUR and current_hour < config.ENDHOUR)
     ) and (not shutdownactive)
     return record_time
