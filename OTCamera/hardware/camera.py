@@ -19,12 +19,17 @@
 
 import picamera
 
+from helpers import log, name
+import config
+
 
 cam = picamera.PiCamera()
-cam.framerate = FPS
-cam.resolution = RESOLUTION
+cam.framerate = config.FPS
+cam.resolution = config.RESOLUTION
 cam.annotate_background = picamera.Color("black")
-cam.annotate_text = current_time_str()
+cam.annotate_text = name.annotate()
 cam.exposure_mode = "nightpreview"
 cam.drc_strength = "high"
 cam.rotation = 180
+
+log.print_date("Camera ready")
