@@ -22,6 +22,8 @@ from OTCamera import config
 shutdownactive = False
 noblink = False
 wifiapon = False
+new_interval = False
+new_preview = True
 
 
 def record_time():
