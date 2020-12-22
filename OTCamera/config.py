@@ -33,11 +33,17 @@ VIDEOPATH = "/home/pi/videos/"
 PREVIEWPATH = "/home/pi/webfiles/preview.jpg"
 
 
+# camera settings
+
+FPS = 20
+RESOLUTION = (1640, 1232)
+EXPOSURE_MODE = "nightpreview"
+DRC_STRENGTH = "high"
+ROTATION = 180
+
 # video settings
 
 INTERVAL = 15
-FPS = 20
-RESOLUTION = (1640, 1232)
 RESIZE = (800, 600)
 PROFILE = "high"
 LEVEL = "4"

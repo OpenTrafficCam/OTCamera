@@ -28,8 +28,8 @@ cam.framerate = config.FPS
 cam.resolution = config.RESOLUTION
 cam.annotate_background = picamera.Color("black")
 cam.annotate_text = name.annotate()
-cam.exposure_mode = "nightpreview"
-cam.drc_strength = "high"
-cam.rotation = 180
+cam.exposure_mode = config.EXPOSURE_MODE
+cam.drc_strength = config.DRC_STRENGTH
+cam.rotation = config.ROTATION
 
-log.print_date("Camera ready")
+log.write_msg("Camera ready")
