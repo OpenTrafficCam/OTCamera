@@ -32,4 +32,4 @@ cam.exposure_mode = config.EXPOSURE_MODE
 cam.drc_strength = config.DRC_STRENGTH
 cam.rotation = config.ROTATION
 
-log.write_msg("Camera ready")
+log.write_msg("Camera initalized")

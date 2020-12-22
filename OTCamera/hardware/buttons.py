@@ -43,6 +43,8 @@ wifi.when_released = rpi.wifi
 hour.when_pressed = rpi.hour_switched
 hour.when_released = rpi.hour_switched
 
+log.write_msg("Buttons initialized")
+
 
 def its_record_time():
     current_hour = dt.datetime.now().hour

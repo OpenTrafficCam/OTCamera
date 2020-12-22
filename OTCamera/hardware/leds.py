@@ -19,6 +19,8 @@
 
 from gpiozero import PWMLED
 
+from helpers import log
+
 POWERLEDPIN = 13
 WIFILEDPIN = 12
 RECLEDPIN = 5
@@ -27,8 +29,10 @@ power = PWMLED(POWERLEDPIN)
 wifi = PWMLED(WIFILEDPIN)
 rec = PWMLED(RECLEDPIN)
 
+log.write_msg("LEDs initalized")
 
-def init():
+
+def off():
     """[summary]"""
     power.on()
     wifi.on()
