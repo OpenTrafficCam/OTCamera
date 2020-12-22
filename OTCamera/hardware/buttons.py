@@ -26,24 +26,26 @@ from helpers import log
 
 import status
 
-POWERPIN = 6
-HOURPIN = 19
-WIFIPIN = 16
-LOWBATTERYPIN = 18
+if config.USE_BUTTONS:
+
+    POWERPIN = 6
+    HOURPIN = 19
+    WIFIPIN = 16
+    LOWBATTERYPIN = 18
 
 
-lowbattery = Button(LOWBATTERYPIN, pull_up=True, hold_time=2, hold_repeat=False)
-power = Button(POWERPIN, pull_up=False, hold_time=2, hold_repeat=False)
-hour = Button(HOURPIN, pull_up=True, hold_time=2, hold_repeat=False)
-wifi = Button(WIFIPIN, pull_up=True, hold_time=2, hold_repeat=False)
-lowbattery.when_held = rpi.lowbattery
-power.when_released = rpi.shutdown
-wifi.when_held = rpi.wifi
-wifi.when_released = rpi.wifi
-hour.when_pressed = rpi.hour_switched
-hour.when_released = rpi.hour_switched
+    lowbattery = Button(LOWBATTERYPIN, pull_up=True, hold_time=2, hold_repeat=False)
+    power = Button(POWERPIN, pull_up=False, hold_time=2, hold_repeat=False)
+    hour = Button(HOURPIN, pull_up=True, hold_time=2, hold_repeat=False)
+    wifi = Button(WIFIPIN, pull_up=True, hold_time=2, hold_repeat=False)
+    lowbattery.when_held = rpi.lowbattery
+    power.when_released = rpi.shutdown
+    wifi.when_held = rpi.wifi
+    wifi.when_released = rpi.wifi
+    hour.when_pressed = rpi.hour_switched
+    hour.when_released = rpi.hour_switched
 
-log.write_msg("Buttons initialized")
+    log.write_msg("Buttons initialized")
 
 
 def its_record_time():

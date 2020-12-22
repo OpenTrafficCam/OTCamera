@@ -50,4 +50,8 @@ LEVEL = "4"
 BITRATE = 600000
 QUALITY = 30
 
+# hardware settings
+
+USE_LED = False
+USE_BUTTONS = False
 WIFIDELAY = 900
