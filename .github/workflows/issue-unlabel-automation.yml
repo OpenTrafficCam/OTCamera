@@ -1,4 +1,4 @@
-name: Issue to Project
+name: Remove Issue from Project
 
 on:
   issues:
