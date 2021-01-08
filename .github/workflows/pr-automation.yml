@@ -1,0 +1,16 @@
+name: PR to Project
+
+on:
+  pull_request:
+    types: [open]
+
+jobs:
+  ToDo-List:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Move PR to ToDo-List
+        uses: alex-page/github-project-automation-plus@v0.3.0
+        with:
+          project: ToDo-List
+          column: To do
+          repo-token: ${{ secrets.TOKEN_SEBASTIAN }}
