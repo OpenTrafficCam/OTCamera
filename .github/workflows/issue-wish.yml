@@ -1,0 +1,17 @@
+name: Issue to Wish-List
+
+on:
+  issues:
+    types: [labeled]
+
+jobs:
+  automate-project-columns:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: alex-page/github-project-automation-plus@v0.3.0
+        if: |
+          contains(github.event.issue.labels.*.name, 'idea')
+        with:
+          project: Wish-List
+          column: ${{ github.event.repository.name }}
+          repo-token: ${{ secrets.TOKEN_SEBASTIAN }}
