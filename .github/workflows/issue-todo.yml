@@ -1,4 +1,4 @@
-name: Issue to Project
+name: Issue to ToDo-List
 
 on:
   issues:
