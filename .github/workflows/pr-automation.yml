@@ -12,5 +12,5 @@ jobs:
         uses: alex-page/github-project-automation-plus@v0.3.0
         with:
           project: ToDo-List
-          column: To do
+          column: In progress
           repo-token: ${{ secrets.TOKEN_SEBASTIAN }}
