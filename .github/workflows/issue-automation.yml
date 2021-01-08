@@ -3,9 +3,6 @@ name: Issue to Project
 on:
   issues:
     types: [labeled]
-  pull_request:
-    types: [assigned]
-    
 
 jobs:
   ToDo-List:
