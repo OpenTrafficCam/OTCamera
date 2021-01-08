@@ -14,5 +14,5 @@ jobs:
           contains(github.event.issue.labels.*.name, 'feature')
         with:
           project: ToDo-List
-          column: To Do
+          column: To do
           repo-token: ${{ secrets.TOKEN_SEBASTIAN }}
