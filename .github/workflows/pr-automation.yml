@@ -2,7 +2,7 @@ name: PR to Project
 
 on:
   pull_request:
-    types: [open]
+    types: [opened]
 
 jobs:
   ToDo-List:
