@@ -1,4 +1,4 @@
-name: Move new issues into ToDo-List
+name: Issue to Project
 
 on:
   issues:
@@ -11,8 +11,8 @@ jobs:
       - uses: alex-page/github-project-automation-plus@v0.3.0
         if: |
           contains(github.event.issue.labels.*.name, 'bug') ||
-          contains(github.event.pull_request.labels.*.name, 'bug')
+          contains(github.event.issue.labels.*.name, 'feature')
         with:
           project: ToDo-List
-          column: Review in progress
+          column: To Do
           repo-token: ${{ secrets.TOKEN_SEBASTIAN }}
