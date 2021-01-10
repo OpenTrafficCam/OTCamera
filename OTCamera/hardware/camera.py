@@ -94,6 +94,7 @@ def split_if_interval_ends():
         log.write("new interval", level="debug")
         __split()
         status.new_interval = False
+        status.current_interval += 1
     elif not (interval_minute or status.new_interval):
         log.write("reset new interval", level="debug")
         status.new_interval = True

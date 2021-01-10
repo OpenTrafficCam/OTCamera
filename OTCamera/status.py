@@ -25,6 +25,7 @@ noblink = False
 wifiapon = False
 new_interval = True
 new_preview = True
+current_interval = 0
 
 
 def record_time():
