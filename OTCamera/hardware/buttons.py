@@ -45,7 +45,7 @@ if config.USE_BUTTONS:
     hour.when_pressed = rpi.hour_switched
     hour.when_released = rpi.hour_switched
 
-    log.write_msg("Buttons initialized")
+    log.write("Buttons initialized")
 
 
 def its_record_time():
@@ -59,6 +59,6 @@ def its_record_time():
 
 def hour_switched():
     if hour.is_pressed:
-        log.write_msg("Hour Switch pressed")
+        log.write("Hour Switch pressed")
     elif not hour.is_pressed:
-        log.write_msg("Hour Switch released")
+        log.write("Hour Switch released")

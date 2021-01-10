@@ -33,7 +33,7 @@ if USE_LED:
     wifi = PWMLED(WIFIPIN)
     rec = PWMLED(RECPIN)
 
-    log.write_msg("LEDs initalized")
+    log.write("LEDs initalized")
 
 
 def off():

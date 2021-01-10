@@ -36,7 +36,7 @@ def shutdown():
     Writes messages to the logfile.
     """
     try:
-        log.write_msg("Shutdown by button in 2s", False)
+        log.write("Shutdown by button in 2s", False)
         status.noblink = True
         leds.power.blink(
             on_time=0.5,
@@ -51,7 +51,7 @@ def shutdown():
         # sleep(2)
         if buttons.power.is_pressed:
             status.noblink = False
-            log.write_msg("Shutdown cancelled", False)
+            log.write("Shutdown cancelled", False)
             return
         else:
             status.shutdownactive = True
@@ -60,15 +60,15 @@ def shutdown():
                     cam.stop_recording()
                     leds.rec.off()
                     cam.close()
-                    log.write_msg("Stop record", False)
+                    log.write("Stop record", False)
             except:
-                log.write_msg("No camera", False)
-            log.write_msg("#", False)
-            log.write_msg("Shutdown", False)
-            log.write_msg("#", False)
+                log.write("No camera", False)
+            log.write("#", False)
+            log.write("Shutdown", False)
+            log.write("#", False)
             log.closefile()
     except:
-        log.write_msg("ERROR: Shutdown error", False)
+        log.write("ERROR: Shutdown error", False)
         status.shutdownactive = False
     call("sudo shutdown -h -t 0", shell=True)
 
@@ -90,12 +90,12 @@ def reboot():
             background=True,
         )
         log.traceback()
-        log.write_msg("Reboot", False)
-        log.write_msg("#", False)
+        log.write("Reboot", False)
+        log.write("#", False)
         log.closefile()
         cam.close()
     except:
-        log.write_msg("ERROR: Reboot error", False)
+        log.write("ERROR: Reboot error", False)
     finally:
         sleep(1)
         print("Finally reboot")
@@ -111,11 +111,11 @@ def wifi():
     Uses a LED to signalize the status.
     """
     try:
-        log.write_msg("Wifiswitch")
+        log.write("Wifiswitch")
         if buttons.wifi.is_pressed and not status.wifiapon:
-            log.write_msg("Turn WifiAP on")
+            log.write("Turn WifiAP on")
             call("sudo /bin/bash /usr/local/bin/wifistart", shell=True)
-            log.write_msg("WifiAP on")
+            log.write("WifiAP on")
             leds.power.pulse(
                 fade_in_time=0.25, fade_out_time=0.25, n=2, background=True
             )
@@ -128,16 +128,16 @@ def wifi():
             if not config.DEBUG:
                 sleep(config.WIFIDELAY)
             if not buttons.wifi.is_pressed and status.wifiapon:
-                log.write_msg("Turn WifiAP OFF")
+                log.write("Turn WifiAP OFF")
                 call("sudo systemctl stop hostapd.service", shell=True)
                 call("sudo systemctl stop dnsmasq.service", shell=True)
                 call("sudo ifconfig uap0 down", shell=True)
-                log.write_msg("WifiAP OFF")
+                log.write("WifiAP OFF")
                 leds.wifi.off()
                 status.wifiapon = False
     except:
-        log.write_msg("#")
-        log.write_msg("ERROR: Wifi Switch not possible")
+        log.write("#")
+        log.write("ERROR: Wifi Switch not possible")
         reboot()
 
 
@@ -146,16 +146,16 @@ def lowbattery():
     Shuts down the Raspberry Pi if called and writes a message to the logfile.
     """
     try:
-        log.write_msg("Low Battery", False)
+        log.write("Low Battery", False)
         if cam.recording:
             cam.stop_recording()
-            log.write_msg("Stop record", False)
+            log.write("Stop record", False)
         status.shutdownactive = True
-        log.write_msg("#", False)
-        log.write_msg("Shutdown", False)
-        log.write_msg("#", False)
+        log.write("#", False)
+        log.write("Shutdown", False)
+        log.write("#", False)
         log.closefile()
     except:
-        log.write_msg("ERROR: Low Battery shutdown error", False)
+        log.write("ERROR: Low Battery shutdown error", False)
     finally:
         call("sudo shutdown -h -t 0", shell=True)

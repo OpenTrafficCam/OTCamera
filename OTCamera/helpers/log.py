@@ -22,7 +22,7 @@ from helpers import name, rpi
 logfile = open(name.log(), "a")
 
 
-def write_msg(msg, reboot=True):
+def write(msg, reboot=True):
     """
     Takes a message, adds date and time and writes it to a logfile (name.log).
     If msg is "#" date and time is not added and a series of '###' is written in the
