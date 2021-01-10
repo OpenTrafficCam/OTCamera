@@ -23,24 +23,6 @@ import config
 from helpers import log
 
 
-if config.USE_LED:
-
-    log.write("Initalizing LEDs")
-
-    POWERPIN = 13
-    WIFIPIN = 12
-    RECPIN = 5
-
-    power = PWMLED(POWERPIN)
-    wifi = PWMLED(WIFIPIN)
-    rec = PWMLED(RECPIN)
-
-    log.write("LEDs initalized")
-
-else:
-    log.write("No LEDs")
-
-
 def off():
     """[summary]"""
     if config.USE_LED:
@@ -71,3 +53,23 @@ def power_on():
         power.blink(on_time=0.1, off_time=0, n=1, background=True)
     else:
         pass
+
+
+if config.USE_LED:
+
+    log.write("Initalizing LEDs")
+
+    POWERPIN = 13
+    WIFIPIN = 12
+    RECPIN = 5
+
+    power = PWMLED(POWERPIN)
+    wifi = PWMLED(WIFIPIN)
+    rec = PWMLED(RECPIN)
+
+    off()
+
+    log.write("LEDs initalized")
+
+else:
+    log.write("No LEDs")
