@@ -33,13 +33,11 @@ def write(msg, level="info", reboot=True):
         reboot (bool, optional): Perform reboot if logging fails. Defaults to True.
     """
 
-    level = level.capitalize
+    level = level.upper()
     if level == "DEBUG":
         if not DEBUG:
             return
-    msg = "{t}: {level} {msg}".format(
-        t=name.current_t(), level=level.capitalize, msg=msg
-    )
+    msg = "{t} {level}: {msg}".format(t=name.current_t(), level=level.upper(), msg=msg)
     __write(msg, reboot)
 
 
