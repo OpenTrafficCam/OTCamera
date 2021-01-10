@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import datetime as dt
+from datetime import datetime as dt
 import config
 
 
@@ -53,7 +53,7 @@ def annotate():
         str: annotation text
     """
 
-    time_str = dt.datetime.now().strftime(config.HOSTNAME + " %d.%m.%Y %H:%M:%S")
+    time_str = dt.now().strftime(config.HOSTNAME + " %d.%m.%Y %H:%M:%S")
     return time_str
 
 
@@ -66,7 +66,7 @@ def current_dt():
         str: YYYY-mm-dd_HH-MM-SS
     """
 
-    curr_dt = dt.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    curr_dt = dt.now().strftime("%Y-%m-%d_%H-%M-%S")
     return curr_dt
 
 
@@ -78,7 +78,7 @@ def current_t():
         str: HH-MM-SS
     """
 
-    curr_t = dt.datetime.now().strftime("%H-%M-%S")
+    curr_t = dt.now().strftime("%H-%M-%S")
     return curr_t
 
 

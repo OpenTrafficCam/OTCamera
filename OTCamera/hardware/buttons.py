@@ -17,7 +17,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-import datetime as dt
+from datetime import datetime as dt
 
 import config
 import helpers.rpi as rpi
@@ -51,7 +51,7 @@ else:
 
 
 def its_record_time():
-    current_hour = dt.datetime.now().hour
+    current_hour = dt.now().hour
     record_time = (
         (hour.is_pressed)
         or (current_hour >= config.STARTHOUR and current_hour < config.ENDHOUR)

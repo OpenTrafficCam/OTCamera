@@ -16,19 +16,19 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import datetime as dt
+from datetime import datetime as dt
 from OTCamera import config
 from hardware import buttons
 
 shutdownactive = False
 noblink = False
 wifiapon = False
-new_interval = False
+new_interval = True
 new_preview = True
 
 
 def record_time():
-    current_hour = dt.datetime.now().hour
+    current_hour = dt.now().hour
     bytime = current_hour >= config.STARTHOUR and current_hour < config.ENDHOUR
     if config.USE_BUTTONS:
         bybutton = buttons.hour.is_pressed

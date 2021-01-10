@@ -19,9 +19,11 @@
 
 import picamera
 from hardware import leds
+from datetime import datetime as dt
 
 from helpers import log, name
 import config
+import status
 from helpers.filesystem import delete_old_files
 
 log.write("Initializing Camera")
@@ -73,10 +75,18 @@ def wait_recording(timeout=0):
     picam.wait_recording(timeout)
 
 
-def split():
+def __split():
     picam.split_recording(name.video())
     delete_old_files()
     log.write("splitted recording")
+
+
+def intervalsplit():
+    current_minute = dt.now().minute
+    interval_minute = (current_minute % config.INTERVAL) == 0
+
+    if interval_minute and status.new_interval:
+        pass
 
 
 def stop_recording():
