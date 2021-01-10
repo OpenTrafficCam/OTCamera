@@ -30,7 +30,7 @@ HOSTNAME = socket.gethostname()
 
 MINFREESPACE = 1  # GB
 VIDEOPATH = "/home/pi/videos/"
-PREVIEWPATH = "/home/pi/webfiles/preview.jpg"
+PREVIEWPATH = "/home/pi/preview.jpg"
 
 
 # camera settings
@@ -43,6 +43,7 @@ ROTATION = 180
 
 # video settings
 
+FORMAT = "h264"
 INTERVAL = 15
 RESIZE = (800, 600)
 PROFILE = "high"
