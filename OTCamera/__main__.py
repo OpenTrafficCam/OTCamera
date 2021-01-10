@@ -16,16 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+from record import record
 
-from helpers import name
-
-# from hardware import buttons, leds
-# import config, status
-
-
-print(name.current_dt())
-print(name.video())
-
-
-# leds.init()
-# buttons.init()
+if __name__ == "__main__":
+    record()
