@@ -32,26 +32,25 @@ def init():
 
 
 def loop():
-    try:
-        if record_time():
-            camera.start_recording()
-            camera.split_if_interval_ends()
-        else:
-            camera.stop_recording()
-            camera.wait_recording(0.5)
-    except (KeyboardInterrupt):
-        log.write("Keyboard Interrupt, Stopping", level="warning")
-        return "break"
+    if record_time():
+        camera.start_recording()
+        camera.split_if_interval_ends()
+    else:
+        camera.stop_recording()
+        camera.wait_recording(0.5)
 
 
 def record():
-    init()
-    while True:
-        if config.N_INTERVALS == 0:
-            pass
-        elif status.current_interval == config.N_INTERVALS:
-            break
-        loop()
+    try:
+        init()
+        while True:
+            if config.N_INTERVALS == 0:
+                pass
+            elif status.current_interval == config.N_INTERVALS:
+                break
+            loop()
+    except (KeyboardInterrupt):
+        log.write("Keyboard Interrupt, Stopping", level="warning")
     camera.stop_recording()
     log.closefile()
 
