@@ -46,6 +46,9 @@ if config.USE_BUTTONS:
 
     log.write("Buttons initialized")
 
+else:
+    log.write("No Buttons")
+
 
 def its_record_time():
     current_hour = dt.datetime.now().hour

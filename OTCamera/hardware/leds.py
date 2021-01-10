@@ -37,6 +37,9 @@ if config.USE_LED:
 
     log.write("LEDs initalized")
 
+else:
+    log.write("No LEDs")
+
 
 def off():
     """[summary]"""
