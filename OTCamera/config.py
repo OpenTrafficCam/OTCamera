@@ -44,6 +44,7 @@ ROTATION = 180
 # video settings
 
 FORMAT = "h264"
+PREVIEWFORMAT = "jpeg"
 INTERVAL = 15
 RESIZE = (800, 600)
 PROFILE = "high"
