@@ -54,3 +54,7 @@ def record():
         loop()
     camera.stop_recording()
     log.closefile()
+
+
+if __name__ == "__main__":
+    record()
