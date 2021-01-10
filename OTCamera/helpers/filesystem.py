@@ -35,7 +35,10 @@ def delete_old_files():
     """
     log.write("delete old file", level="debug")
     minfreespace = config.MINFREESPACE * 1024 * 1024 * 1024
-    enough_space = psutil.disk_usage("/").free > minfreespace
+    free_space = psutil.disk_usage(config.VIDEOPATH).free
+    enough_space = free_space > minfreespace
+    log.write("free space: {fs}".format(fs=free_space), level="DEBUG")
+    log.write("min space: {ms}".format(ms=minfreespace), level="DEBUG")
     while not enough_space:
         try:
             oldest_video = min(os.listdir(config.VIDEOPATH), key=os.path.getctime)
@@ -46,4 +49,6 @@ def delete_old_files():
             log.write("#")
             log.write("ERROR: Cannot delete file")
             rpi.reboot()
-        enough_space = psutil.disk_usage("/").free > minfreespace
+        free_space = psutil.disk_usage("/").free
+        log.write("free space: {fs}".format(fs=free_space))
+        enough_space = free_space > minfreespace
