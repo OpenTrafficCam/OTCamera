@@ -81,6 +81,10 @@ def current_t():
     return curr_t
 
 
+def preview():
+    return config.PREVIEWPATH
+
+
 if __name__ == "__main__":
     config.VIDEOPATH = "local test video"
     config.HOSTNAME = "local test host"
