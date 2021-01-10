@@ -102,7 +102,7 @@ def split_if_interval_ends():
 
 def preview():
     current_second = dt.now().second
-    offset = 5
+    offset = config.PREVIEW_INTERVAL - 1
     preview_second = (current_second % config.PREVIEW_INTERVAL) == offset
 
     if preview_second and status.preview_on() and status.new_preview:
