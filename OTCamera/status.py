@@ -19,6 +19,9 @@
 from datetime import datetime as dt
 import config
 from hardware import buttons
+from helpers import log
+
+log.write("status", level="debug")
 
 shutdownactive = False
 noblink = False
