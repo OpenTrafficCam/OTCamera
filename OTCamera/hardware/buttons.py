@@ -33,7 +33,6 @@ if config.USE_BUTTONS:
     WIFIPIN = 16
     LOWBATTERYPIN = 18
 
-
     lowbattery = Button(LOWBATTERYPIN, pull_up=True, hold_time=2, hold_repeat=False)
     power = Button(POWERPIN, pull_up=False, hold_time=2, hold_repeat=False)
     hour = Button(HOURPIN, pull_up=True, hold_time=2, hold_repeat=False)
