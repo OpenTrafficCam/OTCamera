@@ -26,6 +26,10 @@ from helpers import log
 
 import status
 
+
+log.write("buttons", level="debug")
+
+
 if config.USE_BUTTONS:
 
     POWERPIN = 6

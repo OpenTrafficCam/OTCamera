@@ -23,6 +23,9 @@ import config
 from helpers import log
 
 
+log.write("leds", level="debug")
+
+
 def off():
     """[summary]"""
     if config.USE_LED:

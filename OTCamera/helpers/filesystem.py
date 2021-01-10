@@ -24,12 +24,16 @@ import config
 from helpers import log, rpi
 
 
+log.write("filesystem", level="debug")
+
+
 def delete_old_files():
     """
     Checks if enough space (config.MINFREESPACE) is a availabe to save video files.
     If not, deletes the oldest files in config.VIDEOPATH one after another until enough
     space is available on disk.
     """
+    log.write("delete old file", level="debug")
     minfreespace = config.MINFREESPACE * 1024 * 1024 * 1024
     enough_space = psutil.disk_usage("/").free > minfreespace
     while not enough_space:

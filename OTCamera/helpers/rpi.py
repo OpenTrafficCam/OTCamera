@@ -28,6 +28,9 @@ import status
 from helpers import log
 
 
+log.write("rpi", level="debug")
+
+
 def shutdown():
     """
     Shuts down the Raspberry Pi if the power button is still pressed after blink ends
