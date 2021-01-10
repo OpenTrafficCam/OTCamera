@@ -22,6 +22,7 @@ from hardware import leds
 
 from helpers import log, name
 import config
+from helpers.filesystem import delete_old_files
 
 log.write("Initializing Camera")
 
@@ -38,6 +39,8 @@ log.write("Camera initalized")
 
 
 def start_recording():
+    # TODO: exception handling
+    delete_old_files()
     if not picam.recording:
         picam.annotate_text = name.annotate()
         picam.start_recording(
@@ -72,6 +75,8 @@ def wait_recording(timeout=0):
 
 def split():
     picam.split_recording(name.video())
+    delete_old_files()
+    log.write("splitted recording")
 
 
 def stop_recording():
