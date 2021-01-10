@@ -40,7 +40,10 @@ def record_time():
 
 
 def preview_on():
-    return wifiapon
+    if config.USE_BUTTONS:
+        return wifiapon
+    else:
+        return True
 
 
 if __name__ == "__main__":
