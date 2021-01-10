@@ -65,7 +65,7 @@ def start_recording():
 
 def __capture():
     picam.capture(
-        name.preview,
+        name.preview(),
         format=config.PREVIEWFORMAT,
         resize=config.RESIZE,
         use_video_port=True,
