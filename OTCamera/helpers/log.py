@@ -17,7 +17,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from config import DEBUG
-from helpers import name, rpi
+from helpers import name
 
 
 logfile = open(name.log(), "a")
@@ -64,20 +64,16 @@ def __write(msg, reboot=True):
         msg (str): Message to be written. Use "#" to add a break.
         reboot (bool, optional): Perform reboot if logging fails. Defaults to True.
     """
-    try:
-        if msg == "#":
-            msg = "############################"
-        elif msg == "\n":
-            pass
-        else:
-            msg = "{t}: {msg}".format(t=name.current_t(), msg=msg)
-        print(msg)
-        logfile.write(msg + "\n")
-        logfile.flush()
-    except:
-        print("PRINT AND LOG NOT POSSIBLE")
-        if reboot:
-            rpi.reboot()
+
+    if msg == "#":
+        msg = "############################"
+    elif msg == "\n":
+        pass
+    else:
+        msg = "{t}: {msg}".format(t=name.current_t(), msg=msg)
+    print(msg)
+    logfile.write(msg + "\n")
+    logfile.flush()
 
 
 def closefile():
