@@ -16,13 +16,45 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+from config import DEBUG
 from helpers import name, rpi
 
 
 logfile = open(name.log(), "a")
 
 
-def write(msg, reboot=True):
+def write(msg, level="info", reboot=True):
+    """
+    Takes a message, adds level, date and time and writes it to a logfile (name.log).
+
+    Args:
+        msg (str): Message to be written.
+        level (str): either "debug", "info", "warning", "error", "exception"
+        reboot (bool, optional): Perform reboot if logging fails. Defaults to True.
+    """
+
+    level = level.capitalize
+    if level == "DEBUG":
+        if not DEBUG:
+            return
+    msg = "{t}: {level} {msg}".format(
+        t=name.current_t(), level=level.capitalize, msg=msg
+    )
+    __write(msg, reboot)
+
+
+def breakline(reboot=True):
+    """
+    Write a breakline containing several # to the logfile.
+
+    Args:
+        reboot (bool, optional): Perform reboot if logging fails. Defaults to True.
+    """
+
+    __write("#")
+
+
+def __write(msg, reboot=True):
     """
     Takes a message, adds date and time and writes it to a logfile (name.log).
     If msg is "#" date and time is not added and a series of '###' is written in the
