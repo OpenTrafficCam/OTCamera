@@ -17,6 +17,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
+from time import sleep
 import picamera
 from hardware import leds
 from datetime import datetime as dt
@@ -56,23 +57,27 @@ def start_recording():
         )
         log.write("started recording")
         wait_recording(2)
-        capture()
+        __capture()
         leds.rec_on()
     else:
         pass
 
 
-def capture():
+def __capture():
     picam.capture(
         name.preview,
         format=config.PREVIEWFORMAT,
         resize=config.RESIZE,
         use_video_port=True,
     )
+    log.write("preview captured", level="debug")
 
 
 def wait_recording(timeout=0):
-    picam.wait_recording(timeout)
+    if picam.recording:
+        picam.wait_recording(timeout)
+    else:
+        sleep(timeout + 0.5)
 
 
 def __split():
@@ -81,12 +86,31 @@ def __split():
     log.write("splitted recording")
 
 
-def intervalsplit():
+def split_if_interval_ends():
     current_minute = dt.now().minute
     interval_minute = (current_minute % config.INTERVAL) == 0
 
     if interval_minute and status.new_interval:
-        pass
+        log.write("new interval", level="debug")
+        __split()
+        status.new_interval = False
+    elif not (interval_minute or status.new_interval):
+        log.write("reset new interval", level="debug")
+        status.new_interval = True
+
+
+def preview():
+    current_second = dt.now().second
+    offset = 5
+    preview_second = (current_second % config.PREVIEW_INTERVAL) == offset
+
+    if preview_second and status.preview_on() and status.new_preview:
+        log.write("new preview", level="debug")
+        __capture()
+        status.new_preview = False
+    elif not (preview_second or status.new_preview):
+        log.write("reset new preview", level="debug")
+        status.new_preview = True
 
 
 def stop_recording():
