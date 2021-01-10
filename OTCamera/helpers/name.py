@@ -22,11 +22,11 @@ import config
 
 def video():
     """
-    Generate path incl. filename where videos are saved to, based on hostname and
+    Path incl. filename where videos are saved to, based on hostname and
     current date and time.
 
     Returns:
-        str: filename
+        str: filename for video
     """
 
     filename = config.VIDEOPATH + config.HOSTNAME + "_" + current_dt() + ".h264"
@@ -35,10 +35,10 @@ def video():
 
 def log():
     """
-    Generate path incl. filename where logfile is saved.
+    Path incl. filename where logfile is saved.
 
     Returns:
-        str: filename
+        str: filename for log
     """
 
     filename = config.VIDEOPATH + config.HOSTNAME + "_" + current_dt() + ".log"
@@ -47,7 +47,7 @@ def log():
 
 def annotate():
     """
-    Generate text to be added as annotation to video footage.
+    Text to be added as annotation to video footage.
 
     Returns:
         str: annotation text
@@ -57,6 +57,7 @@ def annotate():
     return time_str
 
 
+# TODO: refactor time stuff in separate helper
 def current_dt():
     """
     Generates current date and time.
@@ -82,6 +83,12 @@ def current_t():
 
 
 def preview():
+    """
+    Path incl. filename where preview file is saved.
+
+    Returns:
+        str: filename for preview
+    """
     return config.PREVIEWPATH
 
 
