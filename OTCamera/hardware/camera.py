@@ -18,18 +18,60 @@
 
 
 import picamera
+from hardware import leds
 
 from helpers import log, name
 import config
 
+log.write("Initializing Camera")
 
-cam = picamera.PiCamera()
-cam.framerate = config.FPS
-cam.resolution = config.RESOLUTION
-cam.annotate_background = picamera.Color("black")
-cam.annotate_text = name.annotate()
-cam.exposure_mode = config.EXPOSURE_MODE
-cam.drc_strength = config.DRC_STRENGTH
-cam.rotation = config.ROTATION
+picam = picamera.PiCamera()
+picam.framerate = config.FPS
+picam.resolution = config.RESOLUTION
+picam.annotate_background = picamera.Color("black")
+picam.annotate_text = name.annotate()
+picam.exposure_mode = config.EXPOSURE_MODE
+picam.drc_strength = config.DRC_STRENGTH
+picam.rotation = config.ROTATION
 
 log.write("Camera initalized")
+
+
+def start_recording():
+    picam.annotate_text = name.annotate()
+    picam.start_recording(
+        output=name.video(),
+        format=config.FORMAT,
+        resize=config.RESIZE,
+        profile=config.PROFILE,
+        level=config.LEVEL,
+        bitrate=config.BITRATE,
+        quality=config.QUALITY,
+    )
+    log.write("started recording")
+    wait_recording(2)
+    leds.rec_on()
+
+
+def capture():
+    picam.capture(
+        name.preview,
+        format=config.PREVIEWFORMAT,
+        resize=config.RESIZE,
+        use_video_port=True,
+    )
+
+
+def wait_recording(timeout=0):
+    picam.wait_recording(timeout)
+
+
+def split():
+    picam.split_recording(name.video())
+
+
+def stop_recording():
+    if picam.recording:
+        picam.stop_recording()
+        leds.rec_off()
+        log.write("stopped recording")
