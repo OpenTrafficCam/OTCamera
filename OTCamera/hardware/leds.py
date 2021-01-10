@@ -55,6 +55,14 @@ def rec_on():
         pass
 
 
+def rec_off():
+    if config.USE_LED:
+        rec.off()
+        rec.pulse(fade_in_time=0.25, fade_out_time=0.25, n=4, background=True)
+    else:
+        pass
+
+
 def power_on():
     if config.USE_LED:
         power.blink(on_time=0.1, off_time=0, n=1, background=True)
