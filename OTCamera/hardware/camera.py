@@ -43,8 +43,8 @@ log.write("Camera initalized")
 
 def start_recording():
     # TODO: exception handling
-    delete_old_files()
     if not picam.recording:
+        delete_old_files()
         picam.annotate_text = name.annotate()
         picam.start_recording(
             output=name.video(),
