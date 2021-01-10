@@ -26,7 +26,7 @@ log.write("status", level="debug")
 shutdownactive = False
 noblink = False
 wifiapon = False
-new_interval = True
+new_interval = False
 new_preview = True
 current_interval = 0
 
