@@ -29,11 +29,14 @@ new_preview = True
 
 def record_time():
     current_hour = dt.datetime.now().hour
-    record_time = (
-        (buttons.hour.is_pressed)
-        or (current_hour >= config.STARTHOUR and current_hour < config.ENDHOUR)
-    ) and (not shutdownactive)
-    return record_time
+    bytime = current_hour >= config.STARTHOUR and current_hour < config.ENDHOUR
+    if config.USE_BUTTONS:
+        bybutton = buttons.hour.is_pressed
+        record = bybutton or bytime
+    else:
+        record = bytime
+    record = record and (not shutdownactive)
+    return record
 
 
 def preview_on():
