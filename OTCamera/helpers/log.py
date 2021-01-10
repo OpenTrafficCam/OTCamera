@@ -37,7 +37,7 @@ def write(msg, level="info", reboot=True):
     if level == "DEBUG":
         if not DEBUG:
             return
-    msg = "{t} {level}: {msg}".format(t=name.current_t(), level=level.upper(), msg=msg)
+    msg = "{t} {level}: {msg}".format(t=name.current_dt(), level=level.upper(), msg=msg)
     __write(msg, reboot)
 
 
@@ -67,8 +67,6 @@ def __write(msg, reboot=True):
         msg = "############################"
     elif msg == "\n":
         pass
-    else:
-        msg = "{t}: {msg}".format(t=name.current_t(), msg=msg)
     print(msg)
     logfile.write(msg + "\n")
     logfile.flush()
