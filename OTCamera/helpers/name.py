@@ -29,7 +29,7 @@ def video():
         str: filename for video
     """
 
-    filename = config.VIDEOPATH + config.HOSTNAME + "_" + current_dt() + ".h264"
+    filename = config.VIDEOPATH + config.PREFIX + "_" + current_dt() + ".h264"
     return filename
 
 
@@ -41,7 +41,7 @@ def log():
         str: filename for log
     """
 
-    filename = config.VIDEOPATH + config.HOSTNAME + "_" + current_dt() + ".log"
+    filename = config.VIDEOPATH + config.PREFIX + "_" + current_dt() + ".log"
     return filename
 
 
@@ -53,7 +53,7 @@ def annotate():
         str: annotation text
     """
 
-    time_str = dt.now().strftime(config.HOSTNAME + " %d.%m.%Y %H:%M:%S")
+    time_str = dt.now().strftime(config.PREFIX + " %d.%m.%Y %H:%M:%S")
     return time_str
 
 
@@ -94,7 +94,7 @@ def preview():
 
 if __name__ == "__main__":
     config.VIDEOPATH = "local test video"
-    config.HOSTNAME = "local test host"
+    config.PREFIX = "local test host"
 
     print("video: {str}".format(str=video()))
     print("log: {str}".format(str=log()))
