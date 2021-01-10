@@ -38,19 +38,23 @@ log.write("Camera initalized")
 
 
 def start_recording():
-    picam.annotate_text = name.annotate()
-    picam.start_recording(
-        output=name.video(),
-        format=config.FORMAT,
-        resize=config.RESIZE,
-        profile=config.PROFILE,
-        level=config.LEVEL,
-        bitrate=config.BITRATE,
-        quality=config.QUALITY,
-    )
-    log.write("started recording")
-    wait_recording(2)
-    leds.rec_on()
+    if not picam.recording:
+        picam.annotate_text = name.annotate()
+        picam.start_recording(
+            output=name.video(),
+            format=config.FORMAT,
+            resize=config.RESIZE,
+            profile=config.PROFILE,
+            level=config.LEVEL,
+            bitrate=config.BITRATE,
+            quality=config.QUALITY,
+        )
+        log.write("started recording")
+        wait_recording(2)
+        capture()
+        leds.rec_on()
+    else:
+        pass
 
 
 def capture():
