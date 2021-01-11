@@ -139,7 +139,7 @@ def wifi():
                 leds.wifi.off()
                 status.wifiapon = False
     except:
-        log.write("#")
+        log.breakline()
         log.write("ERROR: Wifi Switch not possible")
         reboot()
 
