@@ -32,6 +32,8 @@ log.write("buttons", level="debug")
 
 if config.USE_BUTTONS:
 
+    log.write("Initalizing LEDs", level="debug")
+
     POWERPIN = 6
     HOURPIN = 19
     WIFIPIN = 16
