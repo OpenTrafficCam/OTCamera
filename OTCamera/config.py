@@ -20,20 +20,20 @@
 import socket
 
 # Turn debug mode on to get addition log entries
-DEBUG = False
+DEBUG = True
 
 # Hour of day when to start/end recording
 STARTHOUR = 6
 ENDHOUR = 22
 # Interval length in minutes before video splits
 INTERVAL = 15
-# Number of intervals to record (0=infinit)
-N_INTERVALS = 2
+# Number of full intervals to record (0=infinit)
+N_INTERVALS = 0
 # Interval between two preview images in seconds
 PREVIEW_INTERVAL = 5
 
-# free space on sd card before old videos get deleted
-MINFREESPACE = 1  # GB
+# free space in GB on sd card before old videos get deleted
+MINFREESPACE = 1
 # prefix for videoname and annotation
 PREFIX = socket.gethostname()
 # path to safe videofiles
