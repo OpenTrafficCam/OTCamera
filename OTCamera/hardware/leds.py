@@ -60,7 +60,7 @@ def power_on():
 
 if config.USE_LED:
 
-    log.write("Initalizing LEDs")
+    log.write("Initalizing LEDs", level="debug")
 
     POWERPIN = 13
     WIFIPIN = 12
