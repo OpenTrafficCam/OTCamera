@@ -18,9 +18,7 @@
 
 from config import DEBUG
 from helpers import name
-
-
-logfile = open(name.log(), "a")
+from art import text2art
 
 
 def write(msg, level="info", reboot=True):
@@ -49,7 +47,19 @@ def breakline(reboot=True):
         reboot (bool, optional): Perform reboot if logging fails. Defaults to True.
     """
 
-    __write("#")
+    msg = "\n############################\n"
+    __write(msg)
+
+
+def otc():
+    """
+    Write a OTC logo to the logfile.
+    """
+
+    otclogo = text2art("OpenTrafficCam")
+    __write(otclogo)
+    otcamera = text2art("OTCamera")
+    __write(otcamera)
 
 
 def __write(msg, reboot=True):
@@ -63,10 +73,6 @@ def __write(msg, reboot=True):
         reboot (bool, optional): Perform reboot if logging fails. Defaults to True.
     """
 
-    if msg == "#":
-        msg = "############################"
-    elif msg == "\n":
-        pass
     print(msg)
     logfile.write(msg + "\n")
     logfile.flush()
@@ -87,3 +93,8 @@ def traceback():
     # TODO: #11 Test traceback function.
     traceback.print_exc(file=logfile)
     logfile.write("\n")
+
+
+logfile = open(name.log(), "a")
+otc()
+breakline()
