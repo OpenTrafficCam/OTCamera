@@ -17,6 +17,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
+from time import sleep
 import config
 from hardware import camera, leds
 from helpers import log
@@ -36,23 +37,24 @@ def loop():
         camera.start_recording()
         camera.split_if_interval_ends()
         camera.preview()
+        camera.wait_recording(0.5)
     else:
         camera.stop_recording()
-        camera.wait_recording(0.5)
+        sleep(0.5)
 
 
 def record():
     try:
         init()
-        while True:
-            if config.N_INTERVALS == 0:
-                pass
-            elif status.current_interval > config.N_INTERVALS:
-                log.write("Captured all intervals, stopping", level="warning")
-                break
+
+        while status.more_intervals:
             loop()
+
+        log.write("Captured all intervals, stopping", level="warning")
+
     except (KeyboardInterrupt):
         log.write("Keyboard Interrupt, stopping", level="warning")
+
     camera.stop_recording()
     log.closefile()
 

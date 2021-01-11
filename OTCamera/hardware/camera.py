@@ -77,7 +77,7 @@ def wait_recording(timeout=0):
     if picam.recording:
         picam.wait_recording(timeout)
     else:
-        sleep(timeout + 0.5)
+        sleep(timeout)
 
 
 def __split():
@@ -89,18 +89,22 @@ def __split():
 def split_if_interval_ends():
     current_minute = dt.now().minute
     interval_minute = (current_minute % config.INTERVAL) == 0
-
-    if interval_minute and status.new_interval:
+    new_interval = (
+        interval_minute and status.interval_finished and status.more_intervals
+    )
+    after_new_interval = not (interval_minute or status.interval_finished)
+    if new_interval:
         log.write("new interval", level="debug")
         __split()
-        status.new_interval = False
+        status.interval_finished = False
         status.current_interval += 1
-    elif not (interval_minute or status.new_interval):
-        if status.current_interval < config.N_INTERVALS:
-            log.write("reset new interval", level="debug")
-            status.new_interval = True
-        else:
-            status.current_interval += 1
+        if config.N_INTERVALS > 0:
+            status.more_intervals = status.current_interval < config.N_INTERVALS
+        if not status.more_intervals:
+            log.write("last interval", level="debug")
+    elif after_new_interval:
+        status.interval_finished = True
+        log.write("reset new interval", level="debug")
 
 
 def preview():
@@ -121,4 +125,5 @@ def stop_recording():
     if picam.recording:
         picam.stop_recording()
         leds.rec_off()
+        log.write("recorded {n} videos".format(n=status.current_interval))
         log.write("stopped recording")
