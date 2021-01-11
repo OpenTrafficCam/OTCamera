@@ -96,8 +96,11 @@ def split_if_interval_ends():
         status.new_interval = False
         status.current_interval += 1
     elif not (interval_minute or status.new_interval):
-        log.write("reset new interval", level="debug")
-        status.new_interval = True
+        if status.current_interval < config.N_INTERVALS:
+            log.write("reset new interval", level="debug")
+            status.new_interval = True
+        else:
+            status.current_interval += 1
 
 
 def preview():
