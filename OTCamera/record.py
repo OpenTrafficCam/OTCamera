@@ -18,22 +18,21 @@
 
 
 from time import sleep
-import config
+
+import status
 from hardware import camera, leds
 from helpers import log
-from status import record_time
-import status
 
 
 def init():
-    log.write("#")
+    log.breakline()
     log.write("starting periodic record")
     leds.power_on()
     # TODO: turn wifi AP on
 
 
 def loop():
-    if record_time():
+    if status.record_time():
         camera.start_recording()
         camera.split_if_interval_ends()
         camera.preview()
