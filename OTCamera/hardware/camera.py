@@ -27,7 +27,7 @@ import config
 import status
 from helpers.filesystem import delete_old_files
 
-log.write("Initializing Camera")
+log.write("Initializing Camera", level="debug")
 
 picam = picamera.PiCamera()
 picam.framerate = config.FPS
@@ -87,13 +87,7 @@ def __split():
 
 
 def split_if_interval_ends():
-    current_minute = dt.now().minute
-    interval_minute = (current_minute % config.INTERVAL) == 0
-    new_interval = (
-        interval_minute and status.interval_finished and status.more_intervals
-    )
-    after_new_interval = not (interval_minute or status.interval_finished)
-    if new_interval:
+    if new_interval():
         log.write("new interval", level="debug")
         __split()
         status.interval_finished = False
@@ -102,9 +96,27 @@ def split_if_interval_ends():
             status.more_intervals = status.current_interval < config.N_INTERVALS
         if not status.more_intervals:
             log.write("last interval", level="debug")
-    elif after_new_interval:
+    elif after_new_interval():
         status.interval_finished = True
         log.write("reset new interval", level="debug")
+
+
+def interval_minute():
+    current_minute = dt.now().minute
+    interval_minute = (current_minute % config.INTERVAL) == 0
+    return interval_minute
+
+
+def after_new_interval():
+    after_new_interval = not (interval_minute() or status.interval_finished)
+    return after_new_interval
+
+
+def new_interval():
+    new_interval = (
+        interval_minute() and status.interval_finished and status.more_intervals
+    )
+    return new_interval
 
 
 def preview():
