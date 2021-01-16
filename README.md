@@ -123,6 +123,26 @@ pip --version
 
 Both commands should state, that they are (using) python 3.7.
 
+### Install Screen to Run OTCamera in Background
+
+> [Screen](https://www.gnu.org/software/screen/) is a full-screen window manager
+> that multiplexes a physical terminal between several processes, typically
+> interactive shells.
+
+To install screen on the developer Pi just run
+
+```bash
+sudo apt-get install screen
+```
+
+You can now start ```screen``` and use it as an usual terminal. You can run the ```python OTCamera``` to start the camera in an active screen session. Hit <kbd>Ctrl</kbd> + <kbd>a</kbd> and then <kbd>d</kbd> to detach the current session. Screen will still run in background including the OTCamera. If you start screen including the ```-r``` option you can reconnect to this terminal session:
+
+```bash
+screen -r
+```
+
+You can safely disconnect you ssh connection to the pi, while the screen session is still running.
+
 ## License
 
 This software is licensed under the [GPL-3.0 License](LICENSE).
