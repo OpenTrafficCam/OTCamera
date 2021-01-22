@@ -28,7 +28,7 @@ def init():
     log.breakline()
     log.write("starting periodic record")
     leds.power_on()
-    # TODO: turn wifi AP on
+    # TODO: turn wifi AP on #41
 
 
 def loop():
