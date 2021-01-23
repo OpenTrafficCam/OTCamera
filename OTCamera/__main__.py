@@ -1,4 +1,4 @@
-"""OTCamera main module
+"""OTCamera main module.
 
 Just calls the record function in record module.
 
