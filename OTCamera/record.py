@@ -1,20 +1,23 @@
-# OTVision: record a video for specific time period
-# Copyright (C) 2020 OpenTrafficCam Contributors
-# <https://github.com/OpenTrafficCam
+"""OTCamera main module to record videos.
+
+This module can be used to record either some intervals or continuously.
+It is configured by config.py.
+
+"""
+# Copyright (C) 2021 OpenTrafficCam Contributors
+# <https://github.com/OpenTrafficCam>
 # <team@opentrafficcam.org>
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+# This program is free software: you can redistribute it and/or modify it under the
+# terms of the GNU General Public License as published by the Free Software Foundation,
+# either version 3 of the License, or (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+
+# PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+# You should have received a copy of the GNU General Public License along with this
+# program.  If not, see <https://www.gnu.org/licenses/>.
 
 
 from time import sleep
@@ -25,6 +28,7 @@ from helpers import log
 
 
 def init():
+    """Initializes the LEDs and Wifi AP."""
     log.breakline()
     log.write("starting periodic record")
     leds.power_on()
@@ -32,17 +36,34 @@ def init():
 
 
 def loop():
+    """Record and split videos.
+
+    While it is recording time (see status.py), starts recording videos, splits them
+    every interval (see config.py), captures a new preview image and stops recording
+    after recording time ends.
+
+    """
     if status.record_time():
         camera.start_recording()
         camera.split_if_interval_ends()
         camera.preview()
-        camera.wait_recording(0.5)
     else:
         camera.stop_recording()
         sleep(0.5)
 
 
 def record():
+    """Run init and record loop.
+
+    Initializes the LEDs ans Wifi AP.
+
+    While it is recording time (see status.py), starts recording videos, splits them
+    every interval (see config.py), captures a new preview image and stops recording
+    after recording time ends.
+
+    Stops everthing by keyboard interrupt (Ctrl+C).
+
+    """
     try:
         init()
 
