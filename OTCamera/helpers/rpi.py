@@ -85,7 +85,6 @@ def reboot():
         n=None,
         background=True,
     )
-    log.traceback()
     log.write("Reboot", False)
     log.breakline()
     log.closefile()
