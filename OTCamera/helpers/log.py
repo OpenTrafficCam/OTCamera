@@ -35,8 +35,8 @@ def write(msg, level="info", reboot=True):
     if level == "DEBUG":
         if not DEBUG:
             return
-    msg = "{t} {level}: {msg}".format(t=name.current_dt(), level=level.upper(), msg=msg)
-    __write(msg, reboot)
+    msg = "{t} {level}: {msg}".format(t=name._current_dt(), level=level.upper(), msg=msg)
+    _write(msg, reboot)
 
 
 def breakline(reboot=True):
@@ -48,7 +48,7 @@ def breakline(reboot=True):
     """
 
     msg = "\n############################\n"
-    __write(msg)
+    _write(msg)
 
 
 def otc():
@@ -57,12 +57,12 @@ def otc():
     """
 
     otclogo = text2art("OpenTrafficCam")
-    __write(otclogo)
+    _write(otclogo)
     otcamera = text2art("OTCamera")
-    __write(otcamera)
+    _write(otcamera)
 
 
-def __write(msg, reboot=True):
+def _write(msg, reboot=True):
     """
     Takes a message, adds date and time and writes it to a logfile (name.log).
     If msg is "#" date and time is not added and a series of '###' is written in the
