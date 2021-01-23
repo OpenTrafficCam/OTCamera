@@ -21,6 +21,7 @@ All the configuration of OTCamera is done here.
 
 import socket
 
+# TODO: #49 use docstrings to describe the variables
 # Turn debug mode on to get addition log entries
 DEBUG = False
 
