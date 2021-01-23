@@ -1,20 +1,27 @@
-# OTCamera helpers to log information
-# Copyright (C) 2020 OpenTrafficCam Contributors
-# <https://github.com/OpenTrafficCam
+"""OTCamera helper for logging.
+
+Open a logfile, based on the name.log and write a message to it. Also prints all
+messages.
+
+Use log.write(msg) to write any message, log.breakline() to write a single line of #
+or log.otc() to log and print a OpenTrafficCam logo.
+
+"""
+# Copyright (C) 2021 OpenTrafficCam Contributors
+# <https://github.com/OpenTrafficCam>
 # <team@opentrafficcam.org>
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+# This program is free software: you can redistribute it and/or modify it under the
+# terms of the GNU General Public License as published by the Free Software Foundation,
+# either version 3 of the License, or (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+
+# PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+# You should have received a copy of the GNU General Public License along with this
+# program.  If not, see <https://www.gnu.org/licenses/>.
+
 
 from config import DEBUG
 from helpers import name
@@ -22,40 +29,39 @@ from art import text2art
 
 
 def write(msg, level="info", reboot=True):
-    """
-    Takes a message, adds level, date and time and writes it to a logfile (name.log).
+    """Write any message to logfile.
+
+    Takes a message, adds date and time and writes it to a logfile (name.log).
 
     Args:
         msg (str): Message to be written.
         level (str): either "debug", "info", "warning", "error", "exception"
         reboot (bool, optional): Perform reboot if logging fails. Defaults to True.
     """
-
     level = level.upper()
     if level == "DEBUG":
         if not DEBUG:
             return
-    msg = "{t} {level}: {msg}".format(t=name._current_dt(), level=level.upper(), msg=msg)
+    msg = "{t} {level}: {msg}".format(
+        t=name._current_dt(), level=level.upper(), msg=msg
+    )
     _write(msg, reboot)
 
 
 def breakline(reboot=True):
-    """
+    """Write a breakline.
+
     Write a breakline containing several # to the logfile.
 
     Args:
         reboot (bool, optional): Perform reboot if logging fails. Defaults to True.
     """
-
     msg = "\n############################\n"
     _write(msg)
 
 
 def otc():
-    """
-    Write a OTC logo to the logfile.
-    """
-
+    """Generate a ASCII logo and write it to the logfile."""
     otclogo = text2art("OpenTrafficCam")
     _write(otclogo)
     otcamera = text2art("OTCamera")
@@ -63,36 +69,25 @@ def otc():
 
 
 def _write(msg, reboot=True):
-    """
-    Takes a message, adds date and time and writes it to a logfile (name.log).
-    If msg is "#" date and time is not added and a series of '###' is written in the
-    log.
-
-    Args:
-        msg (str): Message to be written. Use "#" to add a break.
-        reboot (bool, optional): Perform reboot if logging fails. Defaults to True.
-    """
-
     print(msg)
     logfile.write(msg + "\n")
     logfile.flush()
 
 
 def closefile():
-    """
-    Flush and close the logfile.
-    """
+    """Flush and close the logfile."""
     logfile.flush()
     logfile.close()
 
 
-def traceback():
-    """
-    Write the traceback message to the logfile.
-    """
-    # TODO: #11 Test traceback function.
-    traceback.print_exc(file=logfile)
-    logfile.write("\n")
+# TODO: #48 implement traceback handling and logging.#
+# def _traceback():
+#     """
+#     Write the traceback message to the logfile.
+#     """
+#     # TODO: #11 Test traceback function.
+#     traceback.print_exc(file=logfile)
+#     logfile.write("\n")
 
 
 logfile = open(name.log(), "a")
