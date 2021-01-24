@@ -24,4 +24,6 @@ def main():
     window.close()
 
 
+# BUG: whole process is killed when closing browser tab
+
 print("Program terminating normally")
