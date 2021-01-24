@@ -1,0 +1,1220 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+      <link rel="shortcut icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-6.2.5">
+    
+    
+      
+        <title>/helpers - OTCamera API Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.15aa0b43.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.75751829.min.css">
+        
+      
+    
+    
+    
+      
+    
+    
+    
+    
+      
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="" data-md-color-accent="">
+      
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#helpers_1" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header-nav md-grid" aria-label="Header">
+    <a href=".." title="OTCamera API Documentation" class="md-header-nav__button md-logo" aria-label="OTCamera API Documentation">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M24 5.25a.75.75 0 00-1.136-.643L16.5 8.425V6.25a1.75 1.75 0 00-1.75-1.75h-13A1.75 1.75 0 000 6.25v11C0 18.216.784 19 1.75 19h13a1.75 1.75 0 001.75-1.75v-2.175l6.364 3.818A.75.75 0 0024 18.25v-13zm-7.5 8.075l6 3.6V6.575l-6 3.6v3.15zM15 9.75v-3.5a.25.25 0 00-.25-.25h-13a.25.25 0 00-.25.25v11c0 .138.112.25.25.25h13a.25.25 0 00.25-.25v-7.5z"/></svg>
+
+    </a>
+    <label class="md-header-nav__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2z"/></svg>
+    </label>
+    <div class="md-header-nav__title" data-md-component="header-title">
+      <div class="md-header-nav__ellipsis">
+        <div class="md-header-nav__topic">
+          <span class="md-ellipsis">
+            OTCamera API Documentation
+          </span>
+        </div>
+        <div class="md-header-nav__topic">
+          <span class="md-ellipsis">
+            
+              /helpers
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      <label class="md-header-nav__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0116 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 019.5 16 6.5 6.5 0 013 9.5 6.5 6.5 0 019.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+      </label>
+      
+<div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" data-md-state="active" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0116 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 019.5 16 6.5 6.5 0 013 9.5 6.5 6.5 0 019.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+      </label>
+      <button type="reset" class="md-search__icon md-icon" aria-label="Clear" data-md-component="search-reset" tabindex="-1">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
+      </button>
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header-nav__source">
+        
+<a href="https://github.com/OpenTrafficCam/OTCamera/" title="Go to repository" class="md-source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    OpenTrafficCam/OTCamera
+  </div>
+</a>
+      </div>
+    
+  </nav>
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="OTCamera API Documentation" class="md-nav__button md-logo" aria-label="OTCamera API Documentation">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M24 5.25a.75.75 0 00-1.136-.643L16.5 8.425V6.25a1.75 1.75 0 00-1.75-1.75h-13A1.75 1.75 0 000 6.25v11C0 18.216.784 19 1.75 19h13a1.75 1.75 0 001.75-1.75v-2.175l6.364 3.818A.75.75 0 0024 18.25v-13zm-7.5 8.075l6 3.6V6.575l-6 3.6v3.15zM15 9.75v-3.5a.25.25 0 00-.25-.25h-13a.25.25 0 00-.25.25v11c0 .138.112.25.25.25h13a.25.25 0 00.25-.25v-7.5z"/></svg>
+
+    </a>
+    OTCamera API Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      
+<a href="https://github.com/OpenTrafficCam/OTCamera/" title="Go to repository" class="md-source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    OpenTrafficCam/OTCamera
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        Home
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../record/" class="md-nav__link">
+        record.py
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../config/" class="md-nav__link">
+        config.py
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../status/" class="md-nav__link">
+        status.py
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          /helpers
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        /helpers
+      </a>
+      
+        
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#helpers" class="md-nav__link">
+    helpers
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#helpers.filesystem" class="md-nav__link">
+    filesystem
+  </a>
+  
+    <nav class="md-nav" aria-label="filesystem">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#helpers.filesystem.delete_old_files" class="md-nav__link">
+    delete_old_files()
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#helpers.log" class="md-nav__link">
+    log
+  </a>
+  
+    <nav class="md-nav" aria-label="log">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#helpers.log.breakline" class="md-nav__link">
+    breakline()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#helpers.log.closefile" class="md-nav__link">
+    closefile()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#helpers.log.otc" class="md-nav__link">
+    otc()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#helpers.log.write" class="md-nav__link">
+    write()
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#helpers.name" class="md-nav__link">
+    name
+  </a>
+  
+    <nav class="md-nav" aria-label="name">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#helpers.name.annotate" class="md-nav__link">
+    annotate()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#helpers.name.log" class="md-nav__link">
+    log()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#helpers.name.preview" class="md-nav__link">
+    preview()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#helpers.name.video" class="md-nav__link">
+    video()
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#helpers.rpi" class="md-nav__link">
+    rpi
+  </a>
+  
+    <nav class="md-nav" aria-label="rpi">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#helpers.rpi.lowbattery" class="md-nav__link">
+    lowbattery()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#helpers.rpi.reboot" class="md-nav__link">
+    reboot()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#helpers.rpi.shutdown" class="md-nav__link">
+    shutdown()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#helpers.rpi.wifi" class="md-nav__link">
+    wifi()
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+      
+
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../hardware/" class="md-nav__link">
+        /hardware
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          <div class="md-content">
+            <article class="md-content__inner md-typeset">
+              
+                
+                  <a href="https://github.com/OpenTrafficCam/OTCamera/edit/master/docs/helpers.md" title="Edit this page" class="md-content__button md-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"/></svg>
+                  </a>
+                
+                
+                <h1 id="helpers_1">/helpers</h1>
+<div class="doc doc-object doc-module">
+<h2 class="hidden-toc" id="helpers" style="visibility: hidden; position: absolute;">
+        </h2>
+<div class="doc doc-contents first">
+<div class="doc doc-children">
+<div class="doc doc-object doc-module">
+<h2 class="doc doc-heading" id="helpers.filesystem">
+
+        <code>filesystem</code>
+
+
+
+      </h2>
+<div class="doc doc-contents ">
+<p>OTCamera helper fo filesystem stuff.</p>
+<p>Check if enough filespace is available and delete old files until it's enough.</p>
+<div class="doc doc-children">
+<div class="doc doc-object doc-function">
+<h3 class="doc doc-heading" id="helpers.filesystem.delete_old_files">
+
+<code class="highlight language-python"><span class="n">delete_old_files</span><span class="p">()</span></code>
+
+
+      </h3>
+<div class="doc doc-contents ">
+<p>Delete old files until enough space available.</p>
+<p>Checks if enough space (config.MINFREESPACE) is a availabe to save video files.
+If not, deletes the oldest files in config.VIDEOPATH one after another until enough
+space is available on disk.</p>
+<details class="quote">
+          <summary>Source code in <code>helpers/filesystem.py</code></summary>
+          <div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="nf">delete_old_files</span><span class="p">():</span>
+    <span class="sd">"""Delete old files until enough space available.</span>
+
+<span class="sd">    Checks if enough space (config.MINFREESPACE) is a availabe to save video files.</span>
+<span class="sd">    If not, deletes the oldest files in config.VIDEOPATH one after another until enough</span>
+<span class="sd">    space is available on disk.</span>
+
+<span class="sd">    """</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">"delete old file"</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="s2">"debug"</span><span class="p">)</span>
+    <span class="n">minfreespace</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">MINFREESPACE</span> <span class="o">*</span> <span class="mi">1024</span> <span class="o">*</span> <span class="mi">1024</span> <span class="o">*</span> <span class="mi">1024</span>
+    <span class="n">free_space</span> <span class="o">=</span> <span class="n">psutil</span><span class="o">.</span><span class="n">disk_usage</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">VIDEOPATH</span><span class="p">)</span><span class="o">.</span><span class="n">free</span>
+    <span class="n">enough_space</span> <span class="o">=</span> <span class="n">free_space</span> <span class="o">&gt;</span> <span class="n">minfreespace</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">"free space: </span><span class="si">{fs}</span><span class="s2">"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fs</span><span class="o">=</span><span class="n">free_space</span><span class="p">),</span> <span class="n">level</span><span class="o">=</span><span class="s2">"DEBUG"</span><span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">"min space: </span><span class="si">{ms}</span><span class="s2">"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ms</span><span class="o">=</span><span class="n">minfreespace</span><span class="p">),</span> <span class="n">level</span><span class="o">=</span><span class="s2">"DEBUG"</span><span class="p">)</span>
+    <span class="k">while</span> <span class="ow">not</span> <span class="n">enough_space</span><span class="p">:</span>
+        <span class="n">oldest_video</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">VIDEOPATH</span><span class="p">),</span> <span class="n">key</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getctime</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">VIDEOPATH</span> <span class="o">+</span> <span class="n">oldest_video</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">breakline</span><span class="p">()</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">"Deleted "</span> <span class="o">+</span> <span class="n">oldest_video</span><span class="p">)</span>
+        <span class="n">free_space</span> <span class="o">=</span> <span class="n">psutil</span><span class="o">.</span><span class="n">disk_usage</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)</span><span class="o">.</span><span class="n">free</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">"free space: </span><span class="si">{fs}</span><span class="s2">"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fs</span><span class="o">=</span><span class="n">free_space</span><span class="p">),</span> <span class="n">level</span><span class="o">=</span><span class="s2">"debug"</span><span class="p">)</span>
+        <span class="n">enough_space</span> <span class="o">=</span> <span class="n">free_space</span> <span class="o">&gt;</span> <span class="n">minfreespace</span>
+</code></pre>
+</div>
+</details>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="doc doc-object doc-module">
+<h2 class="doc doc-heading" id="helpers.log">
+
+        <code>log</code>
+
+
+
+      </h2>
+<div class="doc doc-contents ">
+<p>OTCamera helper for logging.</p>
+<p>Open a logfile, based on the name.log and write a message to it. Also prints all
+messages.</p>
+<p>Use log.write(msg) to write any message, log.breakline() to write a single line of #
+or log.otc() to log and print a OpenTrafficCam logo.</p>
+<div class="doc doc-children">
+<div class="doc doc-object doc-function">
+<h3 class="doc doc-heading" id="helpers.log.breakline">
+
+<code class="highlight language-python"><span class="n">breakline</span><span class="p">(</span><span class="n">reboot</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></code>
+
+
+      </h3>
+<div class="doc doc-contents ">
+<p>Write a breakline.</p>
+<p>Write a breakline containing several # to the logfile.</p>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>reboot</code></td>
+<td><code>bool</code></td>
+<td>
+<p>Perform reboot if logging fails. Defaults to True.</p>
+</td>
+<td><code>True</code></td>
+</tr>
+</tbody>
+</table>
+<details class="quote">
+          <summary>Source code in <code>helpers/log.py</code></summary>
+          <div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="nf">breakline</span><span class="p">(</span><span class="n">reboot</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">"""Write a breakline.</span>
+
+<span class="sd">    Write a breakline containing several # to the logfile.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        reboot (bool, optional): Perform reboot if logging fails. Defaults to True.</span>
+<span class="sd">    """</span>
+    <span class="n">msg</span> <span class="o">=</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">############################</span><span class="se">\n</span><span class="s2">"</span>
+    <span class="n">_write</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+</code></pre>
+</div>
+</details>
+</div>
+</div>
+<div class="doc doc-object doc-function">
+<h3 class="doc doc-heading" id="helpers.log.closefile">
+
+<code class="highlight language-python"><span class="n">closefile</span><span class="p">()</span></code>
+
+
+      </h3>
+<div class="doc doc-contents ">
+<p>Flush and close the logfile.</p>
+<details class="quote">
+          <summary>Source code in <code>helpers/log.py</code></summary>
+          <div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="nf">closefile</span><span class="p">():</span>
+    <span class="sd">"""Flush and close the logfile."""</span>
+    <span class="n">logfile</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+    <span class="n">logfile</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</code></pre>
+</div>
+</details>
+</div>
+</div>
+<div class="doc doc-object doc-function">
+<h3 class="doc doc-heading" id="helpers.log.otc">
+
+<code class="highlight language-python"><span class="n">otc</span><span class="p">()</span></code>
+
+
+      </h3>
+<div class="doc doc-contents ">
+<p>Generate a ASCII logo and write it to the logfile.</p>
+<details class="quote">
+          <summary>Source code in <code>helpers/log.py</code></summary>
+          <div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="nf">otc</span><span class="p">():</span>
+    <span class="sd">"""Generate a ASCII logo and write it to the logfile."""</span>
+    <span class="n">otclogo</span> <span class="o">=</span> <span class="n">text2art</span><span class="p">(</span><span class="s2">"OpenTrafficCam"</span><span class="p">)</span>
+    <span class="n">_write</span><span class="p">(</span><span class="n">otclogo</span><span class="p">)</span>
+    <span class="n">otcamera</span> <span class="o">=</span> <span class="n">text2art</span><span class="p">(</span><span class="s2">"OTCamera"</span><span class="p">)</span>
+    <span class="n">_write</span><span class="p">(</span><span class="n">otcamera</span><span class="p">)</span>
+</code></pre>
+</div>
+</details>
+</div>
+</div>
+<div class="doc doc-object doc-function">
+<h3 class="doc doc-heading" id="helpers.log.write">
+
+<code class="highlight language-python"><span class="n">write</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="s1">'info'</span><span class="p">,</span> <span class="n">reboot</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></code>
+
+
+      </h3>
+<div class="doc doc-contents ">
+<p>Write any message to logfile.</p>
+<p>Takes a message, adds date and time and writes it to a logfile (name.log).</p>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>msg</code></td>
+<td><code>str</code></td>
+<td>
+<p>Message to be written.</p>
+</td>
+<td><em>required</em></td>
+</tr>
+<tr>
+<td><code>level</code></td>
+<td><code>str</code></td>
+<td>
+<p>either "debug", "info", "warning", "error", "exception"</p>
+</td>
+<td><code>'info'</code></td>
+</tr>
+<tr>
+<td><code>reboot</code></td>
+<td><code>bool</code></td>
+<td>
+<p>Perform reboot if logging fails. Defaults to True.</p>
+</td>
+<td><code>True</code></td>
+</tr>
+</tbody>
+</table>
+<details class="quote">
+          <summary>Source code in <code>helpers/log.py</code></summary>
+          <div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="nf">write</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="s2">"info"</span><span class="p">,</span> <span class="n">reboot</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">"""Write any message to logfile.</span>
+
+<span class="sd">    Takes a message, adds date and time and writes it to a logfile (name.log).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        msg (str): Message to be written.</span>
+<span class="sd">        level (str): either "debug", "info", "warning", "error", "exception"</span>
+<span class="sd">        reboot (bool, optional): Perform reboot if logging fails. Defaults to True.</span>
+<span class="sd">    """</span>
+    <span class="n">level</span> <span class="o">=</span> <span class="n">level</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">level</span> <span class="o">==</span> <span class="s2">"DEBUG"</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">DEBUG</span><span class="p">:</span>
+            <span class="k">return</span>
+    <span class="n">msg</span> <span class="o">=</span> <span class="s2">"</span><span class="si">{t}</span><span class="s2"> </span><span class="si">{level}</span><span class="s2">: </span><span class="si">{msg}</span><span class="s2">"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+        <span class="n">t</span><span class="o">=</span><span class="n">name</span><span class="o">.</span><span class="n">_current_dt</span><span class="p">(),</span> <span class="n">level</span><span class="o">=</span><span class="n">level</span><span class="o">.</span><span class="n">upper</span><span class="p">(),</span> <span class="n">msg</span><span class="o">=</span><span class="n">msg</span>
+    <span class="p">)</span>
+    <span class="n">_write</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">reboot</span><span class="p">)</span>
+</code></pre>
+</div>
+</details>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="doc doc-object doc-module">
+<h2 class="doc doc-heading" id="helpers.name">
+
+        <code>name</code>
+
+
+
+      </h2>
+<div class="doc doc-contents ">
+<p>OTCamera helpers for (file)names.</p>
+<p>Generates strings for use in different modules. For example the logfilename or
+videofilename or the string to annotate the video.</p>
+<div class="doc doc-children">
+<div class="doc doc-object doc-function">
+<h3 class="doc doc-heading" id="helpers.name.annotate">
+
+<code class="highlight language-python"><span class="n">annotate</span><span class="p">()</span></code>
+
+
+      </h3>
+<div class="doc doc-contents ">
+<p>String to annotate video.</p>
+<p>Text to be added as annotation to video footage.
+Contains a Prefix and current datetime.</p>
+<p><strong>Returns:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>str</code></td>
+<td>
+<p>annotation text</p>
+</td>
+</tr>
+</tbody>
+</table>
+<details class="quote">
+          <summary>Source code in <code>helpers/name.py</code></summary>
+          <div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="nf">annotate</span><span class="p">():</span>
+    <span class="sd">"""String to annotate video.</span>
+
+<span class="sd">    Text to be added as annotation to video footage.</span>
+<span class="sd">    Contains a Prefix and current datetime.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        str: annotation text</span>
+<span class="sd">    """</span>
+    <span class="n">time_str</span> <span class="o">=</span> <span class="n">dt</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">PREFIX</span> <span class="o">+</span> <span class="s2">" </span><span class="si">%d</span><span class="s2">.%m.%Y %H:%M:%S"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">time_str</span>
+</code></pre>
+</div>
+</details>
+</div>
+</div>
+<div class="doc doc-object doc-function">
+<h3 class="doc doc-heading" id="helpers.name.log">
+
+<code class="highlight language-python"><span class="n">log</span><span class="p">()</span></code>
+
+
+      </h3>
+<div class="doc doc-contents ">
+<p>Filename of logfile.</p>
+<p>Path incl. filename where logfile is saved.</p>
+<p><strong>Returns:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>str</code></td>
+<td>
+<p>filename for log</p>
+</td>
+</tr>
+</tbody>
+</table>
+<details class="quote">
+          <summary>Source code in <code>helpers/name.py</code></summary>
+          <div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="nf">log</span><span class="p">():</span>
+    <span class="sd">"""Filename of logfile.</span>
+
+<span class="sd">    Path incl. filename where logfile is saved.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        str: filename for log</span>
+<span class="sd">    """</span>
+    <span class="n">filename</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">VIDEOPATH</span> <span class="o">+</span> <span class="n">config</span><span class="o">.</span><span class="n">PREFIX</span> <span class="o">+</span> <span class="s2">"_"</span> <span class="o">+</span> <span class="n">_current_dt</span><span class="p">()</span> <span class="o">+</span> <span class="s2">".log"</span>
+    <span class="k">return</span> <span class="n">filename</span>
+</code></pre>
+</div>
+</details>
+</div>
+</div>
+<div class="doc doc-object doc-function">
+<h3 class="doc doc-heading" id="helpers.name.preview">
+
+<code class="highlight language-python"><span class="n">preview</span><span class="p">()</span></code>
+
+
+      </h3>
+<div class="doc doc-contents ">
+<p>Filename for preview image.</p>
+<p>Path incl. filename where preview file is saved.</p>
+<p><strong>Returns:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>str</code></td>
+<td>
+<p>filename for preview</p>
+</td>
+</tr>
+</tbody>
+</table>
+<details class="quote">
+          <summary>Source code in <code>helpers/name.py</code></summary>
+          <div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="nf">preview</span><span class="p">():</span>
+    <span class="sd">"""Filename for preview image.</span>
+
+<span class="sd">    Path incl. filename where preview file is saved.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        str: filename for preview</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">config</span><span class="o">.</span><span class="n">PREVIEWPATH</span>
+</code></pre>
+</div>
+</details>
+</div>
+</div>
+<div class="doc doc-object doc-function">
+<h3 class="doc doc-heading" id="helpers.name.video">
+
+<code class="highlight language-python"><span class="n">video</span><span class="p">()</span></code>
+
+
+      </h3>
+<div class="doc doc-contents ">
+<p>Filename of Video.</p>
+<p>Path incl. filename where videos are saved to, based on hostname and
+current date and time.</p>
+<p><strong>Returns:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>str</code></td>
+<td>
+<p>filename for video</p>
+</td>
+</tr>
+</tbody>
+</table>
+<details class="quote">
+          <summary>Source code in <code>helpers/name.py</code></summary>
+          <div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="nf">video</span><span class="p">():</span>
+    <span class="sd">"""Filename of Video.</span>
+
+<span class="sd">    Path incl. filename where videos are saved to, based on hostname and</span>
+<span class="sd">    current date and time.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        str: filename for video</span>
+<span class="sd">    """</span>
+    <span class="n">filename</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">VIDEOPATH</span> <span class="o">+</span> <span class="n">config</span><span class="o">.</span><span class="n">PREFIX</span> <span class="o">+</span> <span class="s2">"_"</span> <span class="o">+</span> <span class="n">_current_dt</span><span class="p">()</span> <span class="o">+</span> <span class="s2">".h264"</span>
+    <span class="k">return</span> <span class="n">filename</span>
+</code></pre>
+</div>
+</details>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="doc doc-object doc-module">
+<h2 class="doc doc-heading" id="helpers.rpi">
+
+        <code>rpi</code>
+
+
+
+      </h2>
+<div class="doc doc-contents ">
+<p>OTCamera helpers to control the RPi interfaces.</p>
+<p>Contains all functions to control the Raspberry Pi itself.</p>
+<div class="doc doc-children">
+<div class="doc doc-object doc-function">
+<h3 class="doc doc-heading" id="helpers.rpi.lowbattery">
+
+<code class="highlight language-python"><span class="n">lowbattery</span><span class="p">()</span></code>
+
+
+      </h3>
+<div class="doc doc-contents ">
+<p>Shutdown if battery is low.</p>
+<p>Shuts down the Raspberry Pi if called and writes a message to the logfile.</p>
+<details class="quote">
+          <summary>Source code in <code>helpers/rpi.py</code></summary>
+          <div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="nf">lowbattery</span><span class="p">():</span>
+    <span class="sd">"""Shutdown if battery is low.</span>
+
+<span class="sd">    Shuts down the Raspberry Pi if called and writes a message to the logfile.</span>
+
+<span class="sd">    """</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">"Low Battery"</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+    <span class="n">camera</span><span class="o">.</span><span class="n">stop_recording</span><span class="p">()</span>
+    <span class="n">status</span><span class="o">.</span><span class="n">shutdownactive</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">breakline</span><span class="p">()</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">"Shutdown"</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">breakline</span><span class="p">()</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">closefile</span><span class="p">()</span>
+    <span class="n">call</span><span class="p">(</span><span class="s2">"sudo shutdown -h -t 0"</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</code></pre>
+</div>
+</details>
+</div>
+</div>
+<div class="doc doc-object doc-function">
+<h3 class="doc doc-heading" id="helpers.rpi.reboot">
+
+<code class="highlight language-python"><span class="n">reboot</span><span class="p">()</span></code>
+
+
+      </h3>
+<div class="doc doc-contents ">
+<p>Reboot the Raspberry Pi.</p>
+<p>Reboots the Raspberry Pi if any expection is raised.
+Tries to close the camera object and writes to logfile.</p>
+<details class="quote">
+          <summary>Source code in <code>helpers/rpi.py</code></summary>
+          <div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="nf">reboot</span><span class="p">():</span>
+    <span class="sd">"""Reboot the Raspberry Pi.</span>
+
+<span class="sd">    Reboots the Raspberry Pi if any expection is raised.</span>
+<span class="sd">    Tries to close the camera object and writes to logfile.</span>
+
+<span class="sd">    """</span>
+    <span class="n">status</span><span class="o">.</span><span class="n">shutdownactive</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">status</span><span class="o">.</span><span class="n">noblink</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">leds</span><span class="o">.</span><span class="n">power</span><span class="o">.</span><span class="n">blink</span><span class="p">(</span>
+        <span class="n">on_time</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+        <span class="n">off_time</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+        <span class="n">fade_in_time</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">fade_out_time</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">n</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">background</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">"Reboot"</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">breakline</span><span class="p">()</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">closefile</span><span class="p">()</span>
+    <span class="n">camera</span><span class="o">.</span><span class="n">stop_recording</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">config</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">:</span>
+        <span class="n">call</span><span class="p">(</span><span class="s2">"sudo reboot"</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</code></pre>
+</div>
+</details>
+</div>
+</div>
+<div class="doc doc-object doc-function">
+<h3 class="doc doc-heading" id="helpers.rpi.shutdown">
+
+<code class="highlight language-python"><span class="n">shutdown</span><span class="p">()</span></code>
+
+
+      </h3>
+<div class="doc doc-contents ">
+<p>Shutdown the Raspberry Pi.</p>
+<p>Shuts down the Raspberry Pi if the power button is still pressed after blink ends
+(2 seconds).
+Tries to stop and close the camera object.
+Writes messages to the logfile.</p>
+<details class="quote">
+          <summary>Source code in <code>helpers/rpi.py</code></summary>
+          <div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="nf">shutdown</span><span class="p">():</span>
+    <span class="sd">"""Shutdown the Raspberry Pi.</span>
+
+<span class="sd">    Shuts down the Raspberry Pi if the power button is still pressed after blink ends</span>
+<span class="sd">    (2 seconds).</span>
+<span class="sd">    Tries to stop and close the camera object.</span>
+<span class="sd">    Writes messages to the logfile.</span>
+
+<span class="sd">    """</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">"Shutdown by button in 2s"</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+    <span class="n">status</span><span class="o">.</span><span class="n">noblink</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">leds</span><span class="o">.</span><span class="n">power</span><span class="o">.</span><span class="n">blink</span><span class="p">(</span>
+        <span class="n">on_time</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+        <span class="n">off_time</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+        <span class="n">fade_in_time</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">fade_out_time</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">n</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
+        <span class="n">background</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">leds</span><span class="o">.</span><span class="n">power</span><span class="o">.</span><span class="n">on</span><span class="p">()</span>
+    <span class="n">leds</span><span class="o">.</span><span class="n">wifi</span><span class="o">.</span><span class="n">off</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">buttons</span><span class="o">.</span><span class="n">power</span><span class="o">.</span><span class="n">is_pressed</span><span class="p">:</span>
+        <span class="n">status</span><span class="o">.</span><span class="n">noblink</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">"Shutdown cancelled"</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="k">return</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">status</span><span class="o">.</span><span class="n">shutdownactive</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">camera</span><span class="o">.</span><span class="n">stop_recording</span><span class="p">()</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">breakline</span><span class="p">()</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">"Shutdown"</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">breakline</span><span class="p">()</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">closefile</span><span class="p">()</span>
+    <span class="n">call</span><span class="p">(</span><span class="s2">"sudo shutdown -h -t 0"</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</code></pre>
+</div>
+</details>
+</div>
+</div>
+<div class="doc doc-object doc-function">
+<h3 class="doc doc-heading" id="helpers.rpi.wifi">
+
+<code class="highlight language-python"><span class="n">wifi</span><span class="p">()</span></code>
+
+
+      </h3>
+<div class="doc doc-contents ">
+<p>Switches the status of the Wifi-AP.</p>
+<p>If status.wifiapon is False, a script is started to turn the AP on.
+If status.wifiapon is True, it stops the AP after config.WIFIDELAY seconds.
+Uses a LED to signalize the status.</p>
+<details class="quote">
+          <summary>Source code in <code>helpers/rpi.py</code></summary>
+          <div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="nf">wifi</span><span class="p">():</span>
+    <span class="sd">"""Switches the status of the Wifi-AP.</span>
+
+<span class="sd">    If status.wifiapon is False, a script is started to turn the AP on.</span>
+<span class="sd">    If status.wifiapon is True, it stops the AP after config.WIFIDELAY seconds.</span>
+<span class="sd">    Uses a LED to signalize the status.</span>
+
+<span class="sd">    """</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">"Wifiswitch"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">buttons</span><span class="o">.</span><span class="n">wifi</span><span class="o">.</span><span class="n">is_pressed</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">status</span><span class="o">.</span><span class="n">wifiapon</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">"Turn WifiAP on"</span><span class="p">)</span>
+        <span class="n">call</span><span class="p">(</span><span class="s2">"sudo /bin/bash /usr/local/bin/wifistart"</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">"WifiAP on"</span><span class="p">)</span>
+        <span class="n">leds</span><span class="o">.</span><span class="n">power</span><span class="o">.</span><span class="n">pulse</span><span class="p">(</span><span class="n">fade_in_time</span><span class="o">=</span><span class="mf">0.25</span><span class="p">,</span> <span class="n">fade_out_time</span><span class="o">=</span><span class="mf">0.25</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">background</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">leds</span><span class="o">.</span><span class="n">wifi</span><span class="o">.</span><span class="n">blink</span><span class="p">(</span><span class="n">on_time</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">off_time</span><span class="o">=</span><span class="mf">4.9</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">background</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">status</span><span class="o">.</span><span class="n">wifiapon</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">elif</span> <span class="ow">not</span> <span class="n">buttons</span><span class="o">.</span><span class="n">wifi</span><span class="o">.</span><span class="n">is_pressed</span> <span class="ow">and</span> <span class="n">status</span><span class="o">.</span><span class="n">wifiapon</span><span class="p">:</span>
+        <span class="n">leds</span><span class="o">.</span><span class="n">power</span><span class="o">.</span><span class="n">pulse</span><span class="p">(</span><span class="n">fade_in_time</span><span class="o">=</span><span class="mf">0.25</span><span class="p">,</span> <span class="n">fade_out_time</span><span class="o">=</span><span class="mf">0.25</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">background</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">config</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">:</span>
+            <span class="n">sleep</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">WIFIDELAY</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">buttons</span><span class="o">.</span><span class="n">wifi</span><span class="o">.</span><span class="n">is_pressed</span> <span class="ow">and</span> <span class="n">status</span><span class="o">.</span><span class="n">wifiapon</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">"Turn WifiAP OFF"</span><span class="p">)</span>
+            <span class="n">call</span><span class="p">(</span><span class="s2">"sudo systemctl stop hostapd.service"</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">call</span><span class="p">(</span><span class="s2">"sudo systemctl stop dnsmasq.service"</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">call</span><span class="p">(</span><span class="s2">"sudo ifconfig uap0 down"</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">"WifiAP OFF"</span><span class="p">)</span>
+            <span class="n">leds</span><span class="o">.</span><span class="n">wifi</span><span class="o">.</span><span class="n">off</span><span class="p">()</span>
+            <span class="n">status</span><span class="o">.</span><span class="n">wifiapon</span> <span class="o">=</span> <span class="kc">False</span>
+</code></pre>
+</div>
+</details>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+                
+                  
+                    
+
+<hr>
+<div class="md-source-date">
+  <small>
+    
+      Last update: 2021-01-24
+    
+  </small>
+</div>
+                  
+                
+              
+              
+                
+
+
+              
+            </article>
+          </div>
+        </div>
+      </main>
+      
+        
+<footer class="md-footer">
+  
+    <div class="md-footer-nav">
+      <nav class="md-footer-nav__inner md-grid" aria-label="Footer">
+        
+          <a href="../status/" class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+            <div class="md-footer-nav__button md-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+            </div>
+            <div class="md-footer-nav__title">
+              <div class="md-ellipsis">
+                <span class="md-footer-nav__direction">
+                  Previous
+                </span>
+                status.py
+              </div>
+            </div>
+          </a>
+        
+        
+          <a href="../hardware/" class="md-footer-nav__link md-footer-nav__link--next" rel="next">
+            <div class="md-footer-nav__title">
+              <div class="md-ellipsis">
+                <span class="md-footer-nav__direction">
+                  Next
+                </span>
+                /hardware
+              </div>
+            </div>
+            <div class="md-footer-nav__button md-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    </div>
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-footer-copyright">
+        
+          <div class="md-footer-copyright__highlight">
+            Copyright &copy; 2021 OpenTrafficCam contributors
+          </div>
+        
+        Made with
+        <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+          Material for MkDocs
+        </a>
+      </div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    
+      <script src="../assets/javascripts/vendor.93c04032.min.js"></script>
+      <script src="../assets/javascripts/bundle.83e5331e.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing"}</script>
+      
+      <script>
+        app = initialize({
+          base: "..",
+          features: ['navigation.sections', 'toc.integrate'],
+          search: Object.assign({
+            worker: "../assets/javascripts/worker/search.8c7e0a7e.min.js"
+          }, typeof search !== "undefined" && search)
+        })
+      </script>
+      
+    
+  </body>
+</html>
