@@ -27,7 +27,7 @@ DEBUG = False
 
 # Hour of day when to start/end recording
 STARTHOUR = 6
-ENDHOUR = 22
+ENDHOUR = 24
 # Interval length in minutes before video splits
 INTERVAL = 15
 # Number of full intervals to record (0=infinit)
@@ -42,7 +42,7 @@ PREFIX = socket.gethostname()
 # path to safe videofiles
 VIDEOPATH = "/home/pi/videos/"
 # path to save preview
-PREVIEWPATH = "/home/pi/preview.jpg"
+PREVIEWPATH = "OTCamera/gui/preview.png"
 
 
 # camera settings
@@ -54,7 +54,7 @@ ROTATION = 180
 
 # video settings
 FORMAT = "h264"
-PREVIEWFORMAT = "jpeg"
+PREVIEWFORMAT = "png"
 RESIZE = (800, 600)
 PROFILE = "high"
 LEVEL = "4"
