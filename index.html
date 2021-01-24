@@ -310,11 +310,20 @@
                 <h1 id="home">Home</h1>
 <p>This is a documentation of all OTCamera modules and configuration variables.
 OTCamera is part of the <a href="https://opentrafficcam.org">OpenTrafficCam</a> project and is used to record videos of traffic over several hours or even days.</p>
-<p>It is build completly automatically using
-<a href="https://www.mkdocs.org/">MkDocs</a> and
-<a href="https://github.com/pawamoy/mkdocstrings">mkdocstrings</a> and
-<a href="https://squidfunk.github.io/mkdocs-material/">Material for MkDocs</a> theme.</p>
 <p>On the left side you can see the main module <a href="record">record</a> along with the <a href="config">config</a> and <a href="status">status</a> module, which contain variables used across the entire code.</p>
+<p>It is build completly automatically using:</p>
+<ul>
+<li><a href="https://www.mkdocs.org/">MkDocs</a> and</li>
+<li><a href="https://github.com/pawamoy/mkdocstrings">mkdocstrings</a> and</li>
+<li><a href="https://squidfunk.github.io/mkdocs-material/">Material for MkDocs</a> theme.</li>
+</ul>
+<p>To work on the docs run the following command to get a live updating server. You have to run it on the <a href="https://opentrafficcam.org/contribute/otcamera">OTCamera dev pi</a>.</p>
+<pre><code class="language-bash">python mkdocs serve
+</code></pre>
+<p>The site will be publicly served as stativ site on github pages.</p>
+<pre><code class="language-bash">python -m mkdocs gh-deploy
+</code></pre>
+<p>This command will build the current site and push it to the OTCamera repository (branch: <a href="https://github.com/OpenTrafficCam/OTCamera/tree/gh-pages">gh-pages</a>).</p>
                 
                   
                     
@@ -323,7 +332,7 @@ OTCamera is part of the <a href="https://opentrafficcam.org">OpenTrafficCam</a> 
 <div class="md-source-date">
   <small>
     
-      Last update: 2021-01-24
+      Last update: 2021-01-25
     
   </small>
 </div>
