@@ -2,3 +2,4 @@
 *.kicad_pcb-bak
 .vscode/.ropeproject/config.py
 .vscode/.ropeproject/objectdb
+site/
