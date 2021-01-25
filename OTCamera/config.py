@@ -22,27 +22,28 @@ All the configuration of OTCamera is done here.
 import socket
 
 # TODO: #49 use docstrings to describe the variables
-# Turn debug mode on to get addition log entries
 DEBUG = False
+"""Turn debug mode on to get addition log entries."""
 
-# Hour of day when to start/end recording
 STARTHOUR = 6
+"""Hour of day when to start recording."""
 ENDHOUR = 22
-# Interval length in minutes before video splits
+"""Hour of day when to end recording."""
 INTERVAL = 15
-# Number of full intervals to record (0=infinit)
+"""Interval length in minutes before video splits."""
 N_INTERVALS = 0
-# Interval between two preview images in seconds
+"""Number of full intervals to record (0=infinit)."""
 PREVIEW_INTERVAL = 5
+"""Interval between two preview images in seconds."""
 
-# free space in GB on sd card before old videos get deleted
 MINFREESPACE = 1
-# prefix for videoname and annotation
+"""free space in GB on sd card before old videos get deleted."""
 PREFIX = socket.gethostname()
-# path to safe videofiles
+"""prefix for videoname and annotation."""
 VIDEOPATH = "/home/pi/videos/"
-# path to save preview
+"""path to safe videofiles."""
 PREVIEWPATH = "/home/pi/preview.jpg"
+"""path to save preview."""
 
 
 # camera settings
