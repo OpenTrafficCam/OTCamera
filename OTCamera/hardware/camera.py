@@ -84,6 +84,16 @@ def _capture():
     log.write("preview captured", level="debug")
 
 
+def capture_calibrationpic():
+    picam.annotate_text = ""
+    picam.capture(
+            name.preview(),
+            format="jpeg",
+            resize=(800,600),
+            use_video_port=True,
+    )
+
+
 def _wait_recording(timeout=0):
     if picam.recording:
         picam.wait_recording(timeout)
