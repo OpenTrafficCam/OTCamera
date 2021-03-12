@@ -8,9 +8,11 @@ import time
 
 # get all calibrationimages from imagefolder
 
-files = glob.glob("/home/pi/cal*.jpg")
+files_cal = glob.glob("/home/pi/cal*.jpg")
 
-files.sort()
+files_cal.sort()
+
+files_pre = glob.glob("/home/pi/pre*.jpg")
 
 
 def main():
@@ -22,55 +24,53 @@ def main():
     # 2 calibration picture
     # 3 list box with list of calibration pictures
 
-    col1 = [[sg.Text("OpenTrafficCam OTCamera")],
-            [sg.Image(filename=None, background_color="grey",
-                      size=(640, 480), key="-PREVIEW-")],
-            [sg.Button("Take picture", key="-TAKE_PICTURE-", size_px=(150, 60))],
-            [sg.Button("Recieve coefficients", key="-GET_COEFFICENT-",
-                       size_px=(150, 60))],
-            [sg.Button("Start calibration",
-                       key="-START_CALIBRATION-", size_px=(150, 60))],
-            [sg.ProgressBar(10000, orientation='h', size=(20, 20), key='progressbar')],
-                       
-            ]
-
-    col2 = [[sg.Text("Calibration")],
-            [sg.Image(filename=None, background_color="grey",
-                      size=(640, 480), key="-CALIBRATEPICTURE-")],
-            [sg.Button("Find chessboardcorners", key="-CALIBRATE-", size_px=(150, 60))],
-            [sg.Button("Stop calibration", key="-STOP_CALIBRATION-",
-                       size_px=(150, 60))],
-            [sg.Button("Delete pictures", key="-DEL_PICTURES-",
-                       size_px=(150, 60))],
-            [sg.Text("", key="-STATUSTEXT-")]
-            ]
-
-    col3 = [[sg.Text("List of calibrated pictures")],
-            [sg.Listbox(values=files, enable_events=True,
-                        size=(40, 15), key="-PICTURE_LIST-")]
-
-            ]
-
     layout = [
-
         [
-            sg.Column(col1),
-
-            sg.Column(col2),
-
-            sg.Column(col3),
-        ]
-
+            sg.Image(
+                filename=None, background_color="grey", size=(640, 480), key="-PREVIEW-"
+            ),
+            sg.Image(
+                filename=None,
+                background_color="grey",
+                size=(640, 480),
+                key="-CALIBRATEPICTURE-",
+            ),
+            sg.Listbox(
+                values=files_cal,
+                enable_events=True,
+                size=(40, 18),
+                key="-PICTURE_LIST-",
+            ),
+        ],
+        [
+            sg.Button("Take picture", key="-TAKE_PICTURE-", size_px=(150, 60)),
+            sg.Button("Find chessboardcorners", key="-CALIBRATE-", size_px=(150, 60)),
+        ],
+        [sg.Text("-------------------------------------------------------------")],
+        [
+            sg.Button(
+                "Start calibration", key="-START_CALIBRATION-", size_px=(150, 60)
+            ),
+            sg.Button("Stop calibration", key="-STOP_CALIBRATION-", size_px=(150, 60)),
+        ],
+        [
+            sg.Button(
+                "Recieve coefficients", key="-GET_COEFFICENT-", size_px=(150, 60)
+            ),
+            sg.Button("Delete pictures", key="-DEL_PICTURES-", size_px=(150, 60)),
+        ],
+        [sg.Text("", key="-STATUSTEXT-")],
     ]
 
-    window = sg.Window("OpenTrafficCam", layout,
-                       web_port=2222, web_start_browser=True)
-    
+    window = sg.Window("OpenTrafficCam", layout, web_port=2222, web_start_browser=True)
+
+    # progress_bar = window.FindElement('progressbar')
+
     global stop
 
     while True:
 
-        event, values = window.read()
+        event, values = window.read(timeout=10)
 
         PREVIEWPATH = "/home/pi/preview{0}.jpg".format(str(i))
 
@@ -89,7 +89,7 @@ def main():
         elif event == "-CALIBRATE-":
 
             # path to save calibration pictures
-            #CALIBRATEPATH = "/home/pi/calibrate{0}.jpg".format(str(i))
+            # CALIBRATEPATH = "/home/pi/calibrate{0}.jpg".format(str(i))
 
             # takes preview picture and draws chessboardlines for image and objpoint
             # save new image to CALIBRATEPATH
@@ -99,13 +99,13 @@ def main():
             try:
                 window["-CALIBRATEPICTURE-"].update(filename=CALIBRATEPATH)
 
-                files.append(CALIBRATEPATH)
+                files_cal.append(CALIBRATEPATH)
 
-                print(files)
+                print(files_cal)
 
                 window["-STATUSTEXT-"].update("Calibration did work")
 
-            # if calibration is successful => count up
+                # if calibration is successful => count up
                 i += 1
 
             except:
@@ -113,10 +113,11 @@ def main():
                 window["-STATUSTEXT-"].update("Calibration did not work")
 
             # updates listbox with new calibration picture
-            window["-PICTURE_LIST-"].update(files)
+            window["-PICTURE_LIST-"].update(files_cal)
 
         elif event == "-GET_COEFFICENT-":
 
+            # eventuell ein bug oder falsch
             FIRSTIMAGE = "/home/pi/preview0.jpg"
 
             calibration.get_coefficients(FIRSTIMAGE)
@@ -153,43 +154,46 @@ def main():
                 window["-PREVIEW-"].update(filename=PREVIEWPATH)
 
                 try:
-                    calibration.show_chessboard_corners(
-                        PREVIEWPATH, CALIBRATEPATH)
+                    calibration.show_chessboard_corners(PREVIEWPATH, CALIBRATEPATH)
 
-                    window["-CALIBRATEPICTURE-"].update(
-                        filename=CALIBRATEPATH)
+                    window["-CALIBRATEPICTURE-"].update(filename=CALIBRATEPATH)
 
-                    files.append(CALIBRATEPATH)
+                    files_cal.append(CALIBRATEPATH)
 
-                    window["-STATUSTEXT-"].update(
-                        "Calibration did work")
+                    # updates listbox with new calibration picture
+                    window["-PICTURE_LIST-"].update(files_cal)
 
-                # if calibration is successful => count up
+                    window["-STATUSTEXT-"].update("Calibration did work")
+
+                    # if calibration is successful => count up
                     i += 1
+
+                    # progress_bar.UpdateBar(i*1)
 
                 except:
 
+                    window["-CALIBRATEPICTURE-"].update(
+                        filename="Calibfirstdraft/fail.png"
+                    )
 
-                    window["-CALIBRATEPICTURE-"].update(filename="Calibfirstdraft/fail.png")
+                    window["-STATUSTEXT-"].update("Calibration did not work")
 
-                    window["-STATUSTEXT-"].update(
-                        "Calibration did not work")
-
-            if event == "-STOP_CALIBRATION-":
-                stop = True
+            if i == 10:
+                window["-STATUSTEXT-"].update("Calibration complete")
 
         elif event == "-DEL_PICTURES-":
 
             try:
-                for file in files:
+                for file in files_cal:
                     os.remove(file)
 
-                window["-PICTURE_LIST-"].update(files)
+                for file in files_pre:
+                    os.remove(file)
+
+                window["-PICTURE_LIST-"].update(files_cal)
             except:
 
-                window["-STATUSTEXT-"].update(
-                    "No files to delete")
-
+                window["-STATUSTEXT-"].update("No pictures to delete")
 
         elif event is None:
             break
@@ -198,6 +202,7 @@ def main():
 
     # print(config.CALIBRATEPICTURELIST)
     # print(calibration.imgpoints)
+
 
 # BUG: whole process is killed when closing browser tab
 
