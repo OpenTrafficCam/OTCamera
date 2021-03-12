@@ -48,11 +48,11 @@ images = glob.glob('*.jpg')
 
 
 
-def show_chessboard_corners(PATH):
-        img = cv.imread(config.PREVIEWPATH)
+def show_chessboard_corners(PATH1, PATH2):
+        img = cv.imread(PATH1)
         gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
         # Find the chess board corners
-        ret, corners = cv.findChessboardCorners(gray, (7,6), None)
+        ret, corners = cv.findChessboardCorners(gray, (11,7), None)
         # If found, add object points, image points (after refining them)
         print(ret)
         if ret == True:
@@ -60,9 +60,9 @@ def show_chessboard_corners(PATH):
             corners2 = cv.cornerSubPix(gray,corners, (11,11), (-1,-1), criteria)
             imgpoints.append(corners)
             # Draw and display the corners
-            cv.drawChessboardCorners(img, (7,6), corners2, ret)
+            cv.drawChessboardCorners(img, (11,7), corners2, ret)
             # exports picture to folder
-            cv.imwrite(PATH, img)
+            cv.imwrite(PATH2, img)
         #     calibratetext = "calibration worked"
 
         #     return calibratetext
@@ -75,9 +75,9 @@ def show_chessboard_corners(PATH):
         #     cv.waitKey(3000)
         # cv.destroyAllWindows()
 
-def get_coefficients():
+def get_coefficients(PATH):
 
-    img = cv.imread(config.PREVIEWPATH)
+    img = cv.imread(PATH)
     gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
 
     ret, mtx, dist, rvecs, tvecs = cv.calibrateCamera(objpoints, imgpoints, gray.shape[::-1], None, None)
