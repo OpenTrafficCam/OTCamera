@@ -1,4 +1,3 @@
-import config
 import PySimpleGUIWeb as sg
 from hardware import camera
 import calibration
@@ -6,10 +5,13 @@ import os
 import glob
 import time
 
+# PySimpleGUIWeb runs only on Python 3. Legacy Python (2.7) is not supported.
+
 # get all calibrationimages from imagefolder
 
 files_cal = glob.glob("/home/pi/cal*.jpg")
 
+# sorts list to display
 files_cal.sort()
 
 files_pre = glob.glob("/home/pi/pre*.jpg")
@@ -17,7 +19,7 @@ files_pre = glob.glob("/home/pi/pre*.jpg")
 
 def main():
 
-    i = 0
+    i = 1
 
     # gui layout with three columns
     # 1 taken picture
@@ -25,6 +27,7 @@ def main():
     # 3 list box with list of calibration pictures
 
     layout = [
+        [sg.Text("Open TrafficCam")],
         [
             sg.Image(
                 filename=None, background_color="grey", size=(640, 480), key="-PREVIEW-"
@@ -41,6 +44,12 @@ def main():
                 size=(40, 18),
                 key="-PICTURE_LIST-",
             ),
+        ],
+        [
+            sg.Text("Chessboardcolumns"),
+            sg.InputText("8", key="-COLUMNS-", size=(2, 1)),
+            sg.Text("Chessboardrows"),
+            sg.InputText("11", key="-ROWS-", size=(2, 1)),
         ],
         [
             sg.Button("Take picture", key="-TAKE_PICTURE-", size_px=(150, 60)),
@@ -62,7 +71,7 @@ def main():
         [sg.Text("", key="-STATUSTEXT-")],
     ]
 
-    window = sg.Window("OpenTrafficCam", layout, web_port=2222, web_start_browser=True)
+    window = sg.Window("", layout, web_port=2222, web_start_browser=True)
 
     # progress_bar = window.FindElement('progressbar')
 
@@ -71,6 +80,10 @@ def main():
     while True:
 
         event, values = window.read(timeout=10)
+
+        column_number = values["-COLUMNS-"]
+
+        row_number = values["-ROWS-"]
 
         PREVIEWPATH = "/home/pi/preview{0}.jpg".format(str(i))
 
@@ -94,14 +107,22 @@ def main():
             # takes preview picture and draws chessboardlines for image and objpoint
             # save new image to CALIBRATEPATH
 
-            calibration.show_chessboard_corners(PREVIEWPATH, CALIBRATEPATH)
+            # default value = 7,11
+            if column_number == "" or row_number == "":
+                column_number = 7
+                row_number = 11
+            else:
+                column_number = int(column_number) - 1
+                row_number = int(row_number) - 1
+
+            calibration.show_chessboard_corners(
+                PREVIEWPATH, CALIBRATEPATH, column_number, row_number
+            )
 
             try:
                 window["-CALIBRATEPICTURE-"].update(filename=CALIBRATEPATH)
 
                 files_cal.append(CALIBRATEPATH)
-
-                print(files_cal)
 
                 window["-STATUSTEXT-"].update("Calibration did work")
 
@@ -110,10 +131,12 @@ def main():
 
             except:
 
+                window["-CALIBRATEPICTURE-"].update(filename="Calibfirstdraft/fail.png")
+
                 window["-STATUSTEXT-"].update("Calibration did not work")
 
-            # updates listbox with new calibration picture
-            window["-PICTURE_LIST-"].update(files_cal)
+                # updates listbox with new calibration picture
+                window["-PICTURE_LIST-"].update(files_cal)
 
         elif event == "-GET_COEFFICENT-":
 
@@ -130,11 +153,21 @@ def main():
 
         elif event == "-START_CALIBRATION-":
 
+            # default value = 7,11
+            if column_number == "" or row_number == "":
+                column_number = 7
+                row_number = 11
+            else:
+                column_number = int(column_number) - 1
+                row_number = int(row_number) - 1
+
             while i <= 10:
 
                 if event == "-STOP_CALIBRATION-":
                     print("Loop stopped")
                     break
+
+                print(column_number, row_number)
 
                 event, values = window.read(timeout=1000)
 
@@ -154,7 +187,9 @@ def main():
                 window["-PREVIEW-"].update(filename=PREVIEWPATH)
 
                 try:
-                    calibration.show_chessboard_corners(PREVIEWPATH, CALIBRATEPATH)
+                    calibration.show_chessboard_corners(
+                        PREVIEWPATH, CALIBRATEPATH, column_number, row_number
+                    )
 
                     window["-CALIBRATEPICTURE-"].update(filename=CALIBRATEPATH)
 
@@ -166,9 +201,8 @@ def main():
                     window["-STATUSTEXT-"].update("Calibration did work")
 
                     # if calibration is successful => count up
-                    i += 1
 
-                    # progress_bar.UpdateBar(i*1)
+                    i += 1
 
                 except:
 
@@ -178,19 +212,24 @@ def main():
 
                     window["-STATUSTEXT-"].update("Calibration did not work")
 
-            if i == 10:
-                window["-STATUSTEXT-"].update("Calibration complete")
+                if i == 10:
+                    window["-STATUSTEXT-"].update("Calibration complete")
 
         elif event == "-DEL_PICTURES-":
 
             try:
-                for file in files_cal:
-                    os.remove(file)
+                for file_cal in files_cal:
+                    os.remove(file_cal)
 
-                for file in files_pre:
-                    os.remove(file)
+                window["-PICTURE_LIST-"].update()
+            except:
 
-                window["-PICTURE_LIST-"].update(files_cal)
+                window["-STATUSTEXT-"].update("No pictures to delete")
+
+            try:
+                for file_pre in files_pre:
+                    os.remove(file_pre)
+
             except:
 
                 window["-STATUSTEXT-"].update("No pictures to delete")
