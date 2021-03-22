@@ -1,7 +1,5 @@
 """OTCamera config variables.
-
 All the configuration of OTCamera is done here.
-
 """
 # Copyright (C) 2021 OpenTrafficCam Contributors
 # <https://github.com/OpenTrafficCam>
@@ -22,41 +20,42 @@ All the configuration of OTCamera is done here.
 import socket
 
 # TODO: #49 use docstrings to describe the variables
+# Turn debug mode on to get addition log entries
 DEBUG = False
-"""Turn debug mode on to get addition log entries."""
 
+# Hour of day when to start/end recording
 STARTHOUR = 6
-"""Hour of day when to start recording."""
-ENDHOUR = 22
-"""Hour of day when to end recording."""
+ENDHOUR = 24
+# Interval length in minutes before video splits
 INTERVAL = 15
-"""Interval length in minutes before video splits."""
+# Number of full intervals to record (0=infinit)
 N_INTERVALS = 0
-"""Number of full intervals to record (0=infinit)."""
+# Interval between two preview images in seconds
 PREVIEW_INTERVAL = 5
-"""Interval between two preview images in seconds."""
 
+# free space in GB on sd card before old videos get deleted
 MINFREESPACE = 1
-"""free space in GB on sd card before old videos get deleted."""
+# prefix for videoname and annotation
 PREFIX = socket.gethostname()
-"""prefix for videoname and annotation."""
+# path to safe videofiles
 VIDEOPATH = "/home/pi/videos/"
-"""path to safe videofiles."""
-PREVIEWPATH = "/home/pi/preview.jpg"
-"""path to save preview."""
+# path to save preview
 
+PREVIEWPATH = "/home/pi/preview.jpg"
+
+PARAMETERPATH = "/home/pi/camerapara{0}_{1}_{2}.json"
 
 # camera settings
 FPS = 20
-RESOLUTION = (1640, 1232)
+RESOLUTION = (1480, 1280)
 EXPOSURE_MODE = "nightpreview"
 DRC_STRENGTH = "high"
-ROTATION = 180
+ROTATION = 0
 
 # video settings
 FORMAT = "h264"
-PREVIEWFORMAT = "jpeg"
-RESIZE = (800, 600)
+PREVIEWFORMAT = "png"
+RESIZE = (640, 480)
 PROFILE = "high"
 LEVEL = "4"
 BITRATE = 600000
