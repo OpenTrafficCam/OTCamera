@@ -1,34 +1,62 @@
 site_name: OTCamera API Documentation
+
 theme:
-  name: "material"
+  name: material
   palette:
-    scheme: slate
-  features:
-    - navigation.sections
-    - toc.integrate
+    scheme: default
   font: false
+  language: en
+  logo: assets/OTC_icon_white.svg
+  favicon: assets/OTC_icon.svg
+  features:
+    - navigation.instant
+    - navigation.tabs
+    - navigation.tabs.sticky
+    # - navigation.sections
+    - navigation.expands
+    # - search.suggest
+    # - search.highlight
   icon:
-    logo: octicons/device-camera-video-24
     repo: fontawesome/brands/github
 
-copyright: Copyright &copy; 2021 OpenTrafficCam contributors
-repo_url: https://github.com/OpenTrafficCam/OTCamera
-repo_name: OpenTrafficCam/OTCamera
+extra_css:
+  - stylesheets/color.css
+  - stylesheets/fonts.css
 
-nav:
-  - index.md
-  - record.md
-  - config.md
-  - status.md
-  - helpers.md
-  - hardware.md
+extra:
+  social:
+    - icon: fontawesome/brands/linkedin
+      link: https://www.linkedin.com/company/opentrafficcam
+      name: OpenTrafficCam on LinkedIn
+    - icon: fontawesome/brands/github
+      link: https://github.com/OpenTrafficCam
+      name: OpenTrafficCam on GitHub
+
+copyright: Copyright &copy; 2020 - 2021 OpenTrafficCam Contributors
+repo_url: https://github.com/OpenTrafficCam/OTDocs
+repo_name: OpenTrafficCam/OTDocs
+edit_uri: edit/master/docs/
+
+markdown_extensions:
+  - toc:
+      permalink: true
+      toc_depth: 3
+  - admonition
+  - pymdownx.details
+  - pymdownx.highlight
+  - pymdownx.superfences
+  - pymdownx.keys
+  # - meta
 
 plugins:
   - search
-  - git-revision-date
+  - git-revision-date-localized:
+      fallback_to_build_date: true
+      type: date
+      timezone: Europe/Berlin
   - mkdocstrings:
       handlers:
-          python:
-              setup_commands:
-                - import sys
-                - sys.path.append("OTCamera")
+        python:
+          setup_commands:
+            - import sys
+            - sys.path.append("OTCamera")
