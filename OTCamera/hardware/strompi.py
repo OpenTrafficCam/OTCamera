@@ -125,7 +125,11 @@ def print_current_config():
     current_config["strompi_sec"] = int(current_config["sp3_time"]) % 100
 
     for conf in current_config:
-        value = current_config[conf].decode(encoding="UTF-8", errors="strict")
+        value = current_config[conf]
+        if type(value) is bytes:
+            value = value.decode(encoding="UTF-8", errors="strict")
+        else:
+            value = str(value)
         print(conf + ": " + value)
 
 
