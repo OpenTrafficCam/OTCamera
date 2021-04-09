@@ -130,7 +130,7 @@ def print_current_config():
             value = value.decode(encoding="UTF-8", errors="strict")
         else:
             value = str(value)
-        print(conf + ": " + value)
+        print(conf + ": " + value.rstrip("\n"))
 
 
 def set_default_config():
