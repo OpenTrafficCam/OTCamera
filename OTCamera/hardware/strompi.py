@@ -111,13 +111,6 @@ def print_current_config():
 
     current_config = _get_current_config()
 
-    current_config["strompi_year"] = int(current_config["sp3_date"]) // 10000
-    current_config["strompi_month"] = int(current_config["sp3_date"]) % 10000 // 100
-    current_config["strompi_day"] = int(current_config["sp3_date"]) % 100
-    current_config["strompi_hour"] = int(current_config["sp3_time"]) // 10000
-    current_config["strompi_min"] = int(current_config["sp3_time"]) % 10000 // 100
-    current_config["strompi_sec"] = int(current_config["sp3_time"]) % 100
-
     for conf in current_config:
         value = current_config[conf]
         if type(value) is bytes:
