@@ -25,8 +25,38 @@ down.
 import serial
 from time import sleep
 
-BREAKS = 0.1
-BREAKL = 0.5
+
+def print_current_config():
+    """Get and print the currently active StromPi configuration."""
+    current_config = _get_current_config()
+
+    for conf in current_config:
+        value = current_config[conf]
+        if type(value) is bytes:
+            value = value.decode(encoding="UTF-8", errors="strict")
+        else:
+            value = str(value)
+        print(conf + ": " + value.rstrip("\n"))
+
+
+def set_default_config():
+    """Sets the default config for StromPi usage in OTC."""
+    config = _default_config()
+    configmap = _configmap()
+
+    serial_port = _open_serial_port()
+    breaks = 0.1
+    breakl = 0.2
+
+    for conf in config:
+        conf_value = str(config[conf])
+        msg = str.encode("set-config " + configmap[conf] + conf_value)
+        serial_port.write(msg)
+        sleep(breaks)
+        serial_port.write(str.encode("\x0D"))
+        sleep(breakl)
+
+    serial_port.close()
 
 
 def _open_serial_port():
@@ -57,12 +87,14 @@ def _get_current_config():
     Returns:
         dict: {config name: value}
     """
+    breaks = 0.1
+    breakl = 0.5
     current_config = {}
     serial_port = _open_serial_port()
     serial_port.write(str.encode("quit"))
-    sleep(BREAKS)
+    sleep(breaks)
     serial_port.write(str.encode("\x0D"))
-    sleep(BREAKL)
+    sleep(breakl)
 
     serial_port.write(str.encode("status-rpi"))
     sleep(1)
@@ -109,39 +141,6 @@ def _get_current_config():
     serial_port.close()
 
     return current_config
-
-
-def print_current_config():
-    """Get and print the currently active StromPi configuration."""
-    current_config = _get_current_config()
-
-    for conf in current_config:
-        value = current_config[conf]
-        if type(value) is bytes:
-            value = value.decode(encoding="UTF-8", errors="strict")
-        else:
-            value = str(value)
-        print(conf + ": " + value.rstrip("\n"))
-
-
-def set_default_config():
-    """Sets the default config for StromPi usage in OTC."""
-    config = _default_config()
-    configmap = _configmap()
-
-    serial_port = _open_serial_port()
-    breakS = 0.1
-    breakL = 0.2
-
-    for conf in config:
-        conf_value = str(config[conf])
-        msg = str.encode("set-config " + configmap[conf] + conf_value)
-        serial_port.write(msg)
-        sleep(breakS)
-        serial_port.write(str.encode("\x0D"))
-        sleep(breakL)
-
-    serial_port.close()
 
 
 def _default_config():
