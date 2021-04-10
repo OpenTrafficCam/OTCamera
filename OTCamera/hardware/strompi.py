@@ -111,15 +111,9 @@ def print_current_config():
 
     current_config = _get_current_config()
 
-    current_config["powerofftime_enabletest"] = (
-        str(current_config["sp3_poweroff_time_enable"], "utf-8").rstrip("\n").zfill(2)
-    )
-    current_config["date"] = int(current_config["sp3_date"])
-
     current_config["strompi_year"] = int(current_config["sp3_date"]) // 10000
     current_config["strompi_month"] = int(current_config["sp3_date"]) % 10000 // 100
     current_config["strompi_day"] = int(current_config["sp3_date"]) % 100
-
     current_config["strompi_hour"] = int(current_config["sp3_time"]) // 10000
     current_config["strompi_min"] = int(current_config["sp3_time"]) % 10000 // 100
     current_config["strompi_sec"] = int(current_config["sp3_time"]) % 100
