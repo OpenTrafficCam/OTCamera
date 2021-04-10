@@ -52,7 +52,11 @@ def _open_serial_port():
 
 
 def _get_current_config():
+    """Open a serial port an retrive current StromPi config values.
 
+    Returns:
+        dict: {config name: value}
+    """
     current_config = {}
     serial_port = _open_serial_port()
     serial_port.write(str.encode("quit"))
@@ -108,7 +112,7 @@ def _get_current_config():
 
 
 def print_current_config():
-
+    """Get and print the currently active StromPi configuration."""
     current_config = _get_current_config()
 
     for conf in current_config:
