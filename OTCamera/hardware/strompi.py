@@ -23,6 +23,7 @@ down.
 # Those parts are licensed under the MIT License.
 
 import serial
+from subprocess import call
 from time import sleep
 
 
@@ -57,6 +58,28 @@ def set_default_config():
         sleep(breakl)
 
     serial_port.close()
+
+
+def shutdown():
+    breaks = 0.1
+    breakl = 0.5
+
+    serial_port = _open_serial_port()
+
+    serial_port.write(str.encode("quit"))
+    sleep(breaks)
+    serial_port.write(str.encode("\x0D"))
+    sleep(breakl)
+
+    serial_port.write(str.encode("poweroff"))
+    sleep(breaks)
+    serial_port.write(str.encode("\x0D"))
+
+    print("sudo shutdown -h now")
+    print("Shutting down...")
+
+    sleep(2)
+    call("sudo shutdown -h -t 0", shell=True)
 
 
 def _open_serial_port():
@@ -151,7 +174,6 @@ def _default_config():
     """
     config = {}
     config["sp3_modus"] = 3  # mUSB -> Battery
-    config["sp3_modusreset"] = 1  # eventually just 1 if modus really changed
     config["sp3_shutdown_enable"] = 0
     config["sp3_shutdown_time"] = 30
     config["sp3_batLevel_shutdown"] = 1  # below 10 %
@@ -164,6 +186,7 @@ def _default_config():
     config["sp3_alarmPoweroff"] = 0  # Power-Off Alarm
     config["sp3_alarm_enable"] = 0  # Wake-Up Alarm
     config["sp3_intervalAlarm"] = 0  # Interval-Alarm
+    config["sp3_modusreset"] = 1  # eventually just 1 if modus really changed
 
     return config
 
@@ -195,4 +218,6 @@ def _configmap():
 
 
 if __name__ == "__main__":
+    print_current_config()
+    set_default_config()
     print_current_config()
