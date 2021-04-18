@@ -84,13 +84,16 @@ def _capture():
     log.write("preview captured", level="debug")
 
 
-def capture_calibrationpic():
+def capture_calibrationpic(PATH, RESOLUTION):
+    # TODO: take resolution from calibration file
+    """"""
     picam.annotate_text = ""
+    picam.resolution = RESOLUTION
     picam.capture(
-            name.preview(),
-            format="jpeg",
-            resize=(800,600),
-            use_video_port=True,
+        PATH,
+        format="jpeg",
+        resize=(800, 600),
+        use_video_port=True,
     )
 
 
@@ -150,19 +153,22 @@ def _new_interval():
     return new_interval
 
 
-def preview():
+def preview(now: bool = False):
     """Capture a preview image.
 
     Captures a new preview image, if the current second matches the preview interval
     configured in config.py and the Wifi AP is turned on (otherwise, a preview would
     be useless).
 
+    Args:
+        now (bool, optional): Generate preview immediately. Defaults to False.
     """
     current_second = dt.now().second
     offset = config.PREVIEW_INTERVAL - 1
     preview_second = (current_second % config.PREVIEW_INTERVAL) == offset
+    time_preview = preview_second and status.preview_on() and status.new_preview
 
-    if preview_second and status.preview_on() and status.new_preview:
+    if now or time_preview:
         log.write("new preview", level="debug")
         _capture()
         status.new_preview = False

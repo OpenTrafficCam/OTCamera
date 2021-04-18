@@ -1,12 +1,14 @@
-from time import strftime
-import numpy as np
-import cv2 as cv
 import glob
-import os
 import json
-from datetime import datetime, date
-import config
+import os
+from datetime import date, datetime
+from pathlib import Path
+from time import strftime
 
+import cv2 as cv
+import numpy as np
+
+import config
 
 K = []
 D = []
@@ -16,18 +18,12 @@ D = []
 criteria = (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 30, 0.001)
 
 
-# 7 und 11 sind die reihen und spalten des Schachbrettes. Stimmen die nicht überein werden keine Parameter berechnet!!!
-
-# TO DO 9,6 REPRESENT ROWS AND COLUMNS!!! PLS CHANGE
-objp = np.zeros((11*7, 3), np.float32)
-objp[:, :2] = np.mgrid[0:7, 0:11].T.reshape(-1, 2) 
-
 # Arrays to store object points and image points from all the images.
 objpoints = []  # 3d point in real world space
 imgpoints = []  # 2d points in image plane.
 
-# change to pathlib
-images = glob.glob('*.jpg')
+
+#images = glob.glob('*.jpg')
 
 hostname = config.PREFIX
 
@@ -35,7 +31,7 @@ hostname = config.PREFIX
 def calibrationfilepath():
 
     # watch out to have the right systemtime
-    curr_date = datetime.now().strftime("date_%Y_%m.%d time_%H%MUhr")
+    curr_date = datetime.now().strftime("date_%Y_%m_%d time_%H%M_Uhr")
 
     resolution = "RES"+str(config.RESOLUTION)
 
@@ -67,7 +63,11 @@ def show_chessboard_corners(inputpath, outputpath, chessboardrows, chessboardcol
     ret, corners = cv.findChessboardCorners(
         gray, (chessboardcolumns, chessboardrows), None)
     # If found, add object points, image points (after refining them)
-    print(ret)
+
+    # 7 und 11 sind die reihen und spalten des Schachbrettes. Stimmen die nicht überein werden keine Parameter berechnet!!!
+    objp = np.zeros((chessboardrows*chessboardcolumns, 3), np.float32)
+    objp[:, :2] = np.mgrid[0:chessboardcolumns, 0:chessboardrows].T.reshape(-1, 2) 
+
     if ret == True:
         objpoints.append(objp*squaresize)
         corners2 = cv.cornerSubPix(

@@ -47,7 +47,7 @@ PARAMETERPATH = "/home/pi/camerapara{0}_{1}_{2}.json"
 
 # camera settings
 FPS = 20
-RESOLUTION = (1480, 1280)
+RESOLUTION = (640, 480)
 EXPOSURE_MODE = "nightpreview"
 DRC_STRENGTH = "high"
 ROTATION = 0
@@ -55,7 +55,7 @@ ROTATION = 0
 # video settings
 FORMAT = "h264"
 PREVIEWFORMAT = "png"
-RESIZE = (640, 480)
+RESIZE = (800, 600)
 PROFILE = "high"
 LEVEL = "4"
 BITRATE = 600000
