@@ -8,10 +8,13 @@ from time import strftime
 import cv2 as cv
 import numpy as np
 
-import config
+from helpers import config
+
+# matrix, distcoef, error
 
 K = []
 D = []
+E = []
 
 
 # termination criteria
@@ -41,16 +44,18 @@ def calibrationfilepath():
 
 
 # saves  distortion coefficients in json-file
-def dumpParams(fpath, curr_date, K, D):
+def dumpParams(fpath, curr_date, K, D, E):
 
     print(fpath)
     data = dict()
     K = K.tolist()
     D = D.tolist()
+    E = E.tolist()
 
     data["INFORMATION"] = [curr_date, hostname, config.RESOLUTION]
     data['K'] = K
     data['D'] = D
+    data['REPROJECTION ERROR'] = E
     to_json = json.dumps(data, indent=4)
     x = open(fpath, 'w')
     x.write(to_json)
@@ -66,7 +71,8 @@ def show_chessboard_corners(inputpath, outputpath, chessboardrows, chessboardcol
 
     # 7 und 11 sind die reihen und spalten des Schachbrettes. Stimmen die nicht überein werden keine Parameter berechnet!!!
     objp = np.zeros((chessboardrows*chessboardcolumns, 3), np.float32)
-    objp[:, :2] = np.mgrid[0:chessboardcolumns, 0:chessboardrows].T.reshape(-1, 2) 
+    objp[:, :2] = np.mgrid[0:chessboardcolumns,
+                           0:chessboardrows].T.reshape(-1, 2)
 
     if ret == True:
         objpoints.append(objp*squaresize)
@@ -92,26 +98,13 @@ def get_coefficients(FIRSTIMAGEPATH):
             objpoints, imgpoints, gray.shape[::-1], None, None)
     except:
         print("not working")
+
     print('camera matrix\n', mtx, '\n')
     print('distorsion matrix\n', dist, '\n')
 
-    dumpParams(fpath, curr_date, mtx, dist)
+    print("ERROR: "+str(ret))
 
+    # store parameter in a dictionary
+    dumpParams(fpath, curr_date, mtx, dist, ret)
 
-# #shows calibrated picture
-# for fname in images:
-#     img = cv.imread(fname)
-#     h,  w = img.shape[:2]
-#     newcameramtx, roi = cv.getOptimalNewCameraMatrix(mtx, dist, (w,h), 1, (w,h))
-
-#     #undistort
-#     dst = cv.undistort(img, mtx, dist, None, newcameramtx)
-
-#     #crop the image
-#     x, y, w, h = roi
-#     dst = dst[y:y+h, x:x+w]
-
-#     #save calibrated picture
-#     cv.imwrite('calibresult.png', dst)
-#     cv.imshow('img', img)
-#     cv.waitKey(10000)
+    return ret

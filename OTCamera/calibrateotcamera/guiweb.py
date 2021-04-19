@@ -1,13 +1,11 @@
 import PySimpleGUIWeb as sg
 from PySimpleGUIWeb.PySimpleGUIWeb import Slider
-import config
 from hardware import camera
 import calibration
 import os
 import glob
 import time
 import re
-import numpy as np
 
 # PySimpleGUIWeb runs only on Python 3. Legacy Python (2.7) is not supported.
 
@@ -62,6 +60,8 @@ def main():
                    "35", key='-SIZE-', size=(2, 1)),
                sg.Text("Total number"), sg.InputText(
                    "25", key='-WANTED_NUMBER-', size=(2, 1)),
+               sg.Text("Reprojection error"), sg.InputText(
+                   "", key='-MEAN_ERROR-', size=(2, 1)),
                sg.Combo(['ZeroCam FishEye', 'HQ Cam 6mm', 'HQ Cam 16mm', 'Waveshare Raspberry Pi Camera (J) Fisheye', 'Joy-it rb-camera-ww2', 'Raspberry Pi Camera Board v2.1 Noir',
                          'Raspberry Pi Camera Board v2.1', 'RPI CAM NOIR MF', 'Joy-it 8mpcir CMOS Farb-Kameramodul', 'Raspberry Pi Camera Board v1.3'], key="-CAMERA-",),
                sg.Combo(values=resolution_combolist_values, key="-RESOLUTION-", size_px=(90, 25))],
@@ -251,12 +251,18 @@ def main():
                 # eventuell ein bug oder falsch
                 FIRSTIMAGE = files_pre[0]
 
+                # finds chessboard corner from all previewpic
+                # caluculates coefficient and dumps parameters
                 for file in files_pre:
 
                     calibration.show_chessboard_corners(
                         file, CALIBRATEPATH, row_number, column_number, squaresize)
 
-                calibration.get_coefficients(FIRSTIMAGE)
+                # insert mean projection error
+
+                reprojection_error = calibration.get_coefficients(FIRSTIMAGE)
+
+                window["-MEAN_ERROR-"].update(str(reprojection_error))
 
             except:
 
@@ -287,14 +293,19 @@ def main():
             # automatically keeps taking and calibrating pictures till a wanted number is met
             # counter is implemented
 
+            window["-PICTURE_LIST-"].update([])
+
             # resets counter to 1
             i = 1
 
-            calibrationpiture_maxnumber = values["-WANTED_NUMBER-"]
+            calibrationpicture_maxnumber = values["-WANTED_NUMBER-"]
 
-            if calibrationpiture_maxnumber == '':
+            if calibrationpicture_maxnumber == '':
 
-                calibrationpiture_maxnumber = 25
+                calibrationpicture_maxnumber = 25
+
+            # convert string to int
+            calibrationpicture_maxnumber = int(calibrationpicture_maxnumber)
 
             # start with an empty list of img and obj points
 
@@ -316,7 +327,7 @@ def main():
             else:
                 squaresize = int(squaresize)/1000
 
-            while i <= calibrationpiture_maxnumber:
+            while i <= calibrationpicture_maxnumber:
 
                 if event == "-STOP_CALIBRATION-":
                     print("Loop stopped")
@@ -393,6 +404,8 @@ def main():
             except:
                 window["-STATUSTEXT-"].update(
                     "No pictures to delete")
+
+            window["-PICTURE_LIST-"].update([])
 
             i = 1
 
