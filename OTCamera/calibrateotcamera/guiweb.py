@@ -14,6 +14,7 @@ import re
 
 # TODO: replace glob with pathlib or import function from helpers
 # TODO: create path for jsonfile to be dumped (now: home pi ==> wanted: home/pi/"calibratefolder")
+# TODO: picture_list event cant find right index number because of findall (numbers in foldername cause unfunctioning)
 
 files_cal = glob.glob("/home/pi/cal*.jpg")
 
@@ -57,15 +58,15 @@ def main():
                sg.Image(filename=None, background_color="grey",
                         size=(640, 480), key="-CALIBRATEPICTURE-"),
                ],
-              [sg.Text("Chessboardcolumns"), sg.InputText("8", key='-COLUMNS-', size=(2, 1)),
+              [sg.Text("Chessboardcolumns"), sg.InputText("8", key='-COLUMNS-', size=(2, 1), justification='center'),
                sg.Text("Chessboardrows"), sg.InputText(
-                   "12", key='-ROWS-', size=(2, 1)),
+                   "12", key='-ROWS-', size=(2, 1), justification='center'),
                sg.Text("Squaresize in mm"), sg.InputText(
-                   "35", key='-SIZE-', size=(2, 1)),
+                   "35", key='-SIZE-', size=(2, 1), justification='center'),
                sg.Text("Total number"), sg.InputText(
-                   "25", key='-WANTED_NUMBER-', size=(2, 1)),
+                   "25", key='-WANTED_NUMBER-', size=(2, 1), justification='center'),
                sg.Text("Mean reprojection error"), sg.InputText(
-                   "", key='-MEAN_ERROR-', size=(5, 1)),
+                   "", key='-MEAN_ERROR-', size=(5, 1), justification='center'),
                sg.Combo(['ZeroCam FishEye', 'HQ Cam 6mm', 'HQ Cam 16mm', 'Waveshare Raspberry Pi Camera (J) Fisheye', 'Joy-it rb-camera-ww2', 'Raspberry Pi Camera Board v2.1 Noir',
                          'Raspberry Pi Camera Board v2.1', 'RPI CAM NOIR MF', 'Joy-it 8mpcir CMOS Farb-Kameramodul', 'Raspberry Pi Camera Board v1.3'], key="-CAMERA-",),
                sg.Combo(values=resolution_combolist_values,
@@ -79,6 +80,7 @@ def main():
                          key="-UNDO-", size_px=(150, 25)),
                sg.Button("Del picture",
                          key="-DELETE_SELECTED_PICTURE-", size_px=(150, 25)),
+               sg.Text("Timer: "),
                sg.Slider(range=(0, 10), size_px=(150, 25), default_value=5, tick_interval=1, key="-TIMER-")],
 
               [sg.Input("Cam-ID", key="-CALIBRATION_INPUT-"),
@@ -136,7 +138,7 @@ def main():
 
             now = datetime.now()
 
-            current_time = now.strftime("%m%d%Y_%H:%M")
+            current_time = now.strftime("%m%d%Y")  # _%H:%M" add for time
 
             CALIBRATIONFOLDER = cam_id+"_"+resolution+"_"+current_time
 
@@ -155,36 +157,40 @@ def main():
         if event == "-TAKE_PICTURE-":
             # Picture part
 
-            # countdown for picture
-            for timertime in range(slider_val):
-                window["-STATUSTEXT-"].update("COUNTDOWN: " +
-                                              str(slider_val-timertime))
-                time.sleep(1)
+            try:
+                # countdown for picture
+                for timertime in range(slider_val):
+                    window["-STATUSTEXT-"].update("COUNTDOWN: " +
+                                                  str(slider_val-timertime))
+                    time.sleep(1)
 
-            window["-STATUSTEXT-"].update("TAKING PICTURE!")
+                window["-STATUSTEXT-"].update("TAKING PICTURE!")
 
-            # take preview picture
-            camera.capture_calibrationpic(PREVIEWPATH, RESOLUTION)
+                # take preview picture
+                camera.capture_calibrationpic(PREVIEWPATH, RESOLUTION)
 
-            # show preview picture
-            window["-PREVIEW-"].update(filename=PREVIEWPATH)
+                # show preview picture
+                window["-PREVIEW-"].update(filename=PREVIEWPATH)
 
-            # Calibration part
-            # default value for chessboard = 7,11
-            if column_number == "" or row_number == "":
-                column_number = 7
-                row_number = 11
+                # Calibration part
+                # default value for chessboard = 7,11
+                if column_number == "" or row_number == "":
+                    column_number = 7
+                    row_number = 11
 
-            else:
-                column_number = int(column_number)-1
-                row_number = int(row_number)-1
+                else:
+                    column_number = int(column_number)-1
+                    row_number = int(row_number)-1
 
-            # default value for chessboard squaresize
-            if squaresize == "":
-                squaresize = 0.035
+                # default value for chessboard squaresize
+                if squaresize == "":
+                    squaresize = 0.035
 
-            else:
-                squaresize = int(squaresize)/1000
+                else:
+                    squaresize = int(squaresize)/1000
+
+            except:
+                window["-STATUSTEXT-"].update("create Cam ID first!")
 
             # simultanisly trys to find chessboardcorner after every take-picture event
             calibration.show_chessboard_corners(
@@ -300,9 +306,11 @@ def main():
 
                 window["-MEAN_ERROR-"].update(str(reprojection_error_rounded))
 
+                window["-STATUSTEXT-"].update("Parameters recieved!")
+
             except:
 
-                window["-STATUSTEXT-"].update("Nothing to recieve")
+                window["-STATUSTEXT-"].update("Nothing to recieve!")
 
         # display chosen picture and calibration picture when selected in listbox
         elif event == "-PICTURE_LIST-":
@@ -311,7 +319,10 @@ def main():
                 filename_selected = values["-PICTURE_LIST-"][0]
 
                 # find i from filename
-                picture_index = int(re.findall("\d+", filename_selected)[0])
+                picture_index = int(re.findall(
+                    "calibrate(\d+(?:,\d+)*(?:\.\d+)?)", filename_selected)[0])
+
+                print(picture_index)
 
                 PREVIEWPATH = "/home/pi/"+CALIBRATIONFOLDER + \
                     "/preview{0}.jpg".format(
@@ -420,9 +431,7 @@ def main():
                     window["-STATUSTEXT-"].update(
                         "Calibration did not work")
 
-                if i == 10:
-                    window["-STATUSTEXT-"].update(
-                        "Calibration complete")
+            window["-STATUSTEXT-"].update("DONE!")
 
         elif event == "-DEL_CALIBRATION-":
 
@@ -453,7 +462,10 @@ def main():
             filename_selected = values["-PICTURE_LIST-"][0]
 
             # find i from filename
-            picture_index = int(re.findall("\d+", filename_selected)[0])
+            picture_index = int(re.findall(
+                "calibrate(\d+(?:,\d+)*(?:\.\d+)?)", filename_selected)[0])
+
+            print(picture_index)
 
             PREVIEWPATH = "/home/pi/"+CALIBRATIONFOLDER + \
                 "/preview{0}.jpg".format(str(picture_index))
