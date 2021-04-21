@@ -8,7 +8,7 @@ from time import strftime
 import cv2 as cv
 import numpy as np
 
-from helpers import config
+import config
 
 # matrix, distcoef, error
 
@@ -40,18 +40,21 @@ def calibrationfilepath():
 
     fpath = config.PARAMETERPATH.format(curr_date, resolution, hostname)
 
+    print(fpath)
+
     return fpath, curr_date
 
 
 # saves  distortion coefficients in json-file
 def dumpParams(fpath, curr_date, K, D, E):
 
-    print(fpath)
-    data = dict()
-    K = K.tolist()
-    D = D.tolist()
-    E = E.tolist()
+    # TODO dump parameter in folder created
 
+    data = dict()
+
+    K = K.tolist()
+
+    D = D.tolist()
     data["INFORMATION"] = [curr_date, hostname, config.RESOLUTION]
     data['K'] = K
     data['D'] = D
@@ -99,10 +102,9 @@ def get_coefficients(FIRSTIMAGEPATH):
     except:
         print("not working")
 
-    print('camera matrix\n', mtx, '\n')
-    print('distorsion matrix\n', dist, '\n')
+    print(mtx, dist, ret)
 
-    print("ERROR: "+str(ret))
+    print(fpath)
 
     # store parameter in a dictionary
     dumpParams(fpath, curr_date, mtx, dist, ret)

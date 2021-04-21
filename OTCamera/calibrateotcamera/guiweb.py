@@ -2,6 +2,7 @@ import PySimpleGUIWeb as sg
 from PySimpleGUIWeb.PySimpleGUIWeb import Slider
 from hardware import camera
 import calibration
+from datetime import datetime
 import os
 import glob
 import time
@@ -12,6 +13,8 @@ import re
 # get all calibrationimages from imagefolder
 
 # TODO: replace glob with pathlib or import function from helpers
+# TODO: create path for jsonfile to be dumped (now: home pi ==> wanted: home/pi/"calibratefolder")
+
 files_cal = glob.glob("/home/pi/cal*.jpg")
 
 # sorts list to display
@@ -25,7 +28,6 @@ files_pre = glob.glob("/home/pi/pre*.jpg")
 resolution_width = [1640, 1296, 800, 640]
 
 resolution_height = [1231, 972, 600, 480]
-
 
 resolution_combolist_values = [str(resolution_width[0])+"x" + str(resolution_height[0]),
                                str(resolution_width[1])+"x" +
@@ -49,10 +51,12 @@ def main():
     # 3 list box with list of calibration pictures
 
     layout = [[sg.Text("Open TrafficCam")],
-              [sg.Image(filename=None, background_color="grey", size=(640, 480), key="-PREVIEW-"),
+              [sg.Listbox(values=files_cal, enable_events=True, size_px=(250, 480), key="-PICTURE_LIST-"),
+               sg.Image(filename=None, background_color="grey",
+                        size=(640, 480), key="-PREVIEW-"),
                sg.Image(filename=None, background_color="grey",
                         size=(640, 480), key="-CALIBRATEPICTURE-"),
-               sg.Listbox(values=files_cal, enable_events=True, size_px=(250, 480), key="-PICTURE_LIST-")],
+               ],
               [sg.Text("Chessboardcolumns"), sg.InputText("8", key='-COLUMNS-', size=(2, 1)),
                sg.Text("Chessboardrows"), sg.InputText(
                    "12", key='-ROWS-', size=(2, 1)),
@@ -60,28 +64,37 @@ def main():
                    "35", key='-SIZE-', size=(2, 1)),
                sg.Text("Total number"), sg.InputText(
                    "25", key='-WANTED_NUMBER-', size=(2, 1)),
-               sg.Text("Reprojection error"), sg.InputText(
-                   "", key='-MEAN_ERROR-', size=(2, 1)),
+               sg.Text("Mean reprojection error"), sg.InputText(
+                   "", key='-MEAN_ERROR-', size=(5, 1)),
                sg.Combo(['ZeroCam FishEye', 'HQ Cam 6mm', 'HQ Cam 16mm', 'Waveshare Raspberry Pi Camera (J) Fisheye', 'Joy-it rb-camera-ww2', 'Raspberry Pi Camera Board v2.1 Noir',
                          'Raspberry Pi Camera Board v2.1', 'RPI CAM NOIR MF', 'Joy-it 8mpcir CMOS Farb-Kameramodul', 'Raspberry Pi Camera Board v1.3'], key="-CAMERA-",),
-               sg.Combo(values=resolution_combolist_values, key="-RESOLUTION-", size_px=(90, 25))],
-              [sg.Button("Take picture", key="-TAKE_PICTURE-", size_px=(150, 60)),
+               sg.Combo(values=resolution_combolist_values,
+                        key="-RESOLUTION-", size_px=(90, 25))],
+
+
+              [sg.Button("New Calibration", key="-CREATE_CALIBRATION-", size_px=(250, 25)),
+               sg.Button("Take picture", key="-TAKE_PICTURE-",
+                         size_px=(150, 25)),
                sg.Button("Undo last calibration",
-                         key="-UNDO-", size_px=(150, 60)),
-               sg.Button("Delete selected picture",
-                         key="-DELETE_SELECTED_PICTURE-", size_px=(150, 60)),
-               sg.Slider(range=(0, 10), size_px=(150, 60), default_value=5, tick_interval=1, key="-TIMER-")],
-              [sg.Text(
-                  "------------------------------------------------------------------------------------------------------------------------------")],
-              [sg.Button("Start calibration", key="-START_CALIBRATION-", size_px=(150, 60)),
-               sg.Button("Stop calibration", key="-STOP_CALIBRATION-", size_px=(150, 60))],
-              [sg.Button("Recieve coefficients", key="-GET_COEFFICENT-", size_px=(150, 60)),
-               sg.Button("Delete calibration", key="-DEL_CALIBRATION-", size_px=(150, 60))],
-              [sg.Text("", key="-STATUSTEXT-")]
+                         key="-UNDO-", size_px=(150, 25)),
+               sg.Button("Del picture",
+                         key="-DELETE_SELECTED_PICTURE-", size_px=(150, 25)),
+               sg.Slider(range=(0, 10), size_px=(150, 25), default_value=5, tick_interval=1, key="-TIMER-")],
+
+              [sg.Input("Cam-ID", key="-CALIBRATION_INPUT-"),
+               sg.Button("Start calibration",
+                         key="-START_CALIBRATION-", size_px=(150, 25)),
+               sg.Button("Stop calibration",
+                         key="-STOP_CALIBRATION-", size_px=(150, 25)),
+               sg.Button("Delete calibration",
+                         key="-DEL_CALIBRATION-", size_px=(150, 25)),
+               sg.Button("Recieve parameter", key="-GET_COEFFICENT-", size_px=(150, 25))],
+              [sg.Text("", key="-STATUSTEXT-"),
+               sg.Text("Current calibration: NONE", key="-CURRENTCALIBRATION-")]
               ]
 
     window = sg.Window("", layout,
-                       web_port=2222, web_start_browser=True)
+                       web_port=2222, web_start_browser=False)
 
     # progress_bar = window.FindElement('progressbar')
 
@@ -113,13 +126,31 @@ def main():
 
         RESOLUTION = (resolution_width, resolution_height)
 
-        # path for preview picture, calibration picture
-        PREVIEWPATH = "/home/pi/preview{0}.jpg".format(str(i))
-
-        CALIBRATEPATH = "/home/pi/calibrate{0}.jpg".format(str(i))
-
         # slider for timer to take pictures (reaches from 0 to 10; no other visual option available)
         slider_val = int(values["-TIMER-"])
+
+        if event == "-CREATE_CALIBRATION-":
+            # creates a folder with date, time, userdefined camid
+
+            cam_id = values["-CALIBRATION_INPUT-"]
+
+            now = datetime.now()
+
+            current_time = now.strftime("%m%d%Y_%H:%M")
+
+            CALIBRATIONFOLDER = cam_id+"_"+resolution+"_"+current_time
+
+            # createfolder with previewpatch
+            os.mkdir(CALIBRATIONFOLDER)
+
+            window["-CURRENTCALIBRATION-"].update("Cam ID: "+cam_id)
+
+            # path for preview picture, calibration picture
+            PREVIEWPATH = "/home/pi/"+CALIBRATIONFOLDER + \
+                "/preview{0}.jpg".format(str(i))
+
+            CALIBRATEPATH = "/home/pi/"+CALIBRATIONFOLDER + \
+                "/calibrate{0}.jpg".format(str(i))
 
         if event == "-TAKE_PICTURE-":
             # Picture part
@@ -197,9 +228,11 @@ def main():
                 if i != 1:
                     i -= 1
 
-                CALIBRATEPATH = "/home/pi/calibrate{0}.jpg".format(str(i))
+                PREVIEWPATH = "/home/pi/"+CALIBRATIONFOLDER + \
+                    "/preview{0}.jpg".format(str(i))
 
-                PREVIEWPATH = "/home/pi/preview{0}.jpg".format(str(i))
+                CALIBRATEPATH = "/home/pi/"+CALIBRATIONFOLDER + \
+                    "/calibrate{0}.jpg".format(str(i))
 
                 files_cal.remove(CALIBRATEPATH)
 
@@ -260,9 +293,12 @@ def main():
 
                 # insert mean projection error
 
-                reprojection_error = calibration.get_coefficients(FIRSTIMAGE)
+                reprojection_error = calibration.get_coefficients(
+                    FIRSTIMAGE)
 
-                window["-MEAN_ERROR-"].update(str(reprojection_error))
+                reprojection_error_rounded = round(reprojection_error, 2)
+
+                window["-MEAN_ERROR-"].update(str(reprojection_error_rounded))
 
             except:
 
@@ -277,8 +313,9 @@ def main():
                 # find i from filename
                 picture_index = int(re.findall("\d+", filename_selected)[0])
 
-                PREVIEWPATH = "/home/pi/preview{0}.jpg".format(
-                    str(picture_index))
+                PREVIEWPATH = "/home/pi/"+CALIBRATIONFOLDER + \
+                    "/preview{0}.jpg".format(
+                        str(picture_index))
 
                 window["-CALIBRATEPICTURE-"].update(filename_selected)
 
@@ -335,9 +372,11 @@ def main():
 
                 event, values = window.read(timeout=1000)
 
-                PREVIEWPATH = "/home/pi/preview{0}.jpg".format(str(i))
+                PREVIEWPATH = "/home/pi/"+CALIBRATIONFOLDER + \
+                    "/preview{0}.jpg".format(str(i))
 
-                CALIBRATEPATH = "/home/pi/calibrate{0}.jpg".format(str(i))
+                CALIBRATEPATH = "/home/pi/"+CALIBRATIONFOLDER + \
+                    "/calibrate{0}.jpg".format(str(i))
 
                 # countdown for picture
                 for timertime in range(slider_val):
@@ -416,7 +455,8 @@ def main():
             # find i from filename
             picture_index = int(re.findall("\d+", filename_selected)[0])
 
-            PREVIEWPATH = "/home/pi/preview{0}.jpg".format(str(picture_index))
+            PREVIEWPATH = "/home/pi/"+CALIBRATIONFOLDER + \
+                "/preview{0}.jpg".format(str(picture_index))
 
             files_cal.remove(filename_selected)
 
