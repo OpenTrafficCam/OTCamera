@@ -1,16 +1,26 @@
-import config
+import config, status
 import PySimpleGUIWeb as sg
 from hardware import camera
 
 
 def main():
+    camera.preview(now=True)
+
     layout = [
         [sg.Text("OpenTrafficCam OTCamera")],
         [sg.Image(filename=config.PREVIEWPATH, key="preview")],
-        [sg.Button("New Preview", key="previewbutton")],
+        [sg.Button("New Preview", key="previewbutton"), sg.Text(str(status.recording))],
     ]
 
-    window = sg.Window("OpenTrafficCam", layout)
+    window = sg.Window(
+        "OpenTrafficCam",
+        layout,
+        element_padding=(5, 5),
+        web_port=2222,
+        web_start_browser=False,
+        disable_close=True,
+        auto_size_buttons=False,
+    )
     i = 0
     while True:
         event, values = window.read()
@@ -22,8 +32,4 @@ def main():
             break
         i += 1
     window.close()
-
-
-# BUG: whole process is killed when closing browser tab
-
-print("Program terminating normally")
+    print("Program terminating normally")

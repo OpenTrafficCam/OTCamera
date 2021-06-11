@@ -42,7 +42,7 @@ PREFIX = socket.gethostname()
 """prefix for videoname and annotation."""
 VIDEOPATH = "/home/pi/videos/"
 """path to safe videofiles."""
-PREVIEWPATH = "OTCamera/gui/preview.png"
+PREVIEWPATH = "/home/pi/preview.png"
 """path to save preview."""
 
 

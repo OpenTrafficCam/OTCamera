@@ -71,6 +71,7 @@ def start_recording():
         _wait_recording(2)
         _capture()
         leds.rec_on()
+        status.recording = True
     else:
         pass
 
@@ -177,3 +178,4 @@ def stop_recording():
         leds.rec_off()
         log.write("recorded {n} videos".format(n=status.current_interval))
         log.write("stopped recording")
+        status.recording = False

@@ -34,6 +34,7 @@ interval_finished = False
 more_intervals = True
 new_preview = True
 current_interval = 0
+recording = False
 
 
 def record_time():
