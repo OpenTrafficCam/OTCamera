@@ -25,6 +25,7 @@ or log.otc() to log and print a OpenTrafficCam logo.
 
 from art import text2art
 from config import DEBUG
+from pathlib import Path
 
 from helpers import name
 
@@ -71,14 +72,21 @@ def otc():
 
 def _write(msg, reboot=True):
     print(msg)
-    logfile.write(msg + "\n")
-    logfile.flush()
+    logf.write(msg + "\n")
+    logf.flush()
 
 
 def closefile():
     """Flush and close the logfile."""
-    logfile.flush()
-    logfile.close()
+    logf.flush()
+    logf.close()
+
+
+def _check_log_path():
+    logfile = Path(name.log())
+    logpath = logfile.parent
+    if not logpath.exists():
+        logpath.mkdir(parents=True)
 
 
 # TODO: #48 implement traceback handling and logging.#
@@ -91,6 +99,7 @@ def closefile():
 #     logfile.write("\n")
 
 
-logfile = open(name.log(), "a")
+_check_log_path()
+logf = open(name.log(), "a")
 otc()
 breakline()
