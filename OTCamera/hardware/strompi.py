@@ -29,7 +29,7 @@ from time import sleep
 
 def print_current_config():
     """Get and print the currently active StromPi configuration."""
-    current_config = _get_current_config()
+    current_config = get_current_config()
 
     for conf in current_config:
         value = current_config[conf]
@@ -104,7 +104,7 @@ def _open_serial_port():
     return serial_port
 
 
-def _get_current_config():
+def get_current_config():
     """Open a serial port an retrive current StromPi config values.
 
     Returns:
@@ -153,10 +153,10 @@ def _get_current_config():
     current_config["sp3_poweroff_time_enable"] = serial_port.readline(9999)
     current_config["sp3_poweroff_time"] = serial_port.readline(9999)
     current_config["sp3_wakeupweekend_enable"] = serial_port.readline(9999)
-    current_config["sp3_ADC_Wide"] = float(serial_port.readline(9999)) / 1000
-    current_config["sp3_ADC_BAT"] = float(serial_port.readline(9999)) / 1000
-    current_config["sp3_ADC_USB"] = float(serial_port.readline(9999)) / 1000
-    current_config["sp3_ADC_OUTPUT"] = float(serial_port.readline(9999)) / 1000
+    current_config["sp3_ADC_Wide"] = float(serial_port.readline(9999))
+    current_config["sp3_ADC_BAT"] = float(serial_port.readline(9999))
+    current_config["sp3_ADC_USB"] = float(serial_port.readline(9999))
+    current_config["sp3_ADC_OUTPUT"] = float(serial_port.readline(9999))
     current_config["sp3_output_status"] = serial_port.readline(9999)
     current_config["sp3_powerfailure_counter"] = serial_port.readline(9999)
     current_config["sp3_firmwareVersion"] = serial_port.readline(9999)
@@ -218,6 +218,4 @@ def _configmap():
 
 
 if __name__ == "__main__":
-    print_current_config()
-    set_default_config()
     print_current_config()
