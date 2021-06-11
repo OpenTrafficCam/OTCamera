@@ -20,7 +20,7 @@ Used to start, split and stop recording.
 
 
 from time import sleep
-import picamera
+import picamerax as picamera
 from hardware import leds
 from datetime import datetime as dt
 
@@ -37,6 +37,7 @@ picam.resolution = config.RESOLUTION
 picam.annotate_background = picamera.Color("black")
 picam.annotate_text = name.annotate()
 picam.exposure_mode = config.EXPOSURE_MODE
+picam.awb_mode = config.AWB_MODE
 picam.drc_strength = config.DRC_STRENGTH
 picam.rotation = config.ROTATION
 

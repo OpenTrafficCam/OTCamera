@@ -52,6 +52,7 @@ RESOLUTION = (1640, 1232)
 EXPOSURE_MODE = "nightpreview"
 DRC_STRENGTH = "high"
 ROTATION = 180
+AWB_MODE = "greyworld"
 
 # video settings
 FORMAT = "h264"
