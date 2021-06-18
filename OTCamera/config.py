@@ -21,7 +21,6 @@ All the configuration of OTCamera is done here.
 
 import socket
 
-# TODO: #49 use docstrings to describe the variables
 DEBUG = False
 """Turn debug mode on to get addition log entries."""
 
@@ -48,22 +47,41 @@ PREVIEWPATH = "/home/pi/preview.png"
 
 # camera settings
 FPS = 20
+"""Frames per Second. 10-20 should be enough."""
 RESOLUTION = (1640, 1232)
+"""Resolution the camera module is works with internally.
+The field of view could be smaller with other values."""
 EXPOSURE_MODE = "nightpreview"
+"""Controls the analog and digital gains."""
 DRC_STRENGTH = "high"
+"""Sets dynamic range compression to lighten the dark areas and darken the light areas."""
 ROTATION = 180
+"""Rotate the whole camera image."""
 AWB_MODE = "greyworld"
+"""Controls the auto white balancing mode. `greyworld` is a specific mode for NoIR modules."""
 
 # video settings
 FORMAT = "h264"
+"""Encoding format."""
 PREVIEWFORMAT = "png"
+"""Filetype of the static preview image."""
 RESIZE = (800, 600)
+"""Resolution of the saved Videofile, not the camera itself."""
 PROFILE = "high"
+"""Profile used in h264 encoder."""
 LEVEL = "4"
+"""Level used in h264 encoder."""
 BITRATE = 600000
+"""Bitrate used in h264 encoder."""
 QUALITY = 30
+"""Quality used in h264 encoder."""
 
 # hardware settings
 USE_LED = False
+"""True is Status-LEDs are connected."""
 USE_BUTTONS = False
+"""True if hardware buttons are connected."""
 WIFIDELAY = 900
+"""Delay in seconds before wifi turns off."""
+USE_STROMPI = True
+"""Using a Joy-IT StromPi including Battery Unit for power management."""
