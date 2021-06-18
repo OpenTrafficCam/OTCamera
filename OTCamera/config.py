@@ -42,7 +42,7 @@ PREFIX = socket.gethostname()
 """prefix for videoname and annotation."""
 VIDEOPATH = "/home/pi/videos/"
 """path to safe videofiles."""
-PREVIEWPATH = "/home/pi/preview.jpg"
+PREVIEWPATH = "/home/pi/preview.png"
 """path to save preview."""
 
 
@@ -56,7 +56,7 @@ AWB_MODE = "greyworld"
 
 # video settings
 FORMAT = "h264"
-PREVIEWFORMAT = "jpeg"
+PREVIEWFORMAT = "png"
 RESIZE = (800, 600)
 PROFILE = "high"
 LEVEL = "4"
