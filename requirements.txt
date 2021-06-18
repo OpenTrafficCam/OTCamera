@@ -1,3 +1,5 @@
+art
 psutil
 gpiozero
-picamera
+picamerax
+pysimpleguiweb
