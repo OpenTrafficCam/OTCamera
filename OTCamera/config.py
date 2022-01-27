@@ -23,7 +23,7 @@ All the configuration of OTCamera is done here.
 
 import socket
 
-DEBUG = False
+DEBUG = True
 """Turn debug mode on to get addition log entries."""
 
 STARTHOUR = 6
@@ -43,7 +43,7 @@ PREFIX = socket.gethostname()
 """prefix for videoname and annotation."""
 VIDEOPATH = "/home/pi/videos/"
 """path to safe videofiles."""
-PREVIEWPATH = "/home/pi/preview.png"
+PREVIEWPATH = "/home/pi/"
 """path to save preview."""
 
 
