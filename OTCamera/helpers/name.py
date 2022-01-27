@@ -80,9 +80,9 @@ def preview():
     Returns:
         str: filename for preview
     """
+    config.PREVIEWPATH = "/home/pi/preview{}.png".format(_current_dt())
 
-
-    return config.PREVIEWPATH.format(_current_dt())
+    return config.PREVIEWPATH
 
 
 if __name__ == "__main__":

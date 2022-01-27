@@ -25,6 +25,7 @@ from time import sleep
 import status
 from hardware import camera, leds
 from helpers import log
+import config
 
 
 def init():
@@ -47,6 +48,7 @@ def loop():
         camera.start_recording()
         camera.split_if_interval_ends()
         camera.preview()
+        print(config.PREVIEWPATH)
     else:
         camera.stop_recording()
         sleep(0.5)

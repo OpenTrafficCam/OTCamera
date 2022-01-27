@@ -161,7 +161,7 @@ def preview(now: bool = False):
     if now or time_preview:
         log.write("new preview", level="debug")
         _capture()
-        #status.new_preview = False
+        #status.new_preview = False // True
     elif not (preview_second or status.new_preview):
         log.write("reset new preview", level="debug")
         status.new_preview = True
