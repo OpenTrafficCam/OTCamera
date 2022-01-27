@@ -27,9 +27,10 @@ Stops everthing by keyboard interrupt (Ctrl+C).
 # program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-# from record import record
+from record import record
+#from hardware.camera import start_recording
 from gui import gui
 
 if __name__ == "__main__":
-    # record()
-    gui.main()
+    record()
+    #gui.main()

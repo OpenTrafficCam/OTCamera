@@ -69,7 +69,7 @@ def preview_on():
     if config.USE_BUTTONS:
         return wifiapon
     else:
-        return True
+        return True #changed
 
 
 if __name__ == "__main__":

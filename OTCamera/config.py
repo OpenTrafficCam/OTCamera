@@ -1,3 +1,5 @@
+import datetime as dt
+
 """OTCamera config variables.
 
 All the configuration of OTCamera is done here.
@@ -57,7 +59,7 @@ DRC_STRENGTH = "high"
 """Sets dynamic range compression to lighten the dark areas and darken the light areas."""
 ROTATION = 180
 """Rotate the whole camera image."""
-AWB_MODE = "greyworld"
+AWB_MODE = "auto"
 """Controls the auto white balancing mode. `greyworld` is a specific mode for NoIR modules."""
 
 # video settings

@@ -51,3 +51,15 @@ def delete_old_files():
         free_space = psutil.disk_usage("/").free
         log.write("free space: {fs}".format(fs=free_space), level="debug")
         enough_space = free_space > minfreespace
+
+def find_preview():
+    for file in os.listdir("/home/pi/"):
+        if file.endswith(".png"):
+            print("found: "+os.path.join("/home/pi/", file))
+            return file
+
+def delete_preview():
+    for file in os.listdir("/home/pi/"):
+        if file.endswith(".png"):
+            print("deleted: "+os.path.join("/home/pi/", file))
+            os.remove(os.path.join("/home/pi/", file))

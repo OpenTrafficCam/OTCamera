@@ -20,14 +20,14 @@ Used to start, split and stop recording.
 
 
 from time import sleep
-import picamerax as picamera
+import picamera as picamera
 from hardware import leds
 from datetime import datetime as dt
 
 from helpers import log, name
 import config
 import status
-from helpers.filesystem import delete_old_files
+from helpers.filesystem import delete_old_files, delete_preview
 
 log.write("Initializing Camera", level="debug")
 
@@ -77,6 +77,7 @@ def start_recording():
 
 
 def _capture():
+    
     picam.capture(
         name.preview(),
         format=config.PREVIEWFORMAT,
@@ -155,12 +156,12 @@ def preview(now: bool = False):
     current_second = dt.now().second
     offset = config.PREVIEW_INTERVAL - 1
     preview_second = (current_second % config.PREVIEW_INTERVAL) == offset
-    time_preview = preview_second and status.preview_on() and status.new_preview
+    time_preview = preview_second  and status.new_preview
 
     if now or time_preview:
         log.write("new preview", level="debug")
         _capture()
-        status.new_preview = False
+        #status.new_preview = False
     elif not (preview_second or status.new_preview):
         log.write("reset new preview", level="debug")
         status.new_preview = True

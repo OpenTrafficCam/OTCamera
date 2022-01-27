@@ -71,8 +71,7 @@ def _current_dt():
     """
     curr_dt = dt.now().strftime("%Y-%m-%d_%H-%M-%S")
     return curr_dt
-
-
+    
 def preview():
     """Filename for preview image.
 
@@ -81,7 +80,9 @@ def preview():
     Returns:
         str: filename for preview
     """
-    return config.PREVIEWPATH
+
+
+    return config.PREVIEWPATH.format(_current_dt())
 
 
 if __name__ == "__main__":
