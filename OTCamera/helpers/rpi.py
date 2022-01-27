@@ -23,9 +23,9 @@ from subprocess import call
 from time import sleep
 
 import config
-import hardware.buttons as buttons
+import hardware.button as button
 import hardware.camera as camera
-import hardware.leds as leds
+import hardware.led as led
 import status
 
 from helpers import log
@@ -44,7 +44,7 @@ def shutdown():
     """
     log.write("Shutdown by button in 2s", False)
     status.noblink = True
-    leds.power.blink(
+    led.power.blink(
         on_time=0.5,
         off_time=0.5,
         fade_in_time=0,
@@ -52,9 +52,9 @@ def shutdown():
         n=8,
         background=False,
     )
-    leds.power.on()
-    leds.wifi.off()
-    if buttons.power.is_pressed:
+    led.power.on()
+    led.wifi.off()
+    if button.power.is_pressed:
         status.noblink = False
         log.write("Shutdown cancelled", False)
         return
@@ -77,7 +77,7 @@ def reboot():
     """
     status.shutdownactive = True
     status.noblink = True
-    leds.power.blink(
+    led.power.blink(
         on_time=0.1,
         off_time=0.1,
         fade_in_time=0,
@@ -102,24 +102,24 @@ def wifi():
 
     """
     log.write("Wifiswitch")
-    if buttons.wifi.is_pressed and not status.wifiapon:
+    if button.wifi.is_pressed and not status.wifiapon:
         log.write("Turn WifiAP on")
         call("sudo /bin/bash /usr/local/bin/wifistart", shell=True)
         log.write("WifiAP on")
-        leds.power.pulse(fade_in_time=0.25, fade_out_time=0.25, n=2, background=True)
-        leds.wifi.blink(on_time=0.1, off_time=4.9, n=None, background=True)
+        led.power.pulse(fade_in_time=0.25, fade_out_time=0.25, n=2, background=True)
+        led.wifi.blink(on_time=0.1, off_time=4.9, n=None, background=True)
         status.wifiapon = True
-    elif not buttons.wifi.is_pressed and status.wifiapon:
-        leds.power.pulse(fade_in_time=0.25, fade_out_time=0.25, n=2, background=True)
+    elif not button.wifi.is_pressed and status.wifiapon:
+        led.power.pulse(fade_in_time=0.25, fade_out_time=0.25, n=2, background=True)
         if not config.DEBUG:
             sleep(config.WIFIDELAY)
-        if not buttons.wifi.is_pressed and status.wifiapon:
+        if not button.wifi.is_pressed and status.wifiapon:
             log.write("Turn WifiAP OFF")
             call("sudo systemctl stop hostapd.service", shell=True)
             call("sudo systemctl stop dnsmasq.service", shell=True)
             call("sudo ifconfig uap0 down", shell=True)
             log.write("WifiAP OFF")
-            leds.wifi.off()
+            led.wifi.off()
             status.wifiapon = False
 
 

@@ -22,16 +22,17 @@ It is configured by config.py.
 
 from time import sleep
 
-import status
-from hardware import camera, leds
-from helpers import log
+from OTCamera import status
+from OTCamera.hardware import camera
+from OTCamera.helpers import log
+from hardware import led
 
 
 def init():
     """Initializes the LEDs and Wifi AP."""
     log.breakline()
     log.write("starting periodic record")
-    leds.power_on()
+    led.power_on()
     # TODO: turn wifi AP on #41
 
 

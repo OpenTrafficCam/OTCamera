@@ -21,7 +21,7 @@ Used to start, split and stop recording.
 
 from time import sleep
 import picamerax as picamera
-from hardware import leds
+from hardware import led
 from datetime import datetime as dt
 
 from helpers import log, name
@@ -70,7 +70,7 @@ def start_recording():
         log.write("started recording")
         _wait_recording(2)
         _capture()
-        leds.rec_on()
+        led.rec_on()
         status.recording = True
     else:
         pass
@@ -175,7 +175,7 @@ def stop_recording():
     """
     if picam.recording:
         picam.stop_recording()
-        leds.rec_off()
+        led.rec_off()
         log.write("recorded {n} videos".format(n=status.current_interval))
         log.write("stopped recording")
         status.recording = False

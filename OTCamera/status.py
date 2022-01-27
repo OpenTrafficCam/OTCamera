@@ -22,7 +22,7 @@ Contains all status variables and functions to be used across multiple modules.
 from datetime import datetime as dt
 
 import config
-from hardware import buttons
+from hardware import button
 from helpers import log
 
 log.write("status", level="debug")
@@ -49,7 +49,7 @@ def record_time():
     current_hour = dt.now().hour
     bytime = current_hour >= config.STARTHOUR and current_hour < config.ENDHOUR
     if config.USE_BUTTONS:
-        bybutton = buttons.hour.is_pressed
+        bybutton = button.hour.is_pressed
         record = bybutton or bytime
     else:
         record = bytime
