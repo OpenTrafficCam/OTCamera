@@ -21,7 +21,8 @@ videofilename or the string to annotate the video.
 
 
 from datetime import datetime as dt
-import config
+
+from OTCamera import config
 
 
 def video():

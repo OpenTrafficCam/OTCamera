@@ -22,11 +22,9 @@ Button callbacks are calling functions in rpi helper
 
 from datetime import datetime as dt
 
-import config
-import helpers.rpi as rpi
-import status
 from gpiozero import Button
-from helpers import log
+from OTCamera import config, status
+from OTCamera.helpers import log, rpi
 
 log.write("buttons", level="debug")
 

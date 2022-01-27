@@ -23,9 +23,8 @@ It is configured by config.py.
 from time import sleep
 
 from OTCamera import status
-from OTCamera.hardware import camera
+from OTCamera.hardware import camera, led
 from OTCamera.helpers import log
-from hardware import led
 
 
 def init():

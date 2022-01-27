@@ -19,15 +19,14 @@ Used to start, split and stop recording.
 # program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from time import sleep
-import picamerax as picamera
-from hardware import led
 from datetime import datetime as dt
+from time import sleep
 
-from helpers import log, name
-import config
-import status
-from helpers.filesystem import delete_old_files
+import picamerax as picamera
+from OTCamera import config, status
+from OTCamera.hardware import led
+from OTCamera.helpers import log, name
+from OTCamera.helpers.filesystem import delete_old_files
 
 log.write("Initializing Camera", level="debug")
 

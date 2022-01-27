@@ -1,6 +1,6 @@
-import config, status
 import PySimpleGUIWeb as sg
-from hardware import camera
+from OTCamera import config, status
+from OTCamera.hardware import camera
 
 
 def main():

@@ -21,9 +21,9 @@ Contains all status variables and functions to be used across multiple modules.
 
 from datetime import datetime as dt
 
-import config
-from hardware import button
-from helpers import log
+from OTCamera import config
+from OTCamera.hardware import button
+from OTCamera.helpers import log
 
 log.write("status", level="debug")
 

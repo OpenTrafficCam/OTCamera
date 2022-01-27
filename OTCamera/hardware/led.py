@@ -20,9 +20,9 @@ blinking) of the LEDs.
 # program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-import config
 from gpiozero import PWMLED
-from helpers import log
+from OTCamera import config
+from OTCamera.helpers import log
 
 log.write("leds", level="debug")
 

@@ -22,13 +22,9 @@ Contains all functions to control the Raspberry Pi itself.
 from subprocess import call
 from time import sleep
 
-import config
-import hardware.button as button
-import hardware.camera as camera
-import hardware.led as led
-import status
-
-from helpers import log
+from OTCamera import config, status
+from OTCamera.hardware import button, camera, led
+from OTCamera.helpers import log
 
 log.write("rpi", level="debug")
 

@@ -23,11 +23,11 @@ or log.otc() to log and print a OpenTrafficCam logo.
 # program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from art import text2art
-from config import DEBUG
 from pathlib import Path
 
-from helpers import name
+from art import text2art
+from OTCamera.config import DEBUG
+from OTCamera.helpers import name
 
 
 def write(msg, level="info", reboot=True):
