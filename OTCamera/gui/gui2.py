@@ -36,4 +36,4 @@ class MyApp(App):
 # starts the web server
 def main():
     start_accesspoint()
-    start(MyApp)
+    start(MyApp, address='127.0.0.1', port=8081, multiple_instance=False,enable_file_cache=True, update_interval=0.1, start_browser=False)

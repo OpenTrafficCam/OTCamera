@@ -96,7 +96,7 @@ def reboot():
 def start_accesspoint():
     log.write("Wifiswitch")
     os.system("sudo systemctl start wpa_supplicant@ap0")
-    time.sleep(10)
+    sleep(10)
 
 
 
