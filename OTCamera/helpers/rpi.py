@@ -19,7 +19,7 @@ Contains all functions to control the Raspberry Pi itself.
 # program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from subprocess import call
+from subprocess import call, run
 from time import sleep
 
 import config
@@ -27,6 +27,7 @@ import hardware.buttons as buttons
 import hardware.camera as camera
 import hardware.leds as leds
 import status
+import os
 
 from helpers import log
 
@@ -91,6 +92,12 @@ def reboot():
     camera.stop_recording()
     if not config.DEBUG:
         call("sudo reboot", shell=True)
+
+def start_accesspoint():
+    log.write("Wifiswitch")
+    os.system("sudo systemctl start wpa_supplicant@ap0")
+    time.sleep(10)
+
 
 
 def wifi():

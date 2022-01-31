@@ -3,6 +3,7 @@ from hardware import camera
 import remi.gui as gui
 from remi import start, App
 from time import sleep
+from helpers.rpi import start_accesspoint
 
 class MyApp(App):
     def __init__(self, *args):
@@ -30,6 +31,9 @@ class MyApp(App):
         #self.image.set_image(r"/res:/home/pi/cam_test.jpg")
         self.image.set_image(r"/res:"+config.PREVIEWPATH)
 
+
+
 # starts the web server
 def main():
+    start_accesspoint()
     start(MyApp)
