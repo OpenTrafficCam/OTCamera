@@ -1,5 +1,5 @@
 import config
-import record
+from record import record
 from hardware import camera
 import remi.gui as gui
 from remi import start, App
@@ -13,7 +13,7 @@ class MyApp(App):
     def main(self):
         container = gui.VBox(width=800, height=700)
         self.bt1 = gui.Button('preview')
-        self.bt2 = gui.Button('preview')
+        self.bt2 = gui.Button('record')
         self.image = gui.Image(r"/res:"+config.PREVIEWPATH)
 
         # setting the listener for the onclick event of the button
@@ -23,7 +23,8 @@ class MyApp(App):
 
         # appending a widget to another, the first argument is a string key
         container.append(self.image)
-        container.append(self.bt)
+        container.append(self.bt1)
+        container.append(self.bt2)
 
         # returning the root widget
         return container

@@ -47,8 +47,8 @@ def loop():
     if status.record_time():
         camera.start_recording()
         camera.split_if_interval_ends()
-        camera.preview()
-        print(config.PREVIEWPATH)
+        # leads to crash
+        #camera.preview()
     else:
         camera.stop_recording()
         sleep(0.5)

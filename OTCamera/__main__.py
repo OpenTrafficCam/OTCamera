@@ -29,8 +29,8 @@ Stops everthing by keyboard interrupt (Ctrl+C).
 
 from record import record
 #from hardware.camera import start_recording
-from gui import gui2
+from gui import gui_remi
 
 if __name__ == "__main__":
     #record()
-    gui2.main()
+    gui_remi.main()
