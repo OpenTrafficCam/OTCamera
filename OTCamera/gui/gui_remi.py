@@ -11,7 +11,7 @@ class MyApp(App):
         super(MyApp, self).__init__(*args)
 
     def main(self):
-        container = gui.VBox(width=800, height=700)
+        container = gui.VBox(width=1000, height=800)
         self.bt1 = gui.Button('preview')
         self.bt2 = gui.Button('record')
         self.image = gui.Image(r"/res:"+config.PREVIEWPATH)
@@ -32,8 +32,6 @@ class MyApp(App):
     # listener function
     def on_button1_pressed(self, widget):
         camera.preview(now=True)
-        #container.append(self.image)
-        #self.image.set_image(r"/res:/home/pi/cam_test.jpg")
         self.image.set_image(r"/res:"+config.PREVIEWPATH)
     def on_button2_pressed(self, widget):
         record()

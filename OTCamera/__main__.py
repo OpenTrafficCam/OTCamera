@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 """OTCamera main module.
 
 Just calls the record function in record module.
@@ -32,5 +34,4 @@ from record import record
 from gui import gui_remi
 
 if __name__ == "__main__":
-    #record()
     gui_remi.main()
