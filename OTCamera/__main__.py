@@ -30,8 +30,18 @@ Stops everthing by keyboard interrupt (Ctrl+C).
 
 
 from record import record
-#from hardware.camera import start_recording
-from gui import gui_remi
+from gui import gui
+from multiprocessing import Process
+
+
+
 
 if __name__ == "__main__":
-    gui_remi.main()
+    p2 = Process(target=gui.main)
+    p2.start()
+    record()
+
+
+
+
+

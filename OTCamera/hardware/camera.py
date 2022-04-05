@@ -20,7 +20,7 @@ Used to start, split and stop recording.
 
 
 from time import sleep
-import picamera as picamera
+import picamerax as picamera
 from hardware import leds
 from datetime import datetime as dt
 
@@ -46,13 +46,11 @@ log.write("Camera initalized")
 
 def start_recording():
     """Start a recording a video.
-
     If picam isn't already recording:
     - Deletes old files, until enough free space is available.
     - Starts a new recording on picam, using the config.py.
     - Waits 2 seconds and caputres a preview image.
     - Turns on the record LED (if attached).
-
     """
     # TODO: exception handling
     if not picam.recording:
@@ -70,14 +68,13 @@ def start_recording():
         log.write("started recording")
         _wait_recording(2)
         _capture()
-        leds.rec_on()
+#        led.rec_on()
         status.recording = True
     else:
         pass
 
 
 def _capture():
-    
     picam.capture(
         name.preview(),
         format=config.PREVIEWFORMAT,
@@ -102,13 +99,11 @@ def _split():
 
 def split_if_interval_ends():
     """Splits the videofile if the configured intervals ends.
-
     An Interval is configured in config.py. If the current minute matches the interval
     length, the video file is split and a new file begins.
     Counts the full intervals already recorded. If the maximum number of intervals,
     configured in config.py is reached, recording stops by breaking the loop in
     record.py.
-
     """
     if _new_interval():
         log.write("new interval", level="debug")
@@ -145,23 +140,21 @@ def _new_interval():
 
 def preview(now: bool = False):
     """Capture a preview image.
-
     Captures a new preview image, if the current second matches the preview interval
     configured in config.py and the Wifi AP is turned on (otherwise, a preview would
     be useless).
-
     Args:
         now (bool, optional): Generate preview immediately. Defaults to False.
     """
     current_second = dt.now().second
     offset = config.PREVIEW_INTERVAL - 1
     preview_second = (current_second % config.PREVIEW_INTERVAL) == offset
-    time_preview = preview_second  and status.new_preview
+    time_preview = preview_second and status.preview_on() and status.new_preview
 
     if now or time_preview:
         log.write("new preview", level="debug")
         _capture()
-        #status.new_preview = False // True
+        status.new_preview = False
     elif not (preview_second or status.new_preview):
         log.write("reset new preview", level="debug")
         status.new_preview = True
@@ -169,14 +162,12 @@ def preview(now: bool = False):
 
 def stop_recording():
     """Stops the video recording.
-
     If the picamera is recording, the recording is stopped. Additionally, the record
     LED ist switched of (if configured).
-
     """
     if picam.recording:
         picam.stop_recording()
-        leds.rec_off()
+#        led.rec_off()
         log.write("recorded {n} videos".format(n=status.current_interval))
         log.write("stopped recording")
         status.recording = False

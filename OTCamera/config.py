@@ -41,9 +41,9 @@ MINFREESPACE = 1
 """free space in GB on sd card before old videos get deleted."""
 PREFIX = socket.gethostname()
 """prefix for videoname and annotation."""
-VIDEOPATH = "/home/pi/videos/"
+VIDEOPATH = "~/videos/"
 """path to safe videofiles."""
-PREVIEWPATH = "/home/pi/"
+PREVIEWPATH = "/home/pi/OTCamera/webfiles/preview.jpeg"
 """path to save preview."""
 
 
@@ -59,13 +59,13 @@ DRC_STRENGTH = "high"
 """Sets dynamic range compression to lighten the dark areas and darken the light areas."""
 ROTATION = 180
 """Rotate the whole camera image."""
-AWB_MODE = "auto"
+AWB_MODE = "greyworld"
 """Controls the auto white balancing mode. `greyworld` is a specific mode for NoIR modules."""
 
 # video settings
 FORMAT = "h264"
 """Encoding format."""
-PREVIEWFORMAT = "png"
+PREVIEWFORMAT = "jpeg"
 """Filetype of the static preview image."""
 RESIZE = (800, 600)
 """Resolution of the saved Videofile, not the camera itself."""

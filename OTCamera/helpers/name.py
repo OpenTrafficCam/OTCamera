@@ -26,10 +26,8 @@ import config
 
 def video():
     """Filename of Video.
-
     Path incl. filename where videos are saved to, based on hostname and
     current date and time.
-
     Returns:
         str: filename for video
     """
@@ -39,9 +37,7 @@ def video():
 
 def log():
     """Filename of logfile.
-
     Path incl. filename where logfile is saved.
-
     Returns:
         str: filename for log
     """
@@ -51,10 +47,8 @@ def log():
 
 def annotate():
     """String to annotate video.
-
     Text to be added as annotation to video footage.
     Contains a Prefix and current datetime.
-
     Returns:
         str: annotation text
     """
@@ -65,23 +59,19 @@ def annotate():
 # TODO: refactor time stuff in separate helper
 def _current_dt():
     """Generates current date and time.
-
     Returns:
         str: YYYY-mm-dd_HH-MM-SS
     """
     curr_dt = dt.now().strftime("%Y-%m-%d_%H-%M-%S")
     return curr_dt
-    
+
+
 def preview():
     """Filename for preview image.
-
     Path incl. filename where preview file is saved.
-
     Returns:
         str: filename for preview
     """
-    config.PREVIEWPATH = f"/home/pi/preview_{_current_dt()}.png"
-
     return config.PREVIEWPATH
 
 

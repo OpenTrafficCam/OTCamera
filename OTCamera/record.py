@@ -26,29 +26,27 @@ import status
 from hardware import camera, leds
 from helpers import log
 import config
+from gui import gui
 
 
 def init():
     """Initializes the LEDs and Wifi AP."""
     log.breakline()
     log.write("starting periodic record")
-    leds.power_on()
+#    led.power_on()
     # TODO: turn wifi AP on #41
 
 
 def loop():
     """Record and split videos.
-
     While it is recording time (see status.py), starts recording videos, splits them
     every interval (see config.py), captures a new preview image and stops recording
     after recording time ends.
-
     """
     if status.record_time():
         camera.start_recording()
         camera.split_if_interval_ends()
-        # leads to crash
-        #camera.preview()
+        camera.preview()
     else:
         camera.stop_recording()
         sleep(0.5)
@@ -56,15 +54,11 @@ def loop():
 
 def record():
     """Run init and record loop.
-
     Initializes the LEDs ans Wifi AP.
-
     While it is recording time (see status.py), starts recording videos, splits them
     every interval (see config.py), captures a new preview image and stops recording
     after recording time ends.
-
     Stops everthing by keyboard interrupt (Ctrl+C).
-
     """
     try:
         init()
@@ -81,5 +75,5 @@ def record():
     log.closefile()
 
 
-if __name__ == "__main__":
-    record()
+# if __name__ == "__main__":
+#     record()

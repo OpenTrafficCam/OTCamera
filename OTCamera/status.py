@@ -39,17 +39,15 @@ recording = False
 
 def record_time():
     """Checks if the current hour is an hour to record.
-
     Returns True if the hour of the current time is either after configured start hour
     and before end hour or hardware button is switched to continuous record.
-
     Returns:
         bool: Time to record or not.
     """
     current_hour = dt.now().hour
     bytime = current_hour >= config.STARTHOUR and current_hour < config.ENDHOUR
     if config.USE_BUTTONS:
-        bybutton = buttons.hour.is_pressed
+        bybutton = button.hour.is_pressed
         record = bybutton or bytime
     else:
         record = bytime
@@ -59,17 +57,15 @@ def record_time():
 
 def preview_on():
     """Checks if a preview image should be captured.
-
     Returns True if there are buttons configured and the WifiAP status is True.
     Returns always True if no buttons configured.
-
     Returns:
         bool: Capture new preview.
     """
     if config.USE_BUTTONS:
         return wifiapon
     else:
-        return True #changed
+        return True
 
 
 if __name__ == "__main__":
