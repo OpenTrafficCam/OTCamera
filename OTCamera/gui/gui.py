@@ -1,4 +1,5 @@
 import PySimpleGUIWeb as sg
+
 from OTCamera import config, status
 from OTCamera.hardware import camera
 
