@@ -37,8 +37,8 @@ from multiprocessing import Process
 
 
 if __name__ == "__main__":
-    p2 = Process(target=gui.main)
-    p2.start()
+    # p2 = Process(target=gui.main)
+    # p2.start()
     record()
 
 
