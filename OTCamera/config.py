@@ -49,13 +49,12 @@ PREVIEWPATH = "~/OTCamera/webfiles/preview.png"
 FPS = 20
 """Frames per Second. 10-20 should be enough."""
 RESOLUTION = (1640, 1232)
-"""Resolution the camera module is works with internally.
-The field of view could be smaller with other values."""
+"""Resolution of the camera module works internally. 
+Field of view could be smaller with other values."""
 EXPOSURE_MODE = "nightpreview"
 """Controls the analog and digital gains."""
 DRC_STRENGTH = "high"
-"""Sets dynamic range compression to lighten the dark areas
-and darken the light areas."""
+"""Sets dynamic range compression to lighten dark areas and to darken light areas."""
 ROTATION = 180
 """Rotate the whole camera image."""
 AWB_MODE = "greyworld"
