@@ -34,16 +34,16 @@ INTERVAL = 15
 """Interval length in minutes before video splits."""
 N_INTERVALS = 0
 """Number of full intervals to record (0=infinit)."""
-PREVIEW_INTERVAL = 5
+PREVIEW_INTERVAL = 3
 """Interval between two preview images in seconds."""
 
 MINFREESPACE = 1
 """free space in GB on sd card before old videos get deleted."""
 PREFIX = socket.gethostname()
 """prefix for videoname and annotation."""
-VIDEOPATH = "videos/"
+VIDEOPATH = "/home/admin/videos/"
 """path to safe videofiles."""
-PREVIEWPATH = "/home/pi/OTCamera/webfiles/preview.jpeg"
+PREVIEWPATH = "home/admin/OTCamera/webfiles/preview.jpeg"
 """path to save preview."""
 
 
