@@ -30,7 +30,7 @@ Stops everthing by keyboard interrupt (Ctrl+C).
 
 
 from record import record
-from gui import gui
+# from gui import gui
 from multiprocessing import Process
 
 
