@@ -49,7 +49,7 @@ PREVIEWPATH = "~/OTCamera/webfiles/preview.png"
 FPS = 20
 """Frames per Second. 10-20 should be enough."""
 RESOLUTION = (1640, 1232)
-"""Resolution of the camera module works internally. 
+"""Resolution of the camera module works internally.
 Field of view could be smaller with other values."""
 EXPOSURE_MODE = "nightpreview"
 """Controls the analog and digital gains."""
