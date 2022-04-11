@@ -1,11 +1,6 @@
 # OTCamera
-*.pyc
 *.kicad_pcb-bak
-.vscode/.ropeproject/config.py
-.vscode/.ropeproject/objectdb
 *preview.png
-site/
-venv/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
