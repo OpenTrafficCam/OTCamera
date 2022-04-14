@@ -5,8 +5,8 @@ case "$ANSWER" in
         [yY] | [yY][eE][sS])
         read -p "Enter a name for the accesspoint: " HOTSPOTNAME
         sed -i 's/^ssid=.*/ssid='$HOTSPOTNAME'/g' /etc/hostapd/hostapd.conf
-        sed -i 's/        <title>\w*/        <title>'$HOTSPOTNAME'/g' /home/pi/OTCamera/webfiles/index.html    
-        sed -i 's/        <h1>\w*/        <h1>'$HOTSPOTNAME'/g' /home/pi/OTCamera/webfiles/index.html  
+        sed -i 's/        <title>\w*/        <title>'$HOTSPOTNAME'/g' /home/admin/OTCamera/webfiles/index.html    
+        sed -i 's/        <h1>\w*/        <h1>'$HOTSPOTNAME'/g' /home/admin/OTCamera/webfiles/index.html  
         ;;
         [nN] | [oO]) 
         ;;
