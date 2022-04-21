@@ -21,6 +21,7 @@ blinking) of the LEDs.
 
 
 from gpiozero import PWMLED
+
 from OTCamera import config
 from OTCamera.helpers import log
 

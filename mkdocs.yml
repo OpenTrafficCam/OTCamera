@@ -1,3 +1,4 @@
+---
 site_name: OTCamera API Documentation
 theme:
   name: "material"
@@ -28,7 +29,7 @@ plugins:
   - git-revision-date
   - mkdocstrings:
       handlers:
-          python:
-              setup_commands:
-                - import sys
-                - sys.path.append("OTCamera")
+        python:
+          setup_commands:
+            - import sys
+            - sys.path.append("OTCamera")

@@ -22,9 +22,10 @@ down.
 # Based on the free software provided by [Joy-IT](https://github.com/joy-it/strompi3).
 # Those parts are licensed under the MIT License.
 
-import serial
 from subprocess import call
 from time import sleep
+
+import serial
 
 
 def print_current_config():

@@ -17,7 +17,7 @@ To work on the docs run the following command to get a live updating server. You
 python mkdocs serve
 ```
 
-The site will be publicly served as stativ site on github pages.
+The site will be publicly served as stativ site on GitHub pages.
 
 ```bash
 python -m mkdocs gh-deploy
