@@ -55,7 +55,7 @@ def loop():
 def record():
     """Run init and record loop.
 
-    Initializes the LEDs ans Wifi AP.
+    Initializes the LEDs and Wifi AP.
 
     While it is recording time (see status.py), starts recording videos, splits them
     every interval (see config.py), captures a new preview image and stops recording
