@@ -39,9 +39,9 @@ MINFREESPACE = 1
 """free space in GB on sd card before old videos get deleted."""
 PREFIX = socket.gethostname()
 """prefix for videoname and annotation."""
-VIDEOPATH = "~/videos/"
+VIDEOPATH = "/home/pi/OTCamera/videos/"
 """path to safe videofiles."""
-PREVIEWPATH = "~/OTCamera/webfiles/preview.png"
+PREVIEWPATH = "/home/pi/OTCamera/webfiles/preview.jpg"
 """path to save preview."""
 
 
