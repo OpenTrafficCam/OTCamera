@@ -64,7 +64,7 @@ is a specific mode for NoIR modules."""
 # video settings
 FORMAT = "h264"
 """Encoding format."""
-PREVIEWFORMAT = "png"
+PREVIEWFORMAT = "jpeg"
 """Filetype of the static preview image."""
 RESIZE = (800, 600)
 """Resolution of the saved Videofile, not the camera itself."""
