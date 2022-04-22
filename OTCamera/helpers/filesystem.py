@@ -20,12 +20,12 @@ Check if enough filespace is available and delete old files until it's enough.
 
 
 import os
-
-import psutil
 from pathlib import Path
 
-from OTCamera.helpers import log
+import psutil
+
 from OTCamera import config
+from OTCamera.helpers import log
 
 log.write("filesystem", level="debug")
 
