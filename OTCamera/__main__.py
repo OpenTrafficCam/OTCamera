@@ -28,8 +28,12 @@ Stops everthing by keyboard interrupt (Ctrl+C).
 
 
 # from record import record
-from gui import gui
+from OTCamera.record import record
+
+
+def main():
+    record()
+
 
 if __name__ == "__main__":
-    # record()
-    gui.main()
+    main()

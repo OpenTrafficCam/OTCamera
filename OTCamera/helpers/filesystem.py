@@ -21,7 +21,7 @@ Check if enough filespace is available and delete old files until it's enough.
 
 import os
 
-import config
+from OTCamera import config
 import psutil
 
 from OTCamera.helpers import log
