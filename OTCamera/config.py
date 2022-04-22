@@ -41,7 +41,7 @@ PREFIX = socket.gethostname()
 """prefix for videoname and annotation."""
 VIDEOPATH = "~/videos/"
 """path to safe videofiles."""
-PREVIEWPATH = "~/OTCamera/webfiles/preview.png"
+PREVIEWPATH = "~/OTCamera/webfiles/preview.jpg"
 """path to save preview."""
 
 
@@ -64,7 +64,7 @@ is a specific mode for NoIR modules."""
 # video settings
 FORMAT = "h264"
 """Encoding format."""
-PREVIEWFORMAT = "png"
+PREVIEWFORMAT = "jpeg"
 """Filetype of the static preview image."""
 RESIZE = (800, 600)
 """Resolution of the saved Videofile, not the camera itself."""
@@ -84,5 +84,3 @@ USE_BUTTONS = False
 """True if hardware buttons are connected."""
 WIFIDELAY = 900
 """Delay in seconds before wifi turns off."""
-USE_STROMPI = True
-"""Using a Joy-IT StromPi including Battery Unit for power management."""

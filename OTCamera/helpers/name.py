@@ -21,6 +21,7 @@ videofilename or the string to annotate the video.
 
 
 from datetime import datetime as dt
+from pathlib import Path
 
 from OTCamera import config
 
@@ -35,7 +36,7 @@ def video():
         str: filename for video
     """
     filename = config.VIDEOPATH + config.PREFIX + "_" + _current_dt() + ".h264"
-    return filename
+    return str(Path(filename).expanduser().resolve())
 
 
 def log():
@@ -47,7 +48,7 @@ def log():
         str: filename for log
     """
     filename = config.VIDEOPATH + config.PREFIX + "_" + _current_dt() + ".log"
-    return filename
+    return Path(filename).expanduser().resolve()
 
 
 def annotate():
@@ -82,7 +83,8 @@ def preview():
     Returns:
         str: filename for preview
     """
-    return config.PREVIEWPATH
+    filename = config.PREVIEWPATH
+    return str(Path(filename).expanduser().resolve())
 
 
 if __name__ == "__main__":

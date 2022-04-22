@@ -55,9 +55,9 @@ def start_recording():
 
     """
     # TODO: exception handling
+    # OSError Errno 28 No space left on device
     if not picam.recording:
         delete_old_files()
-        picam.annotate_text = name.annotate()
         picam.start_recording(
             output=name.video(),
             format=config.FORMAT,
@@ -77,6 +77,7 @@ def start_recording():
 
 
 def _capture():
+    picam.annotate_text = name.annotate()
     picam.capture(
         name.preview(),
         format=config.PREVIEWFORMAT,
@@ -122,6 +123,7 @@ def split_if_interval_ends():
         status.interval_finished = True
         log.write("reset new interval", level="debug")
     _wait_recording(0.5)
+    picam.annotate_text = name.annotate()
 
 
 def _interval_minute():

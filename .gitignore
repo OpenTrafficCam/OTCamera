@@ -1,6 +1,8 @@
 # OTCamera
 *.kicad_pcb-bak
 *preview.png
+*preview.jpg
+videos/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
