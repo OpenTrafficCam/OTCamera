@@ -39,9 +39,9 @@ MINFREESPACE = 1
 """free space in GB on sd card before old videos get deleted."""
 PREFIX = socket.gethostname()
 """prefix for videoname and annotation."""
-VIDEOPATH = "/home/pi/OTCamera/videos/"
+VIDEOPATH = "~/videos/"
 """path to safe videofiles."""
-PREVIEWPATH = "/home/pi/OTCamera/webfiles/preview.jpg"
+PREVIEWPATH = "~/OTCamera/webfiles/preview.jpg"
 """path to save preview."""
 
 
@@ -84,5 +84,3 @@ USE_BUTTONS = False
 """True if hardware buttons are connected."""
 WIFIDELAY = 900
 """Delay in seconds before wifi turns off."""
-USE_STROMPI = True
-"""Using a Joy-IT StromPi including Battery Unit for power management."""
