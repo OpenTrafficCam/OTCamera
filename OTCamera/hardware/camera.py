@@ -71,6 +71,7 @@ def start_recording():
 #        led.rec_on()
         status.recording = True
     else:
+        picam.annotate_text = name.annotate()
         pass
 
 
