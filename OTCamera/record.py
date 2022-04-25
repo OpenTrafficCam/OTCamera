@@ -25,6 +25,7 @@ from time import sleep
 from OTCamera import status
 from OTCamera.hardware import camera, led
 from OTCamera.helpers import log
+from OTCamera.helpers.filesystem import delete_old_files
 
 
 def init():
@@ -61,22 +62,31 @@ def record():
     every interval (see config.py), captures a new preview image and stops recording
     after recording time ends.
 
-    Stops everthing by keyboard interrupt (Ctrl+C).
+    Stops everything by keyboard interrupt (Ctrl+C).
 
     """
     try:
         init()
 
         while status.more_intervals:
-            loop()
+            try:
+                loop()
+            except OSError as oe:
+                if oe.errno == 28:  # errno: no space left on device
+                    delete_old_files()
+                    log.write_stack_trace()
+                else:
+                    raise
 
         log.write("Captured all intervals, stopping", level="warning")
-
-    except (KeyboardInterrupt):
+    except KeyboardInterrupt:
         log.write("Keyboard Interrupt, stopping", level="warning")
-
-    camera.stop_recording()
-    log.closefile()
+        log.write_stack_trace()
+    finally:
+        log.write("Execute teardown!", level="warning")
+        camera.stop_recording()
+        camera.picam.close()
+        log.closefile()
 
 
 if __name__ == "__main__":

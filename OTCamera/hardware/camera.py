@@ -58,11 +58,8 @@ def start_recording():
     # OSError Errno 28 No space left on device
     # PiCamera error
     # https://picamera.readthedocs.io/en/release-1.13/api_exc.html?highlight=exception
-    ERRNO_NO_SPACE_LEFT_ON_DEVICE = 28
-    try:
 
-        if not picam.recording:
-            pass
+    if not picam.recording:
         delete_old_files()
         picam.start_recording(
             output=name.video(),
@@ -79,13 +76,6 @@ def start_recording():
         _capture()
         led.rec_on()
         status.recording = True
-    except OSError as oe:
-        if oe.errno == ERRNO_NO_SPACE_LEFT_ON_DEVICE:
-            delete_old_files()
-        else:
-            raise
-    except picamera.PiCameraAlreadyRecording:
-        pass
 
 
 def _capture():
