@@ -26,7 +26,7 @@ from OTCamera import config, status
 from OTCamera.hardware import button, camera, led
 from OTCamera.helpers import log
 
-log.write("rpi", level="debug")
+log.write("rpi", level=log.LogLevel.DEBUG)
 
 
 def shutdown():

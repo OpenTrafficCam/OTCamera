@@ -52,7 +52,6 @@ def write(msg: str, level: LogLevel = LogLevel.INFO, reboot: bool = True):
         level (str): either "debug", "info", "warning", "error", "exception"
         reboot (bool, optional): Perform reboot if logging fails. Defaults to True.
     """
-    level = level.upper()
     if level == LogLevel.DEBUG:
         if not DEBUG:
             return
@@ -63,7 +62,6 @@ def write(msg: str, level: LogLevel = LogLevel.INFO, reboot: bool = True):
 
 
 def _get_stack_trace() -> str:
-    tb = traceback.format_exc()
     return traceback.format_exc()
 
 

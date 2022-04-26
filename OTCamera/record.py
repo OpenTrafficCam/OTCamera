@@ -73,17 +73,17 @@ def record():
                 loop()
             except OSError as oe:
                 if oe.errno == 28:  # errno: no space left on device
+                    log.write(str(oe), level=log.LogLevel.EXCEPTION)
                     delete_old_files()
-                    log.write_stack_trace()
                 else:
+                    log.write("OSError occured", level=log.LogLevel.ERROR)
                     raise
 
-        log.write("Captured all intervals, stopping", level="warning")
+        log.write("Captured all intervals, stopping", level=log.LogLevel.WARNING)
     except KeyboardInterrupt:
-        log.write("Keyboard Interrupt, stopping", level="warning")
-        log.write_stack_trace()
+        log.write("Keyboard Interrupt, stopping", level=log.LogLevel.EXCEPTION)
     finally:
-        log.write("Execute teardown!", level="warning")
+        log.write("Execute teardown!", level=log.LogLevel.INFO)
         camera.stop_recording()
         camera.picam.close()
         log.closefile()

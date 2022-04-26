@@ -29,7 +29,7 @@ from OTCamera.hardware import led
 from OTCamera.helpers import log, name
 from OTCamera.helpers.filesystem import delete_old_files
 
-log.write("Initializing Camera", level="debug")
+log.write("Initializing Camera", level=log.LogLevel.DEBUG)
 
 picam = picamera.PiCamera()
 picam.framerate = config.FPS
@@ -86,7 +86,7 @@ def _capture():
         resize=config.RESIZE,
         use_video_port=True,
     )
-    log.write("preview captured", level="debug")
+    log.write("preview captured", level=log.LogLevel.DEBUG)
 
 
 def _wait_recording(timeout=0):
@@ -113,17 +113,17 @@ def split_if_interval_ends():
 
     """
     if _new_interval():
-        log.write("new interval", level="debug")
+        log.write("new interval", level=log.LogLevel.DEBUG)
         _split()
         status.interval_finished = False
         status.current_interval += 1
         if config.N_INTERVALS > 0:
             status.more_intervals = status.current_interval < config.N_INTERVALS
         if not status.more_intervals:
-            log.write("last interval", level="debug")
+            log.write("last interval", level=log.LogLevel.DEBUG)
     elif _after_new_interval():
         status.interval_finished = True
-        log.write("reset new interval", level="debug")
+        log.write("reset new interval", level=log.LogLevel.DEBUG)
     _wait_recording(0.5)
     picam.annotate_text = name.annotate()
 
@@ -162,11 +162,11 @@ def preview(now: bool = False):
     time_preview = preview_second and status.preview_on() and status.new_preview
 
     if now or time_preview:
-        log.write("new preview", level="debug")
+        log.write("new preview", level=log.LogLevel.DEBUG)
         _capture()
         status.new_preview = False
     elif not (preview_second or status.new_preview):
-        log.write("reset new preview", level="debug")
+        log.write("reset new preview", level=log.LogLevel.DEBUG)
         status.new_preview = True
 
 

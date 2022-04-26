@@ -25,7 +25,7 @@ from OTCamera import config
 from OTCamera.hardware import button
 from OTCamera.helpers import log
 
-log.write("status", level="debug")
+log.write("status", level=log.LogLevel.DEBUG)
 
 shutdownactive = False
 noblink = False

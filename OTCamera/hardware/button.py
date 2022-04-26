@@ -27,7 +27,7 @@ from gpiozero import Button
 from OTCamera import config, status
 from OTCamera.helpers import log, rpi
 
-log.write("buttons", level="debug")
+log.write("buttons", level=log.LogLevel.DEBUG)
 
 
 def its_record_time():
@@ -57,7 +57,7 @@ def _hour_switched():
 
 if config.USE_BUTTONS:
 
-    log.write("Initalizing LEDs", level="debug")
+    log.write("Initalizing LEDs", level=log.LogLevel.DEBUG)
 
     POWERPIN = 6
     HOURPIN = 19

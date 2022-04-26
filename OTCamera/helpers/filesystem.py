@@ -27,7 +27,7 @@ import psutil
 from OTCamera import config
 from OTCamera.helpers import log
 
-log.write("filesystem", level="debug")
+log.write("filesystem", level=log.LogLevel.DEBUG)
 
 
 def delete_old_files():
@@ -39,17 +39,17 @@ def delete_old_files():
 
     """
     absolute_video_path = str(Path(config.VIDEOPATH).expanduser().resolve())
-    log.write("delete old file", level="debug")
+    log.write("delete old file", level=log.LogLevel.DEBUG)
     minfreespace = config.MINFREESPACE * 1024 * 1024 * 1024
     free_space = psutil.disk_usage(absolute_video_path).free
     enough_space = free_space > minfreespace
-    log.write("free space: {fs}".format(fs=free_space), level="DEBUG")
-    log.write("min space: {ms}".format(ms=minfreespace), level="DEBUG")
+    log.write("free space: {fs}".format(fs=free_space), level=log.LogLevel.DEBUG)
+    log.write("min space: {ms}".format(ms=minfreespace), level=log.LogLevel.DEBUG)
     while not enough_space:
         oldest_video = min(os.listdir(absolute_video_path), key=os.path.getctime)
         os.remove(Path(absolute_video_path , oldest_video))
         log.breakline()
         log.write("Deleted " + oldest_video)
         free_space = psutil.disk_usage("/").free
-        log.write("free space: {fs}".format(fs=free_space), level="debug")
+        log.write("free space: {fs}".format(fs=free_space), level=log.LogLevel.DEBUG)
         enough_space = free_space > minfreespace
