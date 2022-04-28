@@ -40,16 +40,19 @@ def delete_old_files():
     """
     absolute_video_path = str(Path(config.VIDEOPATH).expanduser().resolve())
     log.write("delete old file", level=log.LogLevel.DEBUG)
-    minfreespace = config.MINFREESPACE * 1024 * 1024 * 1024
-    free_space = psutil.disk_usage(absolute_video_path).free
-    enough_space = free_space > minfreespace
-    log.write("free space: {fs}".format(fs=free_space), level=log.LogLevel.DEBUG)
-    log.write("min space: {ms}".format(ms=minfreespace), level=log.LogLevel.DEBUG)
-    while not enough_space:
+    min_free_space = config.MINFREESPACE * 1024 * 1024 * 1024
+
+    while not _enough_space(min_free_space, absolute_video_path):
         oldest_video = min(os.listdir(absolute_video_path), key=os.path.getctime)
-        os.remove(Path(absolute_video_path , oldest_video))
+        os.remove(Path(absolute_video_path, oldest_video))
         log.breakline()
         log.write("Deleted " + oldest_video)
         free_space = psutil.disk_usage("/").free
         log.write("free space: {fs}".format(fs=free_space), level=log.LogLevel.DEBUG)
-        enough_space = free_space > minfreespace
+
+
+def _enough_space(min_free_space: int, video_path: str) -> bool:
+    free_space = psutil.disk_usage(video_path).free
+    log.write(f"free space: {free_space}", level=log.LogLevel.DEBUG)
+    log.write(f"min space: {min_free_space}", level=log.LogLevel.DEBUG)
+    return free_space > min_free_space
