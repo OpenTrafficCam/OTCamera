@@ -20,6 +20,7 @@ It is configured by config.py.
 # program.  If not, see <https://www.gnu.org/licenses/>.
 
 
+import errno
 from time import sleep
 
 from OTCamera import status
@@ -74,7 +75,7 @@ def record():
             try:
                 loop(camera)
             except OSError as oe:
-                if oe.errno == 28:  # errno: no space left on device
+                if oe.errno == errno.ENOSPC:  # errno: no space left on device
                     log.write(str(oe), level=log.LogLevel.EXCEPTION)
                     delete_old_files()
                 else:
