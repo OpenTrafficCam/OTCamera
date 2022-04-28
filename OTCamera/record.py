@@ -23,7 +23,8 @@ It is configured by config.py.
 from time import sleep
 
 from OTCamera import status
-from OTCamera.hardware import camera, led
+from OTCamera.hardware import led
+from OTCamera.hardware.camera import Camera
 from OTCamera.helpers import log
 from OTCamera.helpers.filesystem import delete_old_files
 
@@ -36,7 +37,7 @@ def init():
     # TODO: turn wifi AP on #41
 
 
-def loop():
+def loop(camera: Camera):
     """Record and split videos.
 
     While it is recording time (see status.py), starts recording videos, splits them
@@ -66,11 +67,12 @@ def record():
 
     """
     try:
+        camera = Camera()
         init()
 
         while status.more_intervals:
             try:
-                loop()
+                loop(camera)
             except OSError as oe:
                 if oe.errno == 28:  # errno: no space left on device
                     log.write(str(oe), level=log.LogLevel.EXCEPTION)
@@ -85,7 +87,7 @@ def record():
     finally:
         log.write("Execute teardown!", level=log.LogLevel.INFO)
         camera.stop_recording()
-        camera.picam.close()
+        camera.close()
         log.closefile()
 
 
