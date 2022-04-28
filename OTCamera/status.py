@@ -22,7 +22,6 @@ Contains all status variables and functions to be used across multiple modules.
 from datetime import datetime as dt
 
 from OTCamera import config
-from OTCamera.hardware import button
 from OTCamera.helpers import log
 
 log.write("status", level=log.LogLevel.DEBUG)
@@ -35,6 +34,7 @@ more_intervals = True
 new_preview = True
 current_interval = 0
 recording = False
+button_hour_pressed = False
 
 
 def record_time():
@@ -49,8 +49,7 @@ def record_time():
     current_hour = dt.now().hour
     bytime = current_hour >= config.STARTHOUR and current_hour < config.ENDHOUR
     if config.USE_BUTTONS:
-        bybutton = button.hour.is_pressed
-        record = bybutton or bytime
+        record = button_hour_pressed or bytime
     else:
         record = bytime
     record = record and (not shutdownactive)

@@ -50,8 +50,10 @@ def its_record_time():
 
 def _hour_switched():
     if hour.is_pressed:
+        status.button_hour_pressed = True
         log.write("Hour Switch pressed")
     elif not hour.is_pressed:
+        status.button_hour_pressed = False
         log.write("Hour Switch released")
 
 
@@ -74,6 +76,7 @@ if config.USE_BUTTONS:
     wifi.when_released = rpi.wifi
     hour.when_pressed = _hour_switched
     hour.when_released = _hour_switched
+    status.button_hour_pressed = hour.is_pressed
 
     log.write("Buttons initialized")
 
