@@ -1,8 +1,8 @@
 #!/bin/bash
 
 
-APNAME = "OTCamera"
-APPASSWORD = "onetwothree4"
+APNAME="OTCamera"
+APPASSWORD="onetwothree4"
 APCHANNEL="11"
 IPRANGE="10.10.10"
 BRANCH="first-version"
