@@ -42,7 +42,7 @@ read -p "Press any key to continue...\n" key
 echo "#### Setting up OTCamera"
 
 echo "    Installing packages"
-apt install python3-pip git nginx -y
+apt install python3-pip git -y
 
 read -p "Press any key to continue...\n" key
 echo "    Cloning OTCamera"
@@ -51,7 +51,8 @@ cd OTCamera
 pip install -r requirements.txt --upgrade
 
 read -p "Press any key to continue...\n" key
-echo "    Changing nginx root"
+echo "    Installing nginx"
+apt install nginx -y
 PWD=$(pwd)
 NGINXDEFAULT="/etc/nginx/sites-available/default"
 sed $NGINXDEFAULT -i -e "s?root /var/www/html?root $PWD/webfiles?g"
@@ -59,6 +60,9 @@ sed $NGINXDEFAULT -i -e "s?root /var/www/html?root $PWD/webfiles?g"
 
 read -p "Press any key to continue...\n" key
 echo "     Configure wifi access-point"
+
+echo "     Installing servies"
+sudo apt install hostapd dnsmasq dhcpcd -y
 
 echo "Configure hostapd"
 HOSTAPD="/etc/default/hostapd"
