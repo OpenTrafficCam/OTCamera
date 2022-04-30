@@ -7,12 +7,12 @@ APCHANNEL="11"
 IPRANGE="10.10.10"
 BRANCH="first-version"
 
-read -sp "Press any key to continue...\n" key
+read -p "Press any key to continue...\n" key
 echo "#### Configure Rasperry Pi"
 echo "Configure legacy camera mode using raspi-config"
 raspi-config nonint do_legacy 0
 
-read -sp "Press any key to continue...\n" key
+read -p "Press any key to continue...\n" key
 echo "    Setting $CONFIG variables"
 CONFIG="/boot/config.txt"
 echo "# OTCamera" >> $CONFIG
@@ -25,39 +25,39 @@ echo "dtparam=audio=off" >> $CONFIG
 sed $CONFIG -i -e "s/^display_auto_detect=1/#display_auto_detect=1/g"
 echo "display_auto_detect=0" >> $CONFIG
 
-read -sp "Press any key to continue...\n" key
+read -p "Press any key to continue...\n" key
 echo "    Installing GL Legacy Drivers"
 apt install gldriver-test libgl1-mesa-dri -y
 sed $CONFIG -i -e "s/^dtoverlay=vc4-fkms-v3d/#dtoverlay=vc4-fkms-v3d/g"
 sed $CONFIG -i -e "s/^dtoverlay=vc4-kms-v3d/#dtoverlay=vc4-kms-v3d/g"
 
-read -sp "Press any key to continue...\n" key
+read -p "Press any key to continue...\n" key
 echo "    Setting power safing variables"
 RCLOCAL="/etc/rc.local"
 sed $RCLOCAL -i -e "/exit 0/i /usr/bin/tvservice -o"
 sed $RCLOCAL -i -e "/exit 0/i /sbin/iw dev wlan0 set power_save off"
 
 
-read -sp "Press any key to continue...\n" key
+read -p "Press any key to continue...\n" key
 echo "#### Setting up OTCamera"
 
 echo "    Installing packages"
 apt install python3-pip git nginx -y
 
-read -sp "Press any key to continue...\n" key
+read -p "Press any key to continue...\n" key
 echo "    Cloning OTCamera"
 git clone --branch $BRANCH https://github.com/OpenTrafficCam/OTCamera.git
 cd OTCamera
 pip install -r requirements.txt --upgrade
 
-read -sp "Press any key to continue...\n" key
+read -p "Press any key to continue...\n" key
 echo "    Changing nginx root"
 PWD=$(pwd)
 NGINXDEFAULT="/etc/nginx/sites-available/default"
 sed $NGINXDEFAULT -i -e "s?root /var/www/html?root $PWD/webfiles?g"
 
 
-read -sp "Press any key to continue...\n" key
+read -p "Press any key to continue...\n" key
 echo "     Configure wifi access-point"
 
 echo "Configure hostapd"
@@ -85,7 +85,7 @@ echo "rsn_pairwise=CCMP" >> $HOSTAPDCONF
 echo "wpa_passphrase=$APPASSWORD" >> $HOSTAPDCONF
 echo "beacon_int=100" >> $HOSTAPDCONF
 
-read -sp "Press any key to continue...\n" key
+read -p "Press any key to continue...\n" key
 echo "    Configure DHCPCD"
 DHCPDCONF="/etc/dhcpcd.conf"
 cp $DHCPDCONF $DHCPDCONF".backup"
@@ -95,7 +95,7 @@ echo "    static ip_address=$IPRANGE.1/24" >> $DHCPDCONF
 echo "    nohook wpa_supplicant" >> $DHCPDCONF
 echo "done"
 
-read -sp "Press any key to continue...\n" key
+read -p "Press any key to continue...\n" key
 echo "    Configure DNSMASQ"
 DNSMASQCONF="/etc/dnsmasq.conf"
 mv $DNSMASQCONF $DNSMASQCONF".backup"
@@ -109,18 +109,18 @@ echo "bogus-priv" >> $DNSMASQCONF
 echo "dhcp-range=$IPRANGE.10,$IPRANGE.250,255.255.255.0,2h" >> $DNSMASQCONF
 echo "done"
 
-read -sp "Press any key to continue...\n" key
+read -p "Press any key to continue...\n" key
 echo "Unmask hostapd.service"
 systemctl unmask hostapd.service
 
-read -sp "Press any key to continue...\n" key
+read -p "Press any key to continue...\n" key
 echo "Disabling Services"
 systemctl disable hostapd.service
 systemctl disable dhcpcd.service
 systemctl disable dnsmasq.service
 
 
-read -sp "Press any key to continue...\n" key
+read -p "Press any key to continue...\n" key
 echo "    Enable Wifi AP at boot"
 RCLOCAL="/etc/rc.local"
 sed $RCLOCAL -i -e "/exit 0/i iw dev uap0 del"
@@ -134,11 +134,11 @@ sed $RCLOCAL -i -e "/exit 0/i systemctl start dnsmasq.service"
 
 
 echo "#### Done ####"
-read -sp "Press any key to continue...\n" key
+read -p "Press any key to continue...\n" key
 sleep 10
 echo "rebooting..."
 sleep 2
-read -sp "Press any key to continue...\n" key
+read -p "Press any key to continue...\n" key
 sudo reboot
 
 
