@@ -21,6 +21,7 @@ Check if enough filespace is available and delete old files until it's enough.
 
 import os
 from pathlib import Path
+from typing import Union
 
 import psutil
 
@@ -30,7 +31,7 @@ from OTCamera.helpers import log
 log.write("filesystem", level=log.LogLevel.DEBUG)
 
 
-def delete_old_files():
+def delete_old_files(video_dir: str = config.VIDEO_DIR):
     """Delete old files until enough space available.
 
     Checks if enough space (config.MINFREESPACE) is a availabe to save video files.
@@ -38,12 +39,21 @@ def delete_old_files():
     space is available on disk.
 
     """
-    absolute_video_path = str(Path(config.VIDEOPATH).expanduser().resolve())
+    absolute_video_path = str(Path(video_dir).expanduser().resolve())
     log.write("delete old file", level=log.LogLevel.DEBUG)
     min_free_space = config.MINFREESPACE * 1024 * 1024 * 1024
 
     while not _enough_space(min_free_space, absolute_video_path):
-        oldest_video = min(os.listdir(absolute_video_path), key=os.path.getctime)
+        video_paths = os.listdir(absolute_video_path)
+        if not video_paths:
+            log.write(
+                (
+                    f"Directory '{absolute_video_path}' is empty. "
+                    "No more files to delete."
+                )
+            )
+            break
+        oldest_video = min(video_paths, key=os.path.getctime)
         os.remove(Path(absolute_video_path, oldest_video))
         log.breakline()
         log.write("Deleted " + oldest_video)

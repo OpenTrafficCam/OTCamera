@@ -1,4 +1,4 @@
-from OTCamera.record import record
+from OTCamera import record
 
 if __name__ == "__main__":
-    record()
+    record.main()

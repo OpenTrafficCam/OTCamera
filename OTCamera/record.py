@@ -23,11 +23,13 @@ It is configured by config.py.
 import errno
 from time import sleep
 
+
 from OTCamera import status
 from OTCamera.hardware import led
 from OTCamera.hardware.camera import Camera
 from OTCamera.helpers import log
 from OTCamera.helpers.filesystem import delete_old_files
+from OTCamera import config
 
 
 def init():
@@ -55,7 +57,7 @@ def loop(camera: Camera):
         sleep(0.5)
 
 
-def record():
+def record(camera: Camera, video_dir: str = config.VIDEO_DIR) -> None:
     """Run init and record loop.
 
     Initializes the LEDs and Wifi AP.
@@ -77,7 +79,8 @@ def record():
             except OSError as oe:
                 if oe.errno == errno.ENOSPC:  # errno: no space left on device
                     log.write(str(oe), level=log.LogLevel.EXCEPTION)
-                    delete_old_files()
+                    print("ENOSPC error handled in record function")
+                    delete_old_files(video_dir=video_dir)
                 else:
                     log.write("OSError occured", level=log.LogLevel.ERROR)
                     raise
@@ -95,5 +98,11 @@ def record():
         log.closefile()
 
 
+def main() -> None:
+    camera = Camera()
+    video_dir = config.VIDEO_DIR
+    record(camera, video_dir)
+
+
 if __name__ == "__main__":
-    record()
+    main()

@@ -21,8 +21,8 @@ All the configuration of OTCamera is done here.
 
 import socket
 
-DEBUG = False
-"""Turn debug mode on to get addition log entries."""
+DEBUG = True
+"""Turn debug mode on to get additional log entries."""
 
 STARTHOUR = 6
 """Hour of day when to start recording."""
@@ -39,7 +39,7 @@ MINFREESPACE = 1
 """free space in GB on sd card before old videos get deleted."""
 PREFIX = socket.gethostname()
 """prefix for videoname and annotation."""
-VIDEOPATH = "~/videos/"
+VIDEO_DIR = "~/videos/"
 """path to safe videofiles."""
 PREVIEWPATH = "~/OTCamera/webfiles/preview.jpg"
 """path to save preview."""
