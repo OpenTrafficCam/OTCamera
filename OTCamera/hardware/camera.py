@@ -68,8 +68,6 @@ class Camera(Singleton):
         self._picam = self._create_picam()
         log.write("Camera initialized")
 
-    # TODO: getter fuer recording
-
     def start_recording(self):
         """Start a recording a video.
 
@@ -99,12 +97,10 @@ class Camera(Singleton):
             )
             log.write(f"Picam recording: {self._picam.recording}")
             log.write("started recording")
-            self._wait_recording(2)
-            self._capture()
             led.rec_on()
             status.recording = True
-            # if fail
-            # picam = init()
+            self._wait_recording(2)
+            self._capture()
 
     def _capture(self):
         self._picam.annotate_text = name.annotate()
