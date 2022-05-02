@@ -1,11 +1,12 @@
 import errno
 import shutil
-from unittest import mock
-import pytest
 from pathlib import Path
+from unittest import mock
 
-from OTCamera.record import record
+import pytest
+
 from OTCamera.hardware.camera import Camera
+from OTCamera.record import record
 
 
 @pytest.fixture

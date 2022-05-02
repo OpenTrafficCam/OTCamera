@@ -1,11 +1,11 @@
 import shutil
+from pathlib import Path
 from unittest import mock
 
 import pytest
-from pathlib import Path
 
-from OTCamera.helpers.filesystem import delete_old_files
 from OTCamera.helpers.errors import NoMoreFilesToDeleteError
+from OTCamera.helpers.filesystem import delete_old_files
 
 
 @pytest.fixture(scope="function")

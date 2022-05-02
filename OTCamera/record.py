@@ -23,13 +23,11 @@ It is configured by config.py.
 import errno
 from time import sleep
 
-
-from OTCamera import status
+from OTCamera import config, status
 from OTCamera.hardware import led
 from OTCamera.hardware.camera import Camera
 from OTCamera.helpers import log
 from OTCamera.helpers.filesystem import delete_old_files
-from OTCamera import config
 
 
 def init():
