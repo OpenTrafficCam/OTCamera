@@ -22,6 +22,8 @@ or log.otc() to log and print a OpenTrafficCam logo.
 # You should have received a copy of the GNU General Public License along with this
 # program.  If not, see <https://www.gnu.org/licenses/>.
 
+import traceback
+from enum import Enum
 
 from art import text2art
 
@@ -29,7 +31,18 @@ from OTCamera.config import DEBUG
 from OTCamera.helpers import name
 
 
-def write(msg, level="info", reboot=True):
+class LogLevel(Enum):
+    DEBUG = "DEBUG"
+    INFO = "INFO"
+    WARNING = "WARNING"
+    ERROR = "ERROR"
+    EXCEPTION = "EXCEPTION"
+
+    def __str__(self):
+        return str(self.value)
+
+
+def write(msg: str, level: LogLevel = LogLevel.INFO, reboot: bool = True):
     """Write any message to logfile.
 
     Takes a message, adds date and time and writes it to a logfile (name.log).
@@ -39,14 +52,17 @@ def write(msg, level="info", reboot=True):
         level (str): either "debug", "info", "warning", "error", "exception"
         reboot (bool, optional): Perform reboot if logging fails. Defaults to True.
     """
-    level = level.upper()
-    if level == "DEBUG":
+    if level == LogLevel.DEBUG:
         if not DEBUG:
             return
-    msg = "{t} {level}: {msg}".format(
-        t=name._current_dt(), level=level.upper(), msg=msg
-    )
+    msg = f"{name._current_dt()} {level}: {msg}"
     _write(msg, reboot)
+    if level == LogLevel.EXCEPTION:
+        _write(_get_stack_trace(), reboot)
+
+
+def _get_stack_trace() -> str:
+    return traceback.format_exc()
 
 
 def breakline(reboot=True):

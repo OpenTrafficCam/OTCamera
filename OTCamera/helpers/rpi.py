@@ -23,10 +23,12 @@ from subprocess import call
 from time import sleep
 
 from OTCamera import config, status
-from OTCamera.hardware import button, camera, led
+from OTCamera.hardware import button, led
+from OTCamera.hardware.camera import Camera
 from OTCamera.helpers import log
 
-log.write("rpi", level="debug")
+log.write("rpi", level=log.LogLevel.DEBUG)
+camera = Camera()
 
 
 def shutdown():

@@ -25,7 +25,7 @@ from gpiozero import PWMLED
 from OTCamera import config
 from OTCamera.helpers import log
 
-log.write("leds", level="debug")
+log.write("leds", level=log.LogLevel.DEBUG)
 
 
 def off():
@@ -65,7 +65,7 @@ def power_on():
 
 if config.USE_LED:
 
-    log.write("Initalizing LEDs", level="debug")
+    log.write("Initalizing LEDs", level=log.LogLevel.DEBUG)
 
     POWERPIN = 13
     WIFIPIN = 12

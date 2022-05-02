@@ -27,7 +27,7 @@ from gpiozero import Button
 from OTCamera import config, status
 from OTCamera.helpers import log, rpi
 
-log.write("buttons", level="debug")
+log.write("buttons", level=log.LogLevel.DEBUG)
 
 
 def its_record_time():
@@ -50,14 +50,16 @@ def its_record_time():
 
 def _hour_switched():
     if hour.is_pressed:
+        status.button_hour_pressed = True
         log.write("Hour Switch pressed")
     elif not hour.is_pressed:
+        status.button_hour_pressed = False
         log.write("Hour Switch released")
 
 
 if config.USE_BUTTONS:
 
-    log.write("Initalizing LEDs", level="debug")
+    log.write("Initalizing LEDs", level=log.LogLevel.DEBUG)
 
     POWERPIN = 6
     HOURPIN = 19
@@ -74,6 +76,7 @@ if config.USE_BUTTONS:
     wifi.when_released = rpi.wifi
     hour.when_pressed = _hour_switched
     hour.when_released = _hour_switched
+    status.button_hour_pressed = hour.is_pressed
 
     log.write("Buttons initialized")
 

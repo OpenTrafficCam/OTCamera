@@ -23,8 +23,10 @@ It is configured by config.py.
 from time import sleep
 
 from OTCamera import status
-from OTCamera.hardware import camera, led
+from OTCamera.hardware import led
+from OTCamera.hardware.camera import Camera
 from OTCamera.helpers import log
+from OTCamera.helpers.filesystem import delete_old_files
 
 
 def init():
@@ -35,7 +37,7 @@ def init():
     # TODO: turn wifi AP on #41
 
 
-def loop():
+def loop(camera: Camera):
     """Record and split videos.
 
     While it is recording time (see status.py), starts recording videos, splits them
@@ -61,22 +63,35 @@ def record():
     every interval (see config.py), captures a new preview image and stops recording
     after recording time ends.
 
-    Stops everthing by keyboard interrupt (Ctrl+C).
+    Stops everything by keyboard interrupt (Ctrl+C).
 
     """
     try:
+        camera = Camera()
         init()
 
         while status.more_intervals:
-            loop()
+            try:
+                loop(camera)
+            except OSError as oe:
+                if oe.errno == 28:  # errno: no space left on device
+                    log.write(str(oe), level=log.LogLevel.EXCEPTION)
+                    delete_old_files()
+                else:
+                    log.write("OSError occured", level=log.LogLevel.ERROR)
+                    raise
 
-        log.write("Captured all intervals, stopping", level="warning")
-
-    except (KeyboardInterrupt):
-        log.write("Keyboard Interrupt, stopping", level="warning")
-
-    camera.stop_recording()
-    log.closefile()
+        log.write("Captured all intervals, stopping", level=log.LogLevel.WARNING)
+    except KeyboardInterrupt:
+        log.write("Keyboard Interrupt, stopping", level=log.LogLevel.EXCEPTION)
+    except Exception as e:
+        log.write(f"{e}", level=log.LogLevel.EXCEPTION)
+        raise
+    finally:
+        log.write("Execute teardown!", level=log.LogLevel.INFO)
+        camera.stop_recording()
+        camera.close()
+        log.closefile()
 
 
 if __name__ == "__main__":
