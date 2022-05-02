@@ -24,7 +24,7 @@ from time import sleep
 from typing import Tuple, Union
 
 import picamerax as picamera
-from colorzero import Color
+from picamerax import Color
 
 from OTCamera import config, status
 from OTCamera.hardware import led
