@@ -57,7 +57,7 @@ def loop(camera: Camera):
         sleep(0.5)
 
 
-def record(camera: Camera, video_dir: str = config.VIDEO_DIR) -> None:
+def record(camera: Camera = Camera(), video_dir: str = config.VIDEO_DIR) -> None:
     """Run init and record loop.
 
     Initializes the LEDs and Wifi AP.
@@ -70,7 +70,6 @@ def record(camera: Camera, video_dir: str = config.VIDEO_DIR) -> None:
 
     """
     try:
-        camera = Camera()
         init()
 
         while status.more_intervals:
