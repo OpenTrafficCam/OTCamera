@@ -79,7 +79,7 @@ def delete_old_files(
         oldest_video.unlink()
         log.breakline()
         log.write(f"Deleted {oldest_video}")
-        free_space = psutil.disk_usage("/").free
+        free_space = psutil.disk_usage(video_paths).free
         log.write(f"free space: {free_space}", level=log.LogLevel.DEBUG)
 
 
