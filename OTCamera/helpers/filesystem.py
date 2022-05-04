@@ -57,7 +57,7 @@ def delete_old_files(
     log.write("delete old file", level=log.LogLevel.DEBUG)
     min_free_space = min_free_space * 1024 * 1024 * 1024
 
-    while not _enough_space(min_free_space, absolute_video_dirpath):
+    while not _enough_space(absolute_video_dirpath, min_free_space):
         video_paths = [
             f for f in absolute_video_dirpath.iterdir() if f.suffix != ".log"
         ]
@@ -83,8 +83,8 @@ def delete_old_files(
         log.write(f"free space: {free_space}", level=log.LogLevel.DEBUG)
 
 
-def _enough_space(min_free_space: int, video_path: Path) -> bool:
-    free_space = psutil.disk_usage(video_path).free
+def _enough_space(directory: Path, min_free_space: int) -> bool:
+    free_space = psutil.disk_usage(directory).free
     log.write(f"free space: {free_space}", level=log.LogLevel.DEBUG)
     log.write(f"min space: {min_free_space}", level=log.LogLevel.DEBUG)
     return free_space > min_free_space
