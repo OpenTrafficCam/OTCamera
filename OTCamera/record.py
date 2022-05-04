@@ -76,7 +76,6 @@ def record(camera: Camera = Camera(), video_dir: str = config.VIDEO_DIR) -> None
             except OSError as oe:
                 if oe.errno == errno.ENOSPC:  # errno: no space left on device
                     log.write(str(oe), level=log.LogLevel.EXCEPTION)
-                    print("ENOSPC error handled in record function")
                     delete_old_files(video_dir=video_dir)
                 else:
                     log.write("OSError occured", level=log.LogLevel.ERROR)
