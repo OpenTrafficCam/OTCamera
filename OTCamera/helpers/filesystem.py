@@ -61,7 +61,7 @@ def delete_old_files(
         video_paths = [
             f for f in absolute_video_dirpath.iterdir() if f.suffix != ".log"
         ]
-        if not video_paths or len(video_paths) <= 1:
+        if len(video_paths) <= 1:
             log.write(
                 (
                     f"Directory '{absolute_video_dirpath}' is empty. "
