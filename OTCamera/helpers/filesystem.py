@@ -64,8 +64,8 @@ def delete_old_files(
         if len(video_paths) <= 1:
             log.write(
                 (
-                    f"Directory '{absolute_video_dirpath}' is empty. "
-                    "No more files to delete."
+                    "No more video files to be deleted "
+                    f"in directory '{absolute_video_dirpath}'."
                 )
             )
             raise NoMoreFilesToDeleteError(
