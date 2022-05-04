@@ -53,22 +53,24 @@ def delete_old_files(
         This implies that there is no space left
 
     """
-    absolute_video_path = Path(video_dir).expanduser().resolve()
+    absolute_video_dirpath = Path(video_dir).expanduser().resolve()
     log.write("delete old file", level=log.LogLevel.DEBUG)
     min_free_space = min_free_space * 1024 * 1024 * 1024
 
-    while not _enough_space(min_free_space, absolute_video_path):
-        video_paths = [f for f in absolute_video_path.iterdir() if f.suffix != ".log"]
+    while not _enough_space(min_free_space, absolute_video_dirpath):
+        video_paths = [
+            f for f in absolute_video_dirpath.iterdir() if f.suffix != ".log"
+        ]
         if not video_paths or len(video_paths) <= 1:
             log.write(
                 (
-                    f"Directory '{absolute_video_path}' is empty. "
+                    f"Directory '{absolute_video_dirpath}' is empty. "
                     "No more files to delete."
                 )
             )
             raise NoMoreFilesToDeleteError(
                 (
-                    f"Folder: '{absolute_video_path}' is empty. "
+                    f"Folder: '{absolute_video_dirpath}' is empty. "
                     "No more files to be deleted.\n"
                     "Please make space to resume recording."
                 )
