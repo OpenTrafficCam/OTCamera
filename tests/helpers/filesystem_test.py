@@ -10,16 +10,16 @@ from OTCamera.helpers.filesystem import delete_old_files
 
 @pytest.fixture(scope="function")
 def temp_dir(test_dir: Path) -> Path:
-    tmp_tests_dir = test_dir / "filesystem"
-    tmp_tests_dir.mkdir(exist_ok=True)
-    Path(tmp_tests_dir, "logfile.log").touch()
-    vid_1 = Path(tmp_tests_dir, "video_1.h264")
-    vid_2 = Path(tmp_tests_dir, "video_2.h264")
+    _dir = test_dir / "filesystem"
+    _dir.mkdir(exist_ok=True)
+    Path(_dir, "logfile.log").touch()
+    vid_1 = Path(_dir, "video_1.h264")
+    vid_2 = Path(_dir, "video_2.h264")
     vid_1.touch()
     vid_2.touch()
-    assert get_dir_size(tmp_tests_dir) == 3
-    yield tmp_tests_dir
-    shutil.rmtree(tmp_tests_dir)
+    assert get_dir_size(_dir) == 3
+    yield _dir
+    shutil.rmtree(_dir)
 
 
 @pytest.fixture(scope="function")
