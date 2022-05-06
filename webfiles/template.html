@@ -14,12 +14,13 @@
     <h1>OTCamera</h1>
     <img src="preview.jpg" alt="Vorschau" style="max-height: 100%; max-width: 100%;">
 
-    <div id="status-info">
+    <div id="status-info" style="display:revert">
         <h2>OTCamera Status Information</h2>
         <table>
             <tr>
                 <th>Current Time</th>
-                <th id="time"></th>
+                <th id=" time">
+                </th>
             </tr>
             <tr>
                 <th>Host Name</th>
@@ -34,12 +35,16 @@
                 <th id="num-videos"></th>
             </tr>
             <tr>
+                <th>Camera Currently Recording</th>
+                <th id="currently-recording"></th>
+            </tr>
+            <tr>
                 <th>Wifi Active</th>
                 <th id="wifi-active"></th>
             </tr>
             <tr>
                 <th>Battery Low</th>
-                <th id="battery"></th>
+                <th id="low-battery"></th>
             </tr>
             <tr>
                 <th>Power Button Active</th>
@@ -56,7 +61,7 @@
         </table>
 
     </div>
-    <div id="config" , style="display:none">
+    <div id="config-info" , style="display: none">
         <h2>OTCamera Configuration</h2>
         <table>
             <tr>
