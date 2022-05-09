@@ -19,10 +19,19 @@ Contains all status variables and functions to be used across multiple modules.
 # program.  If not, see <https://www.gnu.org/licenses/>.
 
 
+import re
+import socket
+import subprocess
 from datetime import datetime as dt
+from pathlib import Path
+from typing import Union
+
+import psutil
 
 from OTCamera import config
 from OTCamera.helpers import log
+from OTCamera.helpers.errors import NetworkDeviceDoesNotExistError
+from OTCamera.html_updater import StatusData
 
 log.write("status", level=log.LogLevel.DEBUG)
 
@@ -69,6 +78,17 @@ def preview_on():
         return wifiapon
     else:
         return True
+
+
+def get_status_data() -> StatusData:
+    """Returns OTCamera's status information."""
+    time = dt.now().strftime("%d.%m.%Y %H:%M:%S")
+    hostname = socket.gethostname()
+    free_diskspace = _calc_free_diskspace(config.VIDEO_DIR)
+    num_videos_recorded = _get_num_videos()
+    currently_recording = recording
+    wifi_active = _is_wifi_enabled()
+    low_battery = None
 
 
 def _is_wifi_enabled(network_device_name: str = "wlan0") -> bool:
