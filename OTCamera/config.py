@@ -43,6 +43,7 @@ VIDEO_DIR = "~/videos/"
 """path to safe videofiles."""
 PREVIEWPATH = "~/OTCamera/webfiles/preview.jpg"
 """path to save preview."""
+TEMPLATE_HTML_PATH = "~/OTCamera/webfiles/template.html"
 INDEX_HTML_PATH = "~/OTCamera/webfiles/index.html"
 
 
