@@ -21,7 +21,7 @@ class StatusData(OTCameraHTMLDataObject):
 
     time: Tuple[str, str]
     hostname: Tuple[str, str]
-    free_space_on_disk: Tuple[str, int]
+    free_diskspace: Tuple[str, int]
     num_videos_recorded: Tuple[str, int]
     currently_recording: Tuple[str, bool]
     wifi_active: Tuple[str, bool]
@@ -145,7 +145,7 @@ if __name__ == "__main__":
     status_data = StatusData(
         time=("time", "2022-05-05T11:26:30"),
         hostname=("hostname", "my-hostname"),
-        free_space_on_disk=("disk-space", 12),
+        free_diskspace=("free-diskspace", 12),
         num_videos_recorded=("num-videos", 4),
         currently_recording=("currently-recording", True),
         wifi_active=("wifi-active", True),
