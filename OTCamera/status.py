@@ -104,5 +104,29 @@ def _is_wifi_enabled(network_device_name: str = "wlan0") -> bool:
     elif re.search("(Device).*(does not exist)", str(out), re.IGNORECASE):
         raise NetworkDeviceDoesNotExistError(f"Network device {network_device_name}")
 
+
+def _get_num_videos(
+    video_dir: Union[str, Path] = config.VIDEO_DIR, filetype: str = config.FORMAT
+) -> int:
+    """
+    Returns the number of videos in a directory.
+
+    Args:
+        video_dir (Union[str, Path]): Path to directory containing the videos.
+        filetype (str): The filetype of a video file.
+
+    Returns:
+        The number of videos in a directory.
+    """
+    if Path(video_dir).is_dir():
+        raise NotADirectoryError(f"'{video_dir}' is not a directory!")
+
+    return len([f for f in video_dir.iterdir() if f.suffix == filetype])
+
+
+def _calc_free_diskspace(directory: Union[str, Path]) -> int:
+    return psutil.disk_usage(directory).free
+
+
 if __name__ == "__main__":
     pass
