@@ -1,9 +1,8 @@
 from abc import ABC
-from dataclasses import dataclass
-from dataclasses import fields
-
+from dataclasses import dataclass, fields
 from pathlib import Path
 from typing import Tuple, Union
+
 from bs4 import BeautifulSoup, Tag
 
 
