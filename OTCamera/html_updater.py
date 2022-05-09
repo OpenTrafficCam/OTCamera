@@ -1,7 +1,6 @@
 from abc import ABC
 from dataclasses import dataclass
 from dataclasses import fields
-from distutils.command.config import config
 
 from pathlib import Path
 from typing import Tuple, Union
