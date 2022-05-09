@@ -28,6 +28,7 @@ from OTCamera.hardware import led
 from OTCamera.hardware.camera import Camera
 from OTCamera.helpers import log
 from OTCamera.helpers.filesystem import delete_old_files
+from OTCamera.html_updater import OTCameraHTMLUpdater
 
 
 def init():
@@ -55,7 +56,11 @@ def loop(camera: Camera):
         sleep(0.5)
 
 
-def record(camera: Camera = Camera(), video_dir: str = config.VIDEO_DIR) -> None:
+def record(
+    camera: Camera = Camera(),
+    video_dir: str = config.VIDEO_DIR,
+    html_updater: OTCameraHTMLUpdater = OTCameraHTMLUpdater(debug_mode_on=config.DEBUG),
+) -> None:
     """Run init and record loop.
 
     Initializes the LEDs and Wifi AP.
@@ -97,7 +102,12 @@ def record(camera: Camera = Camera(), video_dir: str = config.VIDEO_DIR) -> None
 def main() -> None:
     camera = Camera()
     video_dir = config.VIDEO_DIR
-    record(camera, video_dir)
+    html_updater = OTCameraHTMLUpdater(
+        status_info_id="status-info",
+        config_info_id="config-info",
+        debug_mode_on=config.DEBUG,
+    )
+    record(camera, video_dir, html_updater)
 
 
 if __name__ == "__main__":
