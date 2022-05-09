@@ -20,6 +20,8 @@ All the configuration of OTCamera is done here.
 
 
 import socket
+from pathlib import Path
+from typing import Union
 
 DEBUG = True
 """Turn debug mode on to get additional log entries."""
@@ -81,8 +83,20 @@ QUALITY = 30
 
 # hardware settings
 USE_LED = False
-"""True is Status-LEDs are connected."""
+"""True if Status-LEDs are connected."""
 USE_BUTTONS = False
 """True if hardware buttons are connected."""
 WIFIDELAY = 900
 """Delay in seconds before wifi turns off."""
+
+
+def read_user_config(path_to_config: Union[str, Path]) -> dict:
+    validate_user_config()
+
+    if not Path(path_to_config).is_file():
+        # TODO: read default config
+        pass
+
+
+def validate_user_config():
+    pass
