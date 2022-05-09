@@ -71,5 +71,38 @@ def preview_on():
         return True
 
 
+def _is_wifi_enabled(network_device_name: str = "wlan0") -> bool:
+    """
+    Checks if WiFi is enabled.
+
+    On Linux the WiFI network device is usually denoted by 'wlan0'.
+
+    Args:
+        network_device_name (str): The network device's name.
+
+    Returns:
+        True if WiFI enabled otherwise False.
+
+    Raises:
+        Exception: If unknown error occurs.
+        NetworkDeviceDoesNotExistError: If network name doesn't exist.
+    """
+    cmd = f"ip link show {network_device_name}"
+    p = subprocess.Popen(
+        cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+    )
+    out, error = p.communicate()
+    if error:
+        err_msg = f"Error: '{error} occured while checking WIFI status."
+        log.write(err_msg, log.LogLevel.ERROR)
+        raise Exception(err_msg)
+
+    if re.search("state up", str(out), re.IGNORECASE):
+        return True
+    elif re.search("state down", str(out), re.IGNORECASE):
+        return False
+    elif re.search("(Device).*(does not exist)", str(out), re.IGNORECASE):
+        raise NetworkDeviceDoesNotExistError(f"Network device {network_device_name}")
+
 if __name__ == "__main__":
     pass
