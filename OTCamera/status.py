@@ -30,7 +30,6 @@ import psutil
 
 from OTCamera import config
 from OTCamera.helpers import log
-from OTCamera.helpers.errors import NetworkDeviceDoesNotExistError
 from OTCamera.html_updater import StatusData
 
 log.write("status", level=log.LogLevel.DEBUG)
@@ -123,11 +122,17 @@ def _is_wifi_enabled(network_device_name: str = "wlan0") -> bool:
         raise Exception(err_msg)
 
     if re.search("state up", str(out), re.IGNORECASE):
+        # TODO: logging
         return True
     elif re.search("state down", str(out), re.IGNORECASE):
+        # TODO: logging
         return False
     elif re.search("(Device).*(does not exist)", str(out), re.IGNORECASE):
-        raise NetworkDeviceDoesNotExistError(f"Network device {network_device_name}")
+        # TODO: logging
+        return False
+
+
+# TODO: ip address
 
 
 def _get_num_videos(
