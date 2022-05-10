@@ -87,7 +87,7 @@ def reboot():
     log.breakline()
     log.closefile()
     camera.stop_recording()
-    if not config.DEBUG:
+    if not config.DEBUG_MODE_ON:
         call("sudo reboot", shell=True)
 
 
@@ -109,8 +109,8 @@ def wifi():
         status.wifiapon = True
     elif not button.wifi_ap_button.is_pressed and status.wifiapon:
         led.power.pulse(fade_in_time=0.25, fade_out_time=0.25, n=2, background=True)
-        if not config.DEBUG:
-            sleep(config.WIFIDELAY)
+        if not config.DEBUG_MODE_ON:
+            sleep(config.WIFI_DELAY)
         if not button.wifi_ap_button.is_pressed and status.wifiapon:
             log.write("Turn WifiAP OFF")
             call("sudo systemctl stop hostapd.service", shell=True)

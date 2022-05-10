@@ -23,27 +23,27 @@ import socket
 from pathlib import Path
 from typing import Union
 
-DEBUG = True
+DEBUG_MODE_ON = True
 """Turn debug mode on to get additional log entries."""
 
-STARTHOUR = 6
+START_HOUR = 6
 """Hour of day when to start recording."""
-ENDHOUR = 22
+END_HOUR = 22
 """Hour of day when to end recording."""
-INTERVAL = 15
+INTERVAL_VIDEO_SPLIT = 15
 """Interval length in minutes before video splits."""
 N_INTERVALS = 0
 """Number of full intervals to record (0=infinit)."""
 PREVIEW_INTERVAL = 5
 """Interval between two preview images in seconds."""
 
-MINFREESPACE = 1
+MIN_FREE_SPACE = 1
 """free space in GB on sd card before old videos get deleted."""
 PREFIX = socket.gethostname()
 """prefix for videoname and annotation."""
 VIDEO_DIR = "~/videos/"
 """path to safe videofiles."""
-PREVIEWPATH = "~/OTCamera/webfiles/preview.jpg"
+PREVIEW_PATH = "~/OTCamera/webfiles/preview.jpg"
 """path to save preview."""
 TEMPLATE_HTML_PATH = "~/OTCamera/webfiles/template.html"
 INDEX_HTML_PATH = "~/OTCamera/webfiles/index.html"
@@ -66,19 +66,19 @@ AWB_MODE = "greyworld"
 is a specific mode for NoIR modules."""
 
 # video settings
-FORMAT = "h264"
+VIDEO_FORMAT = "h264"
 """Encoding format."""
-PREVIEWFORMAT = "jpeg"
+PREVIEW_FORMAT = "jpeg"
 """Filetype of the static preview image."""
-RESIZE = (800, 600)
+RESOLUTION_SAVED_VIDEO_FILE = (800, 600)
 """Resolution of the saved Videofile, not the camera itself."""
-PROFILE = "high"
+H264_PROFILE = "high"
 """Profile used in h264 encoder."""
-LEVEL = "4"
+H264_LEVEL = "4"
 """Level used in h264 encoder."""
-BITRATE = 600000
+H264_BITRATE = 600000
 """Bitrate used in h264 encoder."""
-QUALITY = 30
+H264_QUALITY = 30
 """Quality used in h264 encoder."""
 
 # hardware settings
@@ -86,7 +86,7 @@ USE_LED = False
 """True if Status-LEDs are connected."""
 USE_BUTTONS = False
 """True if hardware buttons are connected."""
-WIFIDELAY = 900
+WIFI_DELAY = 900
 """Delay in seconds before wifi turns off."""
 
 

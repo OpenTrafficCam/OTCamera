@@ -59,7 +59,9 @@ def loop(camera: Camera):
 def record(
     camera: Camera = Camera(),
     video_dir: str = config.VIDEO_DIR,
-    html_updater: OTCameraHTMLUpdater = OTCameraHTMLUpdater(debug_mode_on=config.DEBUG),
+    html_updater: OTCameraHTMLUpdater = OTCameraHTMLUpdater(
+        debug_mode_on=config.DEBUG_MODE_ON
+    ),
 ) -> None:
     """Run init and record loop.
 
@@ -105,7 +107,7 @@ def main() -> None:
     html_updater = OTCameraHTMLUpdater(
         status_info_id="status-info",
         config_info_id="config-info",
-        debug_mode_on=config.DEBUG,
+        debug_mode_on=config.DEBUG_MODE_ON,
     )
     record(camera, video_dir, html_updater)
 

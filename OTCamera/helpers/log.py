@@ -27,7 +27,7 @@ from enum import Enum
 
 from art import text2art
 
-from OTCamera.config import DEBUG
+from OTCamera.config import DEBUG_MODE_ON
 from OTCamera.helpers import name
 
 
@@ -53,7 +53,7 @@ def write(msg: str, level: LogLevel = LogLevel.INFO, reboot: bool = True):
         reboot (bool, optional): Perform reboot if logging fails. Defaults to True.
     """
     if level == LogLevel.DEBUG:
-        if not DEBUG:
+        if not DEBUG_MODE_ON:
             return
     msg = f"{name._current_dt()} {level}: {msg}"
     _write(msg, reboot)

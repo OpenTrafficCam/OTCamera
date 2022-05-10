@@ -88,12 +88,12 @@ class Camera(Singleton):
             self._picam.annotate_text = name.annotate()
             self._picam.start_recording(
                 output=name.video(),
-                format=config.FORMAT,
-                resize=config.RESIZE,
-                profile=config.PROFILE,
-                level=config.LEVEL,
-                bitrate=config.BITRATE,
-                quality=config.QUALITY,
+                format=config.VIDEO_FORMAT,
+                resize=config.RESOLUTION_SAVED_VIDEO_FILE,
+                profile=config.H264_PROFILE,
+                level=config.H264_LEVEL,
+                bitrate=config.H264_BITRATE,
+                quality=config.H264_QUALITY,
             )
             log.write(f"Picam recording: {self._picam.recording}")
             log.write("started recording")
@@ -106,8 +106,8 @@ class Camera(Singleton):
         self._picam.annotate_text = name.annotate()
         self._picam.capture(
             name.preview(),
-            format=config.PREVIEWFORMAT,
-            resize=config.RESIZE,
+            format=config.PREVIEW_FORMAT,
+            resize=config.RESOLUTION_SAVED_VIDEO_FILE,
             use_video_port=True,
         )
         log.write("preview captured", level=log.LogLevel.DEBUG)
@@ -150,7 +150,7 @@ class Camera(Singleton):
 
     def _interval_minute(self):
         current_minute = dt.now().minute
-        interval_minute = (current_minute % config.INTERVAL) == 0
+        interval_minute = (current_minute % config.INTERVAL_VIDEO_SPLIT) == 0
         return interval_minute
 
     def _after_new_interval(self):

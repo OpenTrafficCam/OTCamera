@@ -43,7 +43,7 @@ def its_record_time() -> bool:
     current_hour = dt.now().hour
     record_time = (
         (hour_button.is_pressed)
-        or (current_hour >= config.STARTHOUR and current_hour < config.ENDHOUR)
+        or (current_hour >= config.START_HOUR and current_hour < config.END_HOUR)
     ) and (not status.SHUTDOWNACTIVE)
     return record_time
 

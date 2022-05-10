@@ -83,7 +83,7 @@ def preview():
     Returns:
         str: filename for preview
     """
-    filename = config.PREVIEWPATH
+    filename = config.PREVIEW_PATH
     return str(Path(filename).expanduser().resolve())
 
 

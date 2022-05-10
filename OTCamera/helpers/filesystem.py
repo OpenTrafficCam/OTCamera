@@ -33,7 +33,7 @@ log.write("filesystem", level=log.LogLevel.DEBUG)
 
 def delete_old_files(
     video_dir: Union[str, Path] = config.VIDEO_DIR,
-    min_free_space: int = config.MINFREESPACE,
+    min_free_space: int = config.MIN_FREE_SPACE,
 ) -> None:
     """Delete old files until enough space available.
 

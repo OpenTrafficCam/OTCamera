@@ -60,7 +60,7 @@ def record_time() -> bool:
         bool: Time to record or not.
     """
     current_hour = dt.now().hour
-    bytime = current_hour >= config.STARTHOUR and current_hour < config.ENDHOUR
+    bytime = current_hour >= config.START_HOUR and current_hour < config.END_HOUR
     if config.USE_BUTTONS:
         record = hour_button_pressed or bytime
     else:
@@ -88,7 +88,7 @@ def get_status_data() -> StatusData:
     """Returns OTCamera's status information."""
     time = dt.now().strftime("%d.%m.%Y %H:%M:%S")
     hostname = socket.gethostname()
-    free_diskspace = _calc_free_diskspace(config.VIDEO_DIR)
+    free_diskspace = calc_free_diskspace(config.VIDEO_DIR)
     num_videos_recorded = _get_num_videos()
     currently_recording = recording
     wifi_active = _is_wifi_enabled()
@@ -136,7 +136,7 @@ def _is_wifi_enabled(network_device_name: str = "wlan0") -> bool:
 
 
 def _get_num_videos(
-    video_dir: Union[str, Path] = config.VIDEO_DIR, filetype: str = config.FORMAT
+    video_dir: Union[str, Path] = config.VIDEO_DIR, filetype: str = config.VIDEO_FORMAT
 ) -> int:
     """
     Returns the number of videos in a directory.
