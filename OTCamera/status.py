@@ -148,14 +148,11 @@ def _get_num_videos(
     Returns:
         The number of videos in a directory.
     """
-    if Path(video_dir).is_dir():
+    video_dir = resolve_path(video_dir)
+    if not Path(video_dir).is_dir():
         raise NotADirectoryError(f"'{video_dir}' is not a directory!")
 
-    return len([f for f in video_dir.iterdir() if f.suffix == filetype])
-
-
-def _calc_free_diskspace(directory: Union[str, Path]) -> int:
-    return psutil.disk_usage(directory).free
+    return len([f for f in video_dir.iterdir() if filetype in f.suffix])
 
 
 if __name__ == "__main__":
