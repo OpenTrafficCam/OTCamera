@@ -30,7 +30,8 @@ import psutil
 
 from OTCamera import config
 from OTCamera.helpers import log
-from OTCamera.html_updater import StatusData
+from OTCamera.helpers.filesystem import calc_free_diskspace, resolve_path
+from OTCamera.html_updater import ConfigData, ConfigHtmlId, StatusData, StatusHtmlId
 
 log.write("status", level=log.LogLevel.DEBUG)
 
@@ -92,7 +93,25 @@ def get_status_data() -> StatusData:
     num_videos_recorded = _get_num_videos()
     currently_recording = recording
     wifi_active = _is_wifi_enabled()
-    low_battery = None
+    low_battery = battery_is_low
+    power_button_active = power_button_pressed
+    hour_button_active = hour_button_pressed
+    wifi_ap_on = wifi_ap_button_pressed
+
+    return StatusData(
+        time=(StatusHtmlId.TIME, time),
+        hostname=(StatusHtmlId.HOSTNAME, hostname),
+        free_diskspace=(StatusHtmlId.FREE_DISKSPACE, free_diskspace),
+        num_videos_recorded=(StatusHtmlId.NUM_VIDEOS_RECORDED, num_videos_recorded),
+        currently_recording=(StatusHtmlId.CURRENTLY_RECORDING, currently_recording),
+        wifi_active=(StatusHtmlId.WIFI_ACTIVE, wifi_active),
+        low_battery=(StatusHtmlId.LOW_BATTERY, low_battery),
+        power_button_active=(StatusHtmlId.POWER_BUTTON_ACTIVE, power_button_active),
+        hour_button_active=(StatusHtmlId.HOUR_BUTTON_ACTIVE, hour_button_active),
+        wifi_ap_on=(StatusHtmlId.WIFI_AP_ON, wifi_ap_on),
+    )
+
+
 
 
 def _is_wifi_enabled(network_device_name: str = "wlan0") -> bool:
