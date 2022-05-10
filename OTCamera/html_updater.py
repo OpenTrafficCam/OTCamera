@@ -1,4 +1,4 @@
-import enum
+from enum import Enum
 from abc import ABC
 from dataclasses import dataclass, fields
 from pathlib import Path
@@ -7,7 +7,7 @@ from typing import Tuple, Union
 from bs4 import BeautifulSoup, Tag
 
 
-class StatusHtmlId(enum):
+class StatusHtmlId(Enum):
     TIME = "time"
     HOSTNAME = "hostname"
     FREE_DISKSPACE = "free-diskspace"
@@ -20,7 +20,7 @@ class StatusHtmlId(enum):
     WIFI_AP_ON = "wifi-ap-on"
 
 
-class ConfigHtmlId(enum):
+class ConfigHtmlId(Enum):
     DEBUG_MODE_ON = "debug-mode-on"
     START_HOUR = "start-hour"
     END_HOUR = "end-hour"
