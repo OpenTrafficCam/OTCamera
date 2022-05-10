@@ -1,6 +1,6 @@
-from enum import Enum
 from abc import ABC
 from dataclasses import dataclass, fields
+from enum import Enum
 from pathlib import Path
 from typing import Tuple, Union
 
@@ -24,12 +24,15 @@ class ConfigHtmlId(Enum):
     DEBUG_MODE_ON = "debug-mode-on"
     START_HOUR = "start-hour"
     END_HOUR = "end-hour"
+    INTERVAL_BEFORE_VIDEO_SPLIT = "interval-before-video-split"
     NUM_INTERVALS = "num-intervals"
     PREVIEW_INTERVAL = "preview-interval"
     MIN_FREE_SPACE = "min-free-space"
     PREFIX = "prefix"
     VIDEO_DIR = "video-dir"
     PREVIEW_PATH = "preview-path"
+    TEMPLATE_HTML_PATH = "template-html-path"
+    INDEX_HTML_PATH = "index-html-path"
     FPS = "fps"
     RESOLUTION = "resolution"
     EXPOSURE_MODE = "exposure-mode"
@@ -38,6 +41,7 @@ class ConfigHtmlId(Enum):
     AWB_MODE = "awb-mode"
     VIDEO_FORMAT = "video-format"
     PREVIEW_FORMAT = "preview-format"
+    RESOLUTION_SAVED_VIDEO_FILE = "resolution-saved-video-file"
     H264_PROFILE = "h264-profile"
     H264_BITRATE = "h264-bitrate"
     H264_QUALITY = "h264-quality"
@@ -77,12 +81,15 @@ class ConfigData(OTCameraHTMLDataObject):
     debug_mode_on: Tuple[str, bool]
     start_hour: Tuple[str, int]
     end_hour: Tuple[str, int]
+    interval_before_video_split: Tuple[str, int]
     n_intervals: Tuple[str, int]
     preview_interval: Tuple[str, int]
     min_free_space: Tuple[str, int]
     prefix: Tuple[str, str]
     video_dir: Tuple[str, str]
     preview_path: Tuple[str, str]
+    template_html_path: Tuple[str, str]
+    index_html_path: Tuple[str, str]
 
     # Camera settings
     fps: Tuple[str, int]
