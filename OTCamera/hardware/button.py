@@ -64,21 +64,18 @@ def _on_low_battery_button_held() -> None:
 
 
 def _on_power_button_released() -> None:
-    assert not power_button.is_pressed
     status.power_button_pressed = False
     log.write("Power button released")
     rpi.shutdown()
 
 
 def _on_wifi_ap_button_held() -> None:
-    assert wifi_ap_button.is_pressed
     status.wifi_ap_button_pressed = True
     log.write("WiFi AP button pressed")
     rpi.wifi()
 
 
 def _on_wifi_ap_button_released() -> None:
-    assert not wifi_ap_button.is_pressed
     status.wifi_ap_button_pressed = False
     log.write("WiFi AP button released")
     rpi.wifi()
