@@ -27,7 +27,7 @@ class StatusData(OTCameraHTMLDataObject):
     low_battery: Tuple[str, bool]
     power_button_active: Tuple[str, bool]
     hour_button_active: Tuple[str, bool]
-    wifi_button_active: Tuple[str, bool]
+    wifi_ap_on: Tuple[str, bool]
 
 
 @dataclass
@@ -151,6 +151,6 @@ if __name__ == "__main__":
         low_battery=("low-battery", False),
         power_button_active=("power-button-active", True),
         hour_button_active=("hour-button-active", False),
-        wifi_button_active=("wifi-button-active", False),
+        wifi_ap_on=("wifi-ap-on", False),
     )
     main(index_html_path, save_path, status_data)
