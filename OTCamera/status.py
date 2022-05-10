@@ -43,7 +43,12 @@ more_intervals = True
 new_preview = True
 current_interval = 0
 recording = False
-button_hour_pressed = False
+
+# Button statuses
+power_button_pressed = False
+hour_button_pressed = False
+wifi_ap_button_pressed = False
+battery_is_low = False
 
 
 def record_time():
@@ -58,7 +63,7 @@ def record_time():
     current_hour = dt.now().hour
     bytime = current_hour >= config.STARTHOUR and current_hour < config.ENDHOUR
     if config.USE_BUTTONS:
-        record = button_hour_pressed or bytime
+        record = hour_button_pressed or bytime
     else:
         record = bytime
     record = record and (not shutdownactive)

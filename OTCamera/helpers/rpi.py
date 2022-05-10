@@ -52,7 +52,7 @@ def shutdown():
     )
     led.power.on()
     led.wifi.off()
-    if button.power.is_pressed:
+    if button.power_button.is_pressed:
         status.noblink = False
         log.write("Shutdown cancelled", False)
         return
@@ -69,7 +69,7 @@ def shutdown():
 def reboot():
     """Reboot the Raspberry Pi.
 
-    Reboots the Raspberry Pi if any expection is raised.
+    Reboots the Raspberry Pi if any exception is raised.
     Tries to close the camera object and writes to logfile.
 
     """
@@ -100,18 +100,18 @@ def wifi():
 
     """
     log.write("Wifiswitch")
-    if button.wifi.is_pressed and not status.wifiapon:
+    if button.wifi_ap_button.is_pressed and not status.wifiapon:
         log.write("Turn WifiAP on")
         call("sudo /bin/bash /usr/local/bin/wifistart", shell=True)
         log.write("WifiAP on")
         led.power.pulse(fade_in_time=0.25, fade_out_time=0.25, n=2, background=True)
         led.wifi.blink(on_time=0.1, off_time=4.9, n=None, background=True)
         status.wifiapon = True
-    elif not button.wifi.is_pressed and status.wifiapon:
+    elif not button.wifi_ap_button.is_pressed and status.wifiapon:
         led.power.pulse(fade_in_time=0.25, fade_out_time=0.25, n=2, background=True)
         if not config.DEBUG:
             sleep(config.WIFIDELAY)
-        if not button.wifi.is_pressed and status.wifiapon:
+        if not button.wifi_ap_button.is_pressed and status.wifiapon:
             log.write("Turn WifiAP OFF")
             call("sudo systemctl stop hostapd.service", shell=True)
             call("sudo systemctl stop dnsmasq.service", shell=True)
