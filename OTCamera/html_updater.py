@@ -1,9 +1,49 @@
+import enum
 from abc import ABC
 from dataclasses import dataclass, fields
 from pathlib import Path
 from typing import Tuple, Union
 
 from bs4 import BeautifulSoup, Tag
+
+
+class StatusHtmlId(enum):
+    TIME = "time"
+    HOSTNAME = "hostname"
+    FREE_DISKSPACE = "free-diskspace"
+    NUM_VIDEOS_RECORDED = "num-videos"
+    CURRENTLY_RECORDING = "currently-recording"
+    WIFI_ACTIVE = "wifi-active"
+    LOW_BATTERY = "low-battery"
+    POWER_BUTTON_ACTIVE = "power-button-active"
+    HOUR_BUTTON_ACTIVE = "hour-button-active"
+    WIFI_AP_ON = "wifi-ap-on"
+
+
+class ConfigHtmlId(enum):
+    DEBUG_MODE_ON = "debug-mode-on"
+    START_HOUR = "start-hour"
+    END_HOUR = "end-hour"
+    NUM_INTERVALS = "num-intervals"
+    PREVIEW_INTERVAL = "preview-interval"
+    MIN_FREE_SPACE = "min-free-space"
+    PREFIX = "prefix"
+    VIDEO_DIR = "video-dir"
+    PREVIEW_PATH = "preview-path"
+    FPS = "fps"
+    RESOLUTION = "resolution"
+    EXPOSURE_MODE = "exposure-mode"
+    DRC_STRENGTH = "drc-strength"
+    ROTATION = "rotation"
+    AWB_MODE = "awb-mode"
+    VIDEO_FORMAT = "video-format"
+    PREVIEW_FORMAT = "preview-format"
+    H264_PROFILE = "h264-profile"
+    H264_BITRATE = "h264-bitrate"
+    H264_QUALITY = "h264-quality"
+    USE_LED = "use-led"
+    USE_BUTTONS = "use-buttons"
+    WIFI_DELAY = "wifi-delay"
 
 
 @dataclass
