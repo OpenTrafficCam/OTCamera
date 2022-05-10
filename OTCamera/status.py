@@ -34,23 +34,23 @@ from OTCamera.html_updater import StatusData
 
 log.write("status", level=log.LogLevel.DEBUG)
 
-shutdownactive = False
-noblink = False
-wifiapon = False
-interval_finished = False
-more_intervals = True
-new_preview = True
-current_interval = 0
-recording = False
+shutdownactive: bool = False
+noblink: bool = False
+wifiapon: bool = False
+interval_finished: bool = False
+more_intervals: bool = True
+new_preview: bool = True
+current_interval: int = 0
+recording: bool = False
 
 # Button statuses
-power_button_pressed = False
-hour_button_pressed = False
-wifi_ap_button_pressed = False
-battery_is_low = False
+power_button_pressed: bool = False
+hour_button_pressed: bool = False
+wifi_ap_button_pressed: bool = False
+battery_is_low: bool = False
 
 
-def record_time():
+def record_time() -> bool:
     """Checks if the current hour is an hour to record.
 
     Returns True if the hour of the current time is either after configured start hour
@@ -69,7 +69,7 @@ def record_time():
     return record
 
 
-def preview_on():
+def preview_on() -> bool:
     """Checks if a preview image should be captured.
 
     Returns True if there are buttons configured and the WifiAP status is True.
