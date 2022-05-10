@@ -32,7 +32,7 @@ END_HOUR = 22
 """Hour of day when to end recording."""
 INTERVAL_VIDEO_SPLIT = 15
 """Interval length in minutes before video splits."""
-N_INTERVALS = 0
+NUM_INTERVALS = 0
 """Number of full intervals to record (0=infinit)."""
 PREVIEW_INTERVAL = 5
 """Interval between two preview images in seconds."""

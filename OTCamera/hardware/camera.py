@@ -138,8 +138,8 @@ class Camera(Singleton):
             self._split()
             status.interval_finished = False
             status.current_interval += 1
-            if config.N_INTERVALS > 0:
-                status.more_intervals = status.current_interval < config.N_INTERVALS
+            if config.NUM_INTERVALS > 0:
+                status.more_intervals = status.current_interval < config.NUM_INTERVALS
             if not status.more_intervals:
                 log.write("last interval", level=log.LogLevel.DEBUG)
         elif self._after_new_interval():

@@ -24,7 +24,7 @@ class ConfigHtmlId(Enum):
     DEBUG_MODE_ON = "debug-mode-on"
     START_HOUR = "start-hour"
     END_HOUR = "end-hour"
-    INTERVAL_BEFORE_VIDEO_SPLIT = "interval-before-video-split"
+    INTERVAL_VIDEO_SPLIT = "interval-video-split"
     NUM_INTERVALS = "num-intervals"
     PREVIEW_INTERVAL = "preview-interval"
     MIN_FREE_SPACE = "min-free-space"
@@ -81,8 +81,8 @@ class ConfigData(OTCameraHTMLDataObject):
     debug_mode_on: Tuple[str, bool]
     start_hour: Tuple[str, int]
     end_hour: Tuple[str, int]
-    interval_before_video_split: Tuple[str, int]
-    n_intervals: Tuple[str, int]
+    interval_video_split: Tuple[str, int]
+    num_intervals: Tuple[str, int]
     preview_interval: Tuple[str, int]
     min_free_space: Tuple[str, int]
     prefix: Tuple[str, str]
