@@ -19,37 +19,72 @@ Check if enough filespace is available and delete old files until it's enough.
 # program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-import os
 from pathlib import Path
+from typing import Union
 
 import psutil
 
 from OTCamera import config
 from OTCamera.helpers import log
+from OTCamera.helpers.errors import NoMoreFilesToDeleteError
 
 log.write("filesystem", level=log.LogLevel.DEBUG)
 
 
-def delete_old_files():
+def delete_old_files(
+    video_dir: Union[str, Path] = config.VIDEO_DIR,
+    min_free_space: int = config.MINFREESPACE,
+) -> None:
     """Delete old files until enough space available.
 
-    Checks if enough space (config.MINFREESPACE) is a availabe to save video files.
-    If not, deletes the oldest files in config.VIDEOPATH one after another until enough
+    Checks if enough space (`config.MINFREESPACE`) is a availabe to save video files.
+    If not, deletes the oldest files in `video_dir` one after another until enough
     space is available on disk.
 
+    Args:
+        video_dir (Union[str, Path], optional): Path to video directory.
+        Defaults to `config.VIDEO_DIR`.
+        min_free_space(int, optional): free space in GB on sd card before old videos
+        get deleted.
+
+    Raises:
+        NoMoreFilesToDeleteError: If no more files in `video_dir` can be deleted to
+        free up more space as the directory is empty.
+        This implies that there is no space left
+
     """
-    absolute_video_path = str(Path(config.VIDEOPATH).expanduser().resolve())
+    absolute_video_dirpath = Path(video_dir).expanduser().resolve()
     log.write("delete old file", level=log.LogLevel.DEBUG)
-    minfreespace = config.MINFREESPACE * 1024 * 1024 * 1024
-    free_space = psutil.disk_usage(absolute_video_path).free
-    enough_space = free_space > minfreespace
-    log.write("free space: {fs}".format(fs=free_space), level=log.LogLevel.DEBUG)
-    log.write("min space: {ms}".format(ms=minfreespace), level=log.LogLevel.DEBUG)
-    while not enough_space:
-        oldest_video = min(os.listdir(absolute_video_path), key=os.path.getctime)
-        os.remove(Path(absolute_video_path , oldest_video))
+    min_free_space = min_free_space * 1024 * 1024 * 1024
+
+    while not _enough_space(absolute_video_dirpath, min_free_space):
+        video_paths = [
+            f for f in absolute_video_dirpath.iterdir() if f.suffix != ".log"
+        ]
+        if len(video_paths) <= 1:
+            log.write(
+                (
+                    "No more video files to be deleted "
+                    f"in directory '{absolute_video_dirpath}'."
+                )
+            )
+            raise NoMoreFilesToDeleteError(
+                (
+                    f"Folder: '{absolute_video_dirpath}' is empty. "
+                    "No more files to be deleted.\n"
+                    "Please make space to resume recording."
+                )
+            )
+        oldest_video = min(video_paths, key=(lambda path: path.stat().st_ctime))
+        oldest_video.unlink()
         log.breakline()
-        log.write("Deleted " + oldest_video)
-        free_space = psutil.disk_usage("/").free
-        log.write("free space: {fs}".format(fs=free_space), level=log.LogLevel.DEBUG)
-        enough_space = free_space > minfreespace
+        log.write(f"Deleted {oldest_video}")
+        free_space = psutil.disk_usage(absolute_video_dirpath).free
+        log.write(f"free space: {free_space}", level=log.LogLevel.DEBUG)
+
+
+def _enough_space(directory: Path, min_free_space: int) -> bool:
+    free_space = psutil.disk_usage(directory).free
+    log.write(f"free space: {free_space}", level=log.LogLevel.DEBUG)
+    log.write(f"min space: {min_free_space}", level=log.LogLevel.DEBUG)
+    return free_space > min_free_space
