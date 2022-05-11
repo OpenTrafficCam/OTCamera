@@ -2,7 +2,7 @@ from abc import ABC
 from dataclasses import dataclass, fields
 from enum import Enum
 from pathlib import Path
-from typing import Tuple, Union
+from typing import Any, Tuple, Union
 
 from bs4 import BeautifulSoup, Tag
 
@@ -54,7 +54,7 @@ class ConfigHtmlId(Enum):
 class OTCameraHTMLDataObject(ABC):
     """Represents"""
 
-    def get_properties(self) -> list[Tuple]:
+    def get_properties(self) -> list[Tuple[Enum, Any]]:
         return [getattr(self, field.name) for field in fields(self)]
 
 
@@ -62,55 +62,55 @@ class OTCameraHTMLDataObject(ABC):
 class StatusData(OTCameraHTMLDataObject):
     """Class containing OTCamera's status information."""
 
-    time: Tuple[str, str]
-    hostname: Tuple[str, str]
-    free_diskspace: Tuple[str, int]
-    num_videos_recorded: Tuple[str, int]
-    currently_recording: Tuple[str, bool]
-    wifi_active: Tuple[str, bool]
-    low_battery: Tuple[str, bool]
-    power_button_active: Tuple[str, bool]
-    hour_button_active: Tuple[str, bool]
-    wifi_ap_on: Tuple[str, bool]
+    time: Tuple[Enum, str]
+    hostname: Tuple[Enum, str]
+    free_diskspace: Tuple[Enum, int]
+    num_videos_recorded: Tuple[Enum, int]
+    currently_recording: Tuple[Enum, bool]
+    wifi_active: Tuple[Enum, bool]
+    low_battery: Tuple[Enum, bool]
+    power_button_active: Tuple[Enum, bool]
+    hour_button_active: Tuple[Enum, bool]
+    wifi_ap_on: Tuple[Enum, bool]
 
 
 @dataclass
 class ConfigData(OTCameraHTMLDataObject):
     """Class representing OTCamera's current configuration file"""
 
-    debug_mode_on: Tuple[str, bool]
-    start_hour: Tuple[str, int]
-    end_hour: Tuple[str, int]
-    interval_video_split: Tuple[str, int]
-    num_intervals: Tuple[str, int]
-    preview_interval: Tuple[str, int]
-    min_free_space: Tuple[str, int]
-    prefix: Tuple[str, str]
-    video_dir: Tuple[str, str]
-    preview_path: Tuple[str, str]
-    template_html_path: Tuple[str, str]
-    index_html_path: Tuple[str, str]
+    debug_mode_on: Tuple[Enum, bool]
+    start_hour: Tuple[Enum, int]
+    end_hour: Tuple[Enum, int]
+    interval_video_split: Tuple[Enum, int]
+    num_intervals: Tuple[Enum, int]
+    preview_interval: Tuple[Enum, int]
+    min_free_space: Tuple[Enum, int]
+    prefix: Tuple[Enum, str]
+    video_dir: Tuple[Enum, str]
+    preview_path: Tuple[Enum, str]
+    template_html_path: Tuple[Enum, str]
+    index_html_path: Tuple[Enum, str]
 
     # Camera settings
-    fps: Tuple[str, int]
-    resolution: Tuple[str, Tuple[int, int]]
-    exposure_mode: Tuple[str, str]
-    drc_strength: Tuple[str, str]
-    rotation: Tuple[str, int]
-    awb_mode: Tuple[str, str]
+    fps: Tuple[Enum, int]
+    resolution: Tuple[Enum, Tuple[int, int]]
+    exposure_mode: Tuple[Enum, str]
+    drc_strength: Tuple[Enum, str]
+    rotation: Tuple[Enum, int]
+    awb_mode: Tuple[Enum, str]
 
     # Video settings
-    video_format: Tuple[str, str]
-    preview_format: Tuple[str, str]
-    res_of_saved_video_file: Tuple[str, Tuple[int, int]]
-    h264_profile: Tuple[str, str]
-    h264_bitrate: Tuple[str, int]
-    h264_quality: Tuple[str, int]
+    video_format: Tuple[Enum, str]
+    preview_format: Tuple[Enum, str]
+    res_of_saved_video_file: Tuple[Enum, Tuple[int, int]]
+    h264_profile: Tuple[Enum, str]
+    h264_bitrate: Tuple[Enum, int]
+    h264_quality: Tuple[Enum, int]
 
     # Hardware settings
-    use_led: Tuple[str, bool]
-    use_buttons: Tuple[str, bool]
-    wifi_delay: Tuple[str, int]
+    use_led: Tuple[Enum, bool]
+    use_buttons: Tuple[Enum, bool]
+    wifi_delay: Tuple[Enum, int]
 
 
 class OTCameraHTMLUpdater:
@@ -133,6 +133,7 @@ class OTCameraHTMLUpdater:
     ):
         html_tree = self._parse_html(Path(html_filepath))
         # Update status info
+        self._enable_tag_by_id(html_tree, self.status_info_id)
         self._update_by_id(html_tree, status_info)
 
         # Update config info
@@ -156,7 +157,7 @@ class OTCameraHTMLUpdater:
 
     def _update_by_id(self, html_tree: Tag, update_info: OTCameraHTMLDataObject):
         for id, update_content in update_info.get_properties():
-            self._change_content(html_tree.find(id=id), str(update_content))
+            self._change_content(html_tree.find(id=id.value), str(update_content))
 
     def _save(self, html_tree: Tag, save_path: Path):
         with open(save_path, "w", encoding="utf-8") as f:

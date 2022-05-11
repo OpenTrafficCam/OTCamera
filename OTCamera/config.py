@@ -46,7 +46,9 @@ VIDEO_DIR = "~/videos/"
 PREVIEW_PATH = "~/OTCamera/webfiles/preview.jpg"
 """path to save preview."""
 TEMPLATE_HTML_PATH = "~/OTCamera/webfiles/template.html"
+"""Path to template HTML"""
 INDEX_HTML_PATH = "~/OTCamera/webfiles/index.html"
+"""Path to the auto generated index HTML."""
 
 
 # camera settings
@@ -100,3 +102,10 @@ def read_user_config(path_to_config: Union[str, Path]) -> dict:
 
 def validate_user_config():
     pass
+
+
+PREFIX = str(Path(PREFIX).expanduser().resolve())
+VIDEO_DIR = str(Path(VIDEO_DIR).expanduser().resolve())
+PREVIEW_PATH = str(Path(PREVIEW_PATH).expanduser().resolve())
+TEMPLATE_HTML_PATH = str(Path(TEMPLATE_HTML_PATH).expanduser().resolve())
+INDEX_HTML_PATH = str(Path(INDEX_HTML_PATH).expanduser().resolve())

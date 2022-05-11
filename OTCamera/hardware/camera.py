@@ -100,9 +100,9 @@ class Camera(Singleton):
             led.rec_on()
             status.recording = True
             self._wait_recording(2)
-            self._capture()
+            self.capture()
 
-    def _capture(self):
+    def capture(self):
         self._picam.annotate_text = name.annotate()
         self._picam.capture(
             name.preview(),
@@ -164,29 +164,6 @@ class Camera(Singleton):
             and status.more_intervals
         )
         return new_interval
-
-    def preview(self, now: bool = False):
-        """Capture a preview image.
-
-        Captures a new preview image, if the current second matches the preview interval
-        configured in config.py and the Wifi AP is turned on (otherwise, a preview would
-        be useless).
-
-        Args:
-            now (bool, optional): Generate preview immediately. Defaults to False.
-        """
-        current_second = dt.now().second
-        offset = config.PREVIEW_INTERVAL - 1
-        preview_second = (current_second % config.PREVIEW_INTERVAL) == offset
-        time_preview = preview_second and status.preview_on() and status.new_preview
-
-        if now or time_preview:
-            log.write("new preview", level=log.LogLevel.DEBUG)
-            self._capture()
-            status.new_preview = False
-        elif not (preview_second or status.new_preview):
-            log.write("reset new preview", level=log.LogLevel.DEBUG)
-            status.new_preview = True
 
     def stop_recording(self):
         """Stops the video recording.
