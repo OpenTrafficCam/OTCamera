@@ -35,7 +35,7 @@ def video():
     Returns:
         str: filename for video
     """
-    filename = config.VIDEO_DIR + config.PREFIX + "_" + _current_dt() + ".h264"
+    filename = f"{config.VIDEO_DIR}{config.PREFIX}_{_current_dt()}.h264"
     return str(Path(filename).expanduser().resolve())
 
 
@@ -47,7 +47,7 @@ def log():
     Returns:
         str: filename for log
     """
-    filename = config.VIDEO_DIR + config.PREFIX + "_" + _current_dt() + ".log"
+    filename = f"{config.VIDEO_DIR}{config.PREFIX}_{_current_dt()}.log"
     return Path(filename).expanduser().resolve()
 
 
