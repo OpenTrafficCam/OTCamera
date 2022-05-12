@@ -177,13 +177,16 @@ def _is_wifi_enabled(network_device_name: str = "wlan0") -> bool:
         raise Exception(err_msg)
 
     if re.search("state up", str(out), re.IGNORECASE):
-        # TODO: logging
+        log.write("WiFi is up", log.LogLevel.DEBUG)
         return True
     elif re.search("state down", str(out), re.IGNORECASE):
-        # TODO: logging
+        log.write("WiFi is down", log.LogLevel.DEBUG)
         return False
     elif re.search("(Device).*(does not exist)", str(out), re.IGNORECASE):
-        # TODO: logging
+        log.write(
+            f'Network device: "{network_device_name}" does not exist',
+            log.LogLevel.WARNING,
+        )
         return False
 
 

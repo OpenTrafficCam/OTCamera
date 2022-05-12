@@ -6,6 +6,8 @@ from typing import Any, Tuple, Union
 
 from bs4 import BeautifulSoup, Tag
 
+from OTCamera.helpers import log
+
 
 class StatusHtmlId(Enum):
     TIME = "time"
@@ -142,12 +144,12 @@ class OTCameraHTMLUpdater:
             self._update_by_id(html_tree, config_info)
 
         self._save(html_tree, Path(html_savepath))
+        log.write("index.html status information updated", log.LogLevel.DEBUG)
 
     def disable_info(self, html_filepath: Union[str, Path]):
         html_tree = self._parse_html(html_filepath)
         self._disable_tag_by_id(html_tree, self.status_info_id)
         self._disable_tag_by_id(html_tree, self.config_info_id)
-        # TODO: write to file
         self._save(html_tree, html_filepath)
 
     def _parse_html(self, html_filepath: Path) -> BeautifulSoup:
@@ -169,36 +171,12 @@ class OTCameraHTMLUpdater:
             id_tag["style"] = "display: none"
 
     def _enable_tag_by_id(self, html_tag: Tag, id: str) -> None:
+        """Make a BeautifulSoup tag visible by reading"""
         id_tag = html_tag.find(id=id)
         if id_tag:
             id_tag["style"] = "display: revert"
 
     def _change_content(self, html_tag: Tag, content: str) -> None:
+        """Change content of an BeautifulSoup tag."""
         if html_tag:
             html_tag.string = content
-
-
-def main(html_filepath: Path, html_savepath: Union[str, Path], status_data: StatusData):
-    html_updater = OTCameraHTMLUpdater()
-    html_updater.update_info(
-        html_filepath, html_savepath, status_info=status_data, config_info=None
-    )
-    html_updater.disable_info(html_savepath)
-
-
-if __name__ == "__main__":
-    index_html_path = Path(__file__).parent / "webfiles/template.html"
-    save_path = Path(__file__).parent / "webfiles/index.html"
-    status_data = StatusData(
-        time=("time", "2022-05-05T11:26:30"),
-        hostname=("hostname", "my-hostname"),
-        free_diskspace=("free-diskspace", 12),
-        num_videos_recorded=("num-videos", 4),
-        currently_recording=("currently-recording", True),
-        wifi_active=("wifi-active", True),
-        low_battery=("low-battery", False),
-        power_button_active=("power-button-active", True),
-        hour_button_active=("hour-button-active", False),
-        wifi_ap_on=("wifi-ap-on", False),
-    )
-    main(index_html_path, save_path, status_data)
