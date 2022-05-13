@@ -45,6 +45,7 @@ class ConfigHtmlId(Enum):
     PREVIEW_FORMAT = "preview-format"
     RESOLUTION_SAVED_VIDEO_FILE = "resolution-saved-video-file"
     H264_PROFILE = "h264-profile"
+    H264_LEVEL = "h264-level"
     H264_BITRATE = "h264-bitrate"
     H264_QUALITY = "h264-quality"
     USE_LED = "use-led"
@@ -107,6 +108,7 @@ class ConfigData(OTCameraHTMLDataObject):
     res_of_saved_video_file: Tuple[Enum, Tuple[int, int]]
     h264_profile: Tuple[Enum, str]
     h264_bitrate: Tuple[Enum, int]
+    h264_level: Tuple[Enum, str]
     h264_quality: Tuple[Enum, int]
 
     # Hardware settings
