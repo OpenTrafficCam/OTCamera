@@ -4,7 +4,6 @@ from typing import Callable
 import pytest
 from bs4 import BeautifulSoup
 
-from OTCamera import config
 from OTCamera.html_updater import (
     ConfigData,
     ConfigHtmlId,
@@ -39,7 +38,7 @@ def create_html_file(test_dir: Path) -> Callable[[str, str], Path]:
 def status_data() -> StatusData:
     return StatusData(
         time=(status_id.TIME, "2022-05-05T11:26:30"),
-        hostname=(status_id.HOSTNAME, "my-hostname"),
+        hostname=(status_id.HOSTNAME, "my-name"),
         free_diskspace=(status_id.FREE_DISKSPACE, 12),
         num_videos_recorded=(status_id.NUM_VIDEOS_RECORDED, 4),
         currently_recording=(status_id.CURRENTLY_RECORDING, True),
@@ -54,39 +53,40 @@ def status_data() -> StatusData:
 @pytest.fixture
 def config_data() -> ConfigData:
     return ConfigData(
-        debug_mode_on=(ConfigHtmlId.DEBUG_MODE_ON, config.DEBUG_MODE_ON),
-        start_hour=(ConfigHtmlId.START_HOUR, config.START_HOUR),
-        end_hour=(ConfigHtmlId.END_HOUR, config.END_HOUR),
+        debug_mode_on=(ConfigHtmlId.DEBUG_MODE_ON, True),
+        start_hour=(ConfigHtmlId.START_HOUR, 6),
+        end_hour=(ConfigHtmlId.END_HOUR, 22),
         interval_video_split=(
             ConfigHtmlId.INTERVAL_VIDEO_SPLIT,
-            config.INTERVAL_VIDEO_SPLIT,
+            15,
         ),
-        num_intervals=(ConfigHtmlId.NUM_INTERVALS, config.NUM_INTERVALS),
-        preview_interval=(ConfigHtmlId.PREVIEW_INTERVAL, config.PREVIEW_INTERVAL),
-        min_free_space=(ConfigHtmlId.MIN_FREE_SPACE, config.MIN_FREE_SPACE),
-        prefix=(ConfigHtmlId.PREFIX, config.PREFIX),
-        video_dir=(ConfigHtmlId.VIDEO_DIR, config.VIDEO_DIR),
-        preview_path=(ConfigHtmlId.PREVIEW_PATH, config.PREVIEW_PATH),
-        template_html_path=(ConfigHtmlId.TEMPLATE_HTML_PATH, config.TEMPLATE_HTML_PATH),
-        index_html_path=(ConfigHtmlId.INDEX_HTML_PATH, config.INDEX_HTML_PATH),
-        fps=(ConfigHtmlId.FPS, config.FPS),
-        resolution=(ConfigHtmlId.RESOLUTION, config.RESOLUTION),
-        exposure_mode=(ConfigHtmlId.EXPOSURE_MODE, config.EXPOSURE_MODE),
-        drc_strength=(ConfigHtmlId.DRC_STRENGTH, config.DRC_STRENGTH),
-        rotation=(ConfigHtmlId.ROTATION, config.ROTATION),
-        awb_mode=(ConfigHtmlId.AWB_MODE, config.AWB_MODE),
-        video_format=(ConfigHtmlId.VIDEO_FORMAT, config.VIDEO_FORMAT),
-        preview_format=(ConfigHtmlId.PREVIEW_FORMAT, config.PREVIEW_PATH),
+        num_intervals=(ConfigHtmlId.NUM_INTERVALS, 0),
+        preview_interval=(ConfigHtmlId.PREVIEW_INTERVAL, 5),
+        min_free_space=(ConfigHtmlId.MIN_FREE_SPACE, 1),
+        prefix=(ConfigHtmlId.PREFIX, "my_prefix"),
+        video_dir=(ConfigHtmlId.VIDEO_DIR, "path/to/video/dir"),
+        preview_path=(ConfigHtmlId.PREVIEW_PATH, "path/to/preview.jpeg"),
+        template_html_path=(ConfigHtmlId.TEMPLATE_HTML_PATH, "path/to/template.html"),
+        index_html_path=(ConfigHtmlId.INDEX_HTML_PATH, "path/to/index.html"),
+        fps=(ConfigHtmlId.FPS, 20),
+        resolution=(ConfigHtmlId.RESOLUTION, (1640, 1232)),
+        exposure_mode=(ConfigHtmlId.EXPOSURE_MODE, "nightpreview"),
+        drc_strength=(ConfigHtmlId.DRC_STRENGTH, "high"),
+        rotation=(ConfigHtmlId.ROTATION, 180),
+        awb_mode=(ConfigHtmlId.AWB_MODE, "greyworld"),
+        video_format=(ConfigHtmlId.VIDEO_FORMAT, "h264"),
+        preview_format=(ConfigHtmlId.PREVIEW_FORMAT, "jpeg"),
         res_of_saved_video_file=(
             ConfigHtmlId.RESOLUTION_SAVED_VIDEO_FILE,
-            config.RESOLUTION_SAVED_VIDEO_FILE,
+            (800, 600),
         ),
-        h264_profile=(ConfigHtmlId.H264_PROFILE, config.H264_PROFILE),
-        h264_bitrate=(ConfigHtmlId.H264_BITRATE, config.H264_BITRATE),
-        h264_quality=(ConfigHtmlId.H264_QUALITY, config.H264_QUALITY),
-        use_led=(ConfigHtmlId.USE_LED, config.USE_LED),
-        use_buttons=(ConfigHtmlId.USE_BUTTONS, config.USE_BUTTONS),
-        wifi_delay=(ConfigHtmlId.WIFI_DELAY, config.WIFI_DELAY),
+        h264_profile=(ConfigHtmlId.H264_PROFILE, "high"),
+        h264_level=(ConfigHtmlId.H264_LEVEL, "4"),
+        h264_bitrate=(ConfigHtmlId.H264_BITRATE, 600000),
+        h264_quality=(ConfigHtmlId.H264_QUALITY, 30),
+        use_led=(ConfigHtmlId.USE_LED, False),
+        use_buttons=(ConfigHtmlId.USE_BUTTONS, False),
+        wifi_delay=(ConfigHtmlId.WIFI_DELAY, 900),
     )
 
 
@@ -206,7 +206,7 @@ def test_change_content(
         ),
         (
             '<div id="status-info"><p id="hostname"></p></div>',
-            '<div id="status-info"><p id="hostname">my-hostname</p></div>',
+            '<div id="status-info"><p id="hostname">my-name</p></div>',
         ),
     ],
 )
@@ -232,7 +232,7 @@ def test_update_by_id(
         ),
         (
             '<div id="status-info"><p id="hostname"></p></div>',
-            '<div id="status-info" style="display: revert"><p id="hostname">my-hostname</p></div>',
+            '<div id="status-info" style="display: revert"><p id="hostname">my-name</p></div>',
         ),
     ],
 )
@@ -250,6 +250,28 @@ def test_update_info(
     result = parse_html(html_filepath)
 
     assert result == expected
+
+
+def test_update_info_htmlWithAllIdsAsParam(
+    html_updater: OTCameraHTMLUpdater,
+    status_data: OTCameraHTMLDataObject,
+    config_data: OTCameraHTMLDataObject,
+    test_dir: Path,
+    resources_dir: Path,
+):
+    template_html_filepath = resources_dir / "template.html"
+    expected_html_filepath = resources_dir / "expected.html"
+    result_save_path = test_dir / "result.html"
+
+    html_updater.update_info(
+        template_html_filepath, result_save_path, status_data, config_data
+    )
+    soup_result = parse_html(result_save_path)
+    soup_expected = parse_html(expected_html_filepath)
+    str_result = str(soup_result)
+    str_expected = str(soup_expected)
+
+    assert str_result == str_expected
 
 
 def parse_html(path: Path) -> str:
