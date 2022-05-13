@@ -14,3 +14,9 @@ def test_dir() -> Path:
             f.unlink()
         except FileNotFoundError:
             shutil.rmtree(f)
+
+
+@pytest.fixture
+def resources_dir() -> Path:
+    resources_dir = Path(__file__).parent / "resources"
+    return resources_dir
