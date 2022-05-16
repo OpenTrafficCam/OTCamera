@@ -1,16 +1,14 @@
 import errno
 import shutil
 from pathlib import Path
-from time import sleep
 from unittest import mock
-import threading
 
 import pytest
+import cv2
 
 from OTCamera.hardware.camera import Camera
 from OTCamera.record import record
 from OTCamera import config
-from OTCamera import status
 from OTCamera.html_updater import OTCameraHTMLUpdater
 
 
@@ -49,22 +47,44 @@ def test_record_handleENOSPC(
 
 
 def test_record_videoRecordedHasCorrectFrames(test_dir: Path):
-    config.PREVIEW_INTERVAL = 1
-    video_dir = str(test_dir / "videos")
+    config.NUM_INTERVALS = 2
+    config.INTERVAL_LENGTH = 2  # in min
 
-    def _thread_record_video(video_dir: str) -> None:
-        camera = Camera()
-        record(camera, video_dir)
+    video_dir = test_dir / "videos"
+    video_dir.mkdir(exist_ok=True)
+    config.VIDEO_DIR = str(video_dir)
 
-    def _thread_sleep_and_end_recording() -> None:
-        sleep(70)
-        status.more_intervals = False
+    camera = Camera()
+    record(camera)
 
-    thread_record = threading.Thread(target=_thread_record_video, args=(video_dir,))
-    thread_end_record = threading.Thread(target=_thread_sleep_and_end_recording)
+    video_paths = [
+        str(p)
+        for p in Path(video_dir).iterdir()
+        if p.suffix == f".{config.VIDEO_FORMAT}"
+    ]
+    video_paths.sort()
+    actual_frame_count = get_frame_count(video_paths[1])
+    expected_frame_count = config.FPS * config.INTERVAL_LENGTH * 60
 
-    thread_record.start()
-    thread_end_record.start()
+    assert (
+        expected_frame_count <= actual_frame_count
+        and actual_frame_count <= expected_frame_count + config.FPS / 2
+    )
 
-    thread_end_record.join()
-    thread_record.join()
+
+def get_frame_count(video_path: Path):
+    def manual_count(handler):
+        frames = 0
+        while True:
+            _status, frame = handler.read()
+            if not _status:
+                break
+            frames += 1
+        return frames
+
+    cap = cv2.VideoCapture(str(video_path))
+    # Slow, inefficient but 100% accurate method
+
+    frames = manual_count(cap)
+    cap.release()
+    return frames
