@@ -12,7 +12,7 @@ def test_dir() -> Path:
     for f in test_dir.iterdir():
         try:
             f.unlink()
-        except FileNotFoundError:
+        except IsADirectoryError:
             shutil.rmtree(f)
 
 
