@@ -118,6 +118,8 @@ def record(
     Stops everything by keyboard interrupt (Ctrl+C).
 
     """
+    Path(video_dir).mkdir(exist_ok=True)
+
     try:
         init()
 
