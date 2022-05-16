@@ -35,8 +35,8 @@ def video():
     Returns:
         str: filename for video
     """
-    filename = f"{config.VIDEO_DIR}{config.PREFIX}_{_current_dt()}.h264"
-    return str(Path(filename).expanduser().resolve())
+    filename = Path(config.VIDEO_DIR) / f"{config.PREFIX}_{_current_dt()}.h264"
+    return str(filename.expanduser().resolve())
 
 
 def log():
