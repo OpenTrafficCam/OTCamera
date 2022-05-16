@@ -104,7 +104,6 @@ def validate_user_config():
     pass
 
 
-PREFIX = str(Path(PREFIX).expanduser().resolve())
 VIDEO_DIR = str(Path(VIDEO_DIR).expanduser().resolve())
 PREVIEW_PATH = str(Path(PREVIEW_PATH).expanduser().resolve())
 TEMPLATE_HTML_PATH = str(Path(TEMPLATE_HTML_PATH).expanduser().resolve())
