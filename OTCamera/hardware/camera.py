@@ -150,7 +150,7 @@ class Camera(Singleton):
 
     def _interval_minute(self):
         current_minute = dt.now().minute
-        interval_minute = (current_minute % config.INTERVAL_VIDEO_SPLIT) == 0
+        interval_minute = (current_minute % config.INTERVAL_LENGTH) == 0
         return interval_minute
 
     def _after_new_interval(self):

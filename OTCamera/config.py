@@ -30,7 +30,7 @@ START_HOUR = 6
 """Hour of day when to start recording."""
 END_HOUR = 22
 """Hour of day when to end recording."""
-INTERVAL_VIDEO_SPLIT = 15
+INTERVAL_LENGTH = 15
 """Interval length in minutes before video splits."""
 NUM_INTERVALS = 0
 """Number of full intervals to record (0=infinit)."""

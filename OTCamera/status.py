@@ -119,7 +119,7 @@ def get_config_settings() -> ConfigData:
         end_hour=(ConfigHtmlId.END_HOUR, config.END_HOUR),
         interval_video_split=(
             ConfigHtmlId.INTERVAL_VIDEO_SPLIT,
-            config.INTERVAL_VIDEO_SPLIT,
+            config.INTERVAL_LENGTH,
         ),
         num_intervals=(ConfigHtmlId.NUM_INTERVALS, config.NUM_INTERVALS),
         preview_interval=(ConfigHtmlId.PREVIEW_INTERVAL, config.PREVIEW_INTERVAL),
