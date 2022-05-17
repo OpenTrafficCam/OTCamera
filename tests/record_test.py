@@ -3,13 +3,13 @@ import shutil
 from pathlib import Path
 from unittest import mock
 
-import pytest
 import cv2
+import pytest
 
-from OTCamera.hardware.camera import Camera
-from OTCamera.record import record
 from OTCamera import config
+from OTCamera.hardware.camera import Camera
 from OTCamera.html_updater import OTCameraHTMLUpdater
+from OTCamera.record import record
 
 
 @pytest.fixture
