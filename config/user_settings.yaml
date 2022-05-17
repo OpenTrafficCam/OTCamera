@@ -1,4 +1,6 @@
 ---
+# yamllint disable rule:line-length
+
 # Values set to null will use the default config
 
 general:
@@ -34,4 +36,3 @@ hardware:
   use_led: true # True if Status-LEDs are connected
   use_buttons: false # True if hardware buttons are connected
   wifi_delay: 900 # Delay in seconds before WiFi turns off
-
