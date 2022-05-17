@@ -232,7 +232,10 @@ def test_update_by_id(
         ),
         (
             '<div id="status-info"><p id="hostname"></p></div>',
-            '<div id="status-info" style="display: revert"><p id="hostname">my-name</p></div>',
+            (
+                '<div id="status-info" style="display: revert">'
+                '<p id="hostname">my-name</p></div>'
+            ),
         ),
     ],
 )
