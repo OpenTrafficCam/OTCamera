@@ -106,6 +106,7 @@ def record(
     html_updater: OTCameraHTMLUpdater = OTCameraHTMLUpdater(
         debug_mode_on=config.DEBUG_MODE_ON
     ),
+    html_filepath: Union[str, Path] = config.INDEX_HTML_PATH,
 ) -> None:
     """Run init and record loop.
 
@@ -145,6 +146,7 @@ def record(
         camera.stop_recording()
         camera.close()
         log.closefile()
+        html_updater.disable_info(html_filepath)
 
 
 def main() -> None:
