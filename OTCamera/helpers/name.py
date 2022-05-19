@@ -26,7 +26,7 @@ from pathlib import Path
 from OTCamera import config
 
 
-def video():
+def video() -> str:
     """Filename of Video.
 
     Path incl. filename where videos are saved to, based on hostname and
@@ -39,19 +39,19 @@ def video():
     return str(filename.expanduser().resolve())
 
 
-def log():
+def log() -> Path:
     """Filename of logfile.
 
     Path incl. filename where logfile is saved.
 
     Returns:
-        str: filename for log
+        Path: filename for log
     """
-    filename = f"{config.VIDEO_DIR}{config.PREFIX}_{_current_dt()}.log"
+    filename = Path(config.VIDEO_DIR) / f"{config.PREFIX}_{_current_dt()}.log"
     return Path(filename).expanduser().resolve()
 
 
-def annotate():
+def annotate() -> str:
     """String to annotate video.
 
     Text to be added as annotation to video footage.
@@ -65,7 +65,7 @@ def annotate():
 
 
 # TODO: refactor time stuff in separate helper
-def _current_dt():
+def _current_dt() -> str:
     """Generates current date and time.
 
     Returns:
@@ -75,7 +75,7 @@ def _current_dt():
     return curr_dt
 
 
-def preview():
+def preview() -> str:
     """Filename for preview image.
 
     Path incl. filename where preview file is saved.
