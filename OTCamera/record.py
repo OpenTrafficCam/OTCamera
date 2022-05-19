@@ -25,6 +25,8 @@ from datetime import datetime as dt
 from pathlib import Path
 from time import sleep
 from typing import Union
+import signal
+import sys
 
 from OTCamera import config, status
 from OTCamera.hardware import led
@@ -34,130 +36,152 @@ from OTCamera.helpers.filesystem import delete_old_files
 from OTCamera.html_updater import OTCameraHTMLUpdater
 
 
-def init() -> None:
-    """Initializes the LEDs and Wifi AP."""
-    log.breakline()
-    log.write("starting periodic record")
-    led.power_on()
-    # TODO: turn wifi AP on #41
+class OTCamera:
+    def __init__(
+        self,
+        camera: Camera,
+        html_updater: OTCameraHTMLUpdater,
+        capture_preview_immediately: bool = False,
+        video_dir: Union[str, Path] = config.VIDEO_DIR,
+        template_html_filepath: Union[str, Path] = config.TEMPLATE_HTML_PATH,
+        index_html_filepath: Union[str, Path] = config.INDEX_HTML_PATH,
+    ) -> None:
+        self._camera = camera
+        self._html_updater = html_updater
+        self._capture_preview_immediately = capture_preview_immediately
+        self._video_dir = Path(video_dir)
+        self._template_html_filepath = Path(template_html_filepath)
+        self._index_html_filepath = Path(index_html_filepath)
+        self._shutdown = False
 
+        self._register_shutdown_action()
 
-def loop(camera: Camera, html_updater: OTCameraHTMLUpdater) -> None:
-    """Record and split videos.
+        Path(self._video_dir).mkdir(exist_ok=True)
 
-    While it is recording time (see status.py), starts recording videos, splits them
-    every interval (see config.py), captures a new preview image and stops recording
-    after recording time ends.
+        # Initializes the LEDs and Wifi AP
+        log.breakline()
+        log.write("starting periodic record")
+        led.power_on()
+        # TODO: turn wifi AP on #41
 
-    """
-    if status.record_time():
-        camera.start_recording()
-        camera.split_if_interval_ends()
-        _try_capture_preview(camera, html_updater)
-    else:
-        camera.stop_recording()
-        sleep(0.5)
+    def loop(self) -> None:
+        """Record and split videos.
 
+        While it is recording time (see status.py), starts recording videos, splits them
+        every interval (see config.py), captures a new preview image and stops recording
+        after recording time ends.
 
-def _try_capture_preview(
-    camera: Camera,
-    html_updater: OTCameraHTMLUpdater,
-    now: bool = False,
-    html_filepath: Union[str, Path] = config.TEMPLATE_HTML_PATH,
-    html_save_path: Union[str, Path] = config.INDEX_HTML_PATH,
-) -> None:
-    """Tries capturing a preview image.
+        """
+        if status.record_time():
+            self._camera.start_recording()
+            self._camera.split_if_interval_ends()
+            self._try_capture_preview()
+        else:
+            self._camera.stop_recording()
+            sleep(0.5)
 
-    Captures a new preview image, if the current second matches the preview interval
-    configured in config.py and the Wifi AP is turned on (otherwise, a preview would
-    be useless).
+    def _try_capture_preview(
+        self,
+    ) -> None:
+        """Tries capturing a preview image.
 
-    Args:
-        now (bool, optional): Generate preview immediately. Defaults to False.
-    """
-    current_second = dt.now().second
-    offset = config.PREVIEW_INTERVAL - 1
-    preview_second = (current_second % config.PREVIEW_INTERVAL) == offset
-    time_preview = preview_second and status.preview_on() and status.new_preview
+        Captures a new preview image, if the current second matches the preview interval
+        configured in config.py and the Wifi AP is turned on (otherwise, a preview would
+        be useless).
 
-    if now or time_preview:
-        log.write("new preview", level=log.LogLevel.DEBUG)
-        camera.capture()
-        html_updater.update_info(
-            html_filepath,
-            html_save_path,
-            status.get_status_data(),
-            status.get_config_settings(),
-        )
-        status.new_preview = False
-    elif not (preview_second or status.new_preview):
-        log.write("reset new preview", level=log.LogLevel.DEBUG)
-        status.new_preview = True
+        Args:
+            now (bool, optional): Generate preview immediately. Defaults to False.
+        """
+        current_second = dt.now().second
+        offset = config.PREVIEW_INTERVAL - 1
+        preview_second = (current_second % config.PREVIEW_INTERVAL) == offset
+        time_preview = preview_second and status.preview_on() and status.new_preview
 
+        if self._capture_preview_immediately or time_preview:
+            log.write("new preview", level=log.LogLevel.DEBUG)
+            self._camera.capture()
+            self._html_updater.update_info(
+                self._template_html_filepath,
+                self._index_html_filepath,
+                status.get_status_data(),
+                status.get_config_settings(),
+            )
+            status.new_preview = False
+        elif not (preview_second or status.new_preview):
+            log.write("reset new preview", level=log.LogLevel.DEBUG)
+            status.new_preview = True
 
-# TODO: tests, ADD logfile to html,
-# write test (recording  -> interval: 1 min,
-# Anzahl von frames mit OpenCV == fps * VideoLange(60s))
+    # TODO: tests, ADD logfile to html,
 
+    def record(
+        self,
+    ) -> None:
+        """Run init and record loop.
 
-def record(
-    camera: Camera = Camera(),
-    video_dir: str = config.VIDEO_DIR,
-    html_updater: OTCameraHTMLUpdater = OTCameraHTMLUpdater(
-        debug_mode_on=config.DEBUG_MODE_ON
-    ),
-    html_filepath: Union[str, Path] = config.INDEX_HTML_PATH,
-) -> None:
-    """Run init and record loop.
+        Initializes the LEDs and Wifi AP.
 
-    Initializes the LEDs and Wifi AP.
+        While it is recording time (see status.py), starts recording videos, splits them
+        every interval (see config.py), captures a new preview image and stops recording
+        after recording time ends.
 
-    While it is recording time (see status.py), starts recording videos, splits them
-    every interval (see config.py), captures a new preview image and stops recording
-    after recording time ends.
+        Stops everything by keyboard interrupt (Ctrl+C).
 
-    Stops everything by keyboard interrupt (Ctrl+C).
+        """
+        try:
+            while status.more_intervals:
+                try:
+                    self.loop()
+                except OSError as oe:
+                    if oe.errno == errno.ENOSPC:  # errno: no space left on device
+                        log.write(str(oe), level=log.LogLevel.EXCEPTION)
+                        delete_old_files(video_dir=self._video_dir)
+                    else:
+                        log.write("OSError occured", level=log.LogLevel.ERROR)
+                        raise
 
-    """
-    Path(video_dir).mkdir(exist_ok=True)
+            log.write("Captured all intervals, stopping", level=log.LogLevel.WARNING)
+        except KeyboardInterrupt:
+            log.write("Keyboard Interrupt, stopping", level=log.LogLevel.EXCEPTION)
+        except Exception as e:
+            log.write(f"{e}", level=log.LogLevel.EXCEPTION)
+            raise
+        finally:
+            self._execute_shutdown()
 
-    try:
-        init()
+    def _register_shutdown_action(
+        self,
+    ) -> None:
+        # Code to execute once terminate or interrupt signal occurs
+        log.write("Register callbacks on SIGTERM", log.LogLevel.DEBUG)
+        signal.signal(signal.SIGINT, self._execute_shutdown)
+        signal.signal(signal.SIGTERM, self._execute_shutdown)
 
-        while status.more_intervals:
-            try:
-                loop(camera, html_updater)
-            except OSError as oe:
-                if oe.errno == errno.ENOSPC:  # errno: no space left on device
-                    log.write(str(oe), level=log.LogLevel.EXCEPTION)
-                    delete_old_files(video_dir=video_dir)
-                else:
-                    log.write("OSError occured", level=log.LogLevel.ERROR)
-                    raise
+    def _execute_shutdown(self, *args):
+        if self._shutdown:
+            return
 
-        log.write("Captured all intervals, stopping", level=log.LogLevel.WARNING)
-    except KeyboardInterrupt:
-        log.write("Keyboard Interrupt, stopping", level=log.LogLevel.EXCEPTION)
-    except Exception as e:
-        log.write(f"{e}", level=log.LogLevel.EXCEPTION)
-        raise
-    finally:
-        log.write("Execute teardown!", level=log.LogLevel.INFO)
-        camera.stop_recording()
-        camera.close()
+        log.write("Shutdown OTCamera", level=log.LogLevel.INFO)
+        # OTCamera teardown
+        self._camera.stop_recording()
+        self._camera.close()
+        log.write("PiCamera closed", log.LogLevel.DEBUG)
+        self._html_updater.display_offline_info(self._index_html_filepath)
+        log.write("Display offline html", log.LogLevel.DEBUG)
+        log.write("OTCamera shutdown finished")
         log.closefile()
-        html_updater.disable_info(html_filepath)
+        self._shutdown = True
+        sys.exit(0)
 
 
 def main() -> None:
     camera = Camera()
-    video_dir = config.VIDEO_DIR
     html_updater = OTCameraHTMLUpdater(
         status_info_id="status-info",
         config_info_id="config-info",
         debug_mode_on=config.DEBUG_MODE_ON,
     )
-    record(camera, video_dir, html_updater)
+    otcamera = OTCamera(camera=camera, html_updater=html_updater)
+    otcamera.record()
 
 
 if __name__ == "__main__":
