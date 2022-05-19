@@ -154,8 +154,11 @@ class OTCameraHTMLUpdater:
         self._disable_tag_by_id(html_tree, self.config_info_id)
         self._save(html_tree, html_filepath)
 
-    def display_offline_info(self, html_filepath: Union[str, Path]):
-        self.disable_info(html_filepath)
+    def display_offline_info(
+        self, offline_html_path: Union[str, Path], html_save_path: Union[str, Path]
+    ):
+        html_tree = self._parse_html(offline_html_path)
+        self._save(html_tree, html_save_path)
 
     def _parse_html(self, html_filepath: Path) -> BeautifulSoup:
         with open(html_filepath) as html_stream:

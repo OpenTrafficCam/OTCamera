@@ -49,6 +49,8 @@ TEMPLATE_HTML_PATH = "~/OTCamera/webfiles/template.html"
 """Path to template HTML"""
 INDEX_HTML_PATH = "~/OTCamera/webfiles/index.html"
 """Path to the auto generated index HTML."""
+OFFLINE_HTML_PATH = "~/OTCamera/webfiles/offline.html"
+"""Path to the HTML to be displayed when OTCamera is offline"""
 
 
 # camera settings
@@ -108,3 +110,4 @@ VIDEO_DIR = str(Path(VIDEO_DIR).expanduser().resolve())
 PREVIEW_PATH = str(Path(PREVIEW_PATH).expanduser().resolve())
 TEMPLATE_HTML_PATH = str(Path(TEMPLATE_HTML_PATH).expanduser().resolve())
 INDEX_HTML_PATH = str(Path(INDEX_HTML_PATH).expanduser().resolve())
+OFFLINE_HTML_PATH = str(Path(OFFLINE_HTML_PATH).expanduser().resolve())

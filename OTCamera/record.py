@@ -45,6 +45,7 @@ class OTCamera:
         video_dir: Union[str, Path] = config.VIDEO_DIR,
         template_html_filepath: Union[str, Path] = config.TEMPLATE_HTML_PATH,
         index_html_filepath: Union[str, Path] = config.INDEX_HTML_PATH,
+        offline_html_filepath: Union[str, Path] = config.OFFLINE_HTML_PATH,
     ) -> None:
         self._camera = camera
         self._html_updater = html_updater
@@ -52,6 +53,7 @@ class OTCamera:
         self._video_dir = Path(video_dir)
         self._template_html_filepath = Path(template_html_filepath)
         self._index_html_filepath = Path(index_html_filepath)
+        self._offline_html_filepath = Path(offline_html_filepath)
         self._shutdown = False
 
         self._register_shutdown_action()
@@ -165,7 +167,9 @@ class OTCamera:
         self._camera.stop_recording()
         self._camera.close()
         log.write("PiCamera closed", log.LogLevel.DEBUG)
-        self._html_updater.display_offline_info(self._index_html_filepath)
+        self._html_updater.display_offline_info(
+            self._offline_html_filepath, self._index_html_filepath
+        )
         log.write("Display offline html", log.LogLevel.DEBUG)
         log.write("OTCamera shutdown finished")
         log.closefile()
