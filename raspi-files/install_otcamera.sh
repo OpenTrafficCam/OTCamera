@@ -55,7 +55,7 @@ apt install python3-pip git -y
 
 # read -p "Press enter to continue..." key
 echo "    Cloning OTCamera"
-git clone --depth 1 --branch $BRANCH https://github.com/OpenTrafficCam/OTCamera.git
+runuser -l $USER -c "git clone --depth 1 --branch $BRANCH https://github.com/OpenTrafficCam/OTCamera.git"
 cd OTCamera
 pip install -r requirements.txt --upgrade
 
