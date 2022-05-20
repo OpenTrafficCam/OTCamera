@@ -63,7 +63,7 @@ class OTCameraDataObject(ABC):
 
 @dataclass
 class StatusData(OTCameraDataObject):
-    """Class containing OTCamera's status information."""
+    """Status information to be displayed on the status website."""
 
     time: Tuple[Enum, str]
     hostname: Tuple[Enum, str]
@@ -79,7 +79,7 @@ class StatusData(OTCameraDataObject):
 
 @dataclass
 class ConfigData(OTCameraDataObject):
-    """Class representing OTCamera's current configuration file"""
+    """Configuration information to be displayed on the status website"""
 
     debug_mode_on: Tuple[Enum, bool]
     start_hour: Tuple[Enum, int]
