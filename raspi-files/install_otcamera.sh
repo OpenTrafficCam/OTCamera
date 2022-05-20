@@ -1,11 +1,20 @@
 #!/bin/bash
 
+echo "OTCamera Installation Script"
+echo "############################"
+echo " "
 
-APNAME="OTCamera"
-APPASSWORD="onetwothree4"
-APCHANNEL="11"
-IPRANGE="10.10.50"
-BRANCH="raspi-files"
+read -e -p "Wifi SSID: " -i "OTCamera" APNAME
+read -e -p "Wifi password: " -i "onetwothree4" APPASSWORD
+read -e -p "Wifi channel: " -i 11 APCHANNEL
+read -e -p "Wifi ip range: " -i 10.10.50 IPRANGE
+read -e -p "OTCamera branch: " -i "master" BRANCH
+
+# APNAME="OTCamera"
+# APPASSWORD="onetwothree4"
+# APCHANNEL="11"
+# IPRANGE="10.10.50"
+# BRANCH="raspi-files"
 
 # read -p "Press enter to continue..." key
 echo "#### Configure Rasperry Pi"
