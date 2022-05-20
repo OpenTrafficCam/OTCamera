@@ -7,7 +7,7 @@ from bs4 import BeautifulSoup
 from OTCamera.html_updater import (
     ConfigData,
     ConfigHtmlId,
-    OTCameraHTMLDataObject,
+    OTCameraDataObject,
     OTCameraHTMLUpdater,
     StatusData,
 )
@@ -214,7 +214,7 @@ def test_update_by_id(
     html_updater: OTCameraHTMLUpdater,
     html: str,
     expected: str,
-    status_data: OTCameraHTMLDataObject,
+    status_data: OTCameraDataObject,
 ):
     html_tree = BeautifulSoup(html, "html.parser")
     html_updater._update_by_id(html_tree=html_tree, update_info=status_data)
@@ -244,8 +244,8 @@ def test_update_info(
     create_html_file: Callable[[str, str], Path],
     html: str,
     expected: str,
-    status_data: OTCameraHTMLDataObject,
-    config_data: OTCameraHTMLDataObject,
+    status_data: OTCameraDataObject,
+    config_data: OTCameraDataObject,
 ):
     html_filepath = create_html_file("test.html", html)
     html_updater.update_info(html_filepath, html_filepath, status_data, config_data)
@@ -257,8 +257,8 @@ def test_update_info(
 
 def test_update_info_htmlWithAllIdsAsParam(
     html_updater: OTCameraHTMLUpdater,
-    status_data: OTCameraHTMLDataObject,
-    config_data: OTCameraHTMLDataObject,
+    status_data: OTCameraDataObject,
+    config_data: OTCameraDataObject,
     test_dir: Path,
     resources_dir: Path,
 ):

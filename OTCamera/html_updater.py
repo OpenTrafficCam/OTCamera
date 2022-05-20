@@ -54,7 +54,7 @@ class ConfigHtmlId(Enum):
 
 
 @dataclass
-class OTCameraHTMLDataObject(ABC):
+class OTCameraDataObject(ABC):
     """Represents"""
 
     def get_properties(self) -> list[Tuple[Enum, Any]]:
@@ -62,7 +62,7 @@ class OTCameraHTMLDataObject(ABC):
 
 
 @dataclass
-class StatusData(OTCameraHTMLDataObject):
+class StatusData(OTCameraDataObject):
     """Class containing OTCamera's status information."""
 
     time: Tuple[Enum, str]
@@ -78,7 +78,7 @@ class StatusData(OTCameraHTMLDataObject):
 
 
 @dataclass
-class ConfigData(OTCameraHTMLDataObject):
+class ConfigData(OTCameraDataObject):
     """Class representing OTCamera's current configuration file"""
 
     debug_mode_on: Tuple[Enum, bool]
@@ -132,8 +132,8 @@ class OTCameraHTMLUpdater:
         self,
         html_filepath: Union[str, Path],
         html_savepath: Union[str, Path],
-        status_info: StatusData,
-        config_info: ConfigData,
+        status_info: OTCameraDataObject,
+        config_info: OTCameraDataObject,
     ):
         html_tree = self._parse_html(Path(html_filepath))
         # Update status info
@@ -165,7 +165,7 @@ class OTCameraHTMLUpdater:
             soup = BeautifulSoup(html_stream, "html.parser")
         return soup
 
-    def _update_by_id(self, html_tree: Tag, update_info: OTCameraHTMLDataObject):
+    def _update_by_id(self, html_tree: Tag, update_info: OTCameraDataObject):
         for id, update_content in update_info.get_properties():
             self._change_content(html_tree.find(id=id.value), str(update_content))
 
