@@ -87,7 +87,7 @@ def get_status_data() -> StatusData:
     """Returns OTCamera's status information."""
     time = dt.now().strftime("%d.%m.%Y %H:%M:%S")
     hostname = socket.gethostname()
-    free_diskspace = calc_free_diskspace(config.VIDEO_DIR)
+    free_diskspace = calc_free_diskspace(config.VIDEO_DIR) / (1024 * 1024 * 1024)
     num_videos_recorded = _get_num_videos()
     currently_recording = recording
     wifi_active = _is_wifi_enabled()
@@ -99,7 +99,7 @@ def get_status_data() -> StatusData:
     return StatusData(
         time=(StatusHtmlId.TIME, time),
         hostname=(StatusHtmlId.HOSTNAME, hostname),
-        free_diskspace=(StatusHtmlId.FREE_DISKSPACE, free_diskspace),
+        free_diskspace=(StatusHtmlId.FREE_DISKSPACE, f"{free_diskspace:.2f} GB"),
         num_videos_recorded=(StatusHtmlId.NUM_VIDEOS_RECORDED, num_videos_recorded),
         currently_recording=(StatusHtmlId.CURRENTLY_RECORDING, currently_recording),
         wifi_active=(StatusHtmlId.WIFI_ACTIVE, wifi_active),

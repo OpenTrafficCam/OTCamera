@@ -67,7 +67,7 @@ class StatusData(OTCameraDataObject):
 
     time: Tuple[Enum, str]
     hostname: Tuple[Enum, str]
-    free_diskspace: Tuple[Enum, int]
+    free_diskspace: Tuple[Enum, str]
     num_videos_recorded: Tuple[Enum, int]
     currently_recording: Tuple[Enum, bool]
     wifi_active: Tuple[Enum, bool]
