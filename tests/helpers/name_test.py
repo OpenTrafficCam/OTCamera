@@ -1,8 +1,7 @@
 from unittest import mock
 
-
-from OTCamera.helpers import name
 from OTCamera import config
+from OTCamera.helpers import name
 
 
 @mock.patch("OTCamera.helpers.name._current_dt", return_value="2022-05-18_22-00-59")

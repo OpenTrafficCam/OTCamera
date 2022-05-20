@@ -21,12 +21,12 @@ It is configured by config.py.
 
 
 import errno
+import signal
+import sys
 from datetime import datetime as dt
 from pathlib import Path
 from time import sleep
 from typing import Union
-import signal
-import sys
 
 from OTCamera import config, status
 from OTCamera.hardware import led
