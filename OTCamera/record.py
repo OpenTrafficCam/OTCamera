@@ -106,7 +106,7 @@ class OTCamera:
                 self._template_html_filepath,
                 self._index_html_filepath,
                 status.get_status_data(),
-                status.get_config_settings(),
+                config.get_config_settings(),
             )
             status.new_preview = False
         elif not (preview_second or status.new_preview):
