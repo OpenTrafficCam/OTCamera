@@ -1,0 +1,13 @@
+[Unit]
+Description=This service starts OTCamera and keeps it running
+
+[Service]
+User=username
+WorkingDirectory=/path/to/otcamera
+Restart=always
+RestartSec=3
+ExecStart=/usr/bin/python3 run.py
+
+
+[Install]
+WantedBy=multi-user.target

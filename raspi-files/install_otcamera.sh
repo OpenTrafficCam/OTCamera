@@ -132,14 +132,20 @@ cp ./raspi-files/usr/local/bin/wifistart /usr/local/bin/wifistart
 sed $RCLOCAL -i -e "/exit 0/i /bin/bash /usr/local/bin/wifistart"
 
 
+echo "    Activate OTCamera service"
+OTCSERVICE="./raspi-files/otcamera.service"
+PWD=$(pwd)
+sed $OTCSERVICE -i -e "s?^WorkingDirectory=/path/to/otcamera?WorkingDirectory=$PWD?g"
+sed $OTCSERVICE -i -e "s?^User=username?User=$USER?g"
+cp $OTCSERVICE /lib/systemd/system
+
+systemctl enable otcamera.service
+
 # TODO
+
 # echo 'Setting Time"
 # sudo hwclock -w
 # sudo hwclock -r
-
-# echo 'Activate OTCamera service"
-# sudo systemctl enable OTCamera.service
-# sudo systemctl enable OTCamera.service
 
 # echo "#########"
 # echo "Done. You need to reboot now and should see the new wifi $APNAME"
