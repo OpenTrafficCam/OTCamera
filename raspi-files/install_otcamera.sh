@@ -20,7 +20,7 @@ read -e -p "OTCamera branch: " -i "master" BRANCH
 echo "#### Configure Rasperry Pi"
 echo "Configure legacy camera mode using raspi-config"
 raspi-config nonint do_legacy 0
-echo "Configure legacy camera mode using raspi-config"
+echo "Enable I2C bus for hwclock"
 raspi-config nonint do_i2c 0
 
 # read -p "Press enter to continue..." key
