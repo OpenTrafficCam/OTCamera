@@ -55,7 +55,7 @@ apt install python3-pip git -y
 
 # read -p "Press enter to continue..." key
 echo "    Cloning OTCamera"
-runuser -l $USER -c "git clone --depth 1 --branch $BRANCH https://github.com/OpenTrafficCam/OTCamera.git"
+runuser -l $SUDO_USER -c "git clone --depth 1 --branch $BRANCH https://github.com/OpenTrafficCam/OTCamera.git"
 cd OTCamera
 pip install -r requirements.txt --upgrade
 
@@ -145,7 +145,7 @@ echo "    Activate OTCamera service"
 OTCSERVICE="./raspi-files/otcamera.service"
 PWD=$(pwd)
 sed $OTCSERVICE -i -e "s?^WorkingDirectory=/path/to/otcamera?WorkingDirectory=$PWD?g"
-sed $OTCSERVICE -i -e "s?^User=username?User=$USER?g"
+sed $OTCSERVICE -i -e "s?^User=username?User=$SUDO_USER?g"
 cp $OTCSERVICE /lib/systemd/system
 
 systemctl enable otcamera.service
