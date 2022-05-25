@@ -20,6 +20,8 @@ read -e -p "OTCamera branch: " -i "master" BRANCH
 echo "#### Configure Rasperry Pi"
 echo "Configure legacy camera mode using raspi-config"
 raspi-config nonint do_legacy 0
+echo "Configure legacy camera mode using raspi-config"
+raspi-config nonint do_i2c 0
 
 # read -p "Press enter to continue..." key
 echo "    Setting $CONFIG variables"
@@ -65,13 +67,13 @@ apt install nginx -y
 PWD=$(pwd)
 NGINXDEFAULT="/etc/nginx/sites-available/default"
 sed $NGINXDEFAULT -i -e "s?root /var/www/html?root $PWD/webfiles?g"
-sudo systemctl restart nginx.service
+systemctl restart nginx.service
 
 # read -p "Press enter to continue..." key
 echo "     Configure wifi access-point"
 
 echo "     Installing servies"
-sudo apt install hostapd dnsmasq dhcpcd -y
+apt install hostapd dnsmasq dhcpcd -y
 
 echo "Configure hostapd"
 HOSTAPD="/etc/default/hostapd"
