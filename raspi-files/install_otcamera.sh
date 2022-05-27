@@ -4,11 +4,11 @@ echo "OTCamera Installation Script"
 echo "############################"
 echo " "
 
-read -e -p "Wifi SSID: " -i "OTCamera" APNAME
-read -e -p "Wifi password: " -i "onetwothree4" APPASSWORD
-read -e -p "Wifi channel: " -i 11 APCHANNEL
-read -e -p "Wifi ip range: " -i 10.10.50 IPRANGE
-read -e -p "OTCamera branch: " -i "master" BRANCH
+read -r -e -p "Wifi SSID: " -i "OTCamera" APNAME
+read -r -e -p "Wifi password: " -i "onetwothree4" APPASSWORD
+read -r -e -p "Wifi channel: " -i 11 APCHANNEL
+read -r -e -p "Wifi ip range: " -i 10.10.50 IPRANGE
+read -r -e -p "OTCamera branch: " -i "master" BRANCH
 
 # APNAME="OTCamera"
 # APPASSWORD="onetwothree4"
@@ -24,17 +24,19 @@ echo "Enable I2C bus for hwclock"
 raspi-config nonint do_i2c 0
 
 # read -p "Press enter to continue..." key
-echo "    Setting $CONFIG variables"
+echo "    Setting config variables"
 CONFIG="/boot/config.txt"
-echo "# OTCamera" >> $CONFIG
-echo "dtoverlay=disable-bt" >> $CONFIG
-echo "disable_camera_led=1" >> $CONFIG
-echo "dtparam=act_led_trigger=none" >> $CONFIG
-echo "dtparam=act_led_activelow=on" >> $CONFIG
+{
+    echo "# OTCamera"
+    echo "dtoverlay=disable-bt"
+    echo "disable_camera_led=1"
+    echo "dtparam=act_led_trigger=none"
+    echo "dtparam=act_led_activelow=on"
+    echo "dtparam=audio=off"
+    echo "display_auto_detect=0"
+} >> $CONFIG
 sed $CONFIG -i -e "s/^dtparam=audio=on/#dtparam=audio=on/g"
-echo "dtparam=audio=off" >> $CONFIG
 sed $CONFIG -i -e "s/^display_auto_detect=1/#display_auto_detect=1/g"
-echo "display_auto_detect=0" >> $CONFIG
 
 # read -p "Press enter to continue..." key
 echo "    Installing GL Legacy Drivers"
@@ -58,7 +60,7 @@ apt install python3-pip git -y
 # read -p "Press enter to continue..." key
 echo "    Cloning OTCamera"
 runuser -l $SUDO_USER -c "git clone --depth 1 --branch $BRANCH https://github.com/OpenTrafficCam/OTCamera.git"
-cd OTCamera
+cd OTCamera || { echo "Error: Cannot find OTCamera directory"; exit 1; }
 pip install -r requirements.txt --upgrade
 
 # read -p "Press enter to continue..." key
@@ -80,22 +82,24 @@ HOSTAPD="/etc/default/hostapd"
 HOSTAPDCONF="/etc/hostapd/hostapd.conf"
 cp $HOSTAPD $HOSTAPD".backup"
 echo "    Current hostapd config moved to $HOSTAPD.backup"
-echo "DAEMON_CONF=\""$HOSTAPDCONF"\"" >> $HOSTAPD
+echo "DAEMON_CONF=\"$HOSTAPDCONF\"" >> $HOSTAPD
 
 cp $HOSTAPDCONF $HOSTAPDCONF".backup"
 echo "    Current hostapd config moved to $HOSTAPDCONF.backup"
-echo "channel=$APCHANNEL" >> $HOSTAPDCONF
-echo "ssid=$APNAME" >> $HOSTAPDCONF
-echo "wpa_passphrase=$APPASSWORD" >> $HOSTAPDCONF
-echo "interface=uap0" >> $HOSTAPDCONF
-echo "hw_mode=g" >> $HOSTAPDCONF
-echo "macaddr_acl=0" >> $HOSTAPDCONF
-echo "auth_algs=1" >> $HOSTAPDCONF
-echo "wpa=2" >> $HOSTAPDCONF
-echo "wpa_key_mgmt=WPA-PSK" >> $HOSTAPDCONF
-echo "wpa_pairwise=TKIP" >> $HOSTAPDCONF
-echo "rsn_pairwise=CCMP" >> $HOSTAPDCONF
-echo "country_code=DE" >> $HOSTAPDCONF
+{
+    echo "channel=$APCHANNEL"
+    echo "ssid=$APNAME"
+    echo "wpa_passphrase=$APPASSWORD"
+    echo "interface=uap0"
+    echo "hw_mode=g"
+    echo "macaddr_acl=0"
+    echo "auth_algs=1"
+    echo "wpa=2"
+    echo "wpa_key_mgmt=WPA-PSK"
+    echo "wpa_pairwise=TKIP"
+    echo "rsn_pairwise=CCMP"
+    echo "country_code=DE"
+} >> $HOSTAPDCONF
 # echo "ctrl_interface=/var/run/hostapd" >> $HOSTAPDCONF
 # echo "ctrl_interface_group=0" >> $HOSTAPDCONF
 # echo "ieee80211d=1" >> $HOSTAPDCONF
@@ -106,9 +110,11 @@ echo "    Configure DHCPCD"
 DHCPDCONF="/etc/dhcpcd.conf"
 cp $DHCPDCONF $DHCPDCONF".backup"
 echo "Current DHCPCD config moved to $DHCPDCONF.backup"
-echo "interface uap0" >> $DHCPDCONF
-echo "	static ip_address=$IPRANGE.1/24" >> $DHCPDCONF
-echo "	nohook wpa_supplicant" >> $DHCPDCONF
+{
+    echo "interface uap0"
+    echo "	static ip_address=$IPRANGE.1/24"
+    echo "	nohook wpa_supplicant"
+} >> $DHCPDCONF
 echo "done"
 
 # read -p "Press enter to continue..." key
@@ -116,13 +122,15 @@ echo "    Configure DNSMASQ"
 DNSMASQCONF="/etc/dnsmasq.conf"
 mv $DNSMASQCONF $DNSMASQCONF".backup"
 echo "    Current DNSMASQ config moved to $DNSMASQCONF.backup"
-echo "interface=lo,uap0" >> $DNSMASQCONF
-echo "no-dhcp-interface=lo,wlan0" >> $DNSMASQCONF
-echo "bind-interfaces" >> $DNSMASQCONF
-echo "server=$IPRANGE.1" >> $DNSMASQCONF
-echo "domain-needed" >> $DNSMASQCONF
-echo "bogus-priv" >> $DNSMASQCONF
-echo "dhcp-range=$IPRANGE.10,$IPRANGE.250,2h" >> $DNSMASQCONF
+{
+    echo "interface=lo,uap0"
+    echo "no-dhcp-interface=lo,wlan0"
+    echo "bind-interfaces"
+    echo "server=$IPRANGE.1"
+    echo "domain-needed"
+    echo "bogus-priv"
+    echo "dhcp-range=$IPRANGE.10,$IPRANGE.250,2h"
+} >> $DNSMASQCONF
 echo "done"
 
 # read -p "Press enter to continue..." key
