@@ -143,6 +143,19 @@ cp ./raspi-files/usr/local/bin/wifistart /usr/local/bin/wifistart
 sed $RCLOCAL -i -e "/exit 0/i /bin/bash /usr/local/bin/wifistart"
 
 
+echo "    Setting up RTC"
+HWCLOCK="/lib/udev/hwclock-set"
+apt install i2c-tools
+echo "dtoverlay=i2c-rtc,ds3231" >> $CONFIG
+apt remove fake-hwclock -y
+update-rc.d -f fake-hwclock remove
+systemctl disable fake-hwclock
+sed $HWCLOCK -i -e "/if.*systemd/ s/^#*/#/"
+sed $HWCLOCK -i -e "s?^    exit 0?#    exit 0?g"
+sed $HWCLOCK -i -e "s?^fi?#fi?g"
+sed $HWCLOCK -i -e "/--systz/ s/^#*/#/"
+
+
 echo "    Activate OTCamera service"
 OTCSERVICE="./raspi-files/otcamera.service"
 PWD=$(pwd)
@@ -152,12 +165,6 @@ cp $OTCSERVICE /lib/systemd/system
 
 systemctl enable otcamera.service
 
-# TODO
-
-# echo 'Setting Time"
-# sudo hwclock -w
-# sudo hwclock -r
-
-# echo "#########"
-# echo "Done. You need to reboot now and should see the new wifi $APNAME"
-# echo "#########"
+echo "#########"
+echo "Done. You need to reboot now and should see the new wifi $APNAME"
+echo "#########"
