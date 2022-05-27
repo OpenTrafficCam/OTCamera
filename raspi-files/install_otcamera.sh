@@ -153,7 +153,7 @@ sed $RCLOCAL -i -e "/exit 0/i /bin/bash /usr/local/bin/wifistart"
 
 echo "    Setting up RTC"
 HWCLOCK="/lib/udev/hwclock-set"
-apt install i2c-tools
+apt install i2c-tools -y
 echo "dtoverlay=i2c-rtc,ds3231" >> $CONFIG
 apt remove fake-hwclock -y
 update-rc.d -f fake-hwclock remove
