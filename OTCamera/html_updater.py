@@ -53,6 +53,10 @@ class ConfigHtmlId(Enum):
     WIFI_DELAY = "wifi-delay"
 
 
+class LogHtmlId(Enum):
+    LOG_DATA = "log-data"
+
+
 @dataclass
 class OTCameraDataObject(ABC):
     """
@@ -125,15 +129,24 @@ class ConfigDataObject(OTCameraDataObject):
     wifi_delay: Tuple[Enum, int]
 
 
+@dataclass
+class LogDataObject(OTCameraDataObject):
+    """Log information to be displayed on the status website"""
+
+    log_data: Tuple[Enum, str]
+
+
 class OTCameraHTMLUpdater:
     def __init__(
         self,
         status_info_id: str = "status-info",
         config_info_id: str = "config-info",
+        log_info_id: str = "log-info",
         debug_mode_on: bool = False,
     ) -> None:
         self.status_info_id = status_info_id
         self.config_info_id = config_info_id
+        self.log_info_id = log_info_id
         self.debug_mode_on = debug_mode_on
 
     def update_info(
@@ -142,6 +155,7 @@ class OTCameraHTMLUpdater:
         html_savepath: Union[str, Path],
         status_info: OTCameraDataObject,
         config_info: OTCameraDataObject,
+        log_info: OTCameraDataObject,
     ):
         html_tree = self._parse_html(Path(html_filepath))
         # Update status info
@@ -153,6 +167,11 @@ class OTCameraHTMLUpdater:
             self._enable_tag_by_id(html_tree, self.config_info_id)
             self._update_by_id(html_tree, config_info)
 
+        # Update log info
+        if self.debug_mode_on:
+            self._enable_tag_by_id(html_tree, self.log_info_id)
+            self._update_by_id(html_tree, log_info)
+
         self._save(html_tree, Path(html_savepath))
         log.write("index.html status information updated", log.LogLevel.DEBUG)
 
@@ -163,9 +182,15 @@ class OTCameraHTMLUpdater:
         self._save(html_tree, html_filepath)
 
     def display_offline_info(
-        self, offline_html_path: Union[str, Path], html_save_path: Union[str, Path]
+        self,
+        offline_html_path: Union[str, Path],
+        html_save_path: Union[str, Path],
+        log_info: LogDataObject,
     ):
         html_tree = self._parse_html(offline_html_path)
+        if self.debug_mode_on:
+            self._enable_tag_by_id(html_tree, self.log_info_id)
+            self._update_by_id(html_tree, log_info)
         self._save(html_tree, html_save_path)
 
     def _parse_html(self, html_filepath: Path) -> BeautifulSoup:

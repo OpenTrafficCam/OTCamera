@@ -51,6 +51,8 @@ INDEX_HTML_PATH = "~/OTCamera/webfiles/index.html"
 """Path to the auto generated index HTML."""
 OFFLINE_HTML_PATH = "~/OTCamera/webfiles/offline.html"
 """Path to the HTML to be displayed when OTCamera is offline"""
+NUM_LOG_FILES_HTML = 2
+"""Number of log files to be displayed on the status website"""
 
 
 # camera settings

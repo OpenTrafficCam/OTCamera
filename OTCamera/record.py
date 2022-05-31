@@ -31,9 +31,15 @@ from typing import Union
 from OTCamera import config, status
 from OTCamera.hardware import led
 from OTCamera.hardware.camera import Camera
-from OTCamera.helpers import log
+from OTCamera.helpers import log, name
 from OTCamera.helpers.filesystem import delete_old_files
-from OTCamera.html_updater import OTCameraHTMLUpdater
+from OTCamera.html_updater import (
+    ConfigDataObject,
+    ConfigHtmlId,
+    LogDataObject,
+    LogHtmlId,
+    OTCameraHTMLUpdater,
+)
 
 
 class OTCamera:
@@ -46,6 +52,8 @@ class OTCamera:
         template_html_filepath: Union[str, Path] = config.TEMPLATE_HTML_PATH,
         index_html_filepath: Union[str, Path] = config.INDEX_HTML_PATH,
         offline_html_filepath: Union[str, Path] = config.OFFLINE_HTML_PATH,
+        log_dir: Union[str, Path] = config.VIDEO_DIR,
+        num_log_files_html: int = config.NUM_LOG_FILES_HTML,
     ) -> None:
         self._camera = camera
         self._html_updater = html_updater
@@ -54,6 +62,8 @@ class OTCamera:
         self._template_html_filepath = Path(template_html_filepath)
         self._index_html_filepath = Path(index_html_filepath)
         self._offline_html_filepath = Path(offline_html_filepath)
+        self._log_dir = Path(log_dir)
+        self._num_log_files_html = num_log_files_html
         self._shutdown = False
 
         self._register_shutdown_action()
@@ -107,13 +117,12 @@ class OTCamera:
                 self._index_html_filepath,
                 status.get_status_data(),
                 self._get_config_settings(),
+                self._get_log_info(start_idx=0, num=self._num_log_files_html),
             )
             status.new_preview = False
         elif not (preview_second or status.new_preview):
             log.write("reset new preview", level=log.LogLevel.DEBUG)
             status.new_preview = True
-
-    # TODO: tests, ADD logfile to html,
 
     def record(
         self,
@@ -201,6 +210,24 @@ class OTCamera:
             wifi_delay=(ConfigHtmlId.WIFI_DELAY, config.WIFI_DELAY),
         )
 
+    def _get_log_info(self, start_idx: int, num: int) -> LogDataObject:
+        # Gather all log files paths in an ordered list
+        log_filepaths = [f for f in self._log_dir.iterdir() if f.suffix == ".log"]
+        sorted_log_filepaths = sorted(
+            log_filepaths, key=name.get_date_from_log_file, reverse=True
+        )
+        # Get num recent log files
+        recent_log_files = sorted_log_filepaths[start_idx : num + 1]
+        recent_log_files.reverse()
+        log_data = ""
+        for log_file_path in recent_log_files:
+            log_data += f"File: {log_file_path}\n"
+            with open(log_file_path, "r") as log_file:
+                log_data += log_file.read()
+                log_data += "\n"
+
+        return LogDataObject(log_data=(LogHtmlId.LOG_DATA, log_data))
+
     def _execute_shutdown(self, *args):
         if self._shutdown:
             return
@@ -211,7 +238,9 @@ class OTCamera:
         self._camera.close()
         log.write("PiCamera closed", log.LogLevel.DEBUG)
         self._html_updater.display_offline_info(
-            self._offline_html_filepath, self._index_html_filepath
+            self._offline_html_filepath,
+            self._index_html_filepath,
+            self._get_log_info(0, self._num_log_files_html),
         )
         log.write("Display offline html", log.LogLevel.DEBUG)
         log.write("OTCamera shutdown finished")
@@ -225,6 +254,7 @@ def main() -> None:
     html_updater = OTCameraHTMLUpdater(
         status_info_id="status-info",
         config_info_id="config-info",
+        log_info_id="log-info",
         debug_mode_on=config.DEBUG_MODE_ON,
     )
     otcamera = OTCamera(camera=camera, html_updater=html_updater)

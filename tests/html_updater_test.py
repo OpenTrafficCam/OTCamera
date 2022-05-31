@@ -92,6 +92,13 @@ def config_data() -> ConfigDataObject:
     )
 
 
+@pytest.fixture
+def log_data() -> LogDataObject:
+    return LogDataObject(
+        log_data=(LogHtmlId.LOG_DATA, "Log File Number 1\n Log line 1\n Log line 2")
+    )
+
+
 @pytest.mark.parametrize(
     "html, expected",
     [
@@ -248,9 +255,12 @@ def test_update_info(
     expected: str,
     status_data: OTCameraDataObject,
     config_data: OTCameraDataObject,
+    log_data: OTCameraDataObject,
 ):
     html_filepath = create_html_file("test.html", html)
-    html_updater.update_info(html_filepath, html_filepath, status_data, config_data)
+    html_updater.update_info(
+        html_filepath, html_filepath, status_data, config_data, log_data
+    )
 
     result = parse_html(html_filepath)
 
@@ -261,6 +271,7 @@ def test_update_info_htmlWithAllIdsAsParam(
     html_updater: OTCameraHTMLUpdater,
     status_data: OTCameraDataObject,
     config_data: OTCameraDataObject,
+    log_data: OTCameraDataObject,
     test_dir: Path,
     resources_dir: Path,
 ):
@@ -269,7 +280,7 @@ def test_update_info_htmlWithAllIdsAsParam(
     result_save_path = test_dir / "result.html"
 
     html_updater.update_info(
-        template_html_filepath, result_save_path, status_data, config_data
+        template_html_filepath, result_save_path, status_data, config_data, log_data
     )
     soup_result = parse_html(result_save_path)
     soup_expected = parse_html(expected_html_filepath)
