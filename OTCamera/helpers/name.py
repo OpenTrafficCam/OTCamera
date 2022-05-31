@@ -19,7 +19,7 @@ videofilename or the string to annotate the video.
 # You should have received a copy of the GNU General Public License along with this
 # program.  If not, see <https://www.gnu.org/licenses/>.
 
-
+import re
 from datetime import datetime as dt
 from pathlib import Path
 
@@ -85,6 +85,23 @@ def preview() -> str:
     """
     filename = config.PREVIEW_PATH
     return str(Path(filename).expanduser().resolve())
+
+
+def get_date_from_log_file(log_filepath: Path) -> dt:
+    regex = "[0-9]{4}-[0-9]{2}-[0-9]{2}_[0-9]{2}-[0-9]{2}-[0-9]{2}"
+    timestamp = re.findall(pattern=regex, string=log_filepath.stem)[-1]
+    date, time = timestamp.split("_")
+    year, month, day = date.split("-")
+    hour, minute, second = time.split("-")
+    dt_object = dt(
+        year=int(year),
+        month=int(month),
+        day=int(day),
+        hour=int(hour),
+        minute=int(minute),
+        second=int(second),
+    )
+    return dt_object
 
 
 if __name__ == "__main__":
