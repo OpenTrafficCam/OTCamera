@@ -81,8 +81,6 @@ def otc():
     """Generate a ASCII logo and write it to the logfile."""
     otclogo = text2art("OpenTrafficCam")
     _write(otclogo)
-    otcamera = text2art("OTCamera")
-    _write(otcamera)
 
 
 def _write(msg, reboot=True):
