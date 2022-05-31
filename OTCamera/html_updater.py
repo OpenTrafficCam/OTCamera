@@ -55,9 +55,17 @@ class ConfigHtmlId(Enum):
 
 @dataclass
 class OTCameraDataObject(ABC):
-    """Represents"""
+    """
+    Represents OTCamera information to be displayed on the status website.
+
+    All properties that inherit from `OTCameraDataObject` need to be a tuple of
+    type Tuple[Enum, Any].
+    The Enum represents the unique HTML id to be found in the HTML document.
+    Thus the value of the Enum refers to an HTML id of a HTML tag.
+    """
 
     def get_properties(self) -> list[Tuple[Enum, Any]]:
+        """Returns all properties of this class as a list of tuples."""
         return [getattr(self, field.name) for field in fields(self)]
 
 
