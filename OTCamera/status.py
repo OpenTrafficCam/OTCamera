@@ -134,8 +134,7 @@ def _is_wifi_enabled(network_device_name: str = "wlan0") -> bool:
     if error:
         err_msg = f"Error: '{error} occured while checking WIFI status."
         log.write(err_msg, log.LogLevel.ERROR)
-        raise Exception(err_msg)
-
+        return False
     if re.search("state up", str(out), re.IGNORECASE):
         log.write("WiFi is up", log.LogLevel.DEBUG)
         return True
