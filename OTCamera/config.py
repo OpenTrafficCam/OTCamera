@@ -96,19 +96,6 @@ WIFI_DELAY = 900
 """Delay in seconds before wifi turns off."""
 
 
-def read_user_config(path_to_config: Union[str, Path]) -> dict:
-    validate_user_config()
-
-    if not Path(path_to_config).is_file():
-        # TODO: read default config
-        pass
-
-
-def validate_user_config():
-    # TODO: implement
-    pass
-
-
 VIDEO_DIR = str(Path(VIDEO_DIR).expanduser().resolve())
 PREVIEW_PATH = str(Path(PREVIEW_PATH).expanduser().resolve())
 TEMPLATE_HTML_PATH = str(Path(TEMPLATE_HTML_PATH).expanduser().resolve())
