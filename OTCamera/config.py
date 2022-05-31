@@ -23,8 +23,6 @@ import socket
 from pathlib import Path
 from typing import Union
 
-from OTCamera.html_updater import ConfigData, ConfigHtmlId
-
 DEBUG_MODE_ON = True
 """Turn debug mode on to get additional log entries."""
 
@@ -105,48 +103,8 @@ def read_user_config(path_to_config: Union[str, Path]) -> dict:
 
 
 def validate_user_config():
+    # TODO: implement
     pass
-
-
-def get_config_settings() -> ConfigData:
-    """Returns OTCamera's configuration settings"""
-
-    return ConfigData(
-        debug_mode_on=(ConfigHtmlId.DEBUG_MODE_ON, DEBUG_MODE_ON),
-        start_hour=(ConfigHtmlId.START_HOUR, START_HOUR),
-        end_hour=(ConfigHtmlId.END_HOUR, END_HOUR),
-        interval_video_split=(
-            ConfigHtmlId.INTERVAL_VIDEO_SPLIT,
-            INTERVAL_LENGTH,
-        ),
-        num_intervals=(ConfigHtmlId.NUM_INTERVALS, NUM_INTERVALS),
-        preview_interval=(ConfigHtmlId.PREVIEW_INTERVAL, PREVIEW_INTERVAL),
-        min_free_space=(ConfigHtmlId.MIN_FREE_SPACE, MIN_FREE_SPACE),
-        prefix=(ConfigHtmlId.PREFIX, PREFIX),
-        video_dir=(ConfigHtmlId.VIDEO_DIR, VIDEO_DIR),
-        preview_path=(ConfigHtmlId.PREVIEW_PATH, PREVIEW_PATH),
-        template_html_path=(ConfigHtmlId.TEMPLATE_HTML_PATH, TEMPLATE_HTML_PATH),
-        index_html_path=(ConfigHtmlId.INDEX_HTML_PATH, INDEX_HTML_PATH),
-        fps=(ConfigHtmlId.FPS, FPS),
-        resolution=(ConfigHtmlId.RESOLUTION, RESOLUTION),
-        exposure_mode=(ConfigHtmlId.EXPOSURE_MODE, EXPOSURE_MODE),
-        drc_strength=(ConfigHtmlId.DRC_STRENGTH, DRC_STRENGTH),
-        rotation=(ConfigHtmlId.ROTATION, ROTATION),
-        awb_mode=(ConfigHtmlId.AWB_MODE, AWB_MODE),
-        video_format=(ConfigHtmlId.VIDEO_FORMAT, VIDEO_FORMAT),
-        preview_format=(ConfigHtmlId.PREVIEW_FORMAT, PREVIEW_FORMAT),
-        res_of_saved_video_file=(
-            ConfigHtmlId.RESOLUTION_SAVED_VIDEO_FILE,
-            RESOLUTION_SAVED_VIDEO_FILE,
-        ),
-        h264_profile=(ConfigHtmlId.H264_PROFILE, H264_PROFILE),
-        h264_level=(ConfigHtmlId.H264_LEVEL, H264_LEVEL),
-        h264_bitrate=(ConfigHtmlId.H264_BITRATE, H264_BITRATE),
-        h264_quality=(ConfigHtmlId.H264_QUALITY, H264_QUALITY),
-        use_led=(ConfigHtmlId.USE_LED, USE_LED),
-        use_buttons=(ConfigHtmlId.USE_BUTTONS, USE_BUTTONS),
-        wifi_delay=(ConfigHtmlId.WIFI_DELAY, WIFI_DELAY),
-    )
 
 
 VIDEO_DIR = str(Path(VIDEO_DIR).expanduser().resolve())

@@ -106,7 +106,7 @@ class OTCamera:
                 self._template_html_filepath,
                 self._index_html_filepath,
                 status.get_status_data(),
-                config.get_config_settings(),
+                self._get_config_settings(),
             )
             status.new_preview = False
         elif not (preview_second or status.new_preview):
@@ -157,6 +157,49 @@ class OTCamera:
         log.write("Register callbacks on SIGTERM", log.LogLevel.DEBUG)
         signal.signal(signal.SIGINT, self._execute_shutdown)
         signal.signal(signal.SIGTERM, self._execute_shutdown)
+
+    def _get_config_settings(self) -> ConfigDataObject:
+        """Returns OTCamera's configuration settings"""
+
+        return ConfigDataObject(
+            debug_mode_on=(ConfigHtmlId.DEBUG_MODE_ON, config.DEBUG_MODE_ON),
+            start_hour=(ConfigHtmlId.START_HOUR, config.START_HOUR),
+            end_hour=(ConfigHtmlId.END_HOUR, config.END_HOUR),
+            interval_video_split=(
+                ConfigHtmlId.INTERVAL_VIDEO_SPLIT,
+                config.INTERVAL_LENGTH,
+            ),
+            num_intervals=(ConfigHtmlId.NUM_INTERVALS, config.NUM_INTERVALS),
+            preview_interval=(ConfigHtmlId.PREVIEW_INTERVAL, config.PREVIEW_INTERVAL),
+            min_free_space=(ConfigHtmlId.MIN_FREE_SPACE, config.MIN_FREE_SPACE),
+            prefix=(ConfigHtmlId.PREFIX, config.PREFIX),
+            video_dir=(ConfigHtmlId.VIDEO_DIR, config.VIDEO_DIR),
+            preview_path=(ConfigHtmlId.PREVIEW_PATH, config.PREVIEW_PATH),
+            template_html_path=(
+                ConfigHtmlId.TEMPLATE_HTML_PATH,
+                config.TEMPLATE_HTML_PATH,
+            ),
+            index_html_path=(ConfigHtmlId.INDEX_HTML_PATH, config.INDEX_HTML_PATH),
+            fps=(ConfigHtmlId.FPS, config.FPS),
+            resolution=(ConfigHtmlId.RESOLUTION, config.RESOLUTION),
+            exposure_mode=(ConfigHtmlId.EXPOSURE_MODE, config.EXPOSURE_MODE),
+            drc_strength=(ConfigHtmlId.DRC_STRENGTH, config.DRC_STRENGTH),
+            rotation=(ConfigHtmlId.ROTATION, config.ROTATION),
+            awb_mode=(ConfigHtmlId.AWB_MODE, config.AWB_MODE),
+            video_format=(ConfigHtmlId.VIDEO_FORMAT, config.VIDEO_FORMAT),
+            preview_format=(ConfigHtmlId.PREVIEW_FORMAT, config.PREVIEW_FORMAT),
+            res_of_saved_video_file=(
+                ConfigHtmlId.RESOLUTION_SAVED_VIDEO_FILE,
+                config.RESOLUTION_SAVED_VIDEO_FILE,
+            ),
+            h264_profile=(ConfigHtmlId.H264_PROFILE, config.H264_PROFILE),
+            h264_level=(ConfigHtmlId.H264_LEVEL, config.H264_LEVEL),
+            h264_bitrate=(ConfigHtmlId.H264_BITRATE, config.H264_BITRATE),
+            h264_quality=(ConfigHtmlId.H264_QUALITY, config.H264_QUALITY),
+            use_led=(ConfigHtmlId.USE_LED, config.USE_LED),
+            use_buttons=(ConfigHtmlId.USE_BUTTONS, config.USE_BUTTONS),
+            wifi_delay=(ConfigHtmlId.WIFI_DELAY, config.WIFI_DELAY),
+        )
 
     def _execute_shutdown(self, *args):
         if self._shutdown:
