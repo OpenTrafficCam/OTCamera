@@ -33,7 +33,7 @@ log.write("filesystem", level=log.LogLevel.DEBUG)
 
 def delete_old_files(
     video_dir: Union[str, Path] = config.VIDEO_DIR,
-    min_free_space: int = config.MINFREESPACE,
+    min_free_space: int = config.MIN_FREE_SPACE,
 ) -> None:
     """Delete old files until enough space available.
 
@@ -88,3 +88,12 @@ def _enough_space(directory: Path, min_free_space: int) -> bool:
     log.write(f"free space: {free_space}", level=log.LogLevel.DEBUG)
     log.write(f"min space: {min_free_space}", level=log.LogLevel.DEBUG)
     return free_space > min_free_space
+
+
+def resolve_path(path: Union[str, Path]) -> Path:
+    return Path(path).expanduser().resolve()
+
+
+def calc_free_diskspace(directory: Union[str, Path]) -> int:
+    resolved_path = resolve_path(directory)
+    return psutil.disk_usage(resolved_path).free

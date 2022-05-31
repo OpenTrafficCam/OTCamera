@@ -3,6 +3,7 @@
 *preview.png
 *preview.jpg
 videos/
+webfiles/index.html
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -168,3 +169,4 @@ Thumbs.db
 
 # Local History for Visual Studio Code
 .history/
+

@@ -88,26 +88,26 @@ class Camera(Singleton):
             self._picam.annotate_text = name.annotate()
             self._picam.start_recording(
                 output=name.video(),
-                format=config.FORMAT,
-                resize=config.RESIZE,
-                profile=config.PROFILE,
-                level=config.LEVEL,
-                bitrate=config.BITRATE,
-                quality=config.QUALITY,
+                format=config.VIDEO_FORMAT,
+                resize=config.RESOLUTION_SAVED_VIDEO_FILE,
+                profile=config.H264_PROFILE,
+                level=config.H264_LEVEL,
+                bitrate=config.H264_BITRATE,
+                quality=config.H264_QUALITY,
             )
             log.write(f"Picam recording: {self._picam.recording}")
             log.write("started recording")
             led.rec_on()
             status.recording = True
             self._wait_recording(2)
-            self._capture()
+            self.capture()
 
-    def _capture(self):
+    def capture(self):
         self._picam.annotate_text = name.annotate()
         self._picam.capture(
             name.preview(),
-            format=config.PREVIEWFORMAT,
-            resize=config.RESIZE,
+            format=config.PREVIEW_FORMAT,
+            resize=config.RESOLUTION_SAVED_VIDEO_FILE,
             use_video_port=True,
         )
         log.write("preview captured", level=log.LogLevel.DEBUG)
@@ -138,8 +138,8 @@ class Camera(Singleton):
             self._split()
             status.interval_finished = False
             status.current_interval += 1
-            if config.N_INTERVALS > 0:
-                status.more_intervals = status.current_interval < config.N_INTERVALS
+            if config.NUM_INTERVALS > 0:
+                status.more_intervals = status.current_interval < config.NUM_INTERVALS
             if not status.more_intervals:
                 log.write("last interval", level=log.LogLevel.DEBUG)
         elif self._after_new_interval():
@@ -150,7 +150,7 @@ class Camera(Singleton):
 
     def _interval_minute(self):
         current_minute = dt.now().minute
-        interval_minute = (current_minute % config.INTERVAL) == 0
+        interval_minute = (current_minute % config.INTERVAL_LENGTH) == 0
         return interval_minute
 
     def _after_new_interval(self):
@@ -164,29 +164,6 @@ class Camera(Singleton):
             and status.more_intervals
         )
         return new_interval
-
-    def preview(self, now: bool = False):
-        """Capture a preview image.
-
-        Captures a new preview image, if the current second matches the preview interval
-        configured in config.py and the Wifi AP is turned on (otherwise, a preview would
-        be useless).
-
-        Args:
-            now (bool, optional): Generate preview immediately. Defaults to False.
-        """
-        current_second = dt.now().second
-        offset = config.PREVIEW_INTERVAL - 1
-        preview_second = (current_second % config.PREVIEW_INTERVAL) == offset
-        time_preview = preview_second and status.preview_on() and status.new_preview
-
-        if now or time_preview:
-            log.write("new preview", level=log.LogLevel.DEBUG)
-            self._capture()
-            status.new_preview = False
-        elif not (preview_second or status.new_preview):
-            log.write("reset new preview", level=log.LogLevel.DEBUG)
-            status.new_preview = True
 
     def stop_recording(self):
         """Stops the video recording.
@@ -203,7 +180,12 @@ class Camera(Singleton):
             status.recording = False
 
     def close(self):
-        self._picam.close()
+        try:
+            self._picam.close()
+            log.write("PiCamera closed", log.LogLevel.DEBUG)
+        except picamera.PiCameraClosed:
+            log.write("Camera already closed.", level=log.LogLevel.DEBUG)
+            pass
 
     def restart(self):
         """
@@ -212,11 +194,7 @@ class Camera(Singleton):
         The initialisation is being done with the current set of parameters.
         """
         log.write("Restart camera")
-        try:
-            self._picam.close()
-
-        except picamera.PiCameraClosed:
-            pass
+        self.close()
 
         self._picam = self._create_picam()
 

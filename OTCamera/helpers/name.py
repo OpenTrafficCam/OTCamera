@@ -19,14 +19,14 @@ videofilename or the string to annotate the video.
 # You should have received a copy of the GNU General Public License along with this
 # program.  If not, see <https://www.gnu.org/licenses/>.
 
-
+import re
 from datetime import datetime as dt
 from pathlib import Path
 
 from OTCamera import config
 
 
-def video():
+def video() -> str:
     """Filename of Video.
 
     Path incl. filename where videos are saved to, based on hostname and
@@ -35,23 +35,23 @@ def video():
     Returns:
         str: filename for video
     """
-    filename = config.VIDEO_DIR + config.PREFIX + "_" + _current_dt() + ".h264"
-    return str(Path(filename).expanduser().resolve())
+    filename = Path(config.VIDEO_DIR) / f"{config.PREFIX}_{_current_dt()}.h264"
+    return str(filename.expanduser().resolve())
 
 
-def log():
+def log() -> Path:
     """Filename of logfile.
 
     Path incl. filename where logfile is saved.
 
     Returns:
-        str: filename for log
+        Path: filename for log
     """
-    filename = config.VIDEO_DIR + config.PREFIX + "_" + _current_dt() + ".log"
+    filename = Path(config.VIDEO_DIR) / f"{config.PREFIX}_{_current_dt()}.log"
     return Path(filename).expanduser().resolve()
 
 
-def annotate():
+def annotate() -> str:
     """String to annotate video.
 
     Text to be added as annotation to video footage.
@@ -65,7 +65,7 @@ def annotate():
 
 
 # TODO: refactor time stuff in separate helper
-def _current_dt():
+def _current_dt() -> str:
     """Generates current date and time.
 
     Returns:
@@ -75,7 +75,7 @@ def _current_dt():
     return curr_dt
 
 
-def preview():
+def preview() -> str:
     """Filename for preview image.
 
     Path incl. filename where preview file is saved.
@@ -83,8 +83,25 @@ def preview():
     Returns:
         str: filename for preview
     """
-    filename = config.PREVIEWPATH
+    filename = config.PREVIEW_PATH
     return str(Path(filename).expanduser().resolve())
+
+
+def get_date_from_log_file(log_filepath: Path) -> dt:
+    regex = "[0-9]{4}-[0-9]{2}-[0-9]{2}_[0-9]{2}-[0-9]{2}-[0-9]{2}"
+    timestamp = re.findall(pattern=regex, string=log_filepath.stem)[-1]
+    date, time = timestamp.split("_")
+    year, month, day = date.split("-")
+    hour, minute, second = time.split("-")
+    dt_object = dt(
+        year=int(year),
+        month=int(month),
+        day=int(day),
+        hour=int(hour),
+        minute=int(minute),
+        second=int(second),
+    )
+    return dt_object
 
 
 if __name__ == "__main__":

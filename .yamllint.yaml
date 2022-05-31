@@ -9,8 +9,7 @@ rules:
   brackets: enable
   colons: enable
   commas: enable
-  comments:
-    level: warning
+  comments: disable
   comments-indentation:
     level: warning
   document-end: disable
