@@ -31,6 +31,8 @@ from OTCamera.hardware import led
 from OTCamera.helpers import log, name
 from OTCamera.helpers.filesystem import delete_old_files
 
+log.write("imported camera", level=log.LogLevel.DEBUG)
+
 
 class Singleton(object):
     def __new__(cls, *args, **kwds):
@@ -95,7 +97,9 @@ class Camera(Singleton):
                 bitrate=config.H264_BITRATE,
                 quality=config.H264_QUALITY,
             )
-            log.write(f"Picam recording: {self._picam.recording}")
+            log.write(
+                f"Picam recording: {self._picam.recording}", level=log.LogLevel.DEBUG
+            )
             log.write("started recording")
             led.rec_on()
             status.recording = True
@@ -110,7 +114,7 @@ class Camera(Singleton):
             resize=config.RESOLUTION_SAVED_VIDEO_FILE,
             use_video_port=True,
         )
-        log.write("preview captured", level=log.LogLevel.DEBUG)
+        log.write("preview captured", level=log.LogLevel.INFO)
 
     def _wait_recording(self, timeout: Union[int, float] = 0):
         if self._picam.recording:
@@ -175,8 +179,8 @@ class Camera(Singleton):
         if self._picam.recording:
             self._picam.stop_recording()
             led.rec_off()
-            log.write("recorded {n} videos".format(n=status.current_interval))
             log.write("stopped recording")
+            log.write("recorded {n} videos".format(n=status.current_interval))
             status.recording = False
 
     def close(self):
@@ -193,7 +197,7 @@ class Camera(Singleton):
 
         The initialisation is being done with the current set of parameters.
         """
-        log.write("Restart camera")
+        log.write("restarting camera")
         self.close()
 
         self._picam = self._create_picam()

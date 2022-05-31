@@ -41,6 +41,8 @@ from OTCamera.html_updater import (
     OTCameraHTMLUpdater,
 )
 
+log.write("imported record", level=log.LogLevel.DEBUG)
+
 
 class OTCamera:
     def __init__(
@@ -150,7 +152,7 @@ class OTCamera:
                         log.write("OSError occured", level=log.LogLevel.ERROR)
                         raise
 
-            log.write("Captured all intervals, stopping", level=log.LogLevel.WARNING)
+            log.write("Captured all intervals, stopping", level=log.LogLevel.INFO)
         except KeyboardInterrupt:
             log.write("Keyboard Interrupt, stopping", level=log.LogLevel.EXCEPTION)
         except Exception as e:
@@ -241,7 +243,7 @@ class OTCamera:
             self._index_html_filepath,
             self._get_log_info(0, self._num_log_files_html),
         )
-        log.write("OTCamera shutdown finished")
+        log.write("OTCamera stopped", level=log.LogLevel.INFO)
         self._shutdown = True
         log.closefile()
         sys.exit(0)

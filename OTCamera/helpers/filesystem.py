@@ -28,7 +28,7 @@ from OTCamera import config
 from OTCamera.helpers import log
 from OTCamera.helpers.errors import NoMoreFilesToDeleteError
 
-log.write("filesystem", level=log.LogLevel.DEBUG)
+log.write("imported filesystem", level=log.LogLevel.DEBUG)
 
 
 def delete_old_files(
@@ -80,7 +80,7 @@ def delete_old_files(
         log.breakline()
         log.write(f"Deleted {oldest_video}")
         free_space = psutil.disk_usage(absolute_video_dirpath).free
-        log.write(f"free space: {free_space}", level=log.LogLevel.DEBUG)
+        log.write(f"free space: {free_space}", level=log.LogLevel.INFO)
 
 
 def _enough_space(directory: Path, min_free_space: int) -> bool:

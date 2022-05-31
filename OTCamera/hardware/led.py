@@ -25,7 +25,7 @@ from gpiozero import PWMLED
 from OTCamera import config
 from OTCamera.helpers import log
 
-log.write("leds", level=log.LogLevel.DEBUG)
+log.write("imported led", level=log.LogLevel.DEBUG)
 
 
 def off():

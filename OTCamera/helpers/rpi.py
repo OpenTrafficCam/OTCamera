@@ -27,7 +27,7 @@ from OTCamera.hardware import button, led
 from OTCamera.hardware.camera import Camera
 from OTCamera.helpers import log
 
-log.write("rpi", level=log.LogLevel.DEBUG)
+log.write("imported rpi", level=log.LogLevel.DEBUG)
 camera = Camera()
 
 

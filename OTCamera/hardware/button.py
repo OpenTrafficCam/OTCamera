@@ -27,7 +27,7 @@ from gpiozero import Button
 from OTCamera import config, status
 from OTCamera.helpers import log, rpi
 
-log.write("buttons", level=log.LogLevel.DEBUG)
+log.write("imported buttons", level=log.LogLevel.DEBUG)
 
 
 def its_record_time() -> bool:
@@ -59,7 +59,7 @@ def _on_hour_button_switched() -> None:
 
 def _on_low_battery_button_held() -> None:
     status.battery_is_low = True
-    log.write("Battery level is low! Initiate shutdown!", log.LogLevel.WARNING)
+    log.write("Battery level is low!", log.LogLevel.WARNING)
     rpi.lowbattery()
 
 
@@ -71,19 +71,19 @@ def _on_power_button_released() -> None:
 
 def _on_wifi_ap_button_held() -> None:
     status.wifi_ap_button_pressed = True
-    log.write("WiFi AP button pressed")
+    log.write("Wi-Fi button pressed")
     rpi.wifi()
 
 
 def _on_wifi_ap_button_released() -> None:
     status.wifi_ap_button_pressed = False
-    log.write("WiFi AP button released")
+    log.write("Wi-Fi button released")
     rpi.wifi()
 
 
 if config.USE_BUTTONS:
 
-    log.write("Initalizing LEDs", level=log.LogLevel.DEBUG)
+    log.write("Initalizing Buttons", level=log.LogLevel.DEBUG)
 
     POWERPIN = 6
     HOURPIN = 19

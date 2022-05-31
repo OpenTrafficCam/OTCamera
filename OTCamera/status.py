@@ -31,7 +31,7 @@ from OTCamera.helpers import log
 from OTCamera.helpers.filesystem import calc_free_diskspace, resolve_path
 from OTCamera.html_updater import StatusDataObject, StatusHtmlId
 
-log.write("status", level=log.LogLevel.DEBUG)
+log.write("imported status", level=log.LogLevel.DEBUG)
 
 shutdownactive: bool = False
 noblink: bool = False
@@ -132,14 +132,16 @@ def _is_wifi_enabled(network_device_name: str = "wlan0") -> bool:
     )
     out, error = p.communicate()
     if error:
-        err_msg = f"Error: '{error} occured while checking WIFI status."
+        err_msg = (
+            f"Error: '{error} occured while checking {network_device_name} status."
+        )
         log.write(err_msg, log.LogLevel.ERROR)
         return False
     if re.search("state up", str(out), re.IGNORECASE):
-        log.write("WiFi is up", log.LogLevel.DEBUG)
+        log.write(f"{network_device_name} is up", log.LogLevel.DEBUG)
         return True
     elif re.search("state down", str(out), re.IGNORECASE):
-        log.write("WiFi is down", log.LogLevel.DEBUG)
+        log.write(f"{network_device_name} is down", log.LogLevel.DEBUG)
         return False
     elif re.search("(Device).*(does not exist)", str(out), re.IGNORECASE):
         log.write(
