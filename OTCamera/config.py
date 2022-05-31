@@ -21,7 +21,6 @@ All the configuration of OTCamera is done here.
 
 import socket
 from pathlib import Path
-from typing import Union
 
 DEBUG_MODE_ON = True
 """Turn debug mode on to get additional log entries."""
