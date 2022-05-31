@@ -163,7 +163,7 @@ class OTCamera:
         self,
     ) -> None:
         # Code to execute once terminate or interrupt signal occurs
-        log.write("Register callbacks on SIGTERM", log.LogLevel.DEBUG)
+        log.write("Register callbacks on SIGINT and SIGTERM", log.LogLevel.DEBUG)
         signal.signal(signal.SIGINT, self._execute_shutdown)
         signal.signal(signal.SIGTERM, self._execute_shutdown)
 
@@ -232,20 +232,18 @@ class OTCamera:
         if self._shutdown:
             return
 
-        log.write("Shutdown OTCamera", level=log.LogLevel.INFO)
+        log.write("Stopping OTCamera", level=log.LogLevel.INFO)
         # OTCamera teardown
         self._camera.stop_recording()
         self._camera.close()
-        log.write("PiCamera closed", log.LogLevel.DEBUG)
         self._html_updater.display_offline_info(
             self._offline_html_filepath,
             self._index_html_filepath,
             self._get_log_info(0, self._num_log_files_html),
         )
-        log.write("Display offline html", log.LogLevel.DEBUG)
         log.write("OTCamera shutdown finished")
-        log.closefile()
         self._shutdown = True
+        log.closefile()
         sys.exit(0)
 
 

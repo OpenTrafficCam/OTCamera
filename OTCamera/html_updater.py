@@ -187,6 +187,7 @@ class OTCameraHTMLUpdater:
         html_save_path: Union[str, Path],
         log_info: LogDataObject,
     ):
+        log.write("Display offline html", log.LogLevel.DEBUG)
         html_tree = self._parse_html(offline_html_path)
         if self.debug_mode_on:
             self._enable_tag_by_id(html_tree, self.log_info_id)

@@ -180,7 +180,12 @@ class Camera(Singleton):
             status.recording = False
 
     def close(self):
-        self._picam.close()
+        try:
+            self._picam.close()
+            log.write("PiCamera closed", log.LogLevel.DEBUG)
+        except picamera.PiCameraClosed:
+            log.write("Camera already closed.", level=log.LogLevel.DEBUG)
+            pass
 
     def restart(self):
         """
@@ -189,11 +194,7 @@ class Camera(Singleton):
         The initialisation is being done with the current set of parameters.
         """
         log.write("Restart camera")
-        try:
-            self._picam.close()
-
-        except picamera.PiCameraClosed:
-            pass
+        self.close()
 
         self._picam = self._create_picam()
 
