@@ -5,11 +5,13 @@ import pytest
 from bs4 import BeautifulSoup
 
 from OTCamera.html_updater import (
-    ConfigData,
+    ConfigDataObject,
     ConfigHtmlId,
+    LogDataObject,
+    LogHtmlId,
     OTCameraDataObject,
     OTCameraHTMLUpdater,
-    StatusData,
+    StatusDataObject,
 )
 from OTCamera.html_updater import StatusHtmlId as status_id
 
@@ -35,8 +37,8 @@ def create_html_file(test_dir: Path) -> Callable[[str, str], Path]:
 
 
 @pytest.fixture
-def status_data() -> StatusData:
-    return StatusData(
+def status_data() -> StatusDataObject:
+    return StatusDataObject(
         time=(status_id.TIME, "2022-05-05T11:26:30"),
         hostname=(status_id.HOSTNAME, "my-name"),
         free_diskspace=(status_id.FREE_DISKSPACE, 12),
@@ -51,8 +53,8 @@ def status_data() -> StatusData:
 
 
 @pytest.fixture
-def config_data() -> ConfigData:
-    return ConfigData(
+def config_data() -> ConfigDataObject:
+    return ConfigDataObject(
         debug_mode_on=(ConfigHtmlId.DEBUG_MODE_ON, True),
         start_hour=(ConfigHtmlId.START_HOUR, 6),
         end_hour=(ConfigHtmlId.END_HOUR, 22),

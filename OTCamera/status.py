@@ -29,7 +29,7 @@ from typing import Union
 from OTCamera import config
 from OTCamera.helpers import log
 from OTCamera.helpers.filesystem import calc_free_diskspace, resolve_path
-from OTCamera.html_updater import StatusData, StatusHtmlId
+from OTCamera.html_updater import StatusDataObject, StatusHtmlId
 
 log.write("status", level=log.LogLevel.DEBUG)
 
@@ -83,7 +83,7 @@ def preview_on() -> bool:
         return True
 
 
-def get_status_data() -> StatusData:
+def get_status_data() -> StatusDataObject:
     """Returns OTCamera's status information."""
     time = dt.now().strftime("%d.%m.%Y %H:%M:%S")
     hostname = socket.gethostname()
@@ -96,7 +96,7 @@ def get_status_data() -> StatusData:
     hour_button_active = hour_button_pressed
     wifi_ap_on = wifi_ap_button_pressed
 
-    return StatusData(
+    return StatusDataObject(
         time=(StatusHtmlId.TIME, time),
         hostname=(StatusHtmlId.HOSTNAME, hostname),
         free_diskspace=(StatusHtmlId.FREE_DISKSPACE, f"{free_diskspace:.2f} GB"),
