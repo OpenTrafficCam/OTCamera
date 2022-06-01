@@ -90,19 +90,3 @@ def wifi_switch_off():
     led.wifi_off()
     status.wifi_on = False
     log.write("Wi-Fi off")
-
-
-def lowbattery():
-    """Shutdown if battery is low.
-
-    Shuts down the Raspberry Pi if called and writes a message to the logfile.
-
-    """
-    log.write("Low Battery", False)
-    camera.stop_recording()
-    status.shutdownactive = True
-    log.breakline()
-    log.write("Shutdown", False)
-    log.breakline()
-    log.closefile()
-    call("sudo shutdown -h -t 0", shell=True)

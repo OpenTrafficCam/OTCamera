@@ -61,7 +61,7 @@ def _on_hour_button_switched() -> None:
 def _on_low_battery_button_held() -> None:
     status.battery_is_low = True
     log.write("Battery level is low!", log.LogLevel.WARNING)
-    rpi.lowbattery()
+    rpi.shutdown()
 
 
 def _on_power_button_released() -> None:
