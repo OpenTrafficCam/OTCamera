@@ -28,10 +28,8 @@ from pathlib import Path
 from time import sleep
 from typing import Union
 
-from hardware import button
-
 from OTCamera import config, status
-from OTCamera.hardware import led
+from OTCamera.hardware import button, led
 from OTCamera.hardware.camera import Camera
 from OTCamera.helpers import log, name
 from OTCamera.helpers.filesystem import delete_old_files
