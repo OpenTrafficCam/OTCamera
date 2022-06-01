@@ -41,6 +41,7 @@ def off():
 def rec_on():
     """Blink record LED infinite."""
     if config.USE_LED:
+        rec.off()
         rec.blink(on_time=0.1, off_time=4.9, n=None, background=True)
     else:
         pass
@@ -58,14 +59,42 @@ def rec_off():
 def power_on():
     """Blink power LED infinite."""
     if config.USE_LED:
+        rec.off()
         power.blink(on_time=0.1, off_time=0, n=1, background=True)
+    else:
+        pass
+
+
+def wifi_on():
+    """Blink Wi-Fi LED infinite."""
+    if config.USE_LED:
+        wifi.off()
+        wifi.blink(on_time=0.1, off_time=4.9, n=None, background=True)
+    else:
+        pass
+
+
+def wifi_off():
+    """Pulse Wi-Fi LED 4 times and switch it off."""
+    if config.USE_LED:
+        wifi.off()
+        wifi.pulse(fade_in_time=0.25, fade_out_time=0.25, n=4, background=True)
+    else:
+        pass
+
+
+def wifi_pre_off():
+    """Pulse Wi-Fi LED 2 times and rapidly blink again."""
+    if config.USE_LED:
+        wifi.off()
+        wifi.blink(on_time=0.1, off_time=0.9, n=None, background=True)
     else:
         pass
 
 
 if config.USE_LED:
 
-    log.write("Initalizing LEDs", level=log.LogLevel.DEBUG)
+    log.write("Initializing LEDs", level=log.LogLevel.DEBUG)
 
     POWERPIN = 13
     WIFIPIN = 12
@@ -77,7 +106,7 @@ if config.USE_LED:
 
     off()
 
-    log.write("LEDs initalized")
+    log.write("LEDs initialized")
 
 else:
     log.write("No LEDs")
