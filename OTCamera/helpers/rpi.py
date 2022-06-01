@@ -20,7 +20,6 @@ Contains all functions to control the Raspberry Pi itself.
 
 
 from subprocess import call
-from time import sleep
 
 from OTCamera import config, status
 from OTCamera.hardware import led
