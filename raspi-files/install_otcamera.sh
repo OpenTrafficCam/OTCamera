@@ -65,9 +65,9 @@ apt install python3-pip git -y
 
 # read -p "Press enter to continue..." key
 echo "    Cloning OTCamera"
-runuser -l $SUDO_USER -c "git clone --depth 1 --branch $BRANCH https://github.com/OpenTrafficCam/OTCamera.git"
+runuser -l "$SUDO_USER" -c "git clone --depth 1 --branch $BRANCH https://github.com/OpenTrafficCam/OTCamera.git"
 cd OTCamera || { echo "Error: Cannot find OTCamera directory"; exit 1; }
-runuser -l $SUDO_USER -c "git config pull.rebase false"
+runuser -l "$SUDO_USER" -c "git config pull.rebase false"
 pip install -r requirements.txt --upgrade
 
 # read -p "Press enter to continue..." key
