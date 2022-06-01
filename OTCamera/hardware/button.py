@@ -87,13 +87,22 @@ def _on_wifi_button_pressed() -> None:
 def _on_wifi_button_held() -> None:
     status.wifi_button_pressed = True
     log.write("Wi-Fi button held", level=log.LogLevel.DEBUG)
-    rpi.wifi()
+    if not status.wifi_on:
+        rpi.wifi_switch_on()
 
 
 def _on_wifi_button_released() -> None:
     status.wifi_button_pressed = False
-    log.write("Wi-Fi button released")
-    rpi.wifi()
+    log.write("Wi-Fi button released", level=log.LogLevel.DEBUG)
+    if status.wifi_on:
+        led.wifi_pre_off()
+        log.write(f"Turning off Wi-Fi AP in {config.WIFI_DELAY} s")
+        wifi_button.wait_for_press(timeout=config.WIFI_DELAY)
+        if not wifi_button.is_pressed:
+            rpi.wifi_switch_off()
+        else:
+            log.write("Wi-Fi not turned off. Button no longer pressed.")
+            led.wifi_on()
 
 
 def init_wifi_button():
@@ -117,9 +126,15 @@ if config.USE_BUTTONS:
         LOWBATTERYPIN, pull_up=True, hold_time=2, hold_repeat=False
     )
     # Initialise buttons
-    power_button = Button(POWERPIN, pull_up=False, hold_time=2, hold_repeat=False)
-    hour_button = Button(HOURPIN, pull_up=True, hold_time=2, hold_repeat=False)
-    wifi_button = Button(WIFIPIN, pull_up=True, hold_time=2, hold_repeat=False)
+    power_button = Button(
+        POWERPIN, pull_up=False, hold_time=2, hold_repeat=False, bounce_time=0.5
+    )
+    hour_button = Button(
+        HOURPIN, pull_up=True, hold_time=2, hold_repeat=False, bounce_time=0.5
+    )
+    wifi_button = Button(
+        WIFIPIN, pull_up=True, hold_time=2, hold_repeat=False, bounce_time=0.5
+    )
 
     # Register callbacks
     low_battery_button.when_held = _on_low_battery_button_held
