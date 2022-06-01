@@ -50,8 +50,8 @@ def rec_off():
         rec.pulse(fade_in_time=0.25, fade_out_time=0.25, n=4, background=True)
 
 
-def power_on():
-    """Blink power LED infinite."""
+def power_blink():
+    """Blink power LED once."""
     if config.USE_LED:
         rec.off()
         power.blink(on_time=0.1, off_time=0, n=1, background=True)

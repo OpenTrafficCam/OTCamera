@@ -75,7 +75,7 @@ class OTCamera:
         # Initializes the LEDs and Wifi AP
         log.breakline()
         log.write("starting periodic record")
-        led.power_on()
+        led.power_blink()
         button.init_wifi_button()
 
     def loop(self) -> None:
