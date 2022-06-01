@@ -101,14 +101,14 @@ def wifi():
     """
     log.write("wifi called", level=log.LogLevel.DEBUG)
     if config.USE_BUTTONS:
-        if button.wifi_button.is_pressed and not status.wifiapon:
+        if status.wifi_button_pressed and not status.wifiapon:
             wifi_switch_on()
-        elif not button.wifi_button.is_pressed and status.wifiapon:
+        elif not status.wifi_button_pressed and status.wifiapon:
             if not config.DEBUG_MODE_ON:
                 led.wifi_pre_off()
                 log.write(f"Turning off Wi-Fi AP in {config.WIFI_DELAY} s")
                 sleep(config.WIFI_DELAY)
-            if not button.wifi_button.is_pressed and status.wifiapon:
+            if not status.wifi_button_pressed and status.wifiapon:
                 wifi_switch_off()
 
 

@@ -69,13 +69,18 @@ def _on_power_button_released() -> None:
     rpi.shutdown()
 
 
-def _on_wifi_ap_button_held() -> None:
+def _on_wifi_button_pressed() -> None:
     status.wifi_button_pressed = True
     log.write("Wi-Fi button pressed")
+
+
+def _on_wifi_button_held() -> None:
+    status.wifi_button_pressed = True
+    log.write("Wi-Fi button held", level=log.LogLevel.DEBUG)
     rpi.wifi()
 
 
-def _on_wifi_ap_button_released() -> None:
+def _on_wifi_button_released() -> None:
     status.wifi_button_pressed = False
     log.write("Wi-Fi button released")
     rpi.wifi()
@@ -101,8 +106,9 @@ if config.USE_BUTTONS:
     # Register callbacks
     low_battery_button.when_held = _on_low_battery_button_held
     power_button.when_released = _on_power_button_released
-    wifi_button.when_held = _on_wifi_ap_button_held
-    wifi_button.when_released = _on_wifi_ap_button_released
+    wifi_button.when_pressed = _on_wifi_button_pressed
+    wifi_button.when_held = _on_wifi_button_held
+    wifi_button.when_released = _on_wifi_button_released
     hour_button.when_pressed = _on_hour_button_switched
     hour_button.when_released = _on_hour_button_switched
 
