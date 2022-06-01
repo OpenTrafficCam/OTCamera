@@ -192,6 +192,8 @@ class StatusWebsiteUpdater:
         if self.debug_mode_on:
             self._enable_tag_by_id(html_tree, self.log_info_id)
             self._update_by_id(html_tree, log_info)
+        else:
+            self._disable_tag_by_id(html_tree, self.log_info_id)
         self._save(html_tree, html_save_path)
 
     def _parse_html(self, html_filepath: Path) -> BeautifulSoup:
