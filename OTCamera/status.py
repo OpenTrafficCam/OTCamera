@@ -35,7 +35,7 @@ log.write("imported status", level=log.LogLevel.DEBUG)
 
 shutdownactive: bool = False
 noblink: bool = False
-wifiapon: bool = False
+wifiapon: bool = True
 interval_finished: bool = False
 more_intervals: bool = True
 new_preview: bool = True
