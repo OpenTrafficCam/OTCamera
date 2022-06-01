@@ -118,7 +118,7 @@ if config.USE_BUTTONS:
     status.wifi_button_pressed = wifi_button.is_pressed
     status.hour_button_pressed = hour_button.is_pressed
 
-    log.write("Initalizing Wi-Fi", level=log.LogLevel.DEBUG)
+    log.write("Initializing Wi-Fi", level=log.LogLevel.DEBUG)
     if wifi_button.is_pressed:
         rpi.wifi_switch_on()
     else:

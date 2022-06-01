@@ -35,7 +35,7 @@ log.write("imported status", level=log.LogLevel.DEBUG)
 
 shutdownactive: bool = False
 noblink: bool = False
-wifiapon: bool = True
+wifi_on: bool = True
 interval_finished: bool = False
 more_intervals: bool = True
 new_preview: bool = True
@@ -78,7 +78,7 @@ def preview_on() -> bool:
         bool: Capture new preview.
     """
     if config.USE_BUTTONS:
-        return wifiapon
+        return wifi_on
     else:
         return True
 
