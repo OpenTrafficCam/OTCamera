@@ -102,20 +102,30 @@ def wifi():
     log.write("wifi called", level=log.LogLevel.DEBUG)
     if config.USE_BUTTONS:
         if button.wifi_button.is_pressed and not status.wifiapon:
-            call("rfkill unblock wlan", shell=True)
-            led.wifi_on()
-            status.wifiapon = True
-            log.write("WifiAP on")
+            wifi_switch_on()
         elif not button.wifi_button.is_pressed and status.wifiapon:
             if not config.DEBUG_MODE_ON:
                 led.wifi_pre_off()
                 log.write(f"Turning off Wi-Fi AP in {config.WIFI_DELAY} s")
                 sleep(config.WIFI_DELAY)
             if not button.wifi_button.is_pressed and status.wifiapon:
-                call("rfkill block wlan", shell=True)
-                led.wifi_off()
-                status.wifiapon = False
-                log.write("Wi-Fi AP off")
+                wifi_switch_off()
+
+
+def wifi_switch_on():
+    """Turn on Wi-Fi"""
+    call("rfkill unblock wlan", shell=True)
+    led.wifi_on()
+    status.wifiapon = True
+    log.write("WifiAP on")
+
+
+def wifi_switch_off():
+    """Turn off Wi-Fi"""
+    call("rfkill block wlan", shell=True)
+    led.wifi_off()
+    status.wifiapon = False
+    log.write("Wi-Fi AP off")
 
 
 def lowbattery():
