@@ -8,20 +8,23 @@ read -r -e -p "Wifi SSID: " -i "OTCamera" APNAME
 read -r -e -p "Wifi password: " -i "onetwothree4" APPASSWORD
 read -r -e -p "Wifi channel: " -i 11 APCHANNEL
 read -r -e -p "Wifi ip range: " -i 10.10.50 IPRANGE
-read -r -e -p "OTCamera branch: " -i "master" BRANCH
+read -r -e -p "OTCamera branch: " -i "first-version" BRANCH
+read -r -e -p "Use DS3231 RTC? [y/n]: " -i "y" USE_RTC
+read -r -e -p "Use Buttons? [y/n]: " -i "y" USE_BUTTONS
+read -r -e -p "Use LEDs? [y/n]: " -i "y" USE_LEDS
+read -r -e -p "Activate DEBUG mode? [y/n]: " -i "n" USE_DEBUG
 
-# APNAME="OTCamera"
-# APPASSWORD="onetwothree4"
-# APCHANNEL="11"
-# IPRANGE="10.10.50"
-# BRANCH="raspi-files"
 
 # read -p "Press enter to continue..." key
 echo "#### Configure Rasperry Pi"
 echo "Configure legacy camera mode using raspi-config"
 raspi-config nonint do_legacy 0
-echo "Enable I2C bus for hwclock"
-raspi-config nonint do_i2c 0
+case $USE_RTC in 
+    [yY] | [yY][eE][sS])
+        echo "Enable I2C bus for hwclock"
+        raspi-config nonint do_i2c 0
+        ;;
+esac
 
 # read -p "Press enter to continue..." key
 echo "    Setting config variables"
@@ -157,18 +160,57 @@ RCLOCAL="/etc/rc.local"
 cp ./raspi-files/usr/local/bin/wifistart /usr/local/bin/wifistart
 sed $RCLOCAL -i -e "/exit 0/i /bin/bash /usr/local/bin/wifistart"
 
+case $USE_RTC in 
+    [yY] | [yY][eE][sS])
+        echo "    Setting up RTC"
+        HWCLOCK="/lib/udev/hwclock-set"
+        apt install i2c-tools -y
+        echo "dtoverlay=i2c-rtc,ds3231" >> $CONFIG
+        apt remove fake-hwclock -y
+        update-rc.d -f fake-hwclock remove
+        systemctl disable fake-hwclock
+        sed $HWCLOCK -i -e "/if.*systemd/ s/^#*/#/"
+        sed $HWCLOCK -i -e "s?^    exit 0?#    exit 0?g"
+        sed $HWCLOCK -i -e "s?^fi?#fi?g"
+        sed $HWCLOCK -i -e "/--systz/ s/^#*/#/"
+        ;;
+esac
 
-echo "    Setting up RTC"
-HWCLOCK="/lib/udev/hwclock-set"
-apt install i2c-tools -y
-echo "dtoverlay=i2c-rtc,ds3231" >> $CONFIG
-apt remove fake-hwclock -y
-update-rc.d -f fake-hwclock remove
-systemctl disable fake-hwclock
-sed $HWCLOCK -i -e "/if.*systemd/ s/^#*/#/"
-sed $HWCLOCK -i -e "s?^    exit 0?#    exit 0?g"
-sed $HWCLOCK -i -e "s?^fi?#fi?g"
-sed $HWCLOCK -i -e "/--systz/ s/^#*/#/"
+
+OTCONFIG="$PWD/OTCamera/config.py"
+
+case $USE_BUTTONS in
+    [yY] | [yY][eE][sS])
+        echo "Enableing buttons"
+        sed "$OTCONFIG" -i -e "s?^USE_BUTTONS.*?USE_BUTTONS = True?g"
+        ;;
+    [nN] | [nN][oO])
+        echo "Disableing buttons"
+        sed "$OTCONFIG" -i -e "s?^USE_BUTTONS.*?USE_BUTTONS = False?g"
+        ;;
+esac
+
+case $USE_LEDS in
+    [yY] | [yY][eE][sS])
+        echo "Enableing LEDs"
+        sed "$OTCONFIG" -i -e "s?^USE_LED.*?USE_LED = True?g"
+        ;;
+    [nN] | [nN][oO])
+        echo "Disableing LEDs"
+        sed "$OTCONFIG" -i -e "s?^USE_LED.*?USE_LED = False?g"
+        ;;
+esac
+
+case $USE_DEBUG in
+    [yY] | [yY][eE][sS])
+        echo "Enableing debug mode"
+        sed "$OTCONFIG" -i -e "s?^DEBUG_MODE_ON.*?DEBUG_MODE_ON = True?g"
+        ;;
+    [nN] | [nN][oO])
+        echo "Disableing debug mode"
+        sed "$OTCONFIG" -i -e "s?^DEBUG_MODE_ON.*?DEBUG_MODE_ON = False?g"
+        ;;
+esac
 
 
 echo "    Activate OTCamera service"
