@@ -35,7 +35,7 @@ log.write("imported status", level=log.LogLevel.DEBUG)
 
 shutdownactive: bool = False
 noblink: bool = False
-wifiapon: bool = False
+wifi_on: bool = True
 interval_finished: bool = False
 more_intervals: bool = True
 new_preview: bool = True
@@ -45,7 +45,7 @@ recording: bool = False
 # Button statuses
 power_button_pressed: bool = False
 hour_button_pressed: bool = False
-wifi_ap_button_pressed: bool = False
+wifi_button_pressed: bool = False
 battery_is_low: bool = False
 
 
@@ -68,21 +68,6 @@ def record_time() -> bool:
     return record
 
 
-def preview_on() -> bool:
-    """Checks if a preview image should be captured.
-
-    Returns True if there are buttons configured and the WifiAP status is True.
-    Returns always True if no buttons configured.
-
-    Returns:
-        bool: Capture new preview.
-    """
-    if config.USE_BUTTONS:
-        return wifiapon
-    else:
-        return True
-
-
 def get_status_data() -> StatusDataObject:
     """Returns OTCamera's status information."""
     time = dt.now().strftime("%d.%m.%Y %H:%M:%S")
@@ -94,7 +79,7 @@ def get_status_data() -> StatusDataObject:
     low_battery = battery_is_low
     power_button_active = power_button_pressed
     hour_button_active = hour_button_pressed
-    wifi_ap_on = wifi_ap_button_pressed
+    wifi_ap_on = wifi_button_pressed
 
     return StatusDataObject(
         time=(StatusHtmlId.TIME, time),

@@ -29,7 +29,7 @@ from time import sleep
 from typing import Union
 
 from OTCamera import config, status
-from OTCamera.hardware import led
+from OTCamera.hardware import button, led
 from OTCamera.hardware.camera import Camera
 from OTCamera.helpers import log, name
 from OTCamera.helpers.filesystem import delete_old_files
@@ -76,7 +76,7 @@ class OTCamera:
         log.breakline()
         log.write("starting periodic record")
         led.power_on()
-        # TODO: turn wifi AP on #41
+        button.init_wifi_button()
 
     def loop(self) -> None:
         """Record and split videos.
@@ -109,7 +109,7 @@ class OTCamera:
         current_second = dt.now().second
         offset = config.PREVIEW_INTERVAL - 1
         preview_second = (current_second % config.PREVIEW_INTERVAL) == offset
-        time_preview = preview_second and status.preview_on() and status.new_preview
+        time_preview = preview_second and status.wifi_on and status.new_preview
 
         if self._capture_preview_immediately or time_preview:
             log.write("new preview", level=log.LogLevel.DEBUG)

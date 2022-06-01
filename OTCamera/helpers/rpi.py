@@ -99,26 +99,40 @@ def wifi():
     Uses a LED to signalize the status.
 
     """
-    log.write("Wifiswitch")
-    if button.wifi_ap_button.is_pressed and not status.wifiapon:
-        log.write("Turn WifiAP on")
-        call("sudo /bin/bash /usr/local/bin/wifistart", shell=True)
-        log.write("WifiAP on")
-        led.power.pulse(fade_in_time=0.25, fade_out_time=0.25, n=2, background=True)
-        led.wifi.blink(on_time=0.1, off_time=4.9, n=None, background=True)
-        status.wifiapon = True
-    elif not button.wifi_ap_button.is_pressed and status.wifiapon:
-        led.power.pulse(fade_in_time=0.25, fade_out_time=0.25, n=2, background=True)
-        if not config.DEBUG_MODE_ON:
-            sleep(config.WIFI_DELAY)
-        if not button.wifi_ap_button.is_pressed and status.wifiapon:
-            log.write("Turn WifiAP OFF")
-            call("sudo systemctl stop hostapd.service", shell=True)
-            call("sudo systemctl stop dnsmasq.service", shell=True)
-            call("sudo ifconfig uap0 down", shell=True)
-            log.write("WifiAP OFF")
-            led.wifi.off()
-            status.wifiapon = False
+    log.write("wifi called", level=log.LogLevel.DEBUG)
+    if config.USE_BUTTONS:
+        if status.wifi_button_pressed and not status.wifi_on:
+            wifi_switch_on()
+        elif not status.wifi_button_pressed and status.wifi_on:
+            led.wifi_pre_off()
+            log.write(f"Turning off Wi-Fi AP in {config.WIFI_DELAY} s")
+            timer = 0
+            while timer <= config.WIFI_DELAY:
+                if status.wifi_button_pressed:
+                    log.write("Wi-Fi not turned off. Button no longer pressed.")
+                    led.wifi_on()
+                    return
+                sleep(1)
+                timer += 1
+            wifi_switch_off()
+
+
+def wifi_switch_on():
+    """Turn on Wi-Fi"""
+    if not config.DEBUG_MODE_ON:
+        call("rfkill unblock wlan", shell=True)
+    led.wifi_on()
+    status.wifi_on = True
+    log.write("Wi-Fi on")
+
+
+def wifi_switch_off():
+    """Turn off Wi-Fi"""
+    if not config.DEBUG_MODE_ON:
+        call("rfkill block wlan", shell=True)
+    led.wifi_off()
+    status.wifi_on = False
+    log.write("Wi-Fi off")
 
 
 def lowbattery():
