@@ -28,6 +28,8 @@ from pathlib import Path
 from time import sleep
 from typing import Union
 
+from hardware import button
+
 from OTCamera import config, status
 from OTCamera.hardware import led
 from OTCamera.hardware.camera import Camera
@@ -76,7 +78,7 @@ class OTCamera:
         log.breakline()
         log.write("starting periodic record")
         led.power_on()
-        # TODO: turn wifi AP on #41
+        button.init_wifi_button()
 
     def loop(self) -> None:
         """Record and split videos.

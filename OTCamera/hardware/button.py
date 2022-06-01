@@ -86,6 +86,14 @@ def _on_wifi_button_released() -> None:
     rpi.wifi()
 
 
+def init_wifi_button():
+    log.write("Initializing Wi-Fi", level=log.LogLevel.DEBUG)
+    if wifi_button.is_pressed:
+        rpi.wifi_switch_on()
+    else:
+        rpi.wifi_switch_off()
+
+
 if config.USE_BUTTONS:
 
     log.write("Initalizing Buttons", level=log.LogLevel.DEBUG)
@@ -117,12 +125,6 @@ if config.USE_BUTTONS:
     status.hour_button_pressed = hour_button.is_pressed
     status.wifi_button_pressed = wifi_button.is_pressed
     status.hour_button_pressed = hour_button.is_pressed
-
-    log.write("Initializing Wi-Fi", level=log.LogLevel.DEBUG)
-    if wifi_button.is_pressed:
-        rpi.wifi_switch_on()
-    else:
-        rpi.wifi_switch_off()
 
     log.write("Buttons initialized")
 
