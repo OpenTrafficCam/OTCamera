@@ -87,7 +87,6 @@ def wifi_pre_off():
     """Pulse Wi-Fi LED 2 times and rapidly blink again."""
     if config.USE_LED:
         wifi.off()
-        wifi.pulse(fade_in_time=0.25, fade_out_time=0.25, n=2, background=True)
         wifi.blink(on_time=0.1, off_time=0.9, n=None, background=True)
     else:
         pass
