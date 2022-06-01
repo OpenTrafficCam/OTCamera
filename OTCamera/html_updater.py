@@ -136,7 +136,7 @@ class LogDataObject(OTCameraDataObject):
     log_data: Tuple[Enum, str]
 
 
-class OTCameraHTMLUpdater:
+class StatusWebsiteUpdater:
     def __init__(
         self,
         status_info_id: str = "status-info",

@@ -8,7 +8,7 @@ import pytest
 
 from OTCamera import config
 from OTCamera.hardware.camera import Camera
-from OTCamera.html_updater import OTCameraHTMLUpdater
+from OTCamera.html_updater import StatusWebsiteUpdater
 from OTCamera.record import OTCamera
 
 
@@ -23,12 +23,12 @@ def temp_dir(test_dir: Path):
 
 
 @pytest.fixture
-def html_updater() -> OTCameraHTMLUpdater:
-    return OTCameraHTMLUpdater(debug_mode_on=True)
+def html_updater() -> StatusWebsiteUpdater:
+    return StatusWebsiteUpdater(debug_mode_on=True)
 
 
 @pytest.fixture
-def otcamera(html_updater: OTCameraHTMLUpdater, temp_dir: Path):
+def otcamera(html_updater: StatusWebsiteUpdater, temp_dir: Path):
     return OTCamera(camera=Camera(), html_updater=html_updater, video_dir=temp_dir)
 
 
