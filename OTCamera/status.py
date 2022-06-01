@@ -68,21 +68,6 @@ def record_time() -> bool:
     return record
 
 
-def preview_on() -> bool:
-    """Checks if a preview image should be captured.
-
-    Returns True if there are buttons configured and the WifiAP status is True.
-    Returns always True if no buttons configured.
-
-    Returns:
-        bool: Capture new preview.
-    """
-    if config.USE_BUTTONS:
-        return wifi_on
-    else:
-        return True
-
-
 def get_status_data() -> StatusDataObject:
     """Returns OTCamera's status information."""
     time = dt.now().strftime("%d.%m.%Y %H:%M:%S")
