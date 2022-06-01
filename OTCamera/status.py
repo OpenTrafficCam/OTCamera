@@ -45,7 +45,7 @@ recording: bool = False
 # Button statuses
 power_button_pressed: bool = False
 hour_button_pressed: bool = False
-wifi_ap_button_pressed: bool = False
+wifi_button_pressed: bool = False
 battery_is_low: bool = False
 
 
@@ -94,7 +94,7 @@ def get_status_data() -> StatusDataObject:
     low_battery = battery_is_low
     power_button_active = power_button_pressed
     hour_button_active = hour_button_pressed
-    wifi_ap_on = wifi_ap_button_pressed
+    wifi_ap_on = wifi_button_pressed
 
     return StatusDataObject(
         time=(StatusHtmlId.TIME, time),

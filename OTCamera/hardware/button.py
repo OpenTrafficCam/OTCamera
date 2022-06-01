@@ -70,13 +70,13 @@ def _on_power_button_released() -> None:
 
 
 def _on_wifi_ap_button_held() -> None:
-    status.wifi_ap_button_pressed = True
+    status.wifi_button_pressed = True
     log.write("Wi-Fi button pressed")
     rpi.wifi()
 
 
 def _on_wifi_ap_button_released() -> None:
-    status.wifi_ap_button_pressed = False
+    status.wifi_button_pressed = False
     log.write("Wi-Fi button released")
     rpi.wifi()
 
@@ -96,20 +96,20 @@ if config.USE_BUTTONS:
     # Initialise buttons
     power_button = Button(POWERPIN, pull_up=False, hold_time=2, hold_repeat=False)
     hour_button = Button(HOURPIN, pull_up=True, hold_time=2, hold_repeat=False)
-    wifi_ap_button = Button(WIFIPIN, pull_up=True, hold_time=2, hold_repeat=False)
+    wifi_button = Button(WIFIPIN, pull_up=True, hold_time=2, hold_repeat=False)
 
     # Register callbacks
     low_battery_button.when_held = _on_low_battery_button_held
     power_button.when_released = _on_power_button_released
-    wifi_ap_button.when_held = _on_wifi_ap_button_held
-    wifi_ap_button.when_released = _on_wifi_ap_button_released
+    wifi_button.when_held = _on_wifi_ap_button_held
+    wifi_button.when_released = _on_wifi_ap_button_released
     hour_button.when_pressed = _on_hour_button_switched
     hour_button.when_released = _on_hour_button_switched
 
     # Set button statuses in status module
     status.power_button_pressed = power_button.is_pressed
     status.hour_button_pressed = hour_button.is_pressed
-    status.wifi_ap_button_pressed = wifi_ap_button.is_pressed
+    status.wifi_button_pressed = wifi_button.is_pressed
     status.hour_button_pressed = hour_button.is_pressed
 
     log.write("Buttons initialized")
