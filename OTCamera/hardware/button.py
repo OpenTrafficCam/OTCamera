@@ -66,7 +66,10 @@ def _on_low_battery_button_held() -> None:
 def _on_power_button_released() -> None:
     status.power_button_pressed = False
     log.write("Power button released")
-    rpi.shutdown()
+    if config.DEBUG_MODE_ON:
+        log.write("Mock shutting down RPI in debug mode.", log.LogLevel.DEBUG)
+    else:
+        rpi.shutdown()
 
 
 def _on_wifi_ap_button_held() -> None:
