@@ -89,10 +89,26 @@ class OTCamera:
         if status.record_time():
             self._camera.start_recording()
             self._camera.split_if_interval_ends()
+            self._send_alive_signal()
             self._try_capture_preview()
         else:
             self._camera.stop_recording()
             sleep(0.5)
+
+    def _send_alive_signal(self) -> None:
+        """Sends alive signal every 5 seconds using the power LED."""
+        current_second = dt.now().second
+        alive_signal_interval = 5  # in seconds
+        offset = alive_signal_interval - 1
+        is_send_time = (current_second % alive_signal_interval) == offset
+
+        if is_send_time and status.noblink:
+            log.write("new preview", level=log.LogLevel.DEBUG)
+            led.power_blink()
+            status.noblink = True
+        elif not (is_send_time or status.noblink):
+            log.write("reset new preview", level=log.LogLevel.DEBUG)
+            status.new_preview = True
 
     def _try_capture_preview(
         self,
