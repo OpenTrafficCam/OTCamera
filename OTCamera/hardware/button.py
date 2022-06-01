@@ -25,6 +25,7 @@ from datetime import datetime as dt
 from gpiozero import Button
 
 from OTCamera import config, status
+from OTCamera.hardware import led
 from OTCamera.helpers import log, rpi
 
 log.write("imported buttons", level=log.LogLevel.DEBUG)
@@ -65,8 +66,17 @@ def _on_low_battery_button_held() -> None:
 
 def _on_power_button_released() -> None:
     status.power_button_pressed = False
-    log.write("Power button released")
-    rpi.shutdown()
+    log.write("Power button released", level=log.LogLevel.DEBUG)
+    log.write("Shutdown by button initialized")
+    status.noblink = True
+    led.power_pre_off()
+    if power_button.is_pressed:
+        status.noblink = False
+        log.write("Shutdown cancelled", False)
+    elif config.DEBUG_MODE_ON:
+        log.write("Mock shutting down RPI in debug mode.", log.LogLevel.DEBUG)
+    else:
+        rpi.shutdown()
 
 
 def _on_wifi_button_pressed() -> None:
