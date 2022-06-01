@@ -76,7 +76,8 @@ class OTCamera:
         log.breakline()
         log.write("starting periodic record")
         led.power_on()
-        button.init_wifi_button()
+        if config.USE_BUTTONS:
+            button.init_wifi_button()
 
     def loop(self) -> None:
         """Record and split videos.

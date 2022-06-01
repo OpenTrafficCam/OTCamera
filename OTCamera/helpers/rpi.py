@@ -23,7 +23,7 @@ from subprocess import call
 from time import sleep
 
 from OTCamera import config, status
-from OTCamera.hardware import button, led
+from OTCamera.hardware import led
 from OTCamera.hardware.camera import Camera
 from OTCamera.helpers import log
 
@@ -40,29 +40,12 @@ def shutdown():
     Writes messages to the logfile.
 
     """
-    log.write("Shutdown by button in 2s", False)
-    status.noblink = True
-    led.power.blink(
-        on_time=0.5,
-        off_time=0.5,
-        fade_in_time=0,
-        fade_out_time=0,
-        n=8,
-        background=False,
-    )
-    led.power.on()
-    led.wifi.off()
-    if button.power_button.is_pressed:
-        status.noblink = False
-        log.write("Shutdown cancelled", False)
-        return
-    else:
-        status.shutdownactive = True
-        camera.stop_recording()
-        log.breakline()
-        log.write("Shutdown", False)
-        log.breakline()
-        log.closefile()
+    status.shutdownactive = True
+    camera.stop_recording()
+    log.breakline()
+    log.write("Shutdown", False)
+    log.breakline()
+    log.closefile()
     call("sudo shutdown -h -t 0", shell=True)
 
 
