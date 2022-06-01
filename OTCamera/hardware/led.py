@@ -31,9 +31,9 @@ log.write("imported led", level=log.LogLevel.DEBUG)
 def off():
     """Turn all LEDs off."""
     if config.USE_LED:
-        power.on()
-        wifi.on()
-        rec.on()
+        power.off()
+        wifi.off()
+        rec.off()
     else:
         pass
 
