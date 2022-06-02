@@ -98,9 +98,10 @@ class OTCamera:
 
     def _send_alive_signal(self) -> None:
         """Sends alive signal every 5 seconds using the power LED."""
+        log.write("blink power led", level=log.LogLevel.DEBUG)
         current_second = dt.now().second
         alive_signal_interval = 5  # in seconds
-        is_send_time = (current_second % alive_signal_interval) == alive_signal_interval
+        is_send_time = (current_second % alive_signal_interval) == 0
 
         if is_send_time and not status.power_led_blinked:
             log.write("blink power led", level=log.LogLevel.DEBUG)
