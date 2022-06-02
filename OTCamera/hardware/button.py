@@ -21,6 +21,7 @@ Button callbacks are calling functions in rpi helper
 
 
 from datetime import datetime as dt
+from time import sleep
 
 from gpiozero import Button
 
@@ -97,7 +98,12 @@ def _on_wifi_button_released() -> None:
     if status.wifi_on:
         led.wifi_pre_off()
         log.write(f"Turning off Wi-Fi AP in {config.WIFI_DELAY} s")
-        wifi_button.wait_for_press(timeout=config.WIFI_DELAY)
+        timer = 0
+        while timer <= config.WIFI_DELAY:
+            if wifi_button.is_pressed:
+                break
+            sleep(1)
+            timer += 1
         if not wifi_button.is_pressed:
             rpi.wifi_switch_off()
         else:
