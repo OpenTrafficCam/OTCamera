@@ -71,13 +71,21 @@ def _on_power_button_released() -> None:
     log.write("Shutdown by button initialized")
     status.noblink = True
     led.power_pre_off()
-    if power_button.is_pressed:
-        status.noblink = False
-        log.write("Shutdown cancelled", False)
-    elif config.DEBUG_MODE_ON:
-        log.write("Mock shutting down RPI in debug mode.", log.LogLevel.DEBUG)
+    timer = 0
+    shutdown_delay = 5
+    while timer <= shutdown_delay:
+        if power_button.is_pressed:
+            break
+        sleep(1)
+        timer += 1
+    if not power_button.is_pressed:
+        if config.DEBUG_MODE_ON:
+            log.write("Mock shutting down RPI in debug mode.", log.LogLevel.DEBUG)
+        else:
+            rpi.shutdown()
     else:
-        rpi.shutdown()
+        status.noblink = False
+        log.write("Shutdown cancelled. Button pressed again.", False)
 
 
 def _on_wifi_button_pressed() -> None:
@@ -107,7 +115,7 @@ def _on_wifi_button_released() -> None:
         if not wifi_button.is_pressed:
             rpi.wifi_switch_off()
         else:
-            log.write("Wi-Fi not turned off. Button no longer pressed.")
+            log.write("Wi-Fi not turned off. Button pressed again.")
             led.wifi_on()
 
 

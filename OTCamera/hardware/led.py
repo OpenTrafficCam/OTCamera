@@ -58,9 +58,10 @@ def power_blink():
 
 
 def power_pre_off():
-    """Rapidly blink power LED for 8 s before returning."""
-    power.blink(on_time=0.5, off_time=0.5, n=8, background=False)
-    power.on()
+    """Rapidly blink power LED."""
+    if config.USE_LED:
+        power.off()
+        power.blink(on_time=0.1, off_time=0.9, n=None, background=True)
 
 
 def wifi_on():
