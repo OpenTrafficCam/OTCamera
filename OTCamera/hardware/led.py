@@ -22,7 +22,7 @@ blinking) of the LEDs.
 
 from gpiozero import PWMLED
 
-from OTCamera import config
+from OTCamera import config, status
 from OTCamera.helpers import log
 
 log.write("imported led", level=log.LogLevel.DEBUG)
@@ -50,18 +50,25 @@ def rec_off():
         rec.pulse(fade_in_time=0.25, fade_out_time=0.25, n=4, background=True)
 
 
+def power_on():
+    """Turn power LED on."""
+    if config.USE_LED:
+        power.on()
+
+
 def power_blink():
     """Blink power LED once."""
     if config.USE_LED:
-        power.off()
-        power.blink(on_time=0.1, off_time=0, n=1, background=True)
+        if not status.noblink:
+            power.off()
+            power.blink(on_time=0.1, off_time=0, n=1, background=True)
 
 
 def power_pre_off():
     """Rapidly blink power LED."""
     if config.USE_LED:
         power.off()
-        power.blink(on_time=0.1, off_time=0.9, n=None, background=True)
+        power.blink(on_time=0.1, off_time=0.4, n=None, background=True)
 
 
 def wifi_on():

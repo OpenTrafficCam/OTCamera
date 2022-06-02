@@ -106,7 +106,7 @@ class OTCamera:
             log.write("blink power led", level=log.LogLevel.DEBUG)
             led.power_blink()
             status.power_led_blinked = True
-        elif not (is_send_time or not status.power_led_blinked):
+        elif (not is_send_time) and status.power_led_blinked:
             log.write("reset power_led_blinked", level=log.LogLevel.DEBUG)
             status.power_led_blinked = False
 

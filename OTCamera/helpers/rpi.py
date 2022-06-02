@@ -40,6 +40,7 @@ def shutdown():
 
     """
     status.shutdownactive = True
+    led.power_on()
     camera.stop_recording()
     log.breakline()
     log.write("Shutdown", False)

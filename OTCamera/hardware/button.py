@@ -79,6 +79,7 @@ def _on_power_button_released() -> None:
         sleep(1)
         timer += 1
     if not power_button.is_pressed:
+        led.power_on()
         if config.DEBUG_MODE_ON:
             log.write("Mock shutting down RPI in debug mode.", log.LogLevel.DEBUG)
         else:
@@ -86,6 +87,7 @@ def _on_power_button_released() -> None:
     else:
         status.noblink = False
         log.write("Shutdown cancelled. Button pressed again.", False)
+        led.power_blink()
 
 
 def _on_wifi_button_pressed() -> None:
