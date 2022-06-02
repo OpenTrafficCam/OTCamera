@@ -31,11 +31,9 @@ log.write("imported led", level=log.LogLevel.DEBUG)
 def off():
     """Turn all LEDs off."""
     if config.USE_LED:
-        power.on()
-        wifi.on()
-        rec.on()
-    else:
-        pass
+        power.off()
+        wifi.off()
+        rec.off()
 
 
 def rec_on():
@@ -43,8 +41,6 @@ def rec_on():
     if config.USE_LED:
         rec.off()
         rec.blink(on_time=0.1, off_time=4.9, n=None, background=True)
-    else:
-        pass
 
 
 def rec_off():
@@ -52,17 +48,13 @@ def rec_off():
     if config.USE_LED:
         rec.off()
         rec.pulse(fade_in_time=0.25, fade_out_time=0.25, n=4, background=True)
-    else:
-        pass
 
 
-def power_on():
-    """Blink power LED infinite."""
+def power_blink():
+    """Blink power LED once."""
     if config.USE_LED:
         power.off()
         power.blink(on_time=0.1, off_time=0, n=1, background=True)
-    else:
-        pass
 
 
 def power_pre_off():
@@ -76,8 +68,6 @@ def wifi_on():
     if config.USE_LED:
         wifi.off()
         wifi.blink(on_time=0.1, off_time=4.9, n=None, background=True)
-    else:
-        pass
 
 
 def wifi_off():
@@ -85,8 +75,6 @@ def wifi_off():
     if config.USE_LED:
         wifi.off()
         wifi.pulse(fade_in_time=0.25, fade_out_time=0.25, n=4, background=True)
-    else:
-        pass
 
 
 def wifi_pre_off():
@@ -94,8 +82,6 @@ def wifi_pre_off():
     if config.USE_LED:
         wifi.off()
         wifi.blink(on_time=0.1, off_time=0.9, n=None, background=True)
-    else:
-        pass
 
 
 if config.USE_LED:

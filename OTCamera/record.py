@@ -75,7 +75,7 @@ class OTCamera:
         # Initializes the LEDs and Wifi AP
         log.breakline()
         log.write("starting periodic record")
-        led.power_on()
+        led.power_blink()
         if config.USE_BUTTONS:
             button.init_wifi_button()
 
@@ -90,10 +90,25 @@ class OTCamera:
         if status.record_time():
             self._camera.start_recording()
             self._camera.split_if_interval_ends()
+            self._send_alive_signal()
             self._try_capture_preview()
         else:
             self._camera.stop_recording()
             sleep(0.5)
+
+    def _send_alive_signal(self) -> None:
+        """Sends alive signal every 5 seconds using the power LED."""
+        current_second = dt.now().second
+        alive_signal_interval = 5  # in seconds
+        is_send_time = (current_second % alive_signal_interval) == alive_signal_interval
+
+        if is_send_time and not status.power_led_blinked:
+            log.write("blink power led", level=log.LogLevel.DEBUG)
+            led.power_blink()
+            status.power_led_blinked = True
+        elif not (is_send_time or not status.power_led_blinked):
+            log.write("reset power_led_blinked", level=log.LogLevel.DEBUG)
+            status.power_led_blinked = False
 
     def _try_capture_preview(
         self,
@@ -108,9 +123,11 @@ class OTCamera:
             now (bool, optional): Generate preview immediately. Defaults to False.
         """
         current_second = dt.now().second
+        # To make sure that preview and split are not called in the same second
+        # we use offset -1 second. Otherwise picamerax could crash.
         offset = config.PREVIEW_INTERVAL - 1
-        preview_second = (current_second % config.PREVIEW_INTERVAL) == offset
-        time_preview = preview_second and status.wifi_on and status.new_preview
+        is_preview_time = (current_second % config.PREVIEW_INTERVAL) == offset
+        time_preview = is_preview_time and status.wifi_on and not status.preview_taken
 
         if self._capture_preview_immediately or time_preview:
             log.write("new preview", level=log.LogLevel.DEBUG)
@@ -122,10 +139,10 @@ class OTCamera:
                 self._get_config_settings(),
                 self._get_log_info(start_idx=0, num=self._num_log_files_html),
             )
-            status.new_preview = False
-        elif not (preview_second or status.new_preview):
-            log.write("reset new preview", level=log.LogLevel.DEBUG)
-            status.new_preview = True
+            status.preview_taken = True
+        elif not (is_preview_time or not status.preview_taken):
+            log.write("reset preview_taken", level=log.LogLevel.DEBUG)
+            status.preview_taken = False
 
     def record(
         self,
