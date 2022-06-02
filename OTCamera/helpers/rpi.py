@@ -43,10 +43,10 @@ def shutdown():
     led.power_on()
     camera.stop_recording()
     log.breakline()
-    log.write("Shutdown", False)
+    log.write("Shutdown")
     log.breakline()
     log.closefile()
-    call("sudo shutdown -h -t 0", shell=True)
+    call("sudo shutdown -h now", shell=True)
 
 
 def reboot():
@@ -66,7 +66,7 @@ def reboot():
         n=None,
         background=True,
     )
-    log.write("Reboot", False)
+    log.write("Reboot")
     log.breakline()
     log.closefile()
     camera.stop_recording()
