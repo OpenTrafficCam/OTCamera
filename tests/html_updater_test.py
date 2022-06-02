@@ -10,10 +10,10 @@ from OTCamera.html_updater import (
     LogDataObject,
     LogHtmlId,
     OTCameraDataObject,
-    StatusWebsiteUpdater,
     StatusDataObject,
 )
 from OTCamera.html_updater import StatusHtmlId as status_id
+from OTCamera.html_updater import StatusWebsiteUpdater
 
 
 @pytest.fixture
