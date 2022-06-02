@@ -20,7 +20,6 @@ Contains all functions to control the Raspberry Pi itself.
 
 
 from subprocess import call
-from time import sleep
 
 from OTCamera import config, status
 from OTCamera.hardware import led
@@ -74,32 +73,6 @@ def reboot():
         call("sudo reboot", shell=True)
 
 
-def wifi():
-    """Switches the status of the Wifi-AP.
-
-    If status.wifiapon is False, a script is started to turn the AP on.
-    If status.wifiapon is True, it stops the AP after config.WIFIDELAY seconds.
-    Uses a LED to signalize the status.
-
-    """
-    log.write("wifi called", level=log.LogLevel.DEBUG)
-    if config.USE_BUTTONS:
-        if status.wifi_button_pressed and not status.wifi_on:
-            wifi_switch_on()
-        elif not status.wifi_button_pressed and status.wifi_on:
-            led.wifi_pre_off()
-            log.write(f"Turning off Wi-Fi AP in {config.WIFI_DELAY} s")
-            timer = 0
-            while timer <= config.WIFI_DELAY:
-                if status.wifi_button_pressed:
-                    log.write("Wi-Fi not turned off. Button no longer pressed.")
-                    led.wifi_on()
-                    return
-                sleep(1)
-                timer += 1
-            wifi_switch_off()
-
-
 def wifi_switch_on():
     """Turn on Wi-Fi"""
     if not config.DEBUG_MODE_ON:
@@ -116,19 +89,3 @@ def wifi_switch_off():
     led.wifi_off()
     status.wifi_on = False
     log.write("Wi-Fi off")
-
-
-def lowbattery():
-    """Shutdown if battery is low.
-
-    Shuts down the Raspberry Pi if called and writes a message to the logfile.
-
-    """
-    log.write("Low Battery", False)
-    camera.stop_recording()
-    status.shutdownactive = True
-    log.breakline()
-    log.write("Shutdown", False)
-    log.breakline()
-    log.closefile()
-    call("sudo shutdown -h -t 0", shell=True)
