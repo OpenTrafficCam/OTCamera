@@ -129,7 +129,9 @@ class OTCamera:
         is_preview_time = (current_second % config.PREVIEW_INTERVAL) == offset
         time_preview = is_preview_time and status.wifi_on and not status.preview_taken
 
-        if self._capture_preview_immediately or time_preview:
+        if (
+            self._capture_preview_immediately or time_preview
+        ) and not status.shutdownactive:
             log.write("new preview", level=log.LogLevel.DEBUG)
             self._camera.capture()
             self._html_updater.update_info(
@@ -253,6 +255,7 @@ class OTCamera:
             return
 
         log.write("Stopping OTCamera", level=log.LogLevel.INFO)
+        status.shutdownactive = True
         # OTCamera teardown
         self._camera.stop_recording()
         self._camera.close()

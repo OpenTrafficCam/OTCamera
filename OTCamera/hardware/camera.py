@@ -85,7 +85,7 @@ class Camera(Singleton):
         # PiCamera error
         # https://picamera.readthedocs.io/en/release-1.13/api_exc.html?highlight=exception
 
-        if not self._picam.recording:
+        if not self._picam.recording and not status.shutdownactive:
             delete_old_files()
             self._picam.annotate_text = name.annotate()
             self._picam.start_recording(
