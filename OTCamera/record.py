@@ -102,13 +102,13 @@ class OTCamera:
         alive_signal_interval = 5  # in seconds
         is_send_time = (current_second % alive_signal_interval) == alive_signal_interval
 
-        if is_send_time and status.power_led_not_blinked:
+        if is_send_time and not status.power_led_blinked:
             log.write("blink power led", level=log.LogLevel.DEBUG)
             led.power_blink()
-            status.power_led_not_blinked = True
-        elif not (is_send_time or status.power_led_not_blinked):
-            log.write("reset power_led_already_blinked", level=log.LogLevel.DEBUG)
-            status.power_led_not_blinked = False
+            status.power_led_blinked = True
+        elif not (is_send_time or not status.power_led_blinked):
+            log.write("reset power_led_blinked", level=log.LogLevel.DEBUG)
+            status.power_led_blinked = False
 
     def _try_capture_preview(
         self,
@@ -127,7 +127,7 @@ class OTCamera:
         # we use offset -1 second. Otherwise picamerax could crash.
         offset = config.PREVIEW_INTERVAL - 1
         is_preview_time = (current_second % config.PREVIEW_INTERVAL) == offset
-        time_preview = is_preview_time and status.wifi_on and status.preview_not_taken
+        time_preview = is_preview_time and status.wifi_on and not status.preview_taken
 
         if self._capture_preview_immediately or time_preview:
             log.write("new preview", level=log.LogLevel.DEBUG)
@@ -139,10 +139,10 @@ class OTCamera:
                 self._get_config_settings(),
                 self._get_log_info(start_idx=0, num=self._num_log_files_html),
             )
-            status.preview_not_taken = False
-        elif not (is_preview_time or status.preview_not_taken):
-            log.write("reset preview_not_taken", level=log.LogLevel.DEBUG)
-            status.preview_not_taken = True
+            status.preview_taken = True
+        elif not (is_preview_time or not status.preview_taken):
+            log.write("reset preview_taken", level=log.LogLevel.DEBUG)
+            status.preview_taken = False
 
     def record(
         self,

@@ -35,11 +35,11 @@ log.write("imported status", level=log.LogLevel.DEBUG)
 
 shutdownactive: bool = False
 noblink: bool = False
-power_led_not_blinked: bool = True
+power_led_blinked: bool = False
 wifi_on: bool = True
 interval_finished: bool = False
 more_intervals: bool = True
-preview_not_taken: bool = True
+preview_taken: bool = False
 current_interval: int = 0
 recording: bool = False
 
