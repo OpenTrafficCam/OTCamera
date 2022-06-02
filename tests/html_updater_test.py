@@ -10,15 +10,15 @@ from OTCamera.html_updater import (
     LogDataObject,
     LogHtmlId,
     OTCameraDataObject,
-    OTCameraHTMLUpdater,
     StatusDataObject,
 )
 from OTCamera.html_updater import StatusHtmlId as status_id
+from OTCamera.html_updater import StatusWebsiteUpdater
 
 
 @pytest.fixture
-def html_updater() -> OTCameraHTMLUpdater:
-    return OTCameraHTMLUpdater(debug_mode_on=True)
+def html_updater() -> StatusWebsiteUpdater:
+    return StatusWebsiteUpdater(debug_mode_on=True)
 
 
 @pytest.fixture
@@ -121,7 +121,7 @@ def log_data() -> LogDataObject:
     ],
 )
 def test_disable_info_visibleHtmlAsParam_returnsDisabledTag(
-    html_updater: OTCameraHTMLUpdater,
+    html_updater: StatusWebsiteUpdater,
     create_html_file: Callable[[str, str], Path],
     html: str,
     expected: str,
@@ -155,7 +155,7 @@ def test_disable_info_visibleHtmlAsParam_returnsDisabledTag(
     ],
 )
 def test_enable_tag_by_id(
-    html_updater: OTCameraHTMLUpdater,
+    html_updater: StatusWebsiteUpdater,
     html: str,
     expected: str,
 ) -> None:
@@ -194,7 +194,7 @@ def test_enable_tag_by_id(
     ],
 )
 def test_change_content(
-    html_updater: OTCameraHTMLUpdater,
+    html_updater: StatusWebsiteUpdater,
     html: str,
     text: str,
     expected: str,
@@ -220,7 +220,7 @@ def test_change_content(
     ],
 )
 def test_update_by_id(
-    html_updater: OTCameraHTMLUpdater,
+    html_updater: StatusWebsiteUpdater,
     html: str,
     expected: str,
     status_data: OTCameraDataObject,
@@ -249,7 +249,7 @@ def test_update_by_id(
     ],
 )
 def test_update_info(
-    html_updater: OTCameraHTMLUpdater,
+    html_updater: StatusWebsiteUpdater,
     create_html_file: Callable[[str, str], Path],
     html: str,
     expected: str,
@@ -268,7 +268,7 @@ def test_update_info(
 
 
 def test_update_info_htmlWithAllIdsAsParam(
-    html_updater: OTCameraHTMLUpdater,
+    html_updater: StatusWebsiteUpdater,
     status_data: OTCameraDataObject,
     config_data: OTCameraDataObject,
     log_data: OTCameraDataObject,

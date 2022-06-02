@@ -38,7 +38,7 @@ from OTCamera.html_updater import (
     ConfigHtmlId,
     LogDataObject,
     LogHtmlId,
-    OTCameraHTMLUpdater,
+    StatusWebsiteUpdater,
 )
 
 log.write("imported record", level=log.LogLevel.DEBUG)
@@ -48,7 +48,7 @@ class OTCamera:
     def __init__(
         self,
         camera: Camera,
-        html_updater: OTCameraHTMLUpdater,
+        html_updater: StatusWebsiteUpdater,
         capture_preview_immediately: bool = False,
         video_dir: Union[str, Path] = config.VIDEO_DIR,
         template_html_filepath: Union[str, Path] = config.TEMPLATE_HTML_PATH,
@@ -252,7 +252,7 @@ class OTCamera:
 
 def main() -> None:
     camera = Camera()
-    html_updater = OTCameraHTMLUpdater(
+    html_updater = StatusWebsiteUpdater(
         status_info_id="status-info",
         config_info_id="config-info",
         log_info_id="log-info",
