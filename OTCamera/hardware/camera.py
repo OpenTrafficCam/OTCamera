@@ -107,14 +107,20 @@ class Camera(Singleton):
             self.capture()
 
     def capture(self):
-        self._picam.annotate_text = name.annotate()
-        self._picam.capture(
-            name.preview(),
-            format=config.PREVIEW_FORMAT,
-            resize=config.RESOLUTION_SAVED_VIDEO_FILE,
-            use_video_port=True,
-        )
-        log.write("preview captured", level=log.LogLevel.INFO)
+        if self._picam.recording:
+            self._picam.annotate_text = name.annotate()
+            self._picam.capture(
+                name.preview(),
+                format=config.PREVIEW_FORMAT,
+                resize=config.RESOLUTION_SAVED_VIDEO_FILE,
+                use_video_port=True,
+            )
+            log.write("preview captured", level=log.LogLevel.INFO)
+        else:
+            log.write(
+                "can not capture preview, camera not recording",
+                level=log.LogLevel.WARNING,
+            )
 
     def _wait_recording(self, timeout: Union[int, float] = 0):
         if self._picam.recording:
