@@ -18,7 +18,7 @@ class StatusHtmlId(Enum):
     WIFI_ACTIVE = "wifi-active"
     LOW_BATTERY = "low-battery"
     POWER_BUTTON_ACTIVE = "power-button-active"
-    HOUR_BUTTON_ACTIVE = "hour-button-active"
+    HOUR_BUTTON_ACTIVE = "24-7-recording"
     WIFI_AP_ON = "wifi-ap-on"
 
 
