@@ -139,7 +139,6 @@ class OTCamera:
                 self._index_html_filepath,
                 status.get_status_data(),
                 self._get_config_settings(),
-                self._get_log_info(start_idx=0, num=self._num_log_files_html),
             )
             status.preview_taken = True
         elif not (is_preview_time or not status.preview_taken):

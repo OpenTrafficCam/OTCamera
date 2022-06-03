@@ -150,7 +150,6 @@ class StatusWebsiteUpdater:
         html_savepath: Union[str, Path],
         status_info: OTCameraDataObject,
         config_info: OTCameraDataObject,
-        log_info: OTCameraDataObject,
     ):
         html_tree = self._parse_html(Path(html_filepath))
         # Update status info
@@ -161,11 +160,6 @@ class StatusWebsiteUpdater:
         if self.debug_mode_on:
             self._enable_tag_by_id(html_tree, self.config_info_id)
             self._update_by_id(html_tree, config_info)
-
-        # Update log info
-        if self.debug_mode_on:
-            self._enable_tag_by_id(html_tree, self.log_info_id)
-            self._update_by_id(html_tree, log_info)
 
         self._save(html_tree, Path(html_savepath))
         log.write("index.html status information updated", log.LogLevel.DEBUG)
