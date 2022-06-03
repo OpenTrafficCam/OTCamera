@@ -168,12 +168,11 @@ class StatusWebsiteUpdater:
         self._save(html_tree, Path(html_savepath))
         log.write("index.html status information updated", log.LogLevel.DEBUG)
 
-    def disable_info(self, html_filepath: Union[str, Path]):
-        html_tree = self._parse_html(html_filepath)
+    def disable_info(self, html_save_path: Union[str, Path]):
         html_tree = copy.copy(self._html_data)
         self._disable_tag_by_id(html_tree, self.status_info_id)
         self._disable_tag_by_id(html_tree, self.config_info_id)
-        self._save(html_tree, html_filepath)
+        self._save(html_tree, html_save_path)
 
     def display_offline_info(
         self,
