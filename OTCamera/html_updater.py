@@ -177,6 +177,7 @@ class StatusWebsiteUpdater:
         self,
         html_path: Union[str, Path],
         offline_html_path: Union[str, Path],
+        html_save_path: Union[str, Path],
         status_info_id: str = "status-info",
         config_info_id: str = "config-info",
         log_info_id: str = "log-info",
@@ -186,6 +187,7 @@ class StatusWebsiteUpdater:
     ) -> None:
         self._html_data = self._parse_html(html_path)
         self._offline_html_data = self._parse_html(offline_html_path)
+        self.html_save_path = html_save_path
         self.status_info_id = status_info_id
         self.config_info_id = config_info_id
         self.log_info_id = log_info_id
@@ -195,7 +197,6 @@ class StatusWebsiteUpdater:
 
     def update_info(
         self,
-        html_savepath: Union[str, Path],
         status_info: OTCameraDataObject,
         config_info: OTCameraDataObject,
     ):
@@ -219,7 +220,7 @@ class StatusWebsiteUpdater:
                 data=config_info,
             )
 
-        self._save(html_tree, Path(html_savepath))
+        self._save(html_tree)
         log.write("index.html status information updated", log.LogLevel.DEBUG)
 
     def _build_data_html_table(
@@ -241,15 +242,14 @@ class StatusWebsiteUpdater:
             table_row.append(td_status_desc)
             table_row.append(td_status_val)
 
-    def disable_info(self, html_save_path: Union[str, Path]):
+    def disable_info(self):
         html_tree = copy.copy(self._html_data)
         self._disable_tag_by_id(html_tree, self.status_info_id)
         self._disable_tag_by_id(html_tree, self.config_info_id)
-        self._save(html_tree, html_save_path)
+        self._save(html_tree)
 
     def display_offline_info(
         self,
-        html_save_path: Union[str, Path],
         log_info: LogDataObject,
     ):
         log.write("Display offline html", log.LogLevel.DEBUG)
@@ -259,7 +259,7 @@ class StatusWebsiteUpdater:
             self._update_by_id(html_tree, log_info)
         else:
             self._disable_tag_by_id(html_tree, self.log_info_id)
-        self._save(html_tree, html_save_path)
+        self._save(html_tree)
 
     def _parse_html(self, html_filepath: Path) -> BeautifulSoup:
         with open(html_filepath) as html_stream:
@@ -270,8 +270,8 @@ class StatusWebsiteUpdater:
         for id, update_content in update_info.get_properties():
             self._change_content(html_tree.find(id=id.value), str(update_content))
 
-    def _save(self, html_tree: Tag, save_path: Path):
-        with open(save_path, "w", encoding="utf-8") as f:
+    def _save(self, html_tree: Tag):
+        with open(self.html_save_path, "w", encoding="utf-8") as f:
             f.write(str(html_tree))
 
     def _disable_tag_by_id(self, html_tag: Tag, id: str) -> None:
