@@ -77,16 +77,11 @@ class OTCameraDataObject(ABC):
 class StatusDataObject(OTCameraDataObject):
     """Status information to be displayed on the status website."""
 
-    time: Tuple[Enum, str]
-    hostname: Tuple[Enum, str]
     free_diskspace: Tuple[Enum, str]
     num_videos_recorded: Tuple[Enum, int]
     currently_recording: Tuple[Enum, bool]
-    wifi_active: Tuple[Enum, bool]
     low_battery: Tuple[Enum, bool]
-    power_button_active: Tuple[Enum, bool]
     hour_button_active: Tuple[Enum, bool]
-    wifi_ap_on: Tuple[Enum, bool]
 
 
 @dataclass
