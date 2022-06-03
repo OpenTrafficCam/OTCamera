@@ -3,6 +3,7 @@ from dataclasses import dataclass, fields
 from enum import Enum
 from pathlib import Path
 from typing import Any, Tuple, Union
+import copy
 
 from bs4 import BeautifulSoup, Tag
 
@@ -134,11 +135,15 @@ class LogDataObject(OTCameraDataObject):
 class StatusWebsiteUpdater:
     def __init__(
         self,
+        html_path: Union[str, Path],
+        offline_html_path: Union[str, Path],
         status_info_id: str = "status-info",
         config_info_id: str = "config-info",
         log_info_id: str = "log-info",
         debug_mode_on: bool = False,
     ) -> None:
+        self._html_data = self._parse_html(html_path)
+        self._offline_html_data = self._parse_html(offline_html_path)
         self.status_info_id = status_info_id
         self.config_info_id = config_info_id
         self.log_info_id = log_info_id
@@ -146,12 +151,11 @@ class StatusWebsiteUpdater:
 
     def update_info(
         self,
-        html_filepath: Union[str, Path],
         html_savepath: Union[str, Path],
         status_info: OTCameraDataObject,
         config_info: OTCameraDataObject,
     ):
-        html_tree = self._parse_html(Path(html_filepath))
+        html_tree = copy.copy(self._html_data)
         # Update status info
         self._enable_tag_by_id(html_tree, self.status_info_id)
         self._update_by_id(html_tree, status_info)
@@ -166,18 +170,18 @@ class StatusWebsiteUpdater:
 
     def disable_info(self, html_filepath: Union[str, Path]):
         html_tree = self._parse_html(html_filepath)
+        html_tree = copy.copy(self._html_data)
         self._disable_tag_by_id(html_tree, self.status_info_id)
         self._disable_tag_by_id(html_tree, self.config_info_id)
         self._save(html_tree, html_filepath)
 
     def display_offline_info(
         self,
-        offline_html_path: Union[str, Path],
         html_save_path: Union[str, Path],
         log_info: LogDataObject,
     ):
         log.write("Display offline html", log.LogLevel.DEBUG)
-        html_tree = self._parse_html(offline_html_path)
+        html_tree = copy.copy(self._offline_html_data)
         if self.debug_mode_on:
             self._enable_tag_by_id(html_tree, self.log_info_id)
             self._update_by_id(html_tree, log_info)

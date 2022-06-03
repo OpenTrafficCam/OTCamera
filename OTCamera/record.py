@@ -135,7 +135,6 @@ class OTCamera:
             log.write("new preview", level=log.LogLevel.DEBUG)
             self._camera.capture()
             self._html_updater.update_info(
-                self._template_html_filepath,
                 self._index_html_filepath,
                 status.get_status_data(),
                 self._get_config_settings(),
@@ -259,7 +258,6 @@ class OTCamera:
         self._camera.stop_recording()
         self._camera.close()
         self._html_updater.display_offline_info(
-            self._offline_html_filepath,
             self._index_html_filepath,
             self._get_log_info(0, self._num_log_files_html),
         )
@@ -272,6 +270,8 @@ class OTCamera:
 def main() -> None:
     camera = Camera()
     html_updater = StatusWebsiteUpdater(
+        html_path=config.TEMPLATE_HTML_PATH,
+        offline_html_path=config.OFFLINE_HTML_PATH,
         status_info_id="status-info",
         config_info_id="config-info",
         log_info_id="log-info",
