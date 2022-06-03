@@ -125,6 +125,46 @@ class ConfigDataObject(OTCameraDataObject):
     wifi_delay: Tuple[Enum, int]
 
 
+STATUS_DESC = {
+    StatusHtmlId.FREE_DISKSPACE: "Free Disk Space",
+    StatusHtmlId.NUM_VIDEOS_RECORDED: "Videos recorded",
+    StatusHtmlId.CURRENTLY_RECORDING: "Camera Currently Recording",
+    StatusHtmlId.LOW_BATTERY: "Battery Low",
+    StatusHtmlId.HOUR_BUTTON_ACTIVE: "24/7 Recording",
+}
+
+CONFIG_DESC = {
+    ConfigHtmlId.DEBUG_MODE_ON: "Debug Mode On",
+    ConfigHtmlId.START_HOUR: "Start Hour",
+    ConfigHtmlId.END_HOUR: "End Hour",
+    ConfigHtmlId.INTERVAL_VIDEO_SPLIT: "Interval Length[min] Before Video Splits",
+    ConfigHtmlId.NUM_INTERVALS: "Number of Full Intervals to Record",
+    ConfigHtmlId.PREVIEW_INTERVAL: "Preview Interval",
+    ConfigHtmlId.MIN_FREE_SPACE: "Minimum Free Space",
+    ConfigHtmlId.PREFIX: "Prefix",
+    ConfigHtmlId.VIDEO_DIR: "Video Directory",
+    ConfigHtmlId.PREVIEW_PATH: "Preview Image Path",
+    ConfigHtmlId.TEMPLATE_HTML_PATH: "Template HTML Path",
+    ConfigHtmlId.INDEX_HTML_PATH: "Index HTML Path",
+    ConfigHtmlId.FPS: "FPS",
+    ConfigHtmlId.RESOLUTION: "Resolution",
+    ConfigHtmlId.EXPOSURE_MODE: "Exposure Mode",
+    ConfigHtmlId.DRC_STRENGTH: "DRC Strength",
+    ConfigHtmlId.ROTATION: "Rotation",
+    ConfigHtmlId.AWB_MODE: "AWB Mode",
+    ConfigHtmlId.VIDEO_FORMAT: "Video Format",
+    ConfigHtmlId.PREVIEW_FORMAT: "Preview Format",
+    ConfigHtmlId.RESOLUTION_SAVED_VIDEO_FILE: "Resolution of Saved Video File",
+    ConfigHtmlId.H264_PROFILE: "H264 Profile",
+    ConfigHtmlId.H264_LEVEL: "H264 Level",
+    ConfigHtmlId.H264_BITRATE: "H264 Bitrate",
+    ConfigHtmlId.H264_QUALITY: "H264 Quality",
+    ConfigHtmlId.USE_LED: "Use LED",
+    ConfigHtmlId.USE_BUTTONS: "Use Buttons",
+    ConfigHtmlId.WIFI_DELAY: "Wi-Fi Delay",
+}
+
+
 @dataclass
 class LogDataObject(OTCameraDataObject):
     """Log information to be displayed on the status website"""
@@ -140,6 +180,8 @@ class StatusWebsiteUpdater:
         status_info_id: str = "status-info",
         config_info_id: str = "config-info",
         log_info_id: str = "log-info",
+        status_table_id: str = "status-info-table",
+        config_table_id: str = "config-info-table",
         debug_mode_on: bool = False,
     ) -> None:
         self._html_data = self._parse_html(html_path)
@@ -147,6 +189,8 @@ class StatusWebsiteUpdater:
         self.status_info_id = status_info_id
         self.config_info_id = config_info_id
         self.log_info_id = log_info_id
+        self.status_table_id = status_table_id
+        self.config_table_id = config_table_id
         self.debug_mode_on = debug_mode_on
 
     def update_info(
@@ -158,15 +202,44 @@ class StatusWebsiteUpdater:
         html_tree = copy.copy(self._html_data)
         # Update status info
         self._enable_tag_by_id(html_tree, self.status_info_id)
-        self._update_by_id(html_tree, status_info)
-
+        self._build_data_html_table(
+            soup=html_tree,
+            table_id=self.status_table_id,
+            value_desc=STATUS_DESC,
+            data=status_info,
+        )
         # Update config info
         if self.debug_mode_on:
             self._enable_tag_by_id(html_tree, self.config_info_id)
             self._update_by_id(html_tree, config_info)
+            self._build_data_html_table(
+                soup=html_tree,
+                table_id=self.config_table_id,
+                value_desc=CONFIG_DESC,
+                data=config_info,
+            )
 
         self._save(html_tree, Path(html_savepath))
         log.write("index.html status information updated", log.LogLevel.DEBUG)
+
+    def _build_data_html_table(
+        self,
+        soup: BeautifulSoup,
+        table_id: str,
+        value_desc: dict,
+        data: OTCameraDataObject,
+    ):
+        table_tag = soup.find(id=table_id)
+        for id, table_content in data.get_properties():
+            table_row = soup.new_tag("tr", attrs={"id": id.value})
+            table_tag.append(table_row)
+            td_status_desc = soup.new_tag("td")
+            td_status_val = soup.new_tag("td")
+            self._change_content(td_status_desc, value_desc[id])
+            self._change_content(td_status_val, str(table_content))
+
+            table_row.append(td_status_desc)
+            table_row.append(td_status_val)
 
     def disable_info(self, html_save_path: Union[str, Path]):
         html_tree = copy.copy(self._html_data)
