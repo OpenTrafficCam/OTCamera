@@ -22,7 +22,7 @@ All the configuration of OTCamera is done here.
 import socket
 from pathlib import Path
 
-DEBUG_MODE_ON = False
+DEBUG_MODE_ON = True
 """Turn debug mode on to get additional log entries."""
 
 START_HOUR = 6

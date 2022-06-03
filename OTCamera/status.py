@@ -20,7 +20,6 @@ Contains all status variables and functions to be used across multiple modules.
 
 
 import re
-import socket
 import subprocess
 from datetime import datetime as dt
 from pathlib import Path
@@ -71,28 +70,18 @@ def record_time() -> bool:
 
 def get_status_data() -> StatusDataObject:
     """Returns OTCamera's status information."""
-    time = dt.now().strftime("%d.%m.%Y %H:%M:%S")
-    hostname = socket.gethostname()
     free_diskspace = calc_free_diskspace(config.VIDEO_DIR) / (1024 * 1024 * 1024)
     num_videos_recorded = _get_num_videos()
     currently_recording = recording
-    wifi_active = _is_wifi_enabled()
     low_battery = battery_is_low
-    power_button_active = power_button_pressed
     hour_button_active = hour_button_pressed
-    wifi_ap_on = wifi_button_pressed
 
     return StatusDataObject(
-        time=(StatusHtmlId.TIME, time),
-        hostname=(StatusHtmlId.HOSTNAME, hostname),
         free_diskspace=(StatusHtmlId.FREE_DISKSPACE, f"{free_diskspace:.2f} GB"),
         num_videos_recorded=(StatusHtmlId.NUM_VIDEOS_RECORDED, num_videos_recorded),
         currently_recording=(StatusHtmlId.CURRENTLY_RECORDING, currently_recording),
-        wifi_active=(StatusHtmlId.WIFI_ACTIVE, wifi_active),
         low_battery=(StatusHtmlId.LOW_BATTERY, low_battery),
-        power_button_active=(StatusHtmlId.POWER_BUTTON_ACTIVE, power_button_active),
         hour_button_active=(StatusHtmlId.HOUR_BUTTON_ACTIVE, hour_button_active),
-        wifi_ap_on=(StatusHtmlId.WIFI_AP_ON, wifi_ap_on),
     )
 
 
