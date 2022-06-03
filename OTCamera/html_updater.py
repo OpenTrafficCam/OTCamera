@@ -1,9 +1,9 @@
+import copy
 from abc import ABC
 from dataclasses import dataclass, fields
 from enum import Enum
 from pathlib import Path
 from typing import Any, Tuple, Union
-import copy
 
 from bs4 import BeautifulSoup, Tag
 
