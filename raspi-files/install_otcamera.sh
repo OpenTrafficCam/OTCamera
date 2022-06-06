@@ -15,14 +15,6 @@ read -r -e -p "Use LEDs? [y/n]: " -i "y" USE_LEDS
 read -r -e -p "Activate DEBUG mode? [y/n]: " -i "n" USE_DEBUG
 read -r -e -p "Use relay server? [y/n]: " -i "n" USE_RELAY
 
-case $USE_RELAY in
-    [yY] | [yY][eE][sS])
-        bash install_sshrelay.sh
-        ;;
-    [nN] | [nN][oO])
-        ;;
-esac
-
 # read -p "Press enter to continue..." key
 echo "#### Configure Rasperry Pi"
 echo "Configure legacy camera mode using raspi-config"
@@ -224,6 +216,7 @@ case $USE_RELAY in
     [yY] | [yY][eE][sS])
         echo "Enableing relay mode"
         sed "$OTCONFIG" -i -e "s?^USE_RELAY.*?USE_RELAY = True?g"
+        bash install_sshrelay.sh
         ;;
     [nN] | [nN][oO])
         echo "Disableing debug mode"
