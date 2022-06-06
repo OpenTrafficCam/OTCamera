@@ -41,6 +41,9 @@ def shutdown():
     """
     status.shutdownactive = True
     led.power_on()
+    if config.USE_RELAY:
+        call("sudo systemctl stop sshrelay.service", shell=True)
+        log.write("Stopped SSH relay server connection")
     camera.stop_recording()
     log.breakline()
     log.write("Shutdown")
