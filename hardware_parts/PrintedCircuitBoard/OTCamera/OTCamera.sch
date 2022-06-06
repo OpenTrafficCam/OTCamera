@@ -1,0 +1,586 @@
+EESchema Schematic File Version 4
+EELAYER 30 0
+EELAYER END
+$Descr A4 11693 8268
+encoding utf-8
+Sheet 1 1
+Title "OTCamera"
+Date "2020-10-23"
+Rev "0.1"
+Comp "OpenTrafficCam.org"
+Comment1 ""
+Comment2 ""
+Comment3 ""
+Comment4 ""
+$EndDescr
+$Comp
+L Connector:Raspberry_Pi_2_3 U2
+U 1 1 5F92A4A1
+P 8550 3450
+F 0 "U2" H 7850 4800 50  0000 L CNN
+F 1 "RPi Zero W" H 7850 4700 50  0000 L CNN
+F 2 "Connector_PinSocket_2.54mm:PinSocket_2x20_P2.54mm_Vertical" H 8550 3450 50  0001 C CNN
+F 3 "https://www.raspberrypi.org/documentation/hardware/raspberrypi/schematics/rpi_SCH_3bplus_1p0_reduced.pdf" H 8550 3450 50  0001 C CNN
+	1    8550 3450
+	1    0    0    -1  
+$EndComp
+$Comp
+L OTCamera_KiCad:PowerBoost1000C-OpenTrafficCam_KiCad U1
+U 1 1 5F92D085
+P 2900 6150
+F 0 "U1" H 3233 7215 50  0000 C CNN
+F 1 "PowerBoost1000C" H 3233 7124 50  0000 C CNN
+F 2 "Connector_PinSocket_2.54mm:PinSocket_1x08_P2.54mm_Vertical" H 3050 6100 50  0001 C CNN
+F 3 "https://learn.adafruit.com/adafruit-powerboost-1000c-load-share-usb-charge-boost/" H 3050 6100 50  0001 C CNN
+	1    2900 6150
+	1    0    0    -1  
+$EndComp
+$Comp
+L OTCamera_KiCad:PiRTC-OpenTrafficCam_KiCad U3
+U 1 1 5F9365CF
+P 9750 3050
+F 0 "U3" H 9950 3615 50  0000 C CNN
+F 1 "PiRTC" H 9950 3524 50  0000 C CNN
+F 2 "Connector_PinHeader_2.54mm:PinHeader_2x03_P2.54mm_Vertical" H 9750 3050 50  0001 C CNN
+F 3 "" H 9750 3050 50  0001 C CNN
+	1    9750 3050
+	1    0    0    -1  
+$EndComp
+$Comp
+L Connector:USB_B_Micro J0
+U 1 1 5F9379F3
+P 1750 5650
+F 0 "J0" H 1807 6117 50  0000 C CNN
+F 1 "USB_B_Micro" H 1807 6026 50  0000 C CNN
+F 2 "Connector_USB:USB_Micro-B_Wuerth_614105150721_Vertical" H 1900 5600 50  0001 C CNN
+F 3 "~" H 1900 5600 50  0001 C CNN
+	1    1750 5650
+	1    0    0    -1  
+$EndComp
+$Comp
+L OTCamera_KiCad:BulginPX0446 J1
+U 1 1 5F945A40
+P 1300 6650
+F 0 "J1" H 1243 6225 50  0000 C CNN
+F 1 "BulginPX0446" H 1243 6316 50  0000 C CNN
+F 2 "Connector_PinSocket_2.54mm:PinSocket_1x05_P2.54mm_Vertical" H 1300 6650 50  0001 C CNN
+F 3 "~" H 1300 6650 50  0001 C CNN
+	1    1300 6650
+	-1   0    0    1   
+$EndComp
+$Comp
+L Device:R R3
+U 1 1 5F951F08
+P 6000 4850
+F 0 "R3" V 5793 4850 50  0000 C CNN
+F 1 "100k" V 5884 4850 50  0000 C CNN
+F 2 "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal" V 5930 4850 50  0001 C CNN
+F 3 "~" H 6000 4850 50  0001 C CNN
+	1    6000 4850
+	0    1    1    0   
+$EndComp
+$Comp
+L Device:R R4
+U 1 1 5F952F86
+P 6000 5150
+F 0 "R4" V 5793 5150 50  0000 C CNN
+F 1 "10k" V 5884 5150 50  0000 C CNN
+F 2 "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal" V 5930 5150 50  0001 C CNN
+F 3 "~" H 6000 5150 50  0001 C CNN
+	1    6000 5150
+	0    1    1    0   
+$EndComp
+$Comp
+L Device:R R1
+U 1 1 5F95356E
+P 6050 2800
+F 0 "R1" V 5843 2800 50  0000 C CNN
+F 1 "47k" V 5934 2800 50  0000 C CNN
+F 2 "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal" V 5980 2800 50  0001 C CNN
+F 3 "~" H 6050 2800 50  0001 C CNN
+	1    6050 2800
+	0    1    1    0   
+$EndComp
+$Comp
+L Device:R R2
+U 1 1 5F9539E4
+P 6050 3100
+F 0 "R2" V 5843 3100 50  0000 C CNN
+F 1 "100k" V 5934 3100 50  0000 C CNN
+F 2 "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal" V 5980 3100 50  0001 C CNN
+F 3 "~" H 6050 3100 50  0001 C CNN
+	1    6050 3100
+	0    1    1    0   
+$EndComp
+$Comp
+L Device:CP C1
+U 1 1 5F954D4D
+P 3950 5000
+F 0 "C1" H 3832 4954 50  0000 R CNN
+F 1 "4700µF" H 3832 5045 50  0000 R CNN
+F 2 "Capacitor_THT:CP_Radial_D16.0mm_P7.50mm" H 3988 4850 50  0001 C CNN
+F 3 "~" H 3950 5000 50  0001 C CNN
+	1    3950 5000
+	-1   0    0    1   
+$EndComp
+$Comp
+L Device:LED LED1
+U 1 1 5F95706C
+P 6050 1500
+F 0 "LED1" H 6043 1717 50  0000 C CNN
+F 1 "Record" H 6043 1626 50  0000 C CNN
+F 2 "Connector_PinSocket_2.54mm:PinSocket_1x02_P2.54mm_Vertical" H 6050 1500 50  0001 C CNN
+F 3 "~" H 6050 1500 50  0001 C CNN
+	1    6050 1500
+	1    0    0    -1  
+$EndComp
+$Comp
+L Device:LED LED2
+U 1 1 5F958F88
+P 6050 1900
+F 0 "LED2" H 6043 2117 50  0000 C CNN
+F 1 "Wifi" H 6043 2026 50  0000 C CNN
+F 2 "Connector_PinSocket_2.54mm:PinSocket_1x02_P2.54mm_Vertical" H 6050 1900 50  0001 C CNN
+F 3 "~" H 6050 1900 50  0001 C CNN
+	1    6050 1900
+	1    0    0    -1  
+$EndComp
+$Comp
+L Device:LED LED3
+U 1 1 5F959651
+P 6050 2300
+F 0 "LED3" H 6043 2517 50  0000 C CNN
+F 1 "Power" H 6043 2426 50  0000 C CNN
+F 2 "Connector_PinSocket_2.54mm:PinSocket_1x02_P2.54mm_Vertical" H 6050 2300 50  0001 C CNN
+F 3 "~" H 6050 2300 50  0001 C CNN
+	1    6050 2300
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	1450 6550 1750 6550
+Wire Wire Line
+	3700 5650 3550 5650
+Wire Wire Line
+	1750 6050 1750 6550
+Connection ~ 1750 6550
+Wire Wire Line
+	1750 6550 1850 6550
+Wire Wire Line
+	1450 6850 2100 6850
+Wire Wire Line
+	3850 6850 3850 6050
+Wire Wire Line
+	3850 6050 3550 6050
+Wire Wire Line
+	2050 5450 2100 5450
+Wire Wire Line
+	2100 5450 2100 6850
+Connection ~ 2100 6850
+Wire Wire Line
+	2100 6850 3850 6850
+Wire Wire Line
+	4200 5950 3550 5950
+Wire Wire Line
+	4200 6250 4200 5950
+$Comp
+L Device:Battery_Cell LiPo1
+U 1 1 5F950B68
+P 4200 6450
+F 0 "LiPo1" H 4318 6546 50  0000 L CNN
+F 1 "LiPo Cell" H 4318 6455 50  0000 L CNN
+F 2 "Connector_Molex:Molex_KK-254_AE-6410-02A_1x02_P2.54mm_Vertical" V 4200 6510 50  0001 C CNN
+F 3 "~" V 4200 6510 50  0001 C CNN
+	1    4200 6450
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:GND #PWR0101
+U 1 1 5F963FA1
+P 1850 6550
+F 0 "#PWR0101" H 1850 6300 50  0001 C CNN
+F 1 "GND" H 1855 6377 50  0000 C CNN
+F 2 "" H 1850 6550 50  0001 C CNN
+F 3 "" H 1850 6550 50  0001 C CNN
+	1    1850 6550
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:GND #PWR0102
+U 1 1 5F964E77
+P 3800 5650
+F 0 "#PWR0102" H 3800 5400 50  0001 C CNN
+F 1 "GND" V 3805 5522 50  0000 R CNN
+F 2 "" H 3800 5650 50  0001 C CNN
+F 3 "" H 3800 5650 50  0001 C CNN
+	1    3800 5650
+	0    -1   -1   0   
+$EndComp
+$Comp
+L power:GND #PWR0103
+U 1 1 5F965516
+P 4200 6550
+F 0 "#PWR0103" H 4200 6300 50  0001 C CNN
+F 1 "GND" H 4205 6377 50  0000 C CNN
+F 2 "" H 4200 6550 50  0001 C CNN
+F 3 "" H 4200 6550 50  0001 C CNN
+	1    4200 6550
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	3550 5450 3700 5450
+$Comp
+L power:GND #PWR0104
+U 1 1 5F96866C
+P 8500 4950
+F 0 "#PWR0104" H 8500 4700 50  0001 C CNN
+F 1 "GND" H 8505 4777 50  0000 C CNN
+F 2 "" H 8500 4950 50  0001 C CNN
+F 3 "" H 8500 4950 50  0001 C CNN
+	1    8500 4950
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	3700 5450 3700 5650
+Connection ~ 3700 5650
+Wire Wire Line
+	3700 5450 3800 5450
+Connection ~ 3700 5450
+Wire Wire Line
+	3700 5650 3800 5650
+$Comp
+L Device:D D1
+U 1 1 5F96B53F
+P 5500 4400
+F 0 "D1" V 5546 4320 50  0000 R CNN
+F 1 "1N4007" V 5455 4320 50  0000 R CNN
+F 2 "Diode_THT:D_DO-41_SOD81_P10.16mm_Horizontal" H 5500 4400 50  0001 C CNN
+F 3 "~" H 5500 4400 50  0001 C CNN
+	1    5500 4400
+	0    -1   -1   0   
+$EndComp
+$Comp
+L power:GND #PWR0105
+U 1 1 5F96CED6
+P 10250 2950
+F 0 "#PWR0105" H 10250 2700 50  0001 C CNN
+F 1 "GND" H 10255 2777 50  0000 C CNN
+F 2 "" H 10250 2950 50  0001 C CNN
+F 3 "" H 10250 2950 50  0001 C CNN
+	1    10250 2950
+	1    0    0    -1  
+$EndComp
+$Comp
+L Switch:SW_SPST SW1
+U 1 1 5F96E52C
+P 5150 2950
+F 0 "SW1" H 5150 3185 50  0000 C CNN
+F 1 "Power" H 5150 3094 50  0000 C CNN
+F 2 "Connector_PinSocket_2.54mm:PinSocket_1x02_P2.54mm_Vertical" H 5150 2950 50  0001 C CNN
+F 3 "~" H 5150 2950 50  0001 C CNN
+	1    5150 2950
+	1    0    0    -1  
+$EndComp
+$Comp
+L Switch:SW_SPST SW2
+U 1 1 5F96F26B
+P 5150 3300
+F 0 "SW2" H 5150 3535 50  0000 C CNN
+F 1 "Wifi" H 5150 3444 50  0000 C CNN
+F 2 "Connector_PinSocket_2.54mm:PinSocket_1x02_P2.54mm_Vertical" H 5150 3300 50  0001 C CNN
+F 3 "~" H 5150 3300 50  0001 C CNN
+	1    5150 3300
+	1    0    0    -1  
+$EndComp
+$Comp
+L Switch:SW_SPST SW3
+U 1 1 5F96F7D1
+P 5150 3650
+F 0 "SW3" H 5150 3885 50  0000 C CNN
+F 1 "Select" H 5150 3794 50  0000 C CNN
+F 2 "Connector_PinSocket_2.54mm:PinSocket_1x02_P2.54mm_Vertical" H 5150 3650 50  0001 C CNN
+F 3 "~" H 5150 3650 50  0001 C CNN
+	1    5150 3650
+	1    0    0    -1  
+$EndComp
+$Comp
+L Switch:SW_Push SW4
+U 1 1 5F97004A
+P 5150 4050
+F 0 "SW4" H 5150 4335 50  0000 C CNN
+F 1 "Hardreset" H 5150 4244 50  0000 C CNN
+F 2 "Connector_PinSocket_2.54mm:PinSocket_1x02_P2.54mm_Vertical" H 5150 4250 50  0001 C CNN
+F 3 "~" H 5150 4250 50  0001 C CNN
+	1    5150 4050
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	9650 2850 9350 2850
+Wire Wire Line
+	9350 2950 9650 2950
+Wire Wire Line
+	9650 2750 9550 2750
+Wire Wire Line
+	9550 2750 9550 2150
+Wire Wire Line
+	9550 2150 8750 2150
+Wire Wire Line
+	8350 2150 8450 2150
+$Comp
+L power:+5V #PWR0106
+U 1 1 5F97B95A
+P 8350 1950
+F 0 "#PWR0106" H 8350 1800 50  0001 C CNN
+F 1 "+5V" H 8365 2123 50  0000 C CNN
+F 2 "" H 8350 1950 50  0001 C CNN
+F 3 "" H 8350 1950 50  0001 C CNN
+	1    8350 1950
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	8350 2150 8350 1950
+Connection ~ 8350 2150
+Wire Wire Line
+	7500 5550 7500 3050
+Wire Wire Line
+	7500 3050 7750 3050
+Wire Wire Line
+	5850 5150 5850 4850
+Connection ~ 5850 4850
+Wire Wire Line
+	7750 2550 7400 2550
+Wire Wire Line
+	7400 5150 6150 5150
+$Comp
+L power:GND #PWR0107
+U 1 1 5F98881C
+P 6150 4850
+F 0 "#PWR0107" H 6150 4600 50  0001 C CNN
+F 1 "GND" V 6155 4722 50  0000 R CNN
+F 2 "" H 6150 4850 50  0001 C CNN
+F 3 "" H 6150 4850 50  0001 C CNN
+	1    6150 4850
+	0    -1   -1   0   
+$EndComp
+Wire Wire Line
+	5500 4850 5850 4850
+Wire Wire Line
+	5500 2950 5350 2950
+Wire Wire Line
+	3550 5550 7500 5550
+Wire Wire Line
+	7400 2550 7400 5150
+Wire Wire Line
+	3550 5750 5500 5750
+Wire Wire Line
+	5500 4250 5500 2950
+Wire Wire Line
+	5500 4550 5500 4850
+Connection ~ 5500 4850
+Wire Wire Line
+	5500 4850 5500 5750
+Wire Wire Line
+	4950 3300 4800 3300
+Wire Wire Line
+	4800 3300 4800 3650
+Wire Wire Line
+	4800 3650 4950 3650
+Wire Wire Line
+	4800 3650 4800 4050
+Wire Wire Line
+	4800 4050 4950 4050
+Connection ~ 4800 3650
+$Comp
+L power:GND #PWR0108
+U 1 1 5F9B77F5
+P 4650 3650
+F 0 "#PWR0108" H 4650 3400 50  0001 C CNN
+F 1 "GND" H 4655 3477 50  0000 C CNN
+F 2 "" H 4650 3650 50  0001 C CNN
+F 3 "" H 4650 3650 50  0001 C CNN
+	1    4650 3650
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	4800 3650 4650 3650
+Wire Wire Line
+	4950 2950 4500 2950
+Wire Wire Line
+	4500 2950 4500 5950
+Wire Wire Line
+	4500 5950 4200 5950
+Connection ~ 4200 5950
+$Comp
+L power:+5V #PWR0109
+U 1 1 5F97A68E
+P 4050 5350
+F 0 "#PWR0109" H 4050 5200 50  0001 C CNN
+F 1 "+5V" V 4065 5478 50  0000 L CNN
+F 2 "" H 4050 5350 50  0001 C CNN
+F 3 "" H 4050 5350 50  0001 C CNN
+	1    4050 5350
+	0    1    1    0   
+$EndComp
+Wire Wire Line
+	3800 4850 3950 4850
+Wire Wire Line
+	3550 5350 3950 5350
+Wire Wire Line
+	3800 4850 3800 5450
+Wire Wire Line
+	3950 5150 3950 5350
+Connection ~ 3950 5350
+Wire Wire Line
+	3950 5350 4050 5350
+Wire Wire Line
+	5350 4050 5350 4850
+Wire Wire Line
+	5350 4850 5500 4850
+Text Label 5500 5200 0    50   ~ 0
+EN
+Wire Wire Line
+	5500 2800 5900 2800
+Wire Wire Line
+	6200 2800 7100 2800
+Wire Wire Line
+	10400 1550 10400 3350
+Wire Wire Line
+	10400 3350 9350 3350
+Wire Wire Line
+	6200 3100 6200 2800
+Connection ~ 6200 2800
+$Comp
+L power:GND #PWR0110
+U 1 1 5F9D0338
+P 5900 3100
+F 0 "#PWR0110" H 5900 2850 50  0001 C CNN
+F 1 "GND" V 5905 2972 50  0000 R CNN
+F 2 "" H 5900 3100 50  0001 C CNN
+F 3 "" H 5900 3100 50  0001 C CNN
+	1    5900 3100
+	0    1    1    0   
+$EndComp
+$Comp
+L power:GND #PWR0111
+U 1 1 5F9D0CC7
+P 5650 1900
+F 0 "#PWR0111" H 5650 1650 50  0001 C CNN
+F 1 "GND" H 5655 1727 50  0000 C CNN
+F 2 "" H 5650 1900 50  0001 C CNN
+F 3 "" H 5650 1900 50  0001 C CNN
+	1    5650 1900
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	5900 1500 5800 1500
+Wire Wire Line
+	5800 1500 5800 1900
+Wire Wire Line
+	5800 1900 5650 1900
+Wire Wire Line
+	5800 1900 5900 1900
+Connection ~ 5800 1900
+Wire Wire Line
+	5800 1900 5800 2300
+Wire Wire Line
+	5800 2300 5900 2300
+Wire Wire Line
+	6200 1500 10350 1500
+Wire Wire Line
+	10350 1500 10350 3250
+Wire Wire Line
+	10350 3250 9350 3250
+Wire Wire Line
+	6200 1900 6550 1900
+Wire Wire Line
+	6550 1900 6550 1450
+Wire Wire Line
+	6550 1450 10450 1450
+Wire Wire Line
+	10450 1450 10450 4150
+Wire Wire Line
+	10450 4150 9350 4150
+Wire Wire Line
+	6200 2300 6650 2300
+Wire Wire Line
+	6650 2300 6650 1400
+Wire Wire Line
+	6650 1400 10500 1400
+Wire Wire Line
+	10500 1400 10500 4250
+Wire Wire Line
+	10500 4250 9350 4250
+Text Label 6250 2300 0    50   ~ 0
+GPIO13
+Text Label 6250 1900 0    50   ~ 0
+GPIO12
+Text Label 6250 1500 0    50   ~ 0
+GPIO5
+Text Label 6350 2800 0    50   ~ 0
+GPIO6
+Text Label 6300 5150 0    50   ~ 0
+GPIO14
+Text Label 3950 5550 0    50   ~ 0
+GPIO18
+Wire Wire Line
+	7100 2800 7100 1550
+Wire Wire Line
+	5500 2800 5500 2950
+Connection ~ 5500 2950
+Wire Wire Line
+	7650 3250 7750 3250
+Text Label 5650 3650 0    50   ~ 0
+GPIO19
+Wire Wire Line
+	5350 3650 7650 3650
+Wire Wire Line
+	7650 3250 7650 3650
+Wire Wire Line
+	5350 3300 7300 3300
+Wire Wire Line
+	7300 2850 7300 3300
+Wire Wire Line
+	7300 2850 7750 2850
+Text Label 5650 3300 0    50   ~ 0
+GPIO16
+Wire Wire Line
+	8150 4750 8150 4950
+Wire Wire Line
+	8250 4750 8250 4950
+Wire Wire Line
+	8150 4950 8250 4950
+Connection ~ 8250 4950
+Wire Wire Line
+	8250 4950 8350 4950
+Wire Wire Line
+	8350 4750 8350 4950
+Connection ~ 8350 4950
+Wire Wire Line
+	8350 4950 8450 4950
+Wire Wire Line
+	8450 4750 8450 4950
+Connection ~ 8450 4950
+Wire Wire Line
+	8450 4950 8500 4950
+Wire Wire Line
+	8550 4750 8550 4950
+Wire Wire Line
+	8550 4950 8500 4950
+Connection ~ 8500 4950
+Wire Wire Line
+	8650 4750 8650 4950
+Wire Wire Line
+	8650 4950 8550 4950
+Connection ~ 8550 4950
+Wire Wire Line
+	8750 4750 8750 4950
+Wire Wire Line
+	8750 4950 8650 4950
+Connection ~ 8650 4950
+Wire Wire Line
+	8850 4750 8850 4950
+Wire Wire Line
+	8850 4950 8750 4950
+Connection ~ 8750 4950
+Wire Wire Line
+	7100 1550 10400 1550
+$EndSCHEMATC

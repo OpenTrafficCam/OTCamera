@@ -1,0 +1,35 @@
+---
+site_name: OTCamera API Documentation
+theme:
+  name: "material"
+  palette:
+    scheme: slate
+  features:
+    - navigation.sections
+    - toc.integrate
+  font: false
+  icon:
+    logo: octicons/device-camera-video-24
+    repo: fontawesome/brands/github
+
+copyright: Copyright &copy; 2021 OpenTrafficCam contributors
+repo_url: https://github.com/OpenTrafficCam/OTCamera
+repo_name: OpenTrafficCam/OTCamera
+
+nav:
+  - index.md
+  - record.md
+  - config.md
+  - status.md
+  - helpers.md
+  - hardware.md
+
+plugins:
+  - search
+  - git-revision-date
+  - mkdocstrings:
+      handlers:
+        python:
+          setup_commands:
+            - import sys
+            - sys.path.append("OTCamera")

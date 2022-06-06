@@ -1,0 +1,5 @@
+art
+psutil
+gpiozero
+picamerax
+bs4

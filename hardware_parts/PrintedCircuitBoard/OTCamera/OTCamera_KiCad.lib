@@ -1,0 +1,68 @@
+EESchema-LIBRARY Version 2.4
+#encoding utf-8
+#
+# BulginPX0446
+#
+DEF BulginPX0446 J 0 40 Y N 1 F N
+F0 "J" 0 300 50 H V C CNN
+F1 "BulginPX0446" 0 -300 50 H V C CNN
+F2 "Connector_PinSocket_2.54mm:PinSocket_1x05_P2.54mm_Vertical" 0 0 50 H I C CNN
+F3 "" 0 0 50 H I C CNN
+$FPLIST
+ Connector*:*_1x??_*
+$ENDFPLIST
+DRAW
+S -50 -195 0 -205 1 1 6 N
+S -50 -95 0 -105 1 1 6 N
+S -50 5 0 -5 1 1 6 N
+S -50 105 0 95 1 1 6 N
+S -50 205 0 195 1 1 6 N
+S -50 250 50 -250 1 1 10 f
+X 5V 1 -150 200 100 R 50 50 1 1 w
+X White 2 -150 100 100 R 50 50 1 1 P
+X Green 3 -150 0 100 R 50 50 1 1 P
+X GND 4 -150 -100 100 R 50 50 1 1 w
+X Braid 5 -150 -200 100 R 50 50 1 1 P
+ENDDRAW
+ENDDEF
+#
+# PiRTC-OpenTrafficCam_KiCad
+#
+DEF PiRTC-OpenTrafficCam_KiCad U 0 40 Y Y 1 F N
+F0 "U" 50 450 50 H V C CNN
+F1 "PiRTC-OpenTrafficCam_KiCad" 100 550 50 H V C CNN
+F2 "Connector_PinHeader_2.54mm:PinHeader_2x03_P2.54mm_Vertical" 0 0 50 H I C CNN
+F3 "" 0 0 50 H I C CNN
+DRAW
+T 0 400 350 24 0 0 0 "Adafruit PiRTC" Normal 0 R B
+T 0 400 300 24 0 0 0 DS3231 Normal 0 R B
+S 0 0 400 400 0 1 0 f
+X 3V3 1 -100 300 100 R 50 50 1 1 W
+X SDA 3 -100 200 100 R 50 50 1 1 B
+X SCL 5 -100 100 100 R 50 50 1 1 B
+X GND 6 500 100 100 L 50 50 1 1 W
+ENDDRAW
+ENDDEF
+#
+# PowerBoost1000C-OpenTrafficCam_KiCad
+#
+DEF PowerBoost1000C-OpenTrafficCam_KiCad U 0 40 Y Y 1 F N
+F0 "U" 50 950 50 H V C CNN
+F1 "PowerBoost1000C-OpenTrafficCam_KiCad" 350 1050 50 H V C CNN
+F2 "Connector_PinSocket_2.54mm:PinSocket_1x08_P2.54mm_Vertical" 150 -50 50 H I C CNN
+F3 "" 150 -50 50 H I C CNN
+DRAW
+T 900 50 50 24 0 0 0 "Adafruit PowerBoost 1000 Charger" Normal 0 L T
+S 550 900 0 0 0 1 0 f
+X USB 1 650 100 100 L 50 50 1 1 W
+X Bat 2 650 200 100 L 50 50 1 1 W
+X Vs 3 650 300 100 L 50 50 1 1 O
+X EN 4 650 400 100 L 50 50 1 1 I
+X GND 5 650 500 100 L 50 50 1 1 W
+X LBO 6 650 600 100 L 50 50 1 1 O
+X GND 7 650 700 100 L 50 50 1 1 w
+X 5V 8 650 800 100 L 50 50 1 1 w
+ENDDRAW
+ENDDEF
+#
+#End Library
