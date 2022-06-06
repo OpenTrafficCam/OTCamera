@@ -8,7 +8,7 @@ read -r -e -p "Wifi SSID: " -i "OTCamera" APNAME
 read -r -e -p "Wifi password: " -i "onetwothree4" APPASSWORD
 read -r -e -p "Wifi channel: " -i 11 APCHANNEL
 read -r -e -p "Wifi ip range: " -i 10.10.50 IPRANGE
-read -r -e -p "OTCamera branch: " -i "first-version" BRANCH
+read -r -e -p "OTCamera branch: " -i "master" BRANCH
 read -r -e -p "Use DS3231 RTC? [y/n]: " -i "y" USE_RTC
 read -r -e -p "Use Buttons? [y/n]: " -i "y" USE_BUTTONS
 read -r -e -p "Use LEDs? [y/n]: " -i "y" USE_LEDS
