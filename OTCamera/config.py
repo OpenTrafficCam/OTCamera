@@ -24,6 +24,8 @@ from pathlib import Path
 
 DEBUG_MODE_ON = True
 """Turn debug mode on to get additional log entries."""
+USE_RELAY = False
+"""Enable to start and stop sshrelay.service (need's to be configured)"""
 
 START_HOUR = 6
 """Hour of day when to start recording."""
