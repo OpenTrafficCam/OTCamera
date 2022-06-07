@@ -10,23 +10,22 @@ read -r -e -p "public key: " PUBKEY
 
 
 echo "### Generating new SSH key"
-runuser -l "$SUDO_USER" -c "ssh-keygen -t ed25519 -q -f '/home/$SUDO_USER/.ssh/id_ed25519' -N ''"
+HOME="/home/$SUDO_USER"
+runuser -l "$SUDO_USER" -c "ssh-keygen -t ed25519 -q -f '$HOME/.ssh/id_ed25519' -N ''"
 
 echo "### Adding remote server public key as authorized key"
-HOME="/home/$SUDO_USER"
 echo "" >> "$HOME"/.ssh/authorized_keys
 echo "$PUBKEY" >> "$HOME"/.ssh/authorized_keys
 
 echo ""
 echo ""
-cat "/home/$SUDO_USER/.ssh/id_ed25519.pub"
+cat "$HOME/.ssh/id_ed25519.pub"
 echo ""
 echo ""
 
 read -r -e -p "Copy public key above to relay server (username: $HOSTNAME)"
 
 echo "### Configuring service"
-cd "$HOME/OTCamera" || { echo "Error: Cannot find OTCamera directory"; exit 1; }
 RELAYSERVICE="./raspi-files/sshrelay.service"
 cp $RELAYSERVICE /lib/systemd/system
 RELAYSERVICE="/lib/systemd/system/sshrelay.service"
@@ -41,10 +40,6 @@ echo "    ServerAliveInterval 240" >> /etc/ssh/ssh_config
 systemctl daemon-reload
 systemctl disable sshrelay.service
 
-echo "### please connect once to add host key using:"
+echo "### please connect once to add host key using the following command:"
 echo "$SSHCMD"
 
-
-echo "#########"
-echo "Done."
-echo "#########"

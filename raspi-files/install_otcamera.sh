@@ -216,7 +216,7 @@ case $USE_RELAY in
     [yY] | [yY][eE][sS])
         echo "Enableing relay mode"
         sed "$OTCONFIG" -i -e "s?^USE_RELAY.*?USE_RELAY = True?g"
-        bash install_sshrelay.sh
+        bash ./raspi-files/install_sshrelay.sh
         ;;
     [nN] | [nN][oO])
         echo "Disableing debug mode"
@@ -227,11 +227,13 @@ esac
 
 echo "    Activate OTCamera service"
 OTCSERVICE="./raspi-files/otcamera.service"
+cp $OTCSERVICE /lib/systemd/system
+OTCSERVICE="/lib/systemd/system/otcamera.service"
 PWD=$(pwd)
 sed $OTCSERVICE -i -e "s?^WorkingDirectory=/path/to/otcamera?WorkingDirectory=$PWD?g"
 sed $OTCSERVICE -i -e "s?^User=username?User=$SUDO_USER?g"
-cp $OTCSERVICE /lib/systemd/system
 
+systemctl daemon-reload
 systemctl enable otcamera.service
 
 echo "#########"
