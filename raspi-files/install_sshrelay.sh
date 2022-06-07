@@ -38,7 +38,7 @@ sed $RELAYSERVICE -i -e "s?^ExecStart=/bin/ssh -NT -R 0:localhost:22 hostname@se
 echo "    ServerAliveInterval 240" >> /etc/ssh/ssh_config
 
 systemctl daemon-reload
-systemctl disable sshrelay.service
+systemctl enable sshrelay.service
 
 echo "### please connect once to add host key using the following command:"
 echo "$SSHCMD"
