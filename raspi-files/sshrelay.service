@@ -1,0 +1,12 @@
+[Unit]
+Description=SSH relay connection
+
+[Service]
+User=username
+Restart=always
+RestartSec=60
+ExecStart=/bin/ssh -NT -R 0:localhost:22 hostname@server -p port
+
+
+[Install]
+WantedBy=multi-user.target

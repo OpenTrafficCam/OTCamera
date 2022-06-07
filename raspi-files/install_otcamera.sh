@@ -13,7 +13,7 @@ read -r -e -p "Use DS3231 RTC? [y/n]: " -i "y" USE_RTC
 read -r -e -p "Use Buttons? [y/n]: " -i "y" USE_BUTTONS
 read -r -e -p "Use LEDs? [y/n]: " -i "y" USE_LEDS
 read -r -e -p "Activate DEBUG mode? [y/n]: " -i "n" USE_DEBUG
-
+read -r -e -p "Use relay server? [y/n]: " -i "n" USE_RELAY
 
 # read -p "Press enter to continue..." key
 echo "#### Configure Rasperry Pi"
@@ -212,14 +212,28 @@ case $USE_DEBUG in
         ;;
 esac
 
+case $USE_RELAY in
+    [yY] | [yY][eE][sS])
+        echo "Enableing relay mode"
+        sed "$OTCONFIG" -i -e "s?^USE_RELAY.*?USE_RELAY = True?g"
+        bash ./raspi-files/install_sshrelay.sh
+        ;;
+    [nN] | [nN][oO])
+        echo "Disableing debug mode"
+        sed "$OTCONFIG" -i -e "s?^USE_RELAY.*?USE_RELAY = False?g"
+        ;;
+esac
+
 
 echo "    Activate OTCamera service"
 OTCSERVICE="./raspi-files/otcamera.service"
+cp $OTCSERVICE /lib/systemd/system
+OTCSERVICE="/lib/systemd/system/otcamera.service"
 PWD=$(pwd)
 sed $OTCSERVICE -i -e "s?^WorkingDirectory=/path/to/otcamera?WorkingDirectory=$PWD?g"
 sed $OTCSERVICE -i -e "s?^User=username?User=$SUDO_USER?g"
-cp $OTCSERVICE /lib/systemd/system
 
+systemctl daemon-reload
 systemctl enable otcamera.service
 
 echo "#########"

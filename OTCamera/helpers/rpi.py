@@ -41,6 +41,9 @@ def shutdown():
     """
     status.shutdownactive = True
     led.power_on()
+    if config.USE_RELAY:
+        call("sudo systemctl stop sshrelay.service", shell=True)
+        log.write("Stopped SSH relay server connection")
     camera.stop_recording()
     log.breakline()
     log.write("Shutdown")
@@ -78,6 +81,9 @@ def wifi_switch_on():
     """Turn on Wi-Fi"""
     if not config.DEBUG_MODE_ON:
         call("rfkill unblock wlan", shell=True)
+    if config.USE_RELAY:
+        call("sudo systemctl start sshrelay.service", shell=True)
+        log.write("Started SSH relay server connection")
     led.wifi_on()
     status.wifi_on = True
     log.write("Wi-Fi on")
@@ -87,6 +93,9 @@ def wifi_switch_off():
     """Turn off Wi-Fi"""
     if not config.DEBUG_MODE_ON:
         call("rfkill block wlan", shell=True)
+    if config.USE_RELAY:
+        call("sudo systemctl stop sshrelay.service", shell=True)
+        log.write("Stopped SSH relay server connection")
     led.wifi_off()
     status.wifi_on = False
     log.write("Wi-Fi off")
