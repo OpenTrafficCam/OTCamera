@@ -91,6 +91,7 @@ class OTCamera:
             self._try_capture_preview()
         else:
             self._camera.stop_recording()
+            self._send_alive_signal()
             sleep(0.5)
 
     def _send_alive_signal(self) -> None:
