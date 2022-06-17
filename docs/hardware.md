@@ -1,3 +1,5 @@
-# /hardware
+# Hardware
 
-::: hardware
+::: OTCamera.hardware.button
+::: OTCamera.hardware.camera
+::: OTCamera.hardware.led

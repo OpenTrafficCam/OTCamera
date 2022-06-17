@@ -1,3 +1,3 @@
-# record.py
+# record
 
-::: record
+::: run

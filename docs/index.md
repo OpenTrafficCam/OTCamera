@@ -5,22 +5,26 @@ OTCamera is part of the [OpenTrafficCam](https://opentrafficcam.org) project and
 
 On the left side you can see the main module [record](record) along with the [config](config) and [status](status) module, which contain variables used across the entire code.
 
-It is build completly automatically using:
+It is build completely automatically using:
 
 - [MkDocs](https://www.mkdocs.org/) and
 - [mkdocstrings](https://github.com/pawamoy/mkdocstrings) and
 - [Material for MkDocs](https://squidfunk.github.io/mkdocs-material/) theme.
 
-To work on the docs run the following command to get a live updating server. You have to run it on the [OTCamera dev pi](https://opentrafficcam.org/contribute/otcamera).
+To work on the docs run the following command to get a live updating server.
 
 ```bash
 python mkdocs serve
 ```
 
-The site will be publicly served as stativ site on GitHub pages.
+The site will be publicly served as static site on GitHub pages.
 
 ```bash
 python -m mkdocs gh-deploy
 ```
 
 This command will build the current site and push it to the OTCamera repository (branch: [gh-pages](https://github.com/OpenTrafficCam/OTCamera/tree/gh-pages)).
+
+## OTCamera
+
+::: OTCamera.record.OTCamera
