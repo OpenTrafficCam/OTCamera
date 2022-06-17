@@ -170,3 +170,5 @@ Thumbs.db
 # Local History for Visual Studio Code
 .history/
 
+# Vim
+.vim/coc-settings.json
