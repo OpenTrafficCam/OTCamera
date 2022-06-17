@@ -1,3 +1,72 @@
+"""The `html_updater` module provides functionality to change and save the information
+to be displayed on OTCamera's status website.
+
+Such information are OTCamera's status variables, config settings and log files.
+
+## Prerequisites
+
+### Status Website HTML
+
+The body of the HTML file being passed as an absolute path to the `StatusWebsiteUpdater`
+argument `html_path` needs to be of following form:
+
+```html
+<body>
+    <div>
+        <img class="img-fluid gy-5" alt="Preview" src="preview.jpg" />
+    </div>
+    <br>
+    <div id="status-info" style="display: none">
+        <table id="status-info-table">
+            <tr>
+                <th>Status</th>
+                <th>Value</th>
+            </tr>
+        </table>
+    </div>
+    <div id="config-info" style="display: none">
+        <table id="config-info-table">
+            <tr>
+                <th>Config Variable</th>
+                <th>Value</th>
+            </tr>
+        </table>
+    </div>
+</body>
+
+```
+Notice that the id's correspond to the default values of following class attributes of
+the `StatusWebsiteUpdater` class:
+- `stastus_info_id`
+- `config_info_id`
+- `status_table_id`
+- `config_table_id`
+
+### Offline Website HTML
+
+```html
+<body>
+    <div>
+        <div>
+            OTCamera is currently offline.
+        </div>
+        <br>
+        <div" id="log-info">
+            <h2>Recent Log Files</h2>
+            <pre>
+                <code>
+                    <p id="log-data" style="white-space:pre-wrap"></p>
+                </code>
+            </pre>
+        </div>
+    </div>
+</body>
+```
+The offline html needs a HTML container element with `id=log-info` to be displayed 
+correctly.
+
+"""
+
 # Copyright (C) 2022 OpenTrafficCam Contributors
 # <https://github.com/OpenTrafficCam>
 # <team@opentrafficcam.org>
@@ -256,7 +325,7 @@ class StatusWebsiteUpdater:
         status website's config info section. Defaults to "config-info".
         log_info_id (str, optional): The HTML id's tag corresponding to the status
         website's log info section. Defaults to "log-info".
-        status_table_id (str, optional): The HTML id's tag corresponding to the
+        status_table_id (str, optional): The HTML idß's tag corresponding to the
         status website's status HTML table. Defaults to "status-info-table".
         config_table_id (str, optional): The HTML id's tag corresponding to the
         status website's config HTML table. Defaults to "config-info-table".
