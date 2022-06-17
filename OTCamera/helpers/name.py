@@ -4,7 +4,7 @@ Generates strings for use in different modules. For example the logfilename or
 videofilename or the string to annotate the video.
 
 """
-# Copyright (C) 2021 OpenTrafficCam Contributors
+# Copyright (C) 2022 OpenTrafficCam Contributors
 # <https://github.com/OpenTrafficCam>
 # <team@opentrafficcam.org>
 
