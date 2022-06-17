@@ -45,6 +45,10 @@ log.write("imported record", level=log.LogLevel.DEBUG)
 
 
 class OTCamera:
+    """The OTCamera class provides functionality to record videos using Raspberry Pi's
+    camera module.
+    """
+
     def __init__(
         self,
         camera: Camera,
@@ -54,6 +58,21 @@ class OTCamera:
         log_dir: Union[str, Path] = config.VIDEO_DIR,
         num_log_files_html: int = config.NUM_LOG_FILES_HTML,
     ) -> None:
+        """Constructor to initialise the OTCamera class.
+
+        Args:
+            camera (Camera): The Camera class to control the Raspberry Pi camera.
+            html_updater (StatusWebsiteUpdater): The class providing functionality to
+            update the status website.
+            capture_preview_immediately (bool, optional): Whether to capture preview
+            image immediately. Defaults to False.
+            video_dir (Union[str, Path], optional): Path to the save directory of the
+            videos recorded by OTCamera. Defaults to config.VIDEO_DIR.
+            log_dir (Union[str, Path], optional): Path to the save directory of the log
+            files. Defaults to config.VIDEO_DIR.
+            num_log_files_html (int, optional): The number of logfiles to be displayed
+            on the status website. Defaults to config.NUM_LOG_FILES_HTML.
+        """
         self._camera = camera
         self._html_updater = html_updater
         self._capture_preview_immediately = capture_preview_immediately
@@ -175,13 +194,18 @@ class OTCamera:
     def _register_shutdown_action(
         self,
     ) -> None:
+        """Register call backs to be executed on a signal interrupt or terminate."""
         # Code to execute once terminate or interrupt signal occurs
         log.write("Register callbacks on SIGINT and SIGTERM", log.LogLevel.DEBUG)
         signal.signal(signal.SIGINT, self._execute_shutdown)
         signal.signal(signal.SIGTERM, self._execute_shutdown)
 
     def _get_config_settings(self) -> ConfigDataObject:
-        """Returns OTCamera's configuration settings"""
+        """Get OTCamera's configuration settings.
+
+        Returns:
+            ConfigDataObject: OTCamera's configuration settings
+        """
 
         return ConfigDataObject(
             debug_mode_on=(ConfigHtmlId.DEBUG_MODE_ON, config.DEBUG_MODE_ON),
@@ -224,8 +248,20 @@ class OTCamera:
         )
 
     def _get_log_info(self, start_idx: int, num: int) -> LogDataObject:
+        """Get OTCamera's log information.
+
+        Args:
+            start_idx (int): The start index specifies the log files to be considered.
+            The log files are sorted after their time of creation in descending order.
+            Meaning a start_idx of 1 ignores the newest log file.
+            num (int): The num recent log files stasrting from `start_idx` to get their
+            data from.
+        Returns:
+            LogDataObject: The log data stored as a `LogDataObject`.
+        """
         # Gather all log files paths in an ordered list
         log_filepaths = [f for f in self._log_dir.iterdir() if f.suffix == ".log"]
+        # Log filepaths sorted in descending order with newest one at index 0
         sorted_log_filepaths = sorted(
             log_filepaths, key=name.get_date_from_log_file, reverse=True
         )
@@ -242,6 +278,15 @@ class OTCamera:
         return LogDataObject(log_data=(LogHtmlId.LOG_DATA, log_data))
 
     def _execute_shutdown(self, *args):
+        """Code to execute when stopping OTCamera.
+
+        ### Following tasks are executed
+
+        - Recording is being stopped
+        - Camera is being closed
+        - Offline information is being displayed on the status website
+        - Log file is being closed
+        """
         if self._shutdown:
             return
 
@@ -260,6 +305,7 @@ class OTCamera:
 
 
 def main() -> None:
+    """Start running OTCamera."""
     camera = Camera()
     html_updater = StatusWebsiteUpdater(
         html_path=config.TEMPLATE_HTML_PATH,
