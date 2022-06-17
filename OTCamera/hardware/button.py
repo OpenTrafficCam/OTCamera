@@ -4,7 +4,7 @@ Initializes hardware buttons using gpiozero if configured in config.py.
 Button callbacks are calling functions in rpi helper
 
 """
-# Copyright (C) 2021 OpenTrafficCam Contributors
+# Copyright (C) 2022 OpenTrafficCam Contributors
 # <https://github.com/OpenTrafficCam>
 # <team@opentrafficcam.org>
 
