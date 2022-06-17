@@ -212,7 +212,6 @@ class StatusWebsiteUpdater:
         # Update config info
         if self.debug_mode_on:
             self._enable_tag_by_id(html_tree, self.config_info_id)
-            self._update_by_id(html_tree, config_info)
             self._build_data_html_table(
                 soup=html_tree,
                 table_id=self.config_table_id,
