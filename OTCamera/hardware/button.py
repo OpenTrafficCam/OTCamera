@@ -1,7 +1,7 @@
 """OTCamera helper to interact with hardware buttons.
 
 Initializes hardware buttons using gpiozero if configured in config.py.
-Button callbacks are calling functions in rpi helper
+Defines all button related functionality.
 
 """
 # Copyright (C) 2022 OpenTrafficCam Contributors
@@ -32,25 +32,8 @@ from OTCamera.helpers import log, rpi
 log.write("imported buttons", level=log.LogLevel.DEBUG)
 
 
-def its_record_time() -> bool:
-    """Is it time to record or not?
-
-    Determines if the current hour is an hour after start hour and before end hour
-    configured in config.py as long as the hour button is not pressed. If pressed it's
-    always recording time.
-
-    Returns:
-        bool: True if it is recording time
-    """
-    current_hour = dt.now().hour
-    record_time = (
-        (hour_button.is_pressed)
-        or (current_hour >= config.START_HOUR and current_hour < config.END_HOUR)
-    ) and (not status.SHUTDOWNACTIVE)
-    return record_time
-
-
 def _on_hour_button_switched() -> None:
+    """_summary_"""
     if hour_button.is_pressed:
         status.hour_button_pressed = True
         log.write("Hour Switch pressed")
