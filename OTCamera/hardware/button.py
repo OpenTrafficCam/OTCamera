@@ -32,7 +32,7 @@ from OTCamera.helpers import log, rpi
 log.write("imported buttons", level=log.LogLevel.DEBUG)
 
 
-def _on_hour_button_switched() -> None:
+def on_hour_button_switched() -> None:
     """Sets `status.hour_button_pressed` if `hour.button` is pressed or released.
 
     Used to determine if user want's to record 24/7 or time based.
@@ -45,7 +45,7 @@ def _on_hour_button_switched() -> None:
         log.write("Hour Switch released")
 
 
-def _on_low_battery_button_held() -> None:
+def on_low_battery_button_held() -> None:
     """Shuts down Raspberry Pi if internal battery level is low.
 
     Adafruit's PowerBoost 1000C has two inputs: USB and LiPo-cell.
@@ -58,7 +58,7 @@ def _on_low_battery_button_held() -> None:
     rpi.shutdown()
 
 
-def _on_power_button_released() -> None:
+def on_power_button_released() -> None:
     """Shuts down Raspberry Pi after 5 seconds delay if main switch is switched off.
 
     If `power_button`is released the power led will blink for 5 seconds.
@@ -89,7 +89,7 @@ def _on_power_button_released() -> None:
         led.power_blink()
 
 
-def _on_wifi_button_pressed() -> None:
+def on_wifi_button_pressed() -> None:
     """If `wifi_button` is pressed `status.wifi_button_pressed` will be set `True`.
 
     This callback function won't do anything else. See `_on_wifi_button_held`.
@@ -98,7 +98,7 @@ def _on_wifi_button_pressed() -> None:
     log.write("Wi-Fi button pressed")
 
 
-def _on_wifi_button_held() -> None:
+def on_wifi_button_held() -> None:
     """If `wifi_button` is pressed for a certain time Wi-Fi will be turned on.
 
     The threshold to distinguish between "pressed" and "hold" is set during
@@ -110,7 +110,7 @@ def _on_wifi_button_held() -> None:
         rpi.wifi_switch_on()
 
 
-def _on_wifi_button_released() -> None:
+def on_wifi_button_released() -> None:
     """If `wifi_button` is released Wi-Fi will be turned off after a delay.
 
     After releasing `wifi_button` the Wi-Fi LED will blink until a delay is over.
@@ -175,13 +175,13 @@ if config.USE_BUTTONS:
     )
 
     # Register callbacks
-    low_battery_button.when_held = _on_low_battery_button_held
-    power_button.when_released = _on_power_button_released
-    wifi_button.when_pressed = _on_wifi_button_pressed
-    wifi_button.when_held = _on_wifi_button_held
-    wifi_button.when_released = _on_wifi_button_released
-    hour_button.when_pressed = _on_hour_button_switched
-    hour_button.when_released = _on_hour_button_switched
+    low_battery_button.when_held = on_low_battery_button_held
+    power_button.when_released = on_power_button_released
+    wifi_button.when_pressed = on_wifi_button_pressed
+    wifi_button.when_held = on_wifi_button_held
+    wifi_button.when_released = on_wifi_button_released
+    hour_button.when_pressed = on_hour_button_switched
+    hour_button.when_released = on_hour_button_switched
 
     # Set button statuses in status module
     status.power_button_pressed = power_button.is_pressed

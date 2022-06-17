@@ -92,7 +92,7 @@ class OTCamera:
         if config.USE_BUTTONS:
             button.init_wifi_button()
 
-    def loop(self) -> None:
+    def _loop(self) -> None:
         """Record and split videos.
 
         While it is recording time (see status.py), starts recording videos, splits them
