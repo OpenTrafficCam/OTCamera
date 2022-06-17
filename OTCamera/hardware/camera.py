@@ -35,6 +35,14 @@ log.write("imported camera", level=log.LogLevel.DEBUG)
 
 
 class Singleton(object):
+    """Implements the Singleton design pattern.
+
+    Classes inheriting from `Singleton` become a singleton class.
+    Meaning only one instance is created.
+    Constructing a another instance of the concrete class inheriting from `Singleton`
+    will return the first instance.
+    """
+
     def __new__(cls, *args, **kwds):
         it = cls.__dict__.get("__it__")
         if it is not None:
@@ -48,6 +56,22 @@ class Singleton(object):
 
 
 class Camera(Singleton):
+    """The camera class providing functionality such as starting or stopping a
+    recording, capturing a preview image, or closing the camera
+
+    Attributes:
+        framerate (int, optional): The frame rate. Defaults to config.FPS.
+        resolution (Tuple[int, int], optional): The resolution.
+        Defaults to config.RESOLUTION.
+        annotate_background (Color, optional): Color of text annotation background.
+        Defaults to Color("black").
+        exposure_mode (str, optional): The exposure mode. Defaults to config.EXPOSURE_MODE.
+        awb_mode (str, optional): The awb mode. Defaults to config.AWB_MODE.
+        drc_strength (str, optional): The DRC strength. Defaults to config.DRC_STRENGTH.
+        rotation (int, optional): The image rotation. Defaults to config.ROTATION.
+
+    """
+
     def init(
         self,
         framerate: int = config.FPS,
@@ -107,6 +131,7 @@ class Camera(Singleton):
             self.capture()
 
     def capture(self):
+        """Capture a preview image if camera is recording."""
         if self._picam.recording:
             self._picam.annotate_text = name.annotate()
             self._picam.capture(
@@ -123,6 +148,11 @@ class Camera(Singleton):
             )
 
     def _wait_recording(self, timeout: Union[int, float] = 0):
+        """Wait timeout seconds recording.
+
+        Args:
+            timeout (Union[int, float], optional): _description_. Defaults to 0.
+        """
         if self._picam.recording:
             self._picam.wait_recording(timeout)
         else:
