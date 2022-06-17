@@ -84,10 +84,10 @@ class OTCamera:
         after recording time ends.
 
         """
+        self._send_alive_signal()
         if status.record_time():
             self._camera.start_recording()
             self._camera.split_if_interval_ends()
-            self._send_alive_signal()
             self._try_capture_preview()
         else:
             self._camera.stop_recording()
