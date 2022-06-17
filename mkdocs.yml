@@ -1,24 +1,57 @@
 ---
-site_name: OTCamera API Documentation
+site_name: OTCamera Documentation
+
 theme:
   name: "material"
   palette:
-    scheme: slate
-  features:
-    - navigation.sections
-    - toc.integrate
+    scheme: default
   font: false
+  language: en
+  logo: assets/OTC_icon_white.svg
+  favicon: assets/OTC_icon.svg
+
+  features:
+    # - navigation.instant
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    # - navigation.expand
+    # - navigation.indexes
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.tabs.link
   icon:
-    logo: octicons/device-camera-video-24
     repo: fontawesome/brands/github
 
-copyright: Copyright &copy; 2021 OpenTrafficCam contributors
+# nav:
+#   - index.md
+#   - Code Reference: reference/
+
+extra_css:
+  - stylesheets/color.css
+  - stylesheets/fonts.css
+
+extra_javascript:
+  - assets/js/mathjax.js
+  - https://polyfill.io/v3/polyfill.min.js?features=es6
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+
+extra:
+  social:
+    - icon: fontawesome/brands/linkedin
+      link: https://www.linkedin.com/company/opentrafficcam
+      name: OpenTrafficCam on LinkedIn
+    - icon: fontawesome/brands/github
+      link: https://github.com/OpenTrafficCam
+      name: OpenTrafficCam on GitHub
+
+copyright: >
+  Copyright &copy; 2020 - 2022 OpenTrafficCam Contributors
+  <a href="https://platomo.de/impressum/">Impressum / Legal Notice</a>
 repo_url: https://github.com/OpenTrafficCam/OTCamera
 repo_name: OpenTrafficCam/OTCamera
-
-nav:
-  - index.md
-  - Code Reference: reference/
 
 plugins:
   - search
@@ -26,11 +59,6 @@ plugins:
       fallback_to_build_date: true
       type: date
       timezone: Europe/Berlin
-  - gen-files:
-      scripts:
-        - docs/gen_ref_pages.py
-  - literate-nav:
-      nav_file: SUMMARY.md
   - mkdocstrings:
       enable_inventory: true
       handlers:
@@ -41,8 +69,6 @@ plugins:
             - https://mkdocstrings.github.io/autorefs/objects.inv
           options:
             docstring_style: google
-            docstring_options:
-              ignore_init_summary: yes
             merge_init_into_class: yes
-            show_submodules: yes
-  - autorefs
+            show_source: false
+  # - autorefs

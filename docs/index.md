@@ -24,7 +24,3 @@ python -m mkdocs gh-deploy
 ```
 
 This command will build the current site and push it to the OTCamera repository (branch: [gh-pages](https://github.com/OpenTrafficCam/OTCamera/tree/gh-pages)).
-
-## OTCamera
-
-::: OTCamera.record.OTCamera

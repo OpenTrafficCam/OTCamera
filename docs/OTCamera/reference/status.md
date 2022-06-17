@@ -1,0 +1,3 @@
+# status.py
+
+::: OTCamera.status
