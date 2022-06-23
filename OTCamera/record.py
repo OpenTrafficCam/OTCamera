@@ -230,7 +230,7 @@ class OTCamera:
         # Gather all log files paths in an ordered list
         log_filepaths = [f for f in self._log_dir.iterdir() if f.suffix == ".log"]
         sorted_log_filepaths = sorted(
-            log_filepaths, key=name.get_date_from_log_file, reverse=True
+            log_filepaths, key=name.get_datetime_from_filename, reverse=True
         )
         # Get num recent log files
         recent_log_files = sorted_log_filepaths[start_idx : num + 1]
