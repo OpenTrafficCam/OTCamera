@@ -51,9 +51,6 @@ class OTCamera:
         html_updater: StatusWebsiteUpdater,
         capture_preview_immediately: bool = False,
         video_dir: Union[str, Path] = config.VIDEO_DIR,
-        template_html_filepath: Union[str, Path] = config.TEMPLATE_HTML_PATH,
-        index_html_filepath: Union[str, Path] = config.INDEX_HTML_PATH,
-        offline_html_filepath: Union[str, Path] = config.OFFLINE_HTML_PATH,
         log_dir: Union[str, Path] = config.VIDEO_DIR,
         num_log_files_html: int = config.NUM_LOG_FILES_HTML,
     ) -> None:
