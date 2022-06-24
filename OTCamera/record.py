@@ -131,6 +131,8 @@ class OTCamera:
             self._html_updater.update_info(
                 status.get_status_data(),
                 self._get_config_settings(),
+                status.recording,
+                status.hour_button_pressed,
             )
             status.preview_taken = True
         elif not (is_preview_time or not status.preview_taken):
