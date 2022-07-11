@@ -168,7 +168,7 @@ CONFIG_DESC = {
 RECORDING_BANNER_DESC = {
     "BANNER_RECORDING": "Currently recording",
     "BANNER_NOT_RECORDING": "Not recording",
-    "BANNER_NOT_ALWAYS_RECORDING": "Currently recording (not24/7)",
+    "BANNER_NOT_ALWAYS_RECORDING": "Currently recording (not 24/7)",
 }
 
 
@@ -243,7 +243,7 @@ class StatusWebsiteUpdater:
 
         A green banner indicates that OTCamera is currently recording.
         A yellow banner indicates that OTCamera is currently recording but not 24/7.
-        A red banner indicates that OTCamer is not recording.
+        A red banner indicates that OTCamera is not recording.
 
         Args:
             soup (BeautifulSoup): Represents the root of html tree.
