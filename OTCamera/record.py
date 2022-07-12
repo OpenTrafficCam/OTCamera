@@ -122,6 +122,12 @@ class OTCamera:
         current_second = dt.now().second
         # To make sure that preview and split are not called in the same second
         # we use offset -1 second. Otherwise picamerax could crash.
+
+        # Inform via status website that WiFi is off for debugging purposes
+        if not status.wifi_on and config.DEBUG_MODE_ON:
+            self._html_updater.display_wifi_off()
+            return
+
         offset = config.PREVIEW_INTERVAL - 1
         is_preview_time = (current_second % config.PREVIEW_INTERVAL) == offset
         time_preview = is_preview_time and status.wifi_on and not status.preview_taken

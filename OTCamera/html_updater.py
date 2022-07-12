@@ -264,6 +264,21 @@ class StatusWebsiteUpdater:
             self._disable_tag_by_id(html_tree, self.log_info_id)
         self._save(html_tree)
 
+    def display_wifi_off(self):
+        """Displays information that WiFi is off.
+
+        NOTE: Only intended to be used in DEBUG MODE.
+        """
+        wifi_off_html = (
+            "<!DOCTYPE html>"
+            "<html>"
+            '<head><meta content="5" http-equiv="refresh" /></head>'
+            "<body><h1>WiFi is off!</h1></body>"
+            "<html>"
+        )
+        soup = BeautifulSoup(wifi_off_html, "html.parser")
+        self._save(soup)
+
     def _parse_html(self, html_filepath: Path) -> BeautifulSoup:
         with open(html_filepath) as html_stream:
             soup = BeautifulSoup(html_stream, "html.parser")
