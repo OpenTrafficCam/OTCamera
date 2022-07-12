@@ -200,7 +200,7 @@ class StatusWebsiteUpdater:
         status_info: OTCameraDataObject,
         config_info: OTCameraDataObject,
     ):
-        html_tree = copy.copy(self._html_data)
+        html_tree = self._get_copy(self._html_data)
         # Update status info
         self._enable_tag_by_id(html_tree, self.status_info_id)
         self._build_data_html_table(
@@ -223,6 +223,9 @@ class StatusWebsiteUpdater:
         self._save(html_tree)
         log.write("index.html status information updated", log.LogLevel.DEBUG)
 
+    def _get_copy(self, to_copy: BeautifulSoup) -> BeautifulSoup:
+        return copy.copy(to_copy)
+
     def _build_data_html_table(
         self,
         soup: BeautifulSoup,
@@ -243,7 +246,7 @@ class StatusWebsiteUpdater:
             table_row.append(td_status_val)
 
     def disable_info(self):
-        html_tree = copy.copy(self._html_data)
+        html_tree = self._get_copy(self._html_data)
         self._disable_tag_by_id(html_tree, self.status_info_id)
         self._disable_tag_by_id(html_tree, self.config_info_id)
         self._save(html_tree)
@@ -253,7 +256,7 @@ class StatusWebsiteUpdater:
         log_info: LogDataObject,
     ):
         log.write("Display offline html", log.LogLevel.DEBUG)
-        html_tree = copy.copy(self._offline_html_data)
+        html_tree = self.get_copy(self._offline_html_data)
         if self.debug_mode_on:
             self._enable_tag_by_id(html_tree, self.log_info_id)
             self._update_by_id(html_tree, log_info)
