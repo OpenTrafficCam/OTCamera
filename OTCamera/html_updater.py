@@ -256,7 +256,7 @@ class StatusWebsiteUpdater:
         log_info: LogDataObject,
     ):
         log.write("Display offline html", log.LogLevel.DEBUG)
-        html_tree = self.get_copy(self._offline_html_data)
+        html_tree = self._get_copy(self._offline_html_data)
         if self.debug_mode_on:
             self._enable_tag_by_id(html_tree, self.log_info_id)
             self._update_by_id(html_tree, log_info)
