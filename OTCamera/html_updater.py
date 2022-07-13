@@ -55,6 +55,7 @@ class ConfigHtmlId(Enum):
 
 
 class LogHtmlId(Enum):
+    RECORDING_BANNER = "recording-banner"
     LOG_DATA = "log-data"
 
 
@@ -164,6 +165,12 @@ CONFIG_DESC = {
     ConfigHtmlId.WIFI_DELAY: "Wi-Fi Delay",
 }
 
+RECORDING_BANNER_DESC = {
+    "BANNER_RECORDING": "Currently recording",
+    "BANNER_NOT_RECORDING": "Not recording",
+    "BANNER_NOT_ALWAYS_RECORDING": "Currently recording (not 24/7)",
+}
+
 
 @dataclass
 class LogDataObject(OTCameraDataObject):
@@ -199,8 +206,14 @@ class StatusWebsiteUpdater:
         self,
         status_info: OTCameraDataObject,
         config_info: OTCameraDataObject,
+        currently_recording: bool,
+        always_recording: bool,
     ):
         html_tree = copy.copy(self._html_data)
+
+        # Update record status banner
+        self._set_record_status_banner(html_tree, currently_recording, always_recording)
+
         # Update status info
         self._enable_tag_by_id(html_tree, self.status_info_id)
         self._build_data_html_table(
@@ -222,6 +235,54 @@ class StatusWebsiteUpdater:
 
         self._save(html_tree)
         log.write("index.html status information updated", log.LogLevel.DEBUG)
+
+    def _set_record_status_banner(
+        self, soup: BeautifulSoup, currently_recording: bool, always_recording: bool
+    ):
+        """Sets a banner reflecting the current recording status of OTCamera
+
+        A green banner indicates that OTCamera is currently recording.
+        A yellow banner indicates that OTCamera is currently recording but not 24/7.
+        A red banner indicates that OTCamera is not recording.
+
+        Args:
+            soup (BeautifulSoup): Represents the root of html tree.
+            currently_recording(bool): Wether OTCamera is currently recording.
+            always_recording(bool): Wether OTCamera is set to always record without
+            breaks.
+        """
+        banner_section_tag = soup.find(id=LogHtmlId.RECORDING_BANNER.value)
+        if currently_recording:
+            if always_recording:
+                banner_tag = self._build_tag(
+                    soup=soup,
+                    tag_type="div",
+                    class_attr="alert alert-success",
+                    content=RECORDING_BANNER_DESC["BANNER_RECORDING"],
+                )
+            else:
+                banner_tag = self._build_tag(
+                    soup=soup,
+                    tag_type="div",
+                    class_attr="alert alert-warning",
+                    content=RECORDING_BANNER_DESC["BANNER_NOT_ALWAYS_RECORDING"],
+                )
+        else:
+            banner_tag = self._build_tag(
+                soup=soup,
+                tag_type="div",
+                class_attr="alert alert-danger",
+                content=RECORDING_BANNER_DESC["BANNER_NOT_RECORDING"],
+            )
+        banner_section_tag.append(banner_tag)
+
+    def _build_tag(
+        self, soup: BeautifulSoup, tag_type: str, class_attr: str, content: str
+    ) -> Tag:
+        """Builds a new HTML tag with predefined class attributes and content"""
+        tag = soup.new_tag(tag_type, attrs={"class": class_attr})
+        self._change_content(tag, content)
+        return tag
 
     def _build_data_html_table(
         self,
