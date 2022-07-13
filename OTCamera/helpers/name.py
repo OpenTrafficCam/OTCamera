@@ -22,6 +22,7 @@ videofilename or the string to annotate the video.
 import re
 from datetime import datetime as dt
 from pathlib import Path
+from typing import Union
 
 from OTCamera import config
 
@@ -35,7 +36,9 @@ def video() -> str:
     Returns:
         str: filename for video
     """
-    filename = Path(config.VIDEO_DIR) / f"{config.PREFIX}_{_current_dt()}.h264"
+    filename = (
+        Path(config.VIDEO_DIR) / f"{config.PREFIX}_FR{config.FPS}_{_current_dt()}.h264"
+    )
     return str(filename.expanduser().resolve())
 
 
@@ -47,7 +50,9 @@ def log() -> Path:
     Returns:
         Path: filename for log
     """
-    filename = Path(config.VIDEO_DIR) / f"{config.PREFIX}_{_current_dt()}.log"
+    filename = (
+        Path(config.VIDEO_DIR) / f"{config.PREFIX}_FR{config.FPS}_{_current_dt()}.log"
+    )
     return Path(filename).expanduser().resolve()
 
 
@@ -87,22 +92,50 @@ def preview() -> str:
     return str(Path(filename).expanduser().resolve())
 
 
-def get_date_from_log_file(log_filepath: Path) -> dt:
-    regex = "[0-9]{4}-[0-9]{2}-[0-9]{2}_[0-9]{2}-[0-9]{2}-[0-9]{2}"
-    timestamp = re.findall(pattern=regex, string=log_filepath.stem)[-1]
-    date, time = timestamp.split("_")
-    year, month, day = date.split("-")
-    hour, minute, second = time.split("-")
-    dt_object = dt(
-        year=int(year),
-        month=int(month),
-        day=int(day),
-        hour=int(hour),
-        minute=int(minute),
-        second=int(second),
-    )
-    return dt_object
+def get_datetime_from_filename(filename: Union[str, Path]) -> dt:
+    """Retrieves the date and time from a filename
+
+    Searches for "_yyyy-mm-dd_hh-mm-ss".
+
+    Args:
+        filename (str): filename with expression
+
+    Returns:
+        dt: datetime object
+    """
+    if isinstance(filename, Path):
+        filename = filename.stem
+
+    regex = "_([0-9]{4,4}-[0-9]{2,2}-[0-9]{2,2}_[0-9]{2,2}-[0-9]{2,2}-[0-9]{2,2})"
+    match = re.search(regex, filename)
+    if not match:
+        return None
+
+    # Assume that there is only one timestamp in the file name
+    datetime_str = match.group(1)  # take group withtout underscore
+
+    try:
+        date_time = dt.strptime(datetime_str, "%Y-%m-%d_%H-%M-%S")
+    except ValueError:
+        return None
+
+    return date_time
 
 
-if __name__ == "__main__":
-    pass
+def get_fps_from_filename(filename: str) -> int:
+    """Get frame rate from file name using regex.
+    Returns None if frame rate is not found in file name.
+
+    Args:
+        input_filename (str): file name
+
+    Returns:
+        int or None: frame rate in frames per second or None
+    """
+    # Get input fps frome filename
+
+    match = re.search(r"_FR([\d]+)_", filename)
+    if not match:
+        return None
+
+    return int(match.group(1))
