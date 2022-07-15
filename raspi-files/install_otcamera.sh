@@ -66,15 +66,12 @@ echo "#### Setting up OTCamera"
 echo "    Installing packages"
 apt install python3-pip -y
 
-case $OTC_VERSION in
-    latest)
-        latest_tag=$(curl -s https://api.github.com/repos/OpenTrafficCam/OTCamera/releases/latest | sed -Ene '/^ *"tag_name": *"(v.+)",$/s//\1/p')
-        ;;
-    [nN] | [nN][oO])
-        latest_tag=$(curl -s https://api.github.com/repos/OpenTrafficCam/OTCamera/releases//tag/$OTC_VERSION | sed -Ene '/^ *"tag_name": *"(v.+)",$/s//\1/p')
-        ;;
-esac
-
+if [ "$OTC_VERSION" = "latest" ]
+then
+    latest_tag=$(curl -s https://api.github.com/repos/OpenTrafficCam/OTCamera/releases/latest | sed -Ene '/^ *"tag_name": *"(v.+)",$/s//\1/p')
+else
+    latest_tag=$OTC_VERSION
+fi
 PWD=$(pwd)
 
 echo "     Downloading OTCamera version $latest_tag"
