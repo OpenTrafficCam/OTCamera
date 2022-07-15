@@ -8,14 +8,16 @@ read -r -e -p "Wifi SSID: " -i "OTCamera" APNAME
 read -r -e -p "Wifi password: " -i "onetwothree4" APPASSWORD
 read -r -e -p "Wifi channel: " -i 11 APCHANNEL
 read -r -e -p "Wifi ip range: " -i 10.10.50 IPRANGE
-read -r -e -p "OTCamera branch: " -i "master" BRANCH
+read -r -e -p "Version to install [latest or tag]: " -i "latest" OTC_VERSION
 read -r -e -p "Use DS3231 RTC? [y/n]: " -i "y" USE_RTC
 read -r -e -p "Use Buttons? [y/n]: " -i "y" USE_BUTTONS
 read -r -e -p "Use LEDs? [y/n]: " -i "y" USE_LEDS
 read -r -e -p "Activate DEBUG mode? [y/n]: " -i "n" USE_DEBUG
 read -r -e -p "Use relay server? [y/n]: " -i "n" USE_RELAY
 
-# read -p "Press enter to continue..." key
+
+
+
 echo "#### Configure Rasperry Pi"
 echo "Configure legacy camera mode using raspi-config"
 raspi-config nonint do_legacy 0
@@ -26,7 +28,6 @@ case $USE_RTC in
         ;;
 esac
 
-# read -p "Press enter to continue..." key
 echo "    Setting config variables"
 CONFIG="/boot/config.txt"
 {
@@ -47,33 +48,41 @@ CONFIG="/boot/config.txt"
 sed $CONFIG -i -e "s/^dtparam=audio=on/#dtparam=audio=on/g"
 sed $CONFIG -i -e "s/^display_auto_detect=1/#display_auto_detect=1/g"
 
-# read -p "Press enter to continue..." key
 echo "    Installing GL Legacy Drivers"
 apt install gldriver-test libgl1-mesa-dri -y
 sed $CONFIG -i -e "s/^dtoverlay=vc4-fkms-v3d/#dtoverlay=vc4-fkms-v3d/g"
 sed $CONFIG -i -e "s/^dtoverlay=vc4-kms-v3d/#dtoverlay=vc4-kms-v3d/g"
 
-# read -p "Press enter to continue..." key
 echo "    Setting power safing variables"
 RCLOCAL="/etc/rc.local"
 sed $RCLOCAL -i -e "/exit 0/i /usr/bin/tvservice -o"
 sed $RCLOCAL -i -e "/exit 0/i /sbin/iw dev wlan0 set power_save off"
 
 
-# read -p "Press enter to continue..." key
+
+
 echo "#### Setting up OTCamera"
 
 echo "    Installing packages"
-apt install python3-pip git -y
+apt install python3-pip -y
 
-# read -p "Press enter to continue..." key
-echo "    Cloning OTCamera"
-runuser -l "$SUDO_USER" -c "git clone --depth 1 --branch $BRANCH https://github.com/OpenTrafficCam/OTCamera.git"
+if [ "$OTC_VERSION" = "latest" ]
+then
+    latest_tag=$(curl -s https://api.github.com/repos/OpenTrafficCam/OTCamera/releases/latest | sed -Ene '/^ *"tag_name": *"(v.+)",$/s//\1/p')
+else
+    latest_tag=$OTC_VERSION
+fi
+PWD=$(pwd)
+
+echo "     Downloading OTCamera version $latest_tag"
+curl -JL https://github.com/OpenTrafficCam/OTCamera/archive/"$latest_tag".tar.gz --output "$PWD"/otcamera.tar.gz
+runuser -l "$SUDO_USER" -c "mkdir $PWD/OTCamera"
+runuser -l "$SUDO_USER" -c "tar -xvzf $PWD/otcamera.tar.gz -C $PWD/OTCamera/ --strip-components=1"
+rm "$PWD"/otcamera.tar.gz
+
 cd OTCamera || { echo "Error: Cannot find OTCamera directory"; exit 1; }
-runuser -l "$SUDO_USER" -c "git config pull.rebase false"
 pip install -r requirements.txt --upgrade
 
-# read -p "Press enter to continue..." key
 echo "    Installing nginx"
 apt install nginx -y
 PWD=$(pwd)
@@ -81,7 +90,6 @@ NGINXDEFAULT="/etc/nginx/sites-available/default"
 sed $NGINXDEFAULT -i -e "s?root /var/www/html?root $PWD/webfiles?g"
 systemctl restart nginx.service
 
-# read -p "Press enter to continue..." key
 echo "     Configure wifi access-point"
 
 echo "     Installing servies"
@@ -115,7 +123,6 @@ echo "    Current hostapd config moved to $HOSTAPDCONF.backup"
 # echo "ieee80211d=1" >> $HOSTAPDCONF
 # echo "beacon_int=100" >> $HOSTAPDCONF
 
-# read -p "Press enter to continue..." key
 echo "    Configure DHCPCD"
 DHCPDCONF="/etc/dhcpcd.conf"
 cp $DHCPDCONF $DHCPDCONF".backup"
@@ -127,7 +134,6 @@ echo "Current DHCPCD config moved to $DHCPDCONF.backup"
 } >> $DHCPDCONF
 echo "done"
 
-# read -p "Press enter to continue..." key
 echo "    Configure DNSMASQ"
 DNSMASQCONF="/etc/dnsmasq.conf"
 mv $DNSMASQCONF $DNSMASQCONF".backup"
@@ -143,18 +149,15 @@ echo "    Current DNSMASQ config moved to $DNSMASQCONF.backup"
 } >> $DNSMASQCONF
 echo "done"
 
-# read -p "Press enter to continue..." key
 echo "Unmask hostapd.service"
 systemctl unmask hostapd.service
 
-# read -p "Press enter to continue..." key
 echo "Disabling Services"
 systemctl disable hostapd.service
 systemctl disable dhcpcd.service
 systemctl disable dnsmasq.service
 
 
-# read -p "Press enter to continue..." key
 echo "    Enable Wifi AP at boot"
 RCLOCAL="/etc/rc.local"
 cp ./raspi-files/usr/local/bin/wifistart /usr/local/bin/wifistart
