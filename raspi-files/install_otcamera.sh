@@ -75,10 +75,10 @@ fi
 PWD=$(pwd)
 
 echo "     Downloading OTCamera version $latest_tag"
-curl -JL https://github.com/OpenTrafficCam/OTCamera/archive/$latest_tag.tar.gz --output $PWD/otcamera.tar.gz
+curl -JL https://github.com/OpenTrafficCam/OTCamera/archive/"$latest_tag".tar.gz --output $PWD/otcamera.tar.gz
 runuser -l "$SUDO_USER" -c "mkdir $PWD/OTCamera"
 runuser -l "$SUDO_USER" -c "tar -xvzf $PWD/otcamera.tar.gz -C $PWD/OTCamera/ --strip-components=1"
-rm $PWD/otcamera.tar.gz
+rm "$PWD"/otcamera.tar.gz
 
 cd OTCamera || { echo "Error: Cannot find OTCamera directory"; exit 1; }
 pip install -r requirements.txt --upgrade
