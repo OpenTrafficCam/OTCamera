@@ -232,14 +232,7 @@ class OTCamera:
         )
 
     def _get_log_info(self, start_idx: int, num: int) -> LogDataObject:
-        # Gather all log files paths in an ordered list
-        log_filepaths = [f for f in self._log_dir.iterdir() if f.suffix == ".log"]
-        sorted_log_filepaths = sorted(
-            log_filepaths, key=name.get_datetime_from_filename, reverse=True
-        )
-        # Get num recent log files
-        recent_log_files = sorted_log_filepaths[start_idx : num + 1]
-        recent_log_files.reverse()
+        recent_log_files = self._get_num_recent_log_files(start_idx, num)
         log_data = ""
         for log_file_path in recent_log_files:
             log_data += f"File: {log_file_path}\n"
@@ -248,6 +241,17 @@ class OTCamera:
                 log_data += "\n"
 
         return LogDataObject(log_data=(LogHtmlId.LOG_DATA, log_data))
+
+    def _get_num_recent_log_files(self, start_idx: int, num: int) -> list[Path]:
+        # Gather all log files paths in an ordered list
+        log_filepaths = [f for f in self._log_dir.iterdir() if f.suffix == ".log"]
+        sorted_log_filepaths = sorted(
+            log_filepaths, key=name.get_datetime_from_filename, reverse=True
+        )
+        # Get num recent log files
+        recent_log_files = sorted_log_filepaths[start_idx:num]
+        recent_log_files.reverse()
+        return recent_log_files
 
     def _execute_shutdown(self, *args):
         if self._shutdown:
@@ -258,12 +262,12 @@ class OTCamera:
         # OTCamera teardown
         self._camera.stop_recording()
         self._camera.close()
-        self._html_updater.display_offline_info(
-            self._get_log_info(0, self._num_log_files_html),
-        )
         log.write("OTCamera stopped", level=log.LogLevel.INFO)
         self._shutdown = True
         log.closefile()
+        self._html_updater.display_offline_info(
+            self._get_log_info(0, self._num_log_files_html),
+        )
         sys.exit(0)
 
 

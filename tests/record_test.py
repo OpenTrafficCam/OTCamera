@@ -23,6 +23,20 @@ def temp_dir(test_dir: Path):
 
 
 @pytest.fixture
+def log_files_dir(test_dir: Path):
+    log_file_name_1 = "name_1990-01-01_20-00-00.log"
+    log_file_name_2 = "name_1990-01-01_21-01-00.log"
+    log_file_name_3 = "name_1990-01-01_21-04-00.log"
+    log_files_dir = test_dir / "logs"
+    log_files_dir.mkdir(exist_ok=True)
+    Path(log_files_dir, log_file_name_1).touch()
+    Path(log_files_dir, log_file_name_2).touch()
+    Path(log_files_dir, log_file_name_3).touch()
+    yield log_files_dir
+    shutil.rmtree(log_files_dir)
+
+
+@pytest.fixture
 def html_updater() -> StatusWebsiteUpdater:
     return StatusWebsiteUpdater(debug_mode_on=True)
 
@@ -82,6 +96,14 @@ def test_record_videoRecordedHasCorrectFrames(otcamera: OTCamera, test_dir: Path
         expected_frame_count <= actual_frame_count
         and actual_frame_count <= expected_frame_count + config.FPS / 2
     )
+
+
+def test_get_log_info(log_files_dir: Path):
+    otcamera = OTCamera(Camera(), None, log_dir=log_files_dir)
+    otcamera._log_dir = log_files_dir
+
+    log_files = otcamera._get_num_recent_log_files(0, 2)
+    assert len(log_files) == 2
 
 
 def get_frame_count(video_path: Path):

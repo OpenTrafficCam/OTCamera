@@ -313,7 +313,6 @@ class StatusWebsiteUpdater:
         self,
         log_info: LogDataObject,
     ):
-        log.write("Display offline html", log.LogLevel.DEBUG)
         html_tree = copy.copy(self._offline_html_data)
         if self.debug_mode_on:
             self._enable_tag_by_id(html_tree, self.log_info_id)
