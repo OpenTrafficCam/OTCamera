@@ -115,9 +115,9 @@ def _on_wifi_button_released() -> None:
             # 💩-FIX to bypass single threaded gpiozero callback handler
             elif not power_button.is_pressed:
                 _on_power_button_released()
-            elif hour_button.is_pressed():
+            elif hour_button.is_pressed:
                 status.hour_button_pressed = True
-            elif not hour_button.is_pressed():
+            elif not hour_button.is_pressed:
                 status.hour_button_pressed = False
 
             sleep(1)
@@ -125,6 +125,7 @@ def _on_wifi_button_released() -> None:
         if not wifi_button.is_pressed:
             rpi.wifi_switch_off()
         else:
+            status.wifi_button_pressed = True
             log.write("Wi-Fi not turned off. Button pressed again.")
             led.wifi_on()
 
