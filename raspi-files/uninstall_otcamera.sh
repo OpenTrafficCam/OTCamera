@@ -1,7 +1,8 @@
 #!/bin/bash
 
+USER_HOME=$(getent passwd ${SUDO_USER:-$USER} | cut -d: -f6)
 CONFIG="/boot/config.txt"
-OTCAMERA=$HOME/OTCamera
+OTCAMERA=$USER_HOME/"OTCamera"
 OTCSERVICE="/lib/systemd/system/otcamera.service"
 RCLOCAL="/etc/rc.local"
 NGINXDEFAULT="/etc/nginx/sites-available/default"
@@ -11,6 +12,7 @@ DHCPCONF="/etc/dhcpcd.conf"
 DNSMASQCONF="/etc/dnsmasq.conf"
 HWCLOCK="/lib/udev/hwclock-set"
 
+echo "$USER_HOME"
 echo "OTCamera Uninstall Script"
 echo "############################"
 echo " "
@@ -59,7 +61,7 @@ apt remove nginx -y
 echo "Remove OTCamera directory"
 cd $OTCAMERA
 pip uninstall -r requirements.txt -y
-cd $HOME
+cd $USER_HOME
 rm -rf $OTCAMERA
 
 echo "#### Uninstall packages"
