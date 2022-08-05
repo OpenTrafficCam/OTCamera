@@ -68,8 +68,8 @@ echo "#### Uninstall packages"
 apt remove python3-pip
 
 echo "Undo power saving variables"
-sed $RCLOCAL -i -e "/exit 0/i /usr/bin/tvservice -o"
-sed $RCLOCAL -i -e "/exit 0/i /sbin/iw dev wlan0 set power_save off"
+sed $RCLOCAL -i -e "s/\/usr\/bin\/tvservice -o//g"
+sed $RCLOCAL -i -e "s/^\/sbin\/iw dev wlan0 set power_save off/\/sbin\/iw dev wlan0 set power_save on/g"
 
 echo "Uninstalling GL Legacy Drivers"
 sed $CONFIG -i -e "s/^#dtoverlay=vc4-kms-v3d/dtoverlay=vc4-kms-v3d/g"
