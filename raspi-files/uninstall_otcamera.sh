@@ -6,8 +6,11 @@ OTCAMERA=$USER_HOME/"OTCamera"
 OTCSERVICE="/lib/systemd/system/otcamera.service"
 RCLOCAL="/etc/rc.local"
 NGINXDEFAULT="/etc/nginx/sites-available/default"
+#NGINX_DIR="/etc/nginx"
+#NGINX_SERVICE_FILE="/lib/systemd/system/nginx.service"
+#INIT_D_NGINX="/etc/init.d/nginx"
 HOSTAPD="/etc/default/hostapd"
-HOSTAPDCONF="/etc/hostapd/hostapd.conf"
+HOSTAPD_DIR="/etc/hostapd"
 DHCPCONF="/etc/dhcpcd.conf"
 DNSMASQCONF="/etc/dnsmasq.conf"
 HWCLOCK="/lib/udev/hwclock-set"
@@ -43,8 +46,7 @@ echo "   Uninstall services"
 cp $HOSTAPD".backup" $HOSTAPD 
 rm $HOSTAPD".backup" 
 
-cp $HOSTAPDCONF".backup" $HOSTAPDCONF
-rm $HOSTAPDCONF".backup"
+rm -rf $HOSTAPD_DIR 
 
 cp $DHCPCONF".backup" $DHCPCONF
 rm $DHCPCONF".backup"
@@ -84,6 +86,7 @@ sed $CONFIG -i -e "s/^#display_auto_detect=1/display_auto_detect=1/g"
 echo "Disable I2C bus for hwclock"
 raspi-config nonint do_i2c 1
 
+systemctl reset-failed
 systemctl daemon-reload
 
 echo "#########"
