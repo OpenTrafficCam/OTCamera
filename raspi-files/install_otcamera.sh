@@ -88,6 +88,7 @@ apt install nginx -y
 PWD=$(pwd)
 NGINXDEFAULT="/etc/nginx/sites-available/default"
 sed $NGINXDEFAULT -i -e "s?root /var/www/html?root $PWD/webfiles?g"
+systemctl enable nginx.service
 systemctl restart nginx.service
 
 echo "     Configure wifi access-point"
