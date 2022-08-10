@@ -68,6 +68,7 @@ rm -rf $OTCAMERA
 
 echo "#### Uninstall packages"
 apt remove python3-pip
+apt remove python3-venv
 
 echo "Undo power saving variables"
 sed $RCLOCAL -i -e "s/\/usr\/bin\/tvservice -o//g"
