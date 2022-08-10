@@ -102,16 +102,6 @@ def _check_log_path():
         logpath.mkdir(parents=True)
 
 
-# TODO: #48 implement traceback handling and logging.#
-# def _traceback():
-#     """
-#     Write the traceback message to the logfile.
-#     """
-#     # TODO: #11 Test traceback function.
-#     traceback.print_exc(file=logfile)
-#     logfile.write("\n")
-
-
 _check_log_path()
 logf = open(name.log(), "a")
 otc()
