@@ -65,6 +65,7 @@ echo "#### Setting up OTCamera"
 
 echo "    Installing packages"
 apt install python3-pip -y
+apt install python3-venv -y
 
 if [ "$OTC_VERSION" = "latest" ]
 then
@@ -238,7 +239,7 @@ OTCSERVICE="/lib/systemd/system/otcamera.service"
 PWD=$(pwd)
 sed $OTCSERVICE -i -e "s?^WorkingDirectory=/path/to/otcamera?WorkingDirectory=$PWD?g"
 sed $OTCSERVICE -i -e "s?^User=username?User=$SUDO_USER?g"
-sed $OTCSERVICE -i -e "s?^ExecStart=/path/to/python run.py?ExecStart=$PWD/venv/bin/python run.py?g"
+sed $OTCSERVICE -i -e "s?^ExecStart=path/to/python?ExecStart=$PWD/venv/bin/python?g"
 
 systemctl daemon-reload
 systemctl enable otcamera.service
