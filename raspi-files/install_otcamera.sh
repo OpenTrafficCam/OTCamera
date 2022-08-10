@@ -81,7 +81,9 @@ runuser -l "$SUDO_USER" -c "tar -xvzf $PWD/otcamera.tar.gz -C $PWD/OTCamera/ --s
 rm "$PWD"/otcamera.tar.gz
 
 cd OTCamera || { echo "Error: Cannot find OTCamera directory"; exit 1; }
-pip install -r requirements.txt --upgrade
+PIP="venv/bin/pip"
+python -m venv venv
+$PIP install -r requirements.txt --upgrade
 
 echo "    Installing nginx"
 apt install nginx -y
@@ -236,6 +238,7 @@ OTCSERVICE="/lib/systemd/system/otcamera.service"
 PWD=$(pwd)
 sed $OTCSERVICE -i -e "s?^WorkingDirectory=/path/to/otcamera?WorkingDirectory=$PWD?g"
 sed $OTCSERVICE -i -e "s?^User=username?User=$SUDO_USER?g"
+sed $OTCSERVICE -i -e "s?^ExecStart=/path/to/python run.py?ExecStart=$PWD/venv/bin/python run.py?g"
 
 systemctl daemon-reload
 systemctl enable otcamera.service

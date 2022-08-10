@@ -6,7 +6,7 @@ User=username
 WorkingDirectory=/path/to/otcamera
 Restart=always
 RestartSec=3
-ExecStart=/usr/bin/python3 run.py
+ExecStart=path/to/python run.py
 Type=idle
 
 
