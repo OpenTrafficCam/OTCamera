@@ -1,6 +1,6 @@
 #!/bin/bash
 
-USER_HOME=$(getent passwd ${SUDO_USER:-$USER} | cut -d: -f6)
+USER_HOME=$(getent passwd "${SUDO_USER:-$USER}" | cut -d: -f6)
 CONFIG="/boot/config.txt"
 OTCAMERA=$USER_HOME/"OTCamera"
 OTCSERVICE="/lib/systemd/system/otcamera.service"
@@ -61,10 +61,10 @@ sed $NGINXDEFAULT -i -e "s?root $OTCAMERA/webfiles?root /var/www/html?g"
 apt remove nginx -y
 
 echo "Remove OTCamera directory"
-cd $OTCAMERA
+cd "$OTCAMERA" || { echo "Error: Cannot find OTCamera directory"; exit 1; }
 pip uninstall -r requirements.txt -y
-cd $USER_HOME
-rm -rf $OTCAMERA
+cd "$USER_HOME" || { echo "Error: Cannot find HOME directory"; exit 1; }
+rm -rf "$OTCAMERA"
 
 echo "#### Uninstall packages"
 apt remove python3-pip
