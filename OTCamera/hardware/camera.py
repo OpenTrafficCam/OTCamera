@@ -115,7 +115,7 @@ class Camera(Singleton):
                 resize=config.RESOLUTION_SAVED_VIDEO_FILE,
                 use_video_port=True,
             )
-            log.write("preview captured", level=log.LogLevel.INFO)
+            log.write("preview captured", level=log.LogLevel.DEBUG)
         else:
             log.write(
                 "can not capture preview, camera not recording",
