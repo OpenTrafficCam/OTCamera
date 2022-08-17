@@ -142,10 +142,10 @@ if config.USE_BUTTONS:
 
     log.write("Initalizing Buttons", level=log.LogLevel.DEBUG)
 
-    POWERPIN = 6
-    HOURPIN = 19
-    WIFIPIN = 16
-    LOWBATTERYPIN = 18
+    POWERPIN = 17
+    HOURPIN = 27
+    WIFIPIN = 22
+    LOWBATTERYPIN = 16
 
     low_battery_button = Button(
         LOWBATTERYPIN, pull_up=True, hold_time=2, hold_repeat=False

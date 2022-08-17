@@ -98,7 +98,7 @@ if config.USE_LED:
 
     POWERPIN = 13
     WIFIPIN = 12
-    RECPIN = 5
+    RECPIN = 6
 
     power = PWMLED(POWERPIN)
     wifi = PWMLED(WIFIPIN)
