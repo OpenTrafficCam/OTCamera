@@ -65,6 +65,14 @@ def _on_low_battery_button_held() -> None:
     rpi.shutdown()
 
 
+def _on_external_power_button_pressed() -> None:
+    log.write("External power connected", log.LogLevel.INFO)
+
+
+def _on_external_power_button_released() -> None:
+    log.write("External power disconnected!", log.LogLevel.WARNING)
+
+
 def _on_power_button_released() -> None:
     status.power_button_pressed = False
     log.write("Power button released", level=log.LogLevel.DEBUG)
@@ -142,13 +150,17 @@ if config.USE_BUTTONS:
 
     log.write("Initalizing Buttons", level=log.LogLevel.DEBUG)
 
-    POWERPIN = 6
-    HOURPIN = 19
-    WIFIPIN = 16
-    LOWBATTERYPIN = 18
+    POWERPIN = 17
+    HOURPIN = 27
+    WIFIPIN = 22
+    LOWBATTERYPIN = 16
+    EXTERNALPOWERPIN = 26
 
     low_battery_button = Button(
         LOWBATTERYPIN, pull_up=True, hold_time=2, hold_repeat=False
+    )
+    external_power_button = Button(
+        EXTERNALPOWERPIN, pull_up=False, hold_time=2, hold_repeat=False
     )
     # Initialise buttons
     power_button = Button(
@@ -163,6 +175,8 @@ if config.USE_BUTTONS:
 
     # Register callbacks
     low_battery_button.when_held = _on_low_battery_button_held
+    external_power_button.when_released = _on_external_power_button_released
+    external_power_button.when_pressed = _on_external_power_button_pressed
     power_button.when_released = _on_power_button_released
     wifi_button.when_pressed = _on_wifi_button_pressed
     wifi_button.when_held = _on_wifi_button_held
@@ -177,6 +191,8 @@ if config.USE_BUTTONS:
     status.hour_button_pressed = hour_button.is_pressed
 
     log.write("Buttons initialized")
+    if external_power_button.is_pressed():
+        _on_external_power_button_pressed()
 
 else:
     log.write("No Buttons")
