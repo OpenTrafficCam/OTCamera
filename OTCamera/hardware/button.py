@@ -191,6 +191,8 @@ if config.USE_BUTTONS:
     status.hour_button_pressed = hour_button.is_pressed
 
     log.write("Buttons initialized")
+    if external_power_button.is_pressed():
+        _on_external_power_button_pressed()
 
 else:
     log.write("No Buttons")
