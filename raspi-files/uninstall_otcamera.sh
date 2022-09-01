@@ -19,15 +19,21 @@ systemctl stop otcamera.service
 systemctl disable otcamera.service
 rm $OTCSERVICE
 
+echo "Restore boot/config.txt"
+rm $CONFIG
+mv $CONFIG.backup $CONFIG
+
 echo "Restore rc.local"
 rm $RCLOCAL
 mv $RCLOCAL.backup $RCLOCAL
 
-echo "Disable WiFi AP"
-sed $HWCLOCK -i -e "/#if.*systemd.*then/s/#//g"
-sed $HWCLOCK -i -e "/#.*exit0/s/#//g"
-sed $HWCLOCK -i -e "/#fi/s/#//g"
-sed $HWCLOCK -i -e "/#\/sbin\/hwclock.*--systz/s/#//g"
+echo "Revert to fake-hwclock"
+apt purge i2c-tools -y
+update-rc.d fake-hwclock defaults
+systemctl enable fake-hwclock
+
+rm $HWCLOCK
+mv $HWCLOCK.backup $HWCLOCK
 
 echo "Stop and disable services"
 systemctl stop dhcpcd.service
@@ -65,14 +71,7 @@ apt remove python3-pip
 apt remove python3-venv
 
 echo "Uninstalling GL Legacy Drivers"
-sed $CONFIG -i -e "s/^#dtoverlay=vc4-kms-v3d/dtoverlay=vc4-kms-v3d/g"
-sed $CONFIG -i -e "s/^#dtoverlay=vc4-fkms-v3d/dtoverlay=vc4-fkms-v3d/g"
 apt remove gldriver-test libgl1-mesa-dri
-
-echo "    Undo OTCamera specific config variables"
-sed -i '/# OTCamera/Q' $CONFIG 
-sed $CONFIG -i -e "s/^#dtparam=audio=on/dtparam=audio=on/g"
-sed $CONFIG -i -e "s/^#display_auto_detect=1/display_auto_detect=1/g"
 
 echo "Disable I2C bus for hwclock"
 raspi-config nonint do_i2c 1

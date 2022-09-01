@@ -30,6 +30,7 @@ esac
 
 echo "    Setting config variables"
 CONFIG="/boot/config.txt"
+cp $CONFIG $CONFIG.backup
 {
     echo "# OTCamera"
     echo "dtoverlay=disable-bt"
@@ -172,6 +173,7 @@ case $USE_RTC in
     [yY] | [yY][eE][sS])
         echo "    Setting up RTC"
         HWCLOCK="/lib/udev/hwclock-set"
+        cp $HWCLOCK $HWCLOCK.backup
         apt install i2c-tools -y
         echo "dtoverlay=i2c-rtc,ds3231" >> $CONFIG
         apt remove fake-hwclock -y
