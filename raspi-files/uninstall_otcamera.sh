@@ -78,6 +78,7 @@ sed $CONFIG -i -e "s/^#display_auto_detect=1/display_auto_detect=1/g"
 
 echo "Disable I2C bus for hwclock"
 raspi-config nonint do_i2c 1
+raspi-config nonint do_legacy 1 
 
 systemctl reset-failed
 systemctl daemon-reload
