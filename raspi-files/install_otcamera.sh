@@ -142,8 +142,6 @@ echo "done"
 
 echo "    Configure DNSMASQ"
 DNSMASQCONF="/etc/dnsmasq.conf"
-mv $DNSMASQCONF $DNSMASQCONF".backup"
-echo "    Current DNSMASQ config moved to $DNSMASQCONF.backup"
 {
     echo "interface=lo,uap0"
     echo "no-dhcp-interface=lo,wlan0"
