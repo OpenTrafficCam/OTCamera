@@ -6,13 +6,7 @@ OTCAMERA=$USER_HOME/"OTCamera"
 OTCSERVICE="/lib/systemd/system/otcamera.service"
 RCLOCAL="/etc/rc.local"
 NGINXDEFAULT="/etc/nginx/sites-available/default"
-#NGINX_DIR="/etc/nginx"
-#NGINX_SERVICE_FILE="/lib/systemd/system/nginx.service"
-#INIT_D_NGINX="/etc/init.d/nginx"
-HOSTAPD="/etc/default/hostapd"
-HOSTAPD_DIR="/etc/hostapd"
 DHCPCONF="/etc/dhcpcd.conf"
-DNSMASQCONF="/etc/dnsmasq.conf"
 HWCLOCK="/lib/udev/hwclock-set"
 
 echo "$USER_HOME"
@@ -27,32 +21,30 @@ rm $OTCSERVICE
 
 echo "Disable WiFi AP"
 sed $RCLOCAL -i -e "/\/bin\/bash \/usr\/local\/bin\/wifistart/d" 
-apt remove hostapd dnsmasq dhcpcd -y
 
 sed $HWCLOCK -i -e "/#if.*systemd.*then/s/#//g"
 sed $HWCLOCK -i -e "/#.*exit0/s/#//g"
 sed $HWCLOCK -i -e "/#fi/s/#//g"
 sed $HWCLOCK -i -e "/#\/sbin\/hwclock.*--systz/s/#//g"
 
-echo "Enable Services"
-systemctl enable dhcpcd.service
-systemctl enable dnsmasq.service
-systemctl enable hostapd.service
+echo "Stop and disable services"
+systemctl stop dhcpcd.service
+systemctl stop dnsmasq.service
+systemctl stop hostapd.service
+systemctl disable dhcpcd.service
+systemctl disable dnsmasq.service
+systemctl disable hostapd.service
 
 echo "Mask hostapd.service"
 systemctl mask hostapd.service
 
 echo "   Uninstall services"
-cp $HOSTAPD".backup" $HOSTAPD 
-rm $HOSTAPD".backup" 
-
-rm -rf $HOSTAPD_DIR 
+apt purge hostapd -y
+apt purge dhcpcd -y
+apt purge dnsmasq -y
 
 cp $DHCPCONF".backup" $DHCPCONF
 rm $DHCPCONF".backup"
-
-cp $DNSMASQCONF".backup" $DNSMASQCONF
-rm $DNSMASQCONF".backup"
 
 echo "Uninstall nginx"
 systemctl stop nginx.service
