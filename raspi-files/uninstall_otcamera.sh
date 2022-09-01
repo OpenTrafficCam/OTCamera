@@ -6,6 +6,7 @@ OTCAMERA=$USER_HOME/"OTCamera"
 OTCSERVICE="/lib/systemd/system/otcamera.service"
 RCLOCAL="/etc/rc.local"
 NGINXDEFAULT="/etc/nginx/sites-available/default"
+HOSTAPD_DIR="/etc/hostapd" 
 DHCPCONF="/etc/dhcpcd.conf"
 HWCLOCK="/lib/udev/hwclock-set"
 
@@ -50,6 +51,8 @@ echo "   Uninstall services"
 apt purge hostapd -y
 apt purge dhcpcd -y
 apt purge dnsmasq -y
+
+rm -rf $HOSTAPD_DIR
 
 cp $DHCPCONF".backup" $DHCPCONF
 rm $DHCPCONF".backup"
