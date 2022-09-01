@@ -38,11 +38,11 @@ CONFIG="/boot/config.txt"
     echo "dtparam=act_led_activelow=on"
     echo "dtparam=audio=off"
     echo "display_auto_detect=0"
-    echo "gpio=6,16,18,19=ip"
-    echo "gpio=16,18,19=pu"
-    echo "gpio=6=pd"
-    echo "gpio=5,12,13=op"
-    echo "gpio=5,12=dl"
+    echo "gpio=17,22,16,27,26=ip"
+    echo "gpio=22,16,27=pu"
+    echo "gpio=17,26=pd"
+    echo "gpio=6,12,13=op"
+    echo "gpio=6,12=dl"
     echo "gpio=13=dh"
 } >> $CONFIG
 sed $CONFIG -i -e "s/^dtparam=audio=on/#dtparam=audio=on/g"
@@ -55,11 +55,7 @@ sed $CONFIG -i -e "s/^dtoverlay=vc4-kms-v3d/#dtoverlay=vc4-kms-v3d/g"
 
 echo "    Setting power safing variables"
 RCLOCAL="/etc/rc.local"
-sed $RCLOCAL -i -e "/exit 0/i /usr/bin/tvservice -o"
-sed $RCLOCAL -i -e "/exit 0/i /sbin/iw dev wlan0 set power_save off"
-
-
-
+sed $RCLOCAL -i -e "/^exit 0/i /usr/bin/tvservice -o"
 
 echo "#### Setting up OTCamera"
 
@@ -161,7 +157,7 @@ systemctl disable dnsmasq.service
 echo "    Enable Wifi AP at boot"
 RCLOCAL="/etc/rc.local"
 cp ./raspi-files/usr/local/bin/wifistart /usr/local/bin/wifistart
-sed $RCLOCAL -i -e "/exit 0/i /bin/bash /usr/local/bin/wifistart"
+sed $RCLOCAL -i -e "/^exit 0/i /bin/bash /usr/local/bin/wifistart"
 
 case $USE_RTC in 
     [yY] | [yY][eE][sS])
