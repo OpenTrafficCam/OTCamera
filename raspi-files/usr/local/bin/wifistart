@@ -10,6 +10,9 @@ systemctl stop dhcpcd.service
 echo "Removing uap0 interface..."
 iw dev uap0 del
 
+rfkill unblock wlan
+sleep 5
+
 #Add uap0 interface (this is dependent on the wireless interface being called wlan0, which it may not be in Stretch)
 echo "Adding uap0 interface..."
 iw dev wlan0 interface add uap0 type __ap
@@ -30,4 +33,5 @@ sleep 5
 
 echo "Starting dnsmasq service..."
 systemctl start dnsmasq.service
+sbin/iw dev wlan0 set power_save off
 echo "wifistart DONE"

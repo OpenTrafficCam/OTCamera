@@ -3,3 +3,4 @@ psutil
 gpiozero
 picamerax
 bs4
+rpi-gpio
