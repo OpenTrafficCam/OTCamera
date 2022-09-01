@@ -7,7 +7,7 @@ OTCSERVICE="/lib/systemd/system/otcamera.service"
 RCLOCAL="/etc/rc.local"
 NGINXDEFAULT="/etc/nginx/sites-available/default"
 HOSTAPD_DIR="/etc/hostapd" 
-DHCPCONF="/etc/dhcpcd.conf"
+DHCPCDCONF="/etc/dhcpcd.conf"
 HWCLOCK="/lib/udev/hwclock-set"
 
 echo "$USER_HOME"
@@ -54,8 +54,8 @@ apt purge dnsmasq -y
 
 rm -rf $HOSTAPD_DIR
 
-cp $DHCPCONF".backup" $DHCPCONF
-rm $DHCPCONF".backup"
+rm $DHCPCDCONF
+cp $DHCPCDCONF.backup $DHCPCDCONF
 
 echo "Uninstall nginx"
 systemctl stop nginx.service
