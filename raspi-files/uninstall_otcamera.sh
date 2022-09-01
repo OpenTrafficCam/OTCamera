@@ -55,7 +55,7 @@ apt purge dnsmasq -y
 rm -rf $HOSTAPD_DIR
 
 rm $DHCPCDCONF
-cp $DHCPCDCONF.backup $DHCPCDCONF
+mv $DHCPCDCONF.backup $DHCPCDCONF
 
 echo "Uninstall nginx"
 systemctl stop nginx.service
