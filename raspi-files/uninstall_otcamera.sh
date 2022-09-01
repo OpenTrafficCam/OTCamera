@@ -19,9 +19,11 @@ systemctl stop otcamera.service
 systemctl disable otcamera.service
 rm $OTCSERVICE
 
-echo "Disable WiFi AP"
-sed $RCLOCAL -i -e "/\/bin\/bash \/usr\/local\/bin\/wifistart/d" 
+echo "Restore rc.local"
+rm $RCLOCAL
+mv $RCLOCAL.backup $RCLOCAL
 
+echo "Disable WiFi AP"
 sed $HWCLOCK -i -e "/#if.*systemd.*then/s/#//g"
 sed $HWCLOCK -i -e "/#.*exit0/s/#//g"
 sed $HWCLOCK -i -e "/#fi/s/#//g"
@@ -61,10 +63,6 @@ rm -rf "$OTCAMERA"
 echo "#### Uninstall packages"
 apt remove python3-pip
 apt remove python3-venv
-
-echo "Undo power saving variables"
-sed $RCLOCAL -i -e "s/\/usr\/bin\/tvservice -o//g"
-sed $RCLOCAL -i -e "s/^\/sbin\/iw dev wlan0 set power_save off/\/sbin\/iw dev wlan0 set power_save on/g"
 
 echo "Uninstalling GL Legacy Drivers"
 sed $CONFIG -i -e "s/^#dtoverlay=vc4-kms-v3d/dtoverlay=vc4-kms-v3d/g"

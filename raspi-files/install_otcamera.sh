@@ -55,6 +55,7 @@ sed $CONFIG -i -e "s/^dtoverlay=vc4-kms-v3d/#dtoverlay=vc4-kms-v3d/g"
 
 echo "    Setting power safing variables"
 RCLOCAL="/etc/rc.local"
+cp $RCLOCAL $RCLOCAL.backup
 sed $RCLOCAL -i -e "/exit 0/i /usr/bin/tvservice -o"
 sed $RCLOCAL -i -e "/exit 0/i /sbin/iw dev wlan0 set power_save off"
 
