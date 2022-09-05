@@ -71,6 +71,8 @@ ROTATION = 180
 AWB_MODE = "greyworld"
 """Controls the auto white balancing mode. `greyworld`
 is a specific mode for NoIR modules."""
+METER_MODE = "average"
+"""Retrieves or sets the metering mode of the camera. Possible values: ['average', 'spot', 'backlit', 'matrix']"""
 
 # video settings
 VIDEO_FORMAT = "h264"
