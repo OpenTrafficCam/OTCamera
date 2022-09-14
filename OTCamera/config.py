@@ -22,6 +22,13 @@ All the configuration of OTCamera is done here.
 import socket
 from pathlib import Path
 
+try:
+    from yaml import CSafeLoader as SafeLoader
+except ImportError:
+    from yaml import SafeLoader
+
+import yaml
+
 DEBUG_MODE_ON = True
 """Turn debug mode on to get additional log entries."""
 USE_RELAY = False
@@ -102,3 +109,21 @@ PREVIEW_PATH = str(Path(PREVIEW_PATH).expanduser().resolve())
 TEMPLATE_HTML_PATH = str(Path(TEMPLATE_HTML_PATH).expanduser().resolve())
 INDEX_HTML_PATH = str(Path(INDEX_HTML_PATH).expanduser().resolve())
 OFFLINE_HTML_PATH = str(Path(OFFLINE_HTML_PATH).expanduser().resolve())
+
+
+def parse_config(config_file: str = "config.yaml"):
+
+    global DEBUG_MODE_ON
+    global USE_RELAY
+
+    with open(config_file, mode="rb") as f:
+        user_config = yaml.load(f, Loader=SafeLoader)
+
+    try:
+        DEBUG_MODE_ON = user_config["debug_mode"]["enable"]
+        USE_RELAY = user_config["relay_server"]["enable"]
+    except KeyError:
+        pass
+
+
+parse_config("config.yaml")

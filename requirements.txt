@@ -4,3 +4,4 @@ gpiozero
 picamerax
 bs4
 rpi-gpio
+pyyaml
