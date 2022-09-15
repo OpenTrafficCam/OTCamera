@@ -22,7 +22,7 @@ All the configuration of OTCamera is done here.
 import socket
 from pathlib import Path
 
-DEBUG_MODE_ON = True
+DEBUG_MODE_ON = False
 """Turn debug mode on to get additional log entries."""
 USE_RELAY = False
 """Enable to start and stop sshrelay.service (need's to be configured)"""
@@ -96,6 +96,9 @@ USE_BUTTONS = False
 WIFI_DELAY = 900
 """Delay in seconds before wifi turns off."""
 
+# Microsoft Teams WebHook
+USE_MS_TEAMS_WEBHOOK = False
+MS_TEAMS_WEBHOOK_URL = None
 
 VIDEO_DIR = str(Path(VIDEO_DIR).expanduser().resolve())
 PREVIEW_PATH = str(Path(PREVIEW_PATH).expanduser().resolve())
