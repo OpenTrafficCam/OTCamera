@@ -1,5 +1,6 @@
 [Unit]
 Description=This service starts OTCamera and keeps it running
+After=rc-local.service
 
 [Service]
 User=username
