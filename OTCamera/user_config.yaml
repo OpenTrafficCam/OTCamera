@@ -1,5 +1,5 @@
 ---
-debug_mode2:
+debug_mode:
   enable: False
 
 relay_server:
@@ -10,12 +10,13 @@ recording:
   end_hour: 22
   interval_length: 15
   num_intervals: 0
+  min_free_space: 1
 
 camera:
   fps: 20
   resolution:
-    width: 1920
-    height: 1080
+    width: 1640
+    height: 1232
   exposure_mode: nightpreview
   drc_strength: high
   rotation: 180
@@ -27,9 +28,8 @@ preview:
   interval: 5
 
 video:
-  path: ~/videos/
+  dir: ~/videos/
   format: h264
-  min_free_space: 1
   resolution:
     width: 800
     height: 600

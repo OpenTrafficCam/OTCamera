@@ -118,19 +118,241 @@ INDEX_HTML_PATH = str(Path(INDEX_HTML_PATH).expanduser().resolve())
 OFFLINE_HTML_PATH = str(Path(OFFLINE_HTML_PATH).expanduser().resolve())
 
 
-def parse_config(config_file: str = "config.yaml"):
-
-    global DEBUG_MODE_ON
-    global USE_RELAY
-
-    with open(config_file, mode="rb") as f:
-        user_config = yaml.load(f, Loader=SafeLoader)
+def parse_user_config(config_file: str = "./user_config.yaml"):
 
     try:
-        DEBUG_MODE_ON = user_config["debug_mode"]["enable"]
-        USE_RELAY = user_config["relay_server"]["enable"]
+        with open(config_file, mode="rb") as f:
+            user_config = yaml.load(f, Loader=SafeLoader)
+    except FileNotFoundError:
+        # TODO: use log module
+        print("Config file not found.")
+        return
+
+    try:
+        section = user_config["debug_mode"]
     except KeyError:
+        print("KeyError in config file.")
         pass
+    else:
+        try:
+            global DEBUG_MODE_ON
+            DEBUG_MODE_ON = section["enable"]
+        except KeyError:
+            pass
+
+    try:
+        section = user_config["relay_server"]
+    except KeyError:
+        print("KeyError in config file.")
+        pass
+    else:
+        try:
+            global USE_RELAY
+            USE_RELAY = section["enable"]
+        except KeyError:
+            pass
+
+    try:
+        section = user_config["recording"]
+    except KeyError:
+        print("KeyError in config file.")
+        pass
+    else:
+        try:
+            global START_HOUR
+            START_HOUR = section["start_hour"]
+        except KeyError:
+            print("KeyError in config file.")
+            pass
+        try:
+            global END_HOUR
+            END_HOUR = section["end_hour"]
+        except KeyError:
+            print("KeyError in config file.")
+            pass
+        try:
+            global INTERVAL_LENGTH
+            INTERVAL_LENGTH = section["interval_length"]
+        except KeyError:
+            print("KeyError in config file.")
+            pass
+        try:
+            global NUM_INTERVALS
+            NUM_INTERVALS = section["num_intervals"]
+        except KeyError:
+            print("KeyError in config file.")
+            pass
+        try:
+            global MIN_FREE_SPACE
+            MIN_FREE_SPACE = section["min_free_space"]
+        except KeyError:
+            print("KeyError in config file.")
+            pass
+
+    try:
+        section = user_config["camera"]
+    except KeyError:
+        print("KeyError in config file.")
+        pass
+    else:
+        try:
+            global FPS
+            FPS = section["fps"]
+        except KeyError:
+            print("KeyError in config file.")
+            pass
+        try:
+            global RESOLUTION
+            RESOLUTION = (
+                section["resolution"]["width"],
+                section["resolution"]["height"],
+            )
+        except KeyError:
+            print("KeyError in config file.")
+            pass
+        try:
+            global EXPOSURE_MODE
+            EXPOSURE_MODE = section["exposure_mode"]
+        except KeyError:
+            print("KeyError in config file.")
+            pass
+        try:
+            global DRC_STRENGTH
+            DRC_STRENGTH = section["drc_strength"]
+        except KeyError:
+            print("KeyError in config file.")
+            pass
+        try:
+            global ROTATION
+            ROTATION = section["rotation"]
+        except KeyError:
+            print("KeyError in config file.")
+            pass
+        try:
+            global AWB_MODE
+            AWB_MODE = section["awb_mode"]
+        except KeyError:
+            print("KeyError in config file.")
+            pass
+
+    try:
+        section = user_config["preview"]
+    except KeyError:
+        print("KeyError in config file.")
+        pass
+    else:
+        try:
+            global PREVIEW_PATH
+            PREVIEW_PATH = section["path"]
+        except KeyError:
+            print("KeyError in config file.")
+            pass
+        try:
+            global PREVIEW_FORMAT
+            PREVIEW_FORMAT = section["format"]
+        except KeyError:
+            print("KeyError in config file.")
+            pass
+        try:
+            global PREVIEW_INTERVAL
+            PREVIEW_INTERVAL = section["interval"]
+        except KeyError:
+            print("KeyError in config file.")
+            pass
+
+    try:
+        section = user_config["video"]
+    except KeyError:
+        print("KeyError in config file.")
+        pass
+    else:
+        try:
+            global VIDEO_DIR
+            VIDEO_DIR = section["dir"]
+        except KeyError:
+            print("KeyError in config file.")
+            pass
+        try:
+            global VIDEO_FORMAT
+            VIDEO_FORMAT = section["format"]
+        except KeyError:
+            print("KeyError in config file.")
+            pass
+        try:
+            global RESOLUTION_SAVED_VIDEO_FILE
+            RESOLUTION_SAVED_VIDEO_FILE = (
+                section["resolution"]["width"],
+                section["resolution"]["height"],
+            )
+        except KeyError:
+            print("KeyError in config file.")
+            pass
+        try:
+            section = section["encoder"]
+        except KeyError:
+            print("KeyError in config file.")
+            pass
+        else:
+            try:
+                global H264_PROFILE
+                H264_PROFILE = section["profile"]
+            except KeyError:
+                print("KeyError in config file.")
+                pass
+            try:
+                global H264_LEVEL
+                H264_LEVEL = section["level"]
+            except KeyError:
+                print("KeyError in config file.")
+                pass
+            try:
+                global H264_BITRATE
+                H264_BITRATE = section["bitrate"]
+            except KeyError:
+                print("KeyError in config file.")
+                pass
+            try:
+                global H264_QUALITY
+                H264_QUALITY = section["quality"]
+            except KeyError:
+                print("KeyError in config file.")
+                pass
+
+    try:
+        section = user_config["wifi"]
+    except KeyError:
+        print("KeyError in config file.")
+        pass
+    else:
+        try:
+            global WIFI_DELAY
+            WIFI_DELAY = section["delay"]
+        except KeyError:
+            pass
+
+    try:
+        section = user_config["leds"]
+    except KeyError:
+        print("KeyError in config file.")
+        pass
+    else:
+        try:
+            global USE_LED
+            USE_LED = section["enable"]
+        except KeyError:
+            pass
+
+    try:
+        section = user_config["buttons"]
+    except KeyError:
+        print("KeyError in config file.")
+        pass
+    else:
+        try:
+            global USE_BUTTONS
+            USE_BUTTONS = section["enable"]
+        except KeyError:
+            pass
 
 
-parse_config("config.yaml")
+parse_user_config("./user_config.yaml")
