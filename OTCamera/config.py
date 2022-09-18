@@ -29,11 +29,13 @@ except ImportError:
 
 import yaml
 
+# general config
 DEBUG_MODE_ON = True
 """Turn debug mode on to get additional log entries."""
 USE_RELAY = False
 """Enable to start and stop sshrelay.service (need's to be configured)"""
 
+# recording config
 START_HOUR = 6
 """Hour of day when to start recording."""
 END_HOUR = 22
@@ -42,28 +44,10 @@ INTERVAL_LENGTH = 15
 """Interval length in minutes before video splits."""
 NUM_INTERVALS = 0
 """Number of full intervals to record (0=infinit)."""
-PREVIEW_INTERVAL = 5
-"""Interval between two preview images in seconds."""
-
 MIN_FREE_SPACE = 1
 """free space in GB on sd card before old videos get deleted."""
-PREFIX = socket.gethostname()
-"""prefix for videoname and annotation."""
-VIDEO_DIR = "~/videos/"
-"""path to safe videofiles."""
-PREVIEW_PATH = "~/OTCamera/webfiles/preview.jpg"
-"""path to save preview."""
-TEMPLATE_HTML_PATH = "~/OTCamera/webfiles/template.html"
-"""Path to template HTML"""
-INDEX_HTML_PATH = "~/OTCamera/webfiles/index.html"
-"""Path to the auto generated index HTML."""
-OFFLINE_HTML_PATH = "~/OTCamera/webfiles/offline.html"
-"""Path to the HTML to be displayed when OTCamera is offline"""
-NUM_LOG_FILES_HTML = 2
-"""Number of log files to be displayed on the status website"""
 
-
-# camera settings
+# camera config
 FPS = 20
 """Frames per Second. 10-20 should be enough."""
 RESOLUTION = (1640, 1232)
@@ -79,13 +63,21 @@ AWB_MODE = "greyworld"
 """Controls the auto white balancing mode. `greyworld`
 is a specific mode for NoIR modules."""
 
-# video settings
-VIDEO_FORMAT = "h264"
-"""Encoding format."""
+# preview settings
+PREVIEW_PATH = "~/OTCamera/webfiles/preview.jpg"
+"""path to save preview."""
 PREVIEW_FORMAT = "jpeg"
 """Filetype of the static preview image."""
+PREVIEW_INTERVAL = 5
+"""Interval between two preview images in seconds."""
+
+# video config
+VIDEO_DIR = "~/videos/"
+"""path to safe videofiles."""
+VIDEO_FORMAT = "h264"
+"""Encoding format."""
 RESOLUTION_SAVED_VIDEO_FILE = (800, 600)
-"""Resolution of the saved Videofile, not the camera itself."""
+"""Resolution of the saved videofile, not the camera itself."""
 H264_PROFILE = "high"
 """Profile used in h264 encoder."""
 H264_LEVEL = "4"
@@ -95,14 +87,29 @@ H264_BITRATE = 600000
 H264_QUALITY = 30
 """Quality used in h264 encoder."""
 
-# hardware settings
-USE_LED = False
-"""True if Status-LEDs are connected."""
-USE_BUTTONS = False
-"""True if hardware buttons are connected."""
+# Wi-Fi config
 WIFI_DELAY = 900
 """Delay in seconds before wifi turns off."""
 
+# LED config
+USE_LED = False
+"""True if Status-LEDs are connected."""
+
+# button config
+USE_BUTTONS = False
+"""True if hardware buttons are connected."""
+
+# other config
+PREFIX = socket.gethostname()
+"""prefix for videoname and annotation."""
+TEMPLATE_HTML_PATH = "~/OTCamera/webfiles/template.html"
+"""Path to template HTML"""
+INDEX_HTML_PATH = "~/OTCamera/webfiles/index.html"
+"""Path to the auto generated index HTML."""
+OFFLINE_HTML_PATH = "~/OTCamera/webfiles/offline.html"
+"""Path to the HTML to be displayed when OTCamera is offline"""
+NUM_LOG_FILES_HTML = 2
+"""Number of log files to be displayed on the status website"""
 
 VIDEO_DIR = str(Path(VIDEO_DIR).expanduser().resolve())
 PREVIEW_PATH = str(Path(PREVIEW_PATH).expanduser().resolve())
