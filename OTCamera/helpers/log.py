@@ -31,9 +31,9 @@ from art import text2art
 
 from OTCamera.config import (
     DEBUG_MODE_ON,
+    MS_TEAMS_MAX_FAILED_SEND_ATTEMPTS,
     MS_TEAMS_WEBHOOK_URL,
     USE_MS_TEAMS_WEBHOOK,
-    MS_TEAMS_MAX_FAILED_SEND_ATTEMPTS,
 )
 from OTCamera.helpers import name
 
