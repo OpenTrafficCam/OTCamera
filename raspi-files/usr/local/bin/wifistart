@@ -23,10 +23,12 @@ ifconfig uap0 up
 # Start hostapd. 
 echo "Starting hostapd service..."
 systemctl start hostapd.service
+sleep 10
 
 # Start dhcpcd. 
 echo "Starting dhcpcd service..."
 systemctl start dhcpcd.service
+sleep 5
 
 echo "Starting dnsmasq service..."
 systemctl start dnsmasq.service
