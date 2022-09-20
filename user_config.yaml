@@ -3,7 +3,7 @@ debug_mode:
   enable: false
 
 relay_server:
-  enable: false 
+  enable: false
 
 recording:
   start_hour: 6
