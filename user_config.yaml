@@ -1,0 +1,49 @@
+---
+debug_mode:
+  enable: false
+
+relay_server:
+  enable: false
+
+recording:
+  start_hour: 6
+  end_hour: 22
+  interval_length: 15
+  num_intervals: 0
+  min_free_space: 1
+
+camera:
+  fps: 20
+  resolution:
+    width: 1640
+    height: 1232
+  exposure_mode: nightpreview
+  drc_strength: high
+  rotation: 180
+  awb_mode: greyworld
+
+preview:
+  path: ~/OTCamera/webfiles/preview.jpg
+  format: jpeg
+  interval: 5
+
+video:
+  dir: ~/videos/
+  format: h264
+  resolution:
+    width: 800
+    height: 600
+  encoder:
+    profile: high
+    level: 4
+    bitrate: 600000
+    quality: 30
+
+wifi:
+  delay: 900
+
+leds:
+  enable: false
+
+buttons:
+  enable: false

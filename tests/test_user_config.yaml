@@ -1,0 +1,49 @@
+---
+debug_mode:
+  enable: debug_mode
+
+relay_server:
+  enable: relay_server
+
+recording:
+  start_hour: start_hour
+  end_hour: end_hour
+  interval_length: interval_length
+  num_intervals: num_intervals
+  min_free_space: min_free_space
+
+camera:
+  fps: fps
+  resolution:
+    width: width
+    height: height
+  exposure_mode: exposure_mode
+  drc_strength: drc_strength
+  rotation: rotation
+  awb_mode: awb_mode
+
+preview:
+  path: path
+  format: format
+  interval: interval
+
+video:
+  dir: dir
+  format: format
+  resolution:
+    width: width
+    height: height
+  encoder:
+    profile: profile
+    level: level
+    bitrate: bitrate
+    quality: quality
+
+wifi:
+  delay: delay
+
+leds:
+  enable: leds
+
+buttons:
+  enable: buttons

@@ -3,5 +3,6 @@ psutil
 gpiozero
 picamerax
 bs4
-requests
 rpi-gpio
+pyyaml
+requests
