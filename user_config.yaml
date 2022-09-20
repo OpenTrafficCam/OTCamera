@@ -1,9 +1,9 @@
 ---
 debug_mode:
-  enable: False
+  enable: false
 
 relay_server:
-  enable: True
+  enable: false 
 
 recording:
   start_hour: 6
@@ -43,7 +43,7 @@ wifi:
   delay: 900
 
 leds:
-  enable: False
+  enable: false
 
 buttons:
-  enable: False
+  enable: false
