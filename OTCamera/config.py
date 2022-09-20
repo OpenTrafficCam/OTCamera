@@ -31,7 +31,7 @@ except ImportError:
 import yaml
 
 # general config
-DEBUG_MODE_ON = True
+DEBUG_MODE_ON = False
 """Turn debug mode on to get additional log entries."""
 USE_RELAY = False
 """Enable to start and stop sshrelay.service (need's to be configured)"""
@@ -111,6 +111,10 @@ OFFLINE_HTML_PATH = "~/OTCamera/webfiles/offline.html"
 """Path to the HTML to be displayed when OTCamera is offline"""
 NUM_LOG_FILES_HTML = 2
 """Number of log files to be displayed on the status website"""
+
+# Microsoft Teams WebHook
+USE_MS_TEAMS_WEBHOOK = False
+MS_TEAMS_WEBHOOK_URL = None
 
 VIDEO_DIR = str(Path(VIDEO_DIR).expanduser().resolve())
 PREVIEW_PATH = str(Path(PREVIEW_PATH).expanduser().resolve())
@@ -218,7 +222,6 @@ def parse_user_config(config_file: str):
     except KeyError:
         _print_key_err_msg("preview")
     else:
-        # preview_path = str(Path(PREVIEW_PATH).expanduser().resolve())  # default
         try:
             preview_path = str(Path(section["path"]).expanduser().resolve())
             setattr(module, "PREVIEW_PATH", preview_path)
@@ -238,7 +241,6 @@ def parse_user_config(config_file: str):
     except KeyError:
         _print_key_err_msg("video")
     else:
-        # video_dir = str(Path(VIDEO_DIR).expanduser().resolve())
         try:
             video_dir = str(Path(section["dir"]).expanduser().resolve())
             setattr(module, "VIDEO_DIR", video_dir)

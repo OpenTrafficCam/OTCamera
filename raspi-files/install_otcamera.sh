@@ -30,6 +30,7 @@ esac
 
 echo "    Setting config variables"
 CONFIG="/boot/config.txt"
+cp $CONFIG $CONFIG.backup
 {
     echo "# OTCamera"
     echo "dtoverlay=disable-bt"
@@ -55,12 +56,14 @@ sed $CONFIG -i -e "s/^dtoverlay=vc4-kms-v3d/#dtoverlay=vc4-kms-v3d/g"
 
 echo "    Setting power safing variables"
 RCLOCAL="/etc/rc.local"
+cp $RCLOCAL $RCLOCAL.backup
 sed $RCLOCAL -i -e "/^exit 0/i /usr/bin/tvservice -o"
 
 echo "#### Setting up OTCamera"
 
 echo "    Installing packages"
 apt install python3-pip -y
+apt install python3-venv -y
 
 if [ "$OTC_VERSION" = "latest" ]
 then
@@ -77,13 +80,16 @@ runuser -l "$SUDO_USER" -c "tar -xvzf $PWD/otcamera.tar.gz -C $PWD/OTCamera/ --s
 rm "$PWD"/otcamera.tar.gz
 
 cd OTCamera || { echo "Error: Cannot find OTCamera directory"; exit 1; }
-pip install -r requirements.txt --upgrade
+PIP="venv/bin/pip"
+python -m venv venv
+$PIP install -r requirements.txt --upgrade
 
 echo "    Installing nginx"
 apt install nginx -y
 PWD=$(pwd)
 NGINXDEFAULT="/etc/nginx/sites-available/default"
 sed $NGINXDEFAULT -i -e "s?root /var/www/html?root $PWD/webfiles?g"
+systemctl enable nginx.service
 systemctl restart nginx.service
 
 echo "     Configure wifi access-point"
@@ -132,8 +138,6 @@ echo "done"
 
 echo "    Configure DNSMASQ"
 DNSMASQCONF="/etc/dnsmasq.conf"
-mv $DNSMASQCONF $DNSMASQCONF".backup"
-echo "    Current DNSMASQ config moved to $DNSMASQCONF.backup"
 {
     echo "interface=lo,uap0"
     echo "no-dhcp-interface=lo,wlan0"
@@ -163,6 +167,7 @@ case $USE_RTC in
     [yY] | [yY][eE][sS])
         echo "    Setting up RTC"
         HWCLOCK="/lib/udev/hwclock-set"
+        cp $HWCLOCK $HWCLOCK.backup
         apt install i2c-tools -y
         echo "dtoverlay=i2c-rtc,ds3231" >> $CONFIG
         apt remove fake-hwclock -y
@@ -231,6 +236,7 @@ OTCSERVICE="/lib/systemd/system/otcamera.service"
 PWD=$(pwd)
 sed $OTCSERVICE -i -e "s?^WorkingDirectory=/path/to/otcamera?WorkingDirectory=$PWD?g"
 sed $OTCSERVICE -i -e "s?^User=username?User=$SUDO_USER?g"
+sed $OTCSERVICE -i -e "s?^ExecStart=path/to/python?ExecStart=$PWD/venv/bin/python?g"
 
 systemctl daemon-reload
 systemctl enable otcamera.service

@@ -22,12 +22,14 @@ or log.otc() to log and print a OpenTrafficCam logo.
 # You should have received a copy of the GNU General Public License along with this
 # program.  If not, see <https://www.gnu.org/licenses/>.
 
+import json
 import traceback
 from enum import Enum
 
+import requests
 from art import text2art
 
-from OTCamera.config import DEBUG_MODE_ON
+from OTCamera.config import DEBUG_MODE_ON, MS_TEAMS_WEBHOOK_URL, USE_MS_TEAMS_WEBHOOK
 from OTCamera.helpers import name
 
 
@@ -55,10 +57,32 @@ def write(msg: str, level: LogLevel = LogLevel.INFO, reboot: bool = True):
     if level == LogLevel.DEBUG:
         if not DEBUG_MODE_ON:
             return
-    msg = f"{name._current_dt()} {level}: {msg}"
+    current_time = name._current_dt()
+    msg = f"{current_time} {level}: {msg}"
     _write(msg, reboot)
+    if USE_MS_TEAMS_WEBHOOK and level != LogLevel.DEBUG and MS_TEAMS_WEBHOOK_URL:
+        _send_msg_to_ms_teams(msg, MS_TEAMS_WEBHOOK_URL, current_time)
     if level == LogLevel.EXCEPTION:
         _write(_get_stack_trace(), reboot)
+
+
+def _send_msg_to_ms_teams(msg: str, teams_url: str, time: str) -> None:
+    headers = {"Content-Type": "application/json"}
+    payload = {"text": msg}
+    err_prefix = f"{time} {LogLevel.ERROR}: "
+    try:
+        response = requests.post(teams_url, headers=headers, data=json.dumps(payload))
+        status_code = response.status_code
+        if status_code in range(400, 600):
+            err_msg = (
+                f"{err_prefix}"
+                f"Unable to send MS Teams message [Status Code {status_code}]"
+            )
+            _write(err_msg)
+    except requests.exceptions.MissingSchema as ms:
+        _write(f"{err_prefix} {ms}")
+    except requests.exceptions.RequestException as e:
+        _write(f"{err_prefix} {e}")
 
 
 def _get_stack_trace() -> str:
@@ -100,16 +124,6 @@ def _check_log_path():
     logpath = logfile.parent
     if not logpath.exists():
         logpath.mkdir(parents=True)
-
-
-# TODO: #48 implement traceback handling and logging.#
-# def _traceback():
-#     """
-#     Write the traceback message to the logfile.
-#     """
-#     # TODO: #11 Test traceback function.
-#     traceback.print_exc(file=logfile)
-#     logfile.write("\n")
 
 
 _check_log_path()
