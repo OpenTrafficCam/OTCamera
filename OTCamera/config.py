@@ -20,6 +20,7 @@ All the configuration of OTCamera is done here.
 
 
 import socket
+import sys
 from pathlib import Path
 
 try:
@@ -118,8 +119,8 @@ INDEX_HTML_PATH = str(Path(INDEX_HTML_PATH).expanduser().resolve())
 OFFLINE_HTML_PATH = str(Path(OFFLINE_HTML_PATH).expanduser().resolve())
 
 
-def parse_user_config(config_file: str = "./user_config.yaml"):
-
+def parse_user_config(config_file: str):
+    config_file = str(Path(config_file).resolve())
     try:
         with open(config_file, mode="rb") as f:
             user_config = yaml.load(f, Loader=SafeLoader)
@@ -128,231 +129,189 @@ def parse_user_config(config_file: str = "./user_config.yaml"):
         print("Config file not found.")
         return
 
+    module = sys.modules[__name__]
+    setattr(module, "DEBUG_MODE_ON", user_config["debug_mode"]["enable"])
+
     try:
         section = user_config["debug_mode"]
     except KeyError:
-        print("KeyError in config file.")
-        pass
+        _print_key_err_msg("debug_mode")
     else:
         try:
-            global DEBUG_MODE_ON
-            DEBUG_MODE_ON = section["enable"]
+            setattr(module, "DEBUG_MODE_ON", section["enable"])
         except KeyError:
-            pass
+            _print_key_err_msg("debug_mode.enable")
 
     try:
         section = user_config["relay_server"]
     except KeyError:
-        print("KeyError in config file.")
-        pass
+        _print_key_err_msg("relay_server")
     else:
         try:
-            global USE_RELAY
-            USE_RELAY = section["enable"]
+            setattr(module, "USE_RELAY", section["enable"])
         except KeyError:
-            pass
+            _print_key_err_msg("relay_server.enable")
 
     try:
         section = user_config["recording"]
     except KeyError:
-        print("KeyError in config file.")
-        pass
+        _print_key_err_msg("recording")
     else:
         try:
-            global START_HOUR
-            START_HOUR = section["start_hour"]
+            setattr(module, "START_HOUR", section["start_hour"])
         except KeyError:
-            print("KeyError in config file.")
-            pass
+            _print_key_err_msg("recording.start_hour")
         try:
-            global END_HOUR
-            END_HOUR = section["end_hour"]
+            setattr(module, "END_HOUR", section["end_hour"])
         except KeyError:
-            print("KeyError in config file.")
-            pass
+            _print_key_err_msg("recording.end_hour")
         try:
             global INTERVAL_LENGTH
-            INTERVAL_LENGTH = section["interval_length"]
+            setattr(module, "INTERVAL_LENGTH", section["interval_length"])
         except KeyError:
-            print("KeyError in config file.")
-            pass
+            _print_key_err_msg("recording.interval_length")
         try:
-            global NUM_INTERVALS
-            NUM_INTERVALS = section["num_intervals"]
+            setattr(module, "NUM_INTERVALS", section["num_intervals"])
         except KeyError:
-            print("KeyError in config file.")
-            pass
+            _print_key_err_msg("recording.num_invervals")
         try:
-            global MIN_FREE_SPACE
-            MIN_FREE_SPACE = section["min_free_space"]
+            setattr(module, "MIN_FREE_SPACE", section["min_free_space"])
         except KeyError:
-            print("KeyError in config file.")
-            pass
+            _print_key_err_msg("recording.min_free_space")
 
     try:
         section = user_config["camera"]
     except KeyError:
-        print("KeyError in config file.")
-        pass
+        _print_key_err_msg("camera")
     else:
         try:
-            global FPS
-            FPS = section["fps"]
+            setattr(module, "FPS", section["fps"])
         except KeyError:
-            print("KeyError in config file.")
-            pass
+            _print_key_err_msg("camera.fps")
         try:
-            global RESOLUTION
-            RESOLUTION = (
-                section["resolution"]["width"],
-                section["resolution"]["height"],
+            setattr(
+                module,
+                "RESOLUTION",
+                (section["resolution"]["width"], section["resolution"]["height"]),
             )
         except KeyError:
-            print("KeyError in config file.")
-            pass
+            _print_key_err_msg("camera.resolution.width, camera.resolution.height")
         try:
-            global EXPOSURE_MODE
-            EXPOSURE_MODE = section["exposure_mode"]
+            setattr(module, "EXPOSURE_MODE", section["exposure_mode"])
         except KeyError:
-            print("KeyError in config file.")
-            pass
+            _print_key_err_msg("camera.exposure_mode")
         try:
-            global DRC_STRENGTH
-            DRC_STRENGTH = section["drc_strength"]
+            setattr(module, "DRC_STRENGTH", section["drc_strength"])
         except KeyError:
-            print("KeyError in config file.")
-            pass
+            _print_key_err_msg("camera.drc_strength")
         try:
-            global ROTATION
-            ROTATION = section["rotation"]
+            setattr(module, "ROTATION", section["rotation"])
         except KeyError:
-            print("KeyError in config file.")
-            pass
+            _print_key_err_msg("cammera.rotation")
         try:
-            global AWB_MODE
-            AWB_MODE = section["awb_mode"]
+            setattr(module, "AWB_MODE", section["awb_mode"])
         except KeyError:
-            print("KeyError in config file.")
-            pass
+            _print_key_err_msg("camera.awb_mode")
 
     try:
         section = user_config["preview"]
     except KeyError:
-        print("KeyError in config file.")
-        pass
+        _print_key_err_msg("preview")
     else:
+        # preview_path = str(Path(PREVIEW_PATH).expanduser().resolve())  # default
         try:
-            global PREVIEW_PATH
-            PREVIEW_PATH = section["path"]
+            preview_path = str(Path(section["path"]).expanduser().resolve())
+            setattr(module, "PREVIEW_PATH", preview_path)
         except KeyError:
-            print("KeyError in config file.")
-            pass
+            _print_key_err_msg("preview.path")
         try:
-            global PREVIEW_FORMAT
-            PREVIEW_FORMAT = section["format"]
+            setattr(module, "PREVIEW_FORMAT", section["format"])
         except KeyError:
-            print("KeyError in config file.")
-            pass
+            print("preview.format")
         try:
-            global PREVIEW_INTERVAL
-            PREVIEW_INTERVAL = section["interval"]
+            setattr(module, "PREVIEW_INTERVAL", section["interval"])
         except KeyError:
-            print("KeyError in config file.")
-            pass
+            _print_key_err_msg("preview.interval")
 
     try:
         section = user_config["video"]
     except KeyError:
-        print("KeyError in config file.")
-        pass
+        _print_key_err_msg("video")
     else:
+        # video_dir = str(Path(VIDEO_DIR).expanduser().resolve())
         try:
-            global VIDEO_DIR
-            VIDEO_DIR = section["dir"]
+            video_dir = str(Path(section["dir"]).expanduser().resolve())
+            setattr(module, "VIDEO_DIR", video_dir)
         except KeyError:
-            print("KeyError in config file.")
-            pass
+            _print_key_err_msg("video.dir")
         try:
-            global VIDEO_FORMAT
-            VIDEO_FORMAT = section["format"]
+            setattr(module, "VIDEO_FORMAT", section["format"])
         except KeyError:
-            print("KeyError in config file.")
-            pass
+            _print_key_err_msg("video.format")
         try:
-            global RESOLUTION_SAVED_VIDEO_FILE
-            RESOLUTION_SAVED_VIDEO_FILE = (
-                section["resolution"]["width"],
-                section["resolution"]["height"],
+            setattr(
+                module,
+                "RESOLUTION_SAVED_VIDEO_FILE",
+                (section["resolution"]["width"], section["resolution"]["height"]),
             )
         except KeyError:
             print("KeyError in config file.")
-            pass
+            _print_key_err_msg("video.resolution.width, video.resolution.height")
+
         try:
             section = section["encoder"]
         except KeyError:
-            print("KeyError in config file.")
-            pass
+            _print_key_err_msg("encoder")
         else:
             try:
-                global H264_PROFILE
-                H264_PROFILE = section["profile"]
+                setattr(module, "H264_PROFILE", section["profile"])
             except KeyError:
-                print("KeyError in config file.")
-                pass
+                _print_key_err_msg("encoder.profile")
             try:
-                global H264_LEVEL
-                H264_LEVEL = section["level"]
+                setattr(module, "H264_LEVEL", str(section["level"]))
             except KeyError:
-                print("KeyError in config file.")
-                pass
+                _print_key_err_msg("encoder.level")
             try:
-                global H264_BITRATE
-                H264_BITRATE = section["bitrate"]
+                setattr(module, "H264_BITRATE", section["bitrate"])
             except KeyError:
-                print("KeyError in config file.")
-                pass
+                _print_key_err_msg("encoder.bitrate")
             try:
                 global H264_QUALITY
                 H264_QUALITY = section["quality"]
+                setattr(module, "H264_QUALITY", section["quality"])
             except KeyError:
-                print("KeyError in config file.")
-                pass
+                _print_key_err_msg("encoder.quality")
 
     try:
         section = user_config["wifi"]
     except KeyError:
-        print("KeyError in config file.")
-        pass
+        _print_key_err_msg("wifi")
     else:
         try:
-            global WIFI_DELAY
-            WIFI_DELAY = section["delay"]
+            setattr(module, "WIFI_DELAY", section["delay"])
         except KeyError:
-            pass
+            _print_key_err_msg("wifi.delay")
 
     try:
         section = user_config["leds"]
     except KeyError:
-        print("KeyError in config file.")
-        pass
+        _print_key_err_msg("leds")
     else:
         try:
-            global USE_LED
-            USE_LED = section["enable"]
+            setattr(module, "USE_LED", section["enable"])
         except KeyError:
-            pass
+            _print_key_err_msg("leds.enable")
 
     try:
         section = user_config["buttons"]
     except KeyError:
-        print("KeyError in config file.")
-        pass
+        _print_key_err_msg("buttons")
     else:
         try:
-            global USE_BUTTONS
-            USE_BUTTONS = section["enable"]
+            setattr(module, "USE_BUTTONS", section["enable"])
         except KeyError:
-            pass
+            _print_key_err_msg("buttons.enable")
 
 
-parse_user_config("./user_config.yaml")
+def _print_key_err_msg(key_name: str) -> None:
+    print(f"KeyError in config file for: '{key_name}'")
