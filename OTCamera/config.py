@@ -314,6 +314,20 @@ def parse_user_config(config_file: str):
         except KeyError:
             _print_key_err_msg("buttons.enable")
 
+    try:
+        section = user_config["msteams"]
+    except KeyError:
+        _print_key_err_msg("msteams")
+    else:
+        try:
+            setattr(module, "USE_MS_TEAMS_WEBHOOK", section["enable"])
+        except KeyError:
+            _print_key_err_msg("msteams.enable")
+        try:
+            setattr(module, "MS_TEAMS_WEBHOOK_URL", section["url"])
+        except KeyError:
+            _print_key_err_msg("msteams.url")
+
 
 def _print_key_err_msg(key_name: str) -> None:
     print(f"KeyError in config file for: '{key_name}'")

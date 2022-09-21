@@ -47,3 +47,7 @@ leds:
 
 buttons:
   enable: false
+
+msteams:
+  enable: false
+  url: null
