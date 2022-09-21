@@ -22,7 +22,7 @@ def parse_args() -> Path:
     if args.config:
         config.parse_user_config(args.config)
     else:
-        config.parse_user_config("./user_config.yaml")
+        config.parse_user_config("~/user_config.yaml")
 
 
 def main():

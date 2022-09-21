@@ -124,13 +124,13 @@ OFFLINE_HTML_PATH = str(Path(OFFLINE_HTML_PATH).expanduser().resolve())
 
 
 def parse_user_config(config_file: str):
-    config_file = str(Path(config_file).resolve())
+    config_file = str(Path(config_file).expanduser().resolve())
     try:
         with open(config_file, mode="rb") as f:
             user_config = yaml.load(f, Loader=SafeLoader)
     except FileNotFoundError:
         # TODO: use log module
-        print("Config file not found.")
+        print("No user config found.")
         return
 
     module = sys.modules[__name__]
