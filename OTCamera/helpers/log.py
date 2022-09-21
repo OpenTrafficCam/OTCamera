@@ -111,7 +111,7 @@ def _send_msg_to_ms_teams(msg: str, teams_url: str, time: str) -> None:
 
 def _write_exception_msg(
     err_prefix: str,
-    exception: requests.exceptions.RequestException,
+    exception: Exception,
 ):
     _write(f"{err_prefix} {exception}")
 
