@@ -88,7 +88,7 @@ def _send_msg_to_ms_teams(msg: str, teams_url: str, time: str) -> None:
     err_prefix = f"{time} {LogLevel.ERROR}: "
 
     global failed_attempts
-    
+
     try:
         response = requests.post(
             teams_url, headers=headers, data=json.dumps(payload), timeout=10
