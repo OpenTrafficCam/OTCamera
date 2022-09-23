@@ -59,6 +59,10 @@ class LogHtmlId(Enum):
     LOG_DATA = "log-data"
 
 
+class BannerHtmlId(Enum):
+    RECORDING_BANNER = "recording-banner"
+
+
 @dataclass
 class OTCameraDataObject(ABC):
     """
@@ -165,7 +169,7 @@ CONFIG_DESC = {
     ConfigHtmlId.WIFI_DELAY: "Wi-Fi Delay",
 }
 
-RECORDING_BANNER_DESC = {
+BANNER_DESC = {
     "BANNER_RECORDING": "Currently recording",
     "BANNER_NOT_RECORDING": "Not recording",
     "BANNER_NOT_ALWAYS_RECORDING": "Currently recording (not 24/7)",
@@ -251,28 +255,30 @@ class StatusWebsiteUpdater:
             always_recording(bool): Wether OTCamera is set to always record without
             breaks.
         """
-        banner_section_tag = soup.find(id=LogHtmlId.RECORDING_BANNER.value)
+        banner_section_tag = soup.find(id=BannerHtmlId.RECORDING_BANNER.value)
         if currently_recording:
             if always_recording:
                 banner_tag = self._build_tag(
                     soup=soup,
                     tag_type="div",
                     class_attr="alert alert-success",
-                    content=RECORDING_BANNER_DESC["BANNER_RECORDING"],
+                    content=BANNER_DESC["BANNER_RECORDING"],
                 )
             else:
                 banner_tag = self._build_tag(
                     soup=soup,
                     tag_type="div",
                     class_attr="alert alert-warning",
-                    content=RECORDING_BANNER_DESC["BANNER_NOT_ALWAYS_RECORDING"],
+                    content=BANNER_DESC["BANNER_NOT_ALWAYS_RECORDING"],
                 )
         else:
             banner_tag = self._build_tag(
                 soup=soup,
                 tag_type="div",
                 class_attr="alert alert-danger",
-                content=RECORDING_BANNER_DESC["BANNER_NOT_RECORDING"],
+                content=BANNER_DESC["BANNER_NOT_RECORDING"],
+            )
+        banner_section_tag.append(banner_tag)
             )
         banner_section_tag.append(banner_tag)
 
