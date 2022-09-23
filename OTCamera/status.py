@@ -83,6 +83,10 @@ def get_status_data() -> StatusDataObject:
         currently_recording=(StatusHtmlId.CURRENTLY_RECORDING, currently_recording),
         low_battery=(StatusHtmlId.LOW_BATTERY, low_battery),
         hour_button_active=(StatusHtmlId.HOUR_BUTTON_ACTIVE, hour_button_active),
+        external_power_supply_connected=(
+            StatusHtmlId.EXT_POWER_SUPPLY_CONNECTED,
+            external_power_supply_connected,
+        ),
     )
 
 

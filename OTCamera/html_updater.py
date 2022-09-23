@@ -21,6 +21,7 @@ class StatusHtmlId(Enum):
     POWER_BUTTON_ACTIVE = "power-button-active"
     HOUR_BUTTON_ACTIVE = "24-7-recording"
     WIFI_AP_ON = "wifi-ap-on"
+    EXT_POWER_SUPPLY_CONNECTED = "ext-power-supply-connected"
 
 
 class ConfigHtmlId(Enum):
@@ -61,6 +62,7 @@ class LogHtmlId(Enum):
 
 class BannerHtmlId(Enum):
     RECORDING_BANNER = "recording-banner"
+    EXT_POWER_SUPPLY_BANNER = "ext-power-supply-banner"
 
 
 @dataclass
@@ -88,6 +90,7 @@ class StatusDataObject(OTCameraDataObject):
     currently_recording: Tuple[Enum, bool]
     low_battery: Tuple[Enum, bool]
     hour_button_active: Tuple[Enum, bool]
+    external_power_supply_connected: Tuple[Enum, bool]
 
 
 @dataclass
@@ -136,6 +139,7 @@ STATUS_DESC = {
     StatusHtmlId.CURRENTLY_RECORDING: "Camera Currently Recording",
     StatusHtmlId.LOW_BATTERY: "Battery Low",
     StatusHtmlId.HOUR_BUTTON_ACTIVE: "24/7 Recording",
+    StatusHtmlId.EXT_POWER_SUPPLY_CONNECTED: "External Power Supply Connected",
 }
 
 CONFIG_DESC = {
@@ -173,6 +177,7 @@ BANNER_DESC = {
     "BANNER_RECORDING": "Currently recording",
     "BANNER_NOT_RECORDING": "Not recording",
     "BANNER_NOT_ALWAYS_RECORDING": "Currently recording (not 24/7)",
+    "BANNER_EXT_POWER_SUPPLY_NOT_CONNECTED": "Not connected to external power supply",
 }
 
 
@@ -212,11 +217,17 @@ class StatusWebsiteUpdater:
         config_info: OTCameraDataObject,
         currently_recording: bool,
         always_recording: bool,
+        external_power_supply_connected: bool,
     ):
         html_tree = copy.copy(self._html_data)
 
         # Update record status banner
         self._set_record_status_banner(html_tree, currently_recording, always_recording)
+
+        # Update external power supply banner
+        self._set_external_power_supply_status_banner(
+            html_tree, external_power_supply_connected
+        )
 
         # Update status info
         self._enable_tag_by_id(html_tree, self.status_info_id)
@@ -279,8 +290,31 @@ class StatusWebsiteUpdater:
                 content=BANNER_DESC["BANNER_NOT_RECORDING"],
             )
         banner_section_tag.append(banner_tag)
+
+    def _set_external_power_supply_status_banner(
+        self,
+        soup: BeautifulSoup,
+        external_power_supply_connected: bool,
+    ):
+        """View banner on status website informing about whether OTCamera is connected
+        to an external power supply
+
+        A red banner indicates that no external power supply is connected.
+
+        Args:
+            soup (BeautifulSoup): Represents the root of html tree.
+            external_power_supply_connected(bool): If connected to external power
+            supply.
+        """
+        banner_section_tag = soup.find(id=BannerHtmlId.EXT_POWER_SUPPLY_BANNER.value)
+        if not external_power_supply_connected:
+            banner_tag = self._build_tag(
+                soup=soup,
+                tag_type="div",
+                class_attr="alert alert-danger",
+                content=BANNER_DESC["BANNER_EXT_POWER_SUPPLY_NOT_CONNECTED"],
             )
-        banner_section_tag.append(banner_tag)
+            banner_section_tag.append(banner_tag)
 
     def _build_tag(
         self, soup: BeautifulSoup, tag_type: str, class_attr: str, content: str
