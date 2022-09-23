@@ -106,7 +106,7 @@ if config.USE_LED:
 
     off()
 
-    log.write("LEDs initialized")
+    log.write("LEDs initialized", log.LogLevel.DEBUG)
 
 else:
     log.write("No LEDs", log.LogLevel.DEBUG)
