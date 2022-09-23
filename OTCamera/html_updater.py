@@ -22,6 +22,7 @@ class StatusHtmlId(Enum):
     HOUR_BUTTON_ACTIVE = "24-7-recording"
     WIFI_AP_ON = "wifi-ap-on"
     EXT_POWER_SUPPLY_CONNECTED = "ext-power-supply-connected"
+    MS_TEAMS_WEBHOOK_ENABLED = "ms-teams-webhook-enabled"
 
 
 class ConfigHtmlId(Enum):
@@ -56,7 +57,6 @@ class ConfigHtmlId(Enum):
 
 
 class LogHtmlId(Enum):
-    RECORDING_BANNER = "recording-banner"
     LOG_DATA = "log-data"
 
 
@@ -91,6 +91,7 @@ class StatusDataObject(OTCameraDataObject):
     low_battery: Tuple[Enum, bool]
     hour_button_active: Tuple[Enum, bool]
     external_power_supply_connected: Tuple[Enum, bool]
+    ms_teams_webhook_enabled: Tuple[Enum, bool]
 
 
 @dataclass
@@ -140,6 +141,7 @@ STATUS_DESC = {
     StatusHtmlId.LOW_BATTERY: "Battery Low",
     StatusHtmlId.HOUR_BUTTON_ACTIVE: "24/7 Recording",
     StatusHtmlId.EXT_POWER_SUPPLY_CONNECTED: "External Power Supply Connected",
+    StatusHtmlId.MS_TEAMS_WEBHOOK_ENABLED: "MS Teams Webhook Enabled",
 }
 
 CONFIG_DESC = {

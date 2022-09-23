@@ -87,6 +87,10 @@ def get_status_data() -> StatusDataObject:
             StatusHtmlId.EXT_POWER_SUPPLY_CONNECTED,
             external_power_supply_connected,
         ),
+        ms_teams_webhook_enabled=(
+            StatusHtmlId.MS_TEAMS_WEBHOOK_ENABLED,
+            config.USE_MS_TEAMS_WEBHOOK,
+        ),
     )
 
 
