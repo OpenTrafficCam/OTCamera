@@ -115,6 +115,7 @@ NUM_LOG_FILES_HTML = 2
 # Microsoft Teams WebHook
 USE_MS_TEAMS_WEBHOOK = False
 MS_TEAMS_WEBHOOK_URL = None
+MS_TEAMS_MAX_FAILED_SEND_ATTEMPTS = 2
 
 VIDEO_DIR = str(Path(VIDEO_DIR).expanduser().resolve())
 PREVIEW_PATH = str(Path(PREVIEW_PATH).expanduser().resolve())
