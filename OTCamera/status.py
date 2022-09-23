@@ -46,6 +46,7 @@ recording: bool = False
 power_button_pressed: bool = False
 hour_button_pressed: bool = False
 wifi_button_pressed: bool = False
+external_power_supply_connected: bool = False
 battery_is_low: bool = False
 
 
