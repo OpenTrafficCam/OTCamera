@@ -68,7 +68,7 @@ class Camera(Singleton):
         self.drc_strength = drc_strength
         self.rotation = rotation
         self._picam = self._create_picam()
-        log.write("Camera initialized")
+        log.write("Camera initialized", log.LogLevel.DEBUG)
 
     def start_recording(self):
         """Start a recording a video.

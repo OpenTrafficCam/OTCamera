@@ -195,4 +195,4 @@ if config.USE_BUTTONS:
         _on_external_power_button_pressed()
 
 else:
-    log.write("No Buttons")
+    log.write("No Buttons", log.LogLevel.DEBUG)
