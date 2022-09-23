@@ -1,5 +1,4 @@
 import argparse
-import sys
 from pathlib import Path
 
 import OTCamera.config as config
