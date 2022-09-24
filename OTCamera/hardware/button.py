@@ -66,10 +66,12 @@ def _on_low_battery_button_held() -> None:
 
 
 def _on_external_power_button_pressed() -> None:
+    status.external_power_connected = True
     log.write("External power connected", log.LogLevel.INFO)
 
 
 def _on_external_power_button_released() -> None:
+    status.external_power_connected = False
     log.write("External power disconnected!", log.LogLevel.WARNING)
 
 
@@ -192,6 +194,7 @@ if config.USE_BUTTONS:
 
     log.write("Buttons initialized", log.LogLevel.DEBUG)
     if external_power_button.is_pressed():
+        status.external_power_connected = external_power_button.is_pressed
         _on_external_power_button_pressed()
 
 else:

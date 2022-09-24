@@ -93,6 +93,7 @@ class OTCamera:
                 self._get_config_settings(),
                 status.recording,
                 status.hour_button_pressed,
+                status.external_power_connected,
             )
             sleep(0.5)
 
@@ -139,6 +140,7 @@ class OTCamera:
                 self._get_config_settings(),
                 status.recording,
                 status.hour_button_pressed,
+                status.external_power_connected,
             )
             status.preview_taken = True
         elif not (is_preview_time or not status.preview_taken):
