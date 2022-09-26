@@ -96,7 +96,7 @@ def _on_power_button_released() -> None:
             rpi.shutdown()
     else:
         status.noblink = False
-        log.write("Shutdown cancelled. Button pressed again.", False)
+        log.write("Shutdown cancelled. Button pressed again.", log.LogLevel.INFO, False)
         led.power_blink()
 
 
