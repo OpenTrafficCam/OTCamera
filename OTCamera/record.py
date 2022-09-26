@@ -176,6 +176,11 @@ class OTCamera:
             log.write("Captured all intervals, stopping", level=log.LogLevel.INFO)
         except KeyboardInterrupt:
             log.write("Keyboard Interrupt, stopping", level=log.LogLevel.EXCEPTION)
+        except ValueError as ve:
+            if str(ve).startswith("ValueError: I/O operation on closed file."):
+                print(ve)
+            else:
+                raise
         except Exception as e:
             log.write(f"{e}", level=log.LogLevel.EXCEPTION)
             raise
