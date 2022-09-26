@@ -1,5 +1,4 @@
 import argparse
-import sys
 from pathlib import Path
 
 import OTCamera.config as config
@@ -34,5 +33,4 @@ def main():
 
 
 if __name__ == "__main__":
-    module = sys.modules[__name__]
     main()

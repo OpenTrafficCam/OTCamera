@@ -46,7 +46,7 @@ recording: bool = False
 power_button_pressed: bool = False
 hour_button_pressed: bool = False
 wifi_button_pressed: bool = False
-external_power_supply_connected: bool = False
+external_power_connected: bool = False
 battery_is_low: bool = False
 
 
@@ -85,7 +85,7 @@ def get_status_data() -> StatusDataObject:
         hour_button_active=(StatusHtmlId.HOUR_BUTTON_ACTIVE, hour_button_active),
         external_power_supply_connected=(
             StatusHtmlId.EXT_POWER_SUPPLY_CONNECTED,
-            external_power_supply_connected,
+            external_power_connected,
         ),
         ms_teams_webhook_enabled=(
             StatusHtmlId.MS_TEAMS_WEBHOOK_ENABLED,
