@@ -193,7 +193,7 @@ if config.USE_BUTTONS:
     status.hour_button_pressed = hour_button.is_pressed
 
     log.write("Buttons initialized", log.LogLevel.DEBUG)
-    if external_power_button.is_pressed():
+    if external_power_button.is_pressed:
         status.external_power_connected = external_power_button.is_pressed
         _on_external_power_button_pressed()
 
