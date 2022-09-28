@@ -90,6 +90,18 @@ def on_hour_button_released():
     print(f"Hour LED is off: {not hour_led.is_active}")
 
 
+@surround_with_dashes
+def on_external_power_button_pressed():
+    print("External power is connected")
+    print(f"External power is connected: {external_power_button.is_pressed}")
+
+
+@surround_with_dashes
+def on_external_power_button_released():
+    print("External power is not connected")
+    print(f"External power is connected: {external_power_button.is_pressed}")
+
+
 # Handlers
 power_button.when_pressed = on_power_button_pressed
 power_button.when_released = on_power_button_released
@@ -97,6 +109,8 @@ wifi_button.when_pressed = on_wifi_button_pressed
 wifi_button.when_released = on_wifi_button_released
 hour_button.when_pressed = on_hour_button_pressed
 hour_button.when_released = on_hour_button_released
+external_power_button.when_pressed = on_external_power_button_pressed
+external_power_button.when_released = on_external_power_button_released
 
 
 def sanitize(input: str) -> str:
