@@ -147,6 +147,7 @@ def print_cmd_list() -> None:
     print("Commands")
     print("---")
     print("cmd list - List all commands.")
+    print("help - List all commands.")
     print("---")
     print("button stat - Show status of all buttons.")
     print("---")
@@ -242,7 +243,7 @@ def main():
         user_input = input()
         sanitized_input = sanitize(user_input)
 
-        if sanitized_input == "cmd list":
+        if sanitized_input == "cmd list" or sanitized_input == "help":
             print_cmd_list()
         elif sanitized_input == "button stat":
             print_button_statuses()
