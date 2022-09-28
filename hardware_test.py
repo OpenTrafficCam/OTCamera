@@ -14,6 +14,10 @@ EXTERNAL_POWER_PIN = 26
 
 # Camera
 camera = PiCamera()
+test_video_dir = Path("~/test_videos").expanduser().resolve()
+test_video_dir.mkdir(parents=True, exist_ok=True)
+
+
 # Initialise buttons
 low_battery_button = Button(
     LOWBATTERY_PIN, pull_up=True, hold_time=2, hold_repeat=False
@@ -169,6 +173,21 @@ def stop_recording() -> None:
     print(f"Camera recording: {camera.recording}")
 
 
+@surround_with_dashes
+def teardown() -> None:
+    print("Execute teardown.")
+    print("---")
+    if camera.recording:
+        camera.stop_recording()
+    camera.close()
+    print("Camera closed.")
+
+    for f in test_video_dir.iterdir():
+        f.unlink()
+    test_video_dir.rmdir()
+    print("Test directory removed")
+
+
 def main():
     print("Test OTCamera Hardware")
 
@@ -200,9 +219,11 @@ def main():
         elif sanitized_input == "cam off":
             stop_recording()
         elif sanitized_input == "sh":
+            teardown()
             call("sudo shutdown -h now", shell=True)
         elif sanitized_input == "q":
             close = True
+            teardown()
             print("Quit app.")
         else:
             print(f"Command '{sanitized_input}' does not exist!")
