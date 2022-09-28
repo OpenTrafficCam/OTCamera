@@ -123,6 +123,26 @@ def print_button_statuses() -> None:
     print(f"External Power Pin active: {external_power_button.is_active}")
 
 
+@surround_with_dashes
+def print_cmd_list() -> None:
+    print("Commands")
+    print("---")
+    print("cmd list - List all commands.")
+    print("---")
+    print("button stat - Show status of all buttons.")
+    print("---")
+    print("led on - Turn on all LEDs.")
+    print("led off - Turn off all LEDs.")
+    print("led stat - Show status of all LEDs.")
+    print("---")
+    print("cam on - Start camera recording.")
+    print("cam off - Stop camera recording.")
+    print("cam stat - Show number of recorded videos.")
+    print("---")
+    print("sh - System shutdown.")
+    print("q - Quit application.")
+
+
 def turn_leds_on() -> None:
     power_led.on()
     wifi_led.on()
@@ -196,13 +216,16 @@ def main():
     sync_button_with_led(hour_button, hour_led)
 
     close: bool = False
+    print_cmd_list()
 
     while not close:
         print("Enter command: ")
         user_input = input()
         sanitized_input = sanitize(user_input)
 
-        if sanitized_input == "button stat":
+        if sanitized_input == "cmd list":
+            print_cmd_list()
+        elif sanitized_input == "button stat":
             print_button_statuses()
         elif sanitized_input == "led stat":
             print_led_statuses()
