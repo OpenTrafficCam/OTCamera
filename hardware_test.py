@@ -1,8 +1,9 @@
 from gpiozero import Button
 from gpiozero import PWMLED
 
-# from picamerax import PiCamera
+from picamerax import PiCamera
 from subprocess import call
+from pathlib import Path
 
 # Button GPIO Pins
 BUTTON_POWER_PIN = 17
@@ -11,6 +12,8 @@ BUTTON_WIFI_PIN = 22
 LOWBATTERY_PIN = 16
 EXTERNAL_POWER_PIN = 26
 
+# Camera
+camera = PiCamera()
 # Initialise buttons
 low_battery_button = Button(
     LOWBATTERY_PIN, pull_up=True, hold_time=2, hold_repeat=False
@@ -135,6 +138,37 @@ def sync_button_with_led(button: Button, led: PWMLED) -> None:
         led.off()
 
 
+def get_num_videos_recorded() -> int:
+    return len([f for f in test_video_dir.iterdir()])
+
+
+@surround_with_dashes
+def print_num_videos_recorded() -> None:
+    print(f"Num videos recorded: {get_num_videos_recorded()}")
+
+
+@surround_with_dashes
+def start_recording() -> None:
+    if not camera.recording:
+        camera.start_recording(
+            output=str(test_video_dir / f"test{get_num_videos_recorded() + 1}.h264")
+        )
+        print("Start camera recording.")
+    else:
+        print("Camera already recording.")
+    print(f"Camera recording: {camera.recording}")
+
+
+@surround_with_dashes
+def stop_recording() -> None:
+    if camera.recording:
+        camera.stop_recording()
+        print("Stop camera recording.")
+    else:
+        print("Camera recording already stopped.")
+    print(f"Camera recording: {camera.recording}")
+
+
 def main():
     print("Test OTCamera Hardware")
 
@@ -153,26 +187,18 @@ def main():
             print_button_statuses()
         elif sanitized_input == "led stat":
             print_led_statuses()
+        elif sanitized_input == "cam stat":
+            print_num_videos_recorded()
         elif sanitized_input == "led on":
             turn_leds_on()
             print_led_statuses()
         elif sanitized_input == "led off":
             turn_leds_off()
             print_led_statuses()
-        #        elif sanitized_input == "cam on":
-        #            if not PiCamera.recording:
-        #                PiCamera.start_recording()
-        #                print("Start camera recording.")
-        #            else:
-        #                print("Camera already recording.")
-        #            print(f"Camera recording: {PiCamera.recording}")
-        #        elif sanitized_input == "cam off":
-        #            if PiCamera.recording:
-        #                PiCamera.stop_recording()
-        #                print("Stop camera recording.")
-        #            else:
-        #                print("Camera recording already stopped.")
-        #            print(f"Camera recording: {PiCamera.recording}")
+        elif sanitized_input == "cam on":
+            start_recording()
+        elif sanitized_input == "cam off":
+            stop_recording()
         elif sanitized_input == "sh":
             call("sudo shutdown -h now", shell=True)
         elif sanitized_input == "q":
