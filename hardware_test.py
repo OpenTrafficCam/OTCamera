@@ -1,9 +1,8 @@
-from gpiozero import Button
-from gpiozero import PWMLED
-
-from picamerax import PiCamera
-from subprocess import call
 from pathlib import Path
+from subprocess import call
+
+from gpiozero import PWMLED, Button
+from picamerax import PiCamera
 
 # Button GPIO Pins
 BUTTON_POWER_PIN = 17
