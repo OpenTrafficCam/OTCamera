@@ -31,53 +31,56 @@ wifi_led = PWMLED(LED_WIFI_PIN)
 hour_led = PWMLED(LED_REC_PIN)
 
 
+def surround_with_dashes(func):
+    def wrapper_func(*args, **kwargs):
+        print("---")
+        func(*args, **kwargs)
+        print("---")
+
+    return wrapper_func
+
+
 # Callbacks
+@surround_with_dashes
 def on_power_button_pressed():
-    print("---")
     print(f"Power button is on: {power_button.is_pressed}")
     power_led.on()
     print(f"Power LED is on: {power_led.is_active}")
-    print("---")
 
 
+@surround_with_dashes
 def on_power_button_released():
-    print("---")
     print(f"Power button is off: {not power_button.is_pressed}")
     power_led.off()
     print(f"Power LED is off: {not power_led.is_active}")
-    print("---")
 
 
+@surround_with_dashes
 def on_wifi_button_pressed():
-    print("---")
     print(f"Wifi button is on: {wifi_button.is_pressed}")
     wifi_led.on()
     print(f"Wifi LED is on: {wifi_led.is_active}")
-    print("---")
 
 
+@surround_with_dashes
 def on_wifi_button_released():
-    print("---")
     print(f"Wifi button is off: {not wifi_button.is_pressed}")
     wifi_led.off()
     print(f"Wifi LED is off: {not wifi_led.is_active}")
-    print("---")
 
 
+@surround_with_dashes
 def on_hour_button_pressed():
-    print("---")
     print(f"Hour button is on: {hour_button.is_pressed}")
     hour_led.on()
     print(f"Hour LED is on: {power_led.is_active}")
-    print("---")
 
 
+@surround_with_dashes
 def on_hour_button_released():
-    print("---")
     print(f"Hour button is off: {not hour_button.is_pressed}")
     hour_led.off()
     print(f"Hour LED is off: {not hour_led.is_active}")
-    print("---")
 
 
 # Handlers
@@ -93,18 +96,17 @@ def sanitize(input: str) -> str:
     return input.strip().lower()
 
 
+@surround_with_dashes
 def print_led_statuses() -> None:
-    print("---")
     print("LED statuses")
     print("---")
     print(f"Power LED active: {power_led.is_active}")
     print(f"Wifi LED active: {wifi_led.is_active}")
     print(f"Hour LED active: {hour_led.is_active}")
-    print("---")
 
 
+@surround_with_dashes
 def print_button_statuses() -> None:
-    print("---")
     print("Button statuses")
     print("---")
     print(f"Power Button active: {power_button.is_active}")
@@ -112,7 +114,6 @@ def print_button_statuses() -> None:
     print(f"Hour Button active: {hour_button.is_active}")
     print(f"Low Battery active: {low_battery_button.is_active}")
     print(f"External Power Pin active: {external_power_button.is_active}")
-    print("---")
 
 
 def turn_leds_on() -> None:
