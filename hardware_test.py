@@ -50,6 +50,7 @@ def surround_with_dashes(func):
 # Callbacks
 @surround_with_dashes
 def on_power_button_pressed():
+    print("Power button pressed")
     print(f"Power button is on: {power_button.is_pressed}")
     power_led.on()
     print(f"Power LED is on: {power_led.is_active}")
@@ -57,13 +58,15 @@ def on_power_button_pressed():
 
 @surround_with_dashes
 def on_power_button_released():
-    print(f"Power button is off: {not power_button.is_pressed}")
+    print("Power button released")
+    print(f"Power button is on: {power_button.is_pressed}")
     power_led.off()
-    print(f"Power LED is off: {not power_led.is_active}")
+    print(f"Power LED is on: {power_led.is_active}")
 
 
 @surround_with_dashes
 def on_wifi_button_pressed():
+    print("Wifi button pressed")
     print(f"Wifi button is on: {wifi_button.is_pressed}")
     wifi_led.on()
     print(f"Wifi LED is on: {wifi_led.is_active}")
@@ -71,13 +74,15 @@ def on_wifi_button_pressed():
 
 @surround_with_dashes
 def on_wifi_button_released():
-    print(f"Wifi button is off: {not wifi_button.is_pressed}")
+    print("Wifi button released")
+    print(f"Wifi button is on: {wifi_button.is_pressed}")
     wifi_led.off()
-    print(f"Wifi LED is off: {not wifi_led.is_active}")
+    print(f"Wifi LED is on: {wifi_led.is_active}")
 
 
 @surround_with_dashes
 def on_hour_button_pressed():
+    print("Hour button pressed")
     print(f"Hour button is on: {hour_button.is_pressed}")
     hour_led.on()
     print(f"Hour LED is on: {power_led.is_active}")
@@ -85,9 +90,10 @@ def on_hour_button_pressed():
 
 @surround_with_dashes
 def on_hour_button_released():
-    print(f"Hour button is off: {not hour_button.is_pressed}")
+    print("Hour button released")
+    print(f"Hour button is on: {hour_button.is_pressed}")
     hour_led.off()
-    print(f"Hour LED is off: {not hour_led.is_active}")
+    print(f"Hour LED is on: {hour_led.is_active}")
 
 
 @surround_with_dashes
