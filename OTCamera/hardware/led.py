@@ -61,7 +61,11 @@ def power_blink():
     if config.USE_LED:
         if not status.noblink:
             power.off()
-            power.blink(on_time=0.1, off_time=0, n=1, background=True)
+            if status.external_power_connected:
+                n = 2
+            else:
+                n = 1
+            power.blink(on_time=0.1, off_time=0.1, n=n, background=True)
 
 
 def power_pre_off():
