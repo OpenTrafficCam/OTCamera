@@ -62,10 +62,10 @@ def power_blink():
         if not status.noblink:
             power.off()
             if status.external_power_connected:
-                n = 2
+                number_of_blinks_running = 2
             else:
-                n = 1
-            power.blink(on_time=0.1, off_time=0.1, n=n, background=True)
+                number_of_blinks_running = 1
+            power.blink(on_time=0.1, off_time=0.1, n=number_of_blinks_running, background=True)
 
 
 def power_pre_off():
