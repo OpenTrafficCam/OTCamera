@@ -65,7 +65,9 @@ def power_blink():
                 number_of_blinks_running = 2
             else:
                 number_of_blinks_running = 1
-            power.blink(on_time=0.1, off_time=0.1, n=number_of_blinks_running, background=True)
+            power.blink(
+                on_time=0.1, off_time=0.1, n=number_of_blinks_running, background=True
+            )
 
 
 def power_pre_off():
