@@ -41,7 +41,7 @@ def surround_with_dashes(func):
     def wrapper_func(*args, **kwargs):
         print("---")
         func(*args, **kwargs)
-        print("---")
+        print("Enter command: ")
 
     return wrapper_func
 
@@ -98,12 +98,21 @@ def on_hour_button_released():
 @surround_with_dashes
 def on_external_power_button_pressed():
     print("External power is connected")
+    power_led.blink(n=3, on_time=0.25, off_time=0.25)
+    hour_led.blink(n=3, on_time=0.25, off_time=0.25)
+    wifi_led.blink(n=3, on_time=0.25, off_time=0.25, background=False)
+    sync_all_buttons_with_led()
+
     print(f"External power is connected: {external_power_button.is_pressed}")
 
 
 @surround_with_dashes
 def on_external_power_button_released():
     print("External power is not connected")
+    power_led.blink(n=2, on_time=0.25, off_time=0.25)
+    hour_led.blink(n=2, on_time=0.25, off_time=0.25)
+    wifi_led.blink(n=2, on_time=0.25, off_time=0.25, background=False)
+    sync_all_buttons_with_led()
     print(f"External power is connected: {external_power_button.is_pressed}")
 
 
@@ -182,6 +191,12 @@ def sync_button_with_led(button: Button, led: PWMLED) -> None:
         led.off()
 
 
+def sync_all_buttons_with_led():
+    sync_button_with_led(power_button, power_led)
+    sync_button_with_led(wifi_button, wifi_led)
+    sync_button_with_led(hour_button, hour_led)
+
+
 def get_num_videos_recorded() -> int:
     return len([f for f in test_video_dir.iterdir()])
 
@@ -231,15 +246,12 @@ def teardown() -> None:
 def main():
     print("Test OTCamera Hardware")
 
-    sync_button_with_led(power_button, power_led)
-    sync_button_with_led(wifi_button, wifi_led)
-    sync_button_with_led(hour_button, hour_led)
+    sync_all_buttons_with_led()
 
     close: bool = False
     print_cmd_list()
 
     while not close:
-        print("Enter command: ")
         user_input = input()
         sanitized_input = sanitize(user_input)
 
