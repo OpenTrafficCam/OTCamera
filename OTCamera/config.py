@@ -63,6 +63,8 @@ ROTATION = 180
 AWB_MODE = "greyworld"
 """Controls the auto white balancing mode. `greyworld`
 is a specific mode for NoIR modules."""
+METER_MODE = "average"
+"""Controls the size of the center region to adjust exposure."""
 
 # preview settings
 PREVIEW_PATH = "~/OTCamera/webfiles/preview.jpg"
@@ -217,6 +219,10 @@ def parse_user_config(config_file: str):
             setattr(module, "AWB_MODE", section["awb_mode"])
         except KeyError:
             _print_key_err_msg("camera.awb_mode")
+        try:
+            setattr(module, "METER_MODE", section["meter_mode"])
+        except KeyError:
+            _print_key_err_msg("camera.meter_mode")
 
     try:
         section = user_config["preview"]

@@ -57,6 +57,7 @@ class Camera(Singleton):
         awb_mode: str = config.AWB_MODE,
         drc_strength: str = config.DRC_STRENGTH,
         rotation: int = config.ROTATION,
+        meter_mode: str = config.METER_MODE,
     ) -> None:
         log.write("Initializing Camera", level=log.LogLevel.DEBUG)
 
@@ -67,6 +68,7 @@ class Camera(Singleton):
         self.awb_mode = awb_mode
         self.drc_strength = drc_strength
         self.rotation = rotation
+        self.meter_mode = meter_mode
         self._picam = self._create_picam()
         log.write("Camera initialized", log.LogLevel.DEBUG)
 
@@ -217,4 +219,5 @@ class Camera(Singleton):
         picam.awb_mode = self.awb_mode
         picam.drc_strength = self.drc_strength
         picam.rotation = self.rotation
+        picam.meter_mode = self.meter_mode
         return picam
