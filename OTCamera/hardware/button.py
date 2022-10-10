@@ -188,7 +188,7 @@ if config.USE_BUTTONS:
 
     log.write("Buttons initialized", log.LogLevel.DEBUG)
 
-    if low_battery_button.is_held:
+    if low_battery_button.is_pressed:
         _on_low_battery_button_held()
 
     if external_power_button.is_pressed:
