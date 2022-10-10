@@ -165,15 +165,9 @@ if config.USE_BUTTONS:
         EXTERNALPOWERPIN, pull_up=False, hold_time=2, hold_repeat=False
     )
     # Initialise buttons
-    power_button = Button(
-        POWERPIN, pull_up=False, hold_time=2, hold_repeat=False, bounce_time=0.5
-    )
-    hour_button = Button(
-        HOURPIN, pull_up=True, hold_time=2, hold_repeat=False, bounce_time=0.5
-    )
-    wifi_button = Button(
-        WIFIPIN, pull_up=True, hold_time=2, hold_repeat=False, bounce_time=0.5
-    )
+    power_button = Button(POWERPIN, pull_up=False, hold_time=2, hold_repeat=False)
+    hour_button = Button(HOURPIN, pull_up=True, hold_time=2, hold_repeat=False)
+    wifi_button = Button(WIFIPIN, pull_up=True, hold_time=2, hold_repeat=False)
 
     # Register callbacks
     low_battery_button.when_held = _on_low_battery_button_held

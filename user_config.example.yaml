@@ -21,6 +21,7 @@ camera:
   drc_strength: high
   rotation: 180
   awb_mode: greyworld
+  meter_mode: average
 
 preview:
   path: ~/OTCamera/webfiles/preview.jpg
