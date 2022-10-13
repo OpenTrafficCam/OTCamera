@@ -283,16 +283,15 @@ def start_app(headless: bool = False):
                     call("sudo shutdown -h now", shell=True)
                 elif sanitized_input == "q":
                     close = True
-                    teardown()
-                    print("Quit app.")
                 else:
                     print(f"Command '{sanitized_input}' does not exist!")
             else:
                 time.sleep(0.1)
     except KeyboardInterrupt:
         close = True
-        teardown()
-        print("Quit app.")
+
+    teardown()
+    print("Quit app.")
 
 
 def parse_args():
