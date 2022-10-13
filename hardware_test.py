@@ -1,3 +1,5 @@
+import argparse
+import time
 from pathlib import Path
 from subprocess import call
 
@@ -41,7 +43,7 @@ def surround_with_dashes(func):
     def wrapper_func(*args, **kwargs):
         print("---")
         func(*args, **kwargs)
-        print("Enter command: ")
+        print("---")
 
     return wrapper_func
 
@@ -243,45 +245,71 @@ def teardown() -> None:
     print("Test directory removed")
 
 
-def main():
+def start_app(headless: bool):
     print("Test OTCamera Hardware")
 
     sync_all_buttons_with_led()
 
     close: bool = False
-    print_cmd_list()
+    if not headless:
+        print_cmd_list()
+    try:
+        while not close:
+            if not headless:
+                print("Enter command: ")
+                user_input = input()
+                sanitized_input = sanitize(user_input)
 
-    while not close:
-        user_input = input()
-        sanitized_input = sanitize(user_input)
+                if sanitized_input == "cmd list" or sanitized_input == "help":
+                    print_cmd_list()
+                elif sanitized_input == "button stat":
+                    print_button_statuses()
+                elif sanitized_input == "led stat":
+                    print_led_statuses()
+                elif sanitized_input == "cam stat":
+                    print_num_videos_recorded()
+                elif sanitized_input == "led on":
+                    turn_leds_on()
+                    print_led_statuses()
+                elif sanitized_input == "led off":
+                    turn_leds_off()
+                    print_led_statuses()
+                elif sanitized_input == "cam on":
+                    start_recording()
+                elif sanitized_input == "cam off":
+                    stop_recording()
+                elif sanitized_input == "sh":
+                    teardown()
+                    call("sudo shutdown -h now", shell=True)
+                elif sanitized_input == "q":
+                    close = True
+                    teardown()
+                    print("Quit app.")
+                else:
+                    print(f"Command '{sanitized_input}' does not exist!")
+            else:
+                time.sleep(0.1)
+    except KeyboardInterrupt:
+        close = True
+        teardown()
+        print("Quit app.")
 
-        if sanitized_input == "cmd list" or sanitized_input == "help":
-            print_cmd_list()
-        elif sanitized_input == "button stat":
-            print_button_statuses()
-        elif sanitized_input == "led stat":
-            print_led_statuses()
-        elif sanitized_input == "cam stat":
-            print_num_videos_recorded()
-        elif sanitized_input == "led on":
-            turn_leds_on()
-            print_led_statuses()
-        elif sanitized_input == "led off":
-            turn_leds_off()
-            print_led_statuses()
-        elif sanitized_input == "cam on":
-            start_recording()
-        elif sanitized_input == "cam off":
-            stop_recording()
-        elif sanitized_input == "sh":
-            teardown()
-            call("sudo shutdown -h now", shell=True)
-        elif sanitized_input == "q":
-            close = True
-            teardown()
-            print("Quit app.")
-        else:
-            print(f"Command '{sanitized_input}' does not exist!")
+
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--headless",
+        action="store_true",
+        help="OTCamera hardware test will be run in headless mode.",
+    )
+    args = parser.parse_args()
+
+    return args
+
+
+def main():
+    args = parse_args()
+    start_app(headless=args.headless)
 
 
 if __name__ == "__main__":
