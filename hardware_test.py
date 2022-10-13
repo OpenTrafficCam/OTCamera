@@ -245,7 +245,7 @@ def teardown() -> None:
     print("Test directory removed")
 
 
-def start_app(headless: bool):
+def start_app(headless: bool = False):
     print("Test OTCamera Hardware")
 
     sync_all_buttons_with_led()
