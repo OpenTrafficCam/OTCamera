@@ -137,7 +137,7 @@ def handle_power_button_off_state():
 def handle_wifi_button_off_state():
     """Switches off the WiFi after config.WIFI_DELAY seconds."""
     if (
-        status.wifi_button_pressed_time + timedelta(minutes=config.WIFI_DELAY)
+        status.wifi_button_pressed_time + timedelta(seconds=config.WIFI_DELAY)
         > dt.now()
     ):
         rpi.wifi_switch_off()
