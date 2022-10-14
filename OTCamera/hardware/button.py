@@ -110,9 +110,8 @@ def _on_wifi_button_released() -> None:
     status.wifi_button_pressed = False
     status.wifi_button_pressed_time = dt.now()
 
-    if status.wifi_on:
-        led.wifi_pre_off()
-        log.write(f"Turning off Wi-Fi AP in {config.WIFI_DELAY} s")
+    led.wifi_pre_off()
+    log.write(f"Turning off Wi-Fi AP in {config.WIFI_DELAY} s")
 
 
 def init_wifi_button():
