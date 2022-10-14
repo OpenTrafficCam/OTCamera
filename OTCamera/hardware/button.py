@@ -125,7 +125,7 @@ def handle_power_button_off_state():
     """Switches off the system after a 5 second delay."""
     shutdown_delay = 5
 
-    if status.power_button_pressed_time + timedelta(seconds=shutdown_delay) > dt.now():
+    if status.power_button_pressed_time + timedelta(seconds=shutdown_delay) < dt.now():
         if config.DEBUG_MODE_ON:
             log.write("Mock shutting down RPI in debug mode.", log.LogLevel.DEBUG)
         else:
@@ -137,7 +137,7 @@ def handle_wifi_button_off_state():
     """Switches off the WiFi after config.WIFI_DELAY seconds."""
     if (
         status.wifi_button_pressed_time + timedelta(seconds=config.WIFI_DELAY)
-        > dt.now()
+        < dt.now()
     ):
         rpi.wifi_switch_off()
         status.wifi_button_pressed_time = None
