@@ -21,7 +21,7 @@ Button callbacks are calling functions in rpi helper
 
 
 from datetime import datetime as dt
-from time import sleep
+from datetime import timedelta
 
 from gpiozero import Button
 
@@ -75,29 +75,21 @@ def _on_external_power_button_released() -> None:
     log.write("External power disconnected!", log.LogLevel.WARNING)
 
 
+def _on_power_button_pressed() -> None:
+    status.power_button_pressed = True
+    status.power_button_pressed_time = None
+    status.noblink = False
+    log.write("Shutdown cancelled. Button pressed again.", log.LogLevel.INFO, False)
+    led.power_blink()
+
+
 def _on_power_button_released() -> None:
     status.power_button_pressed = False
+    status.power_button_pressed_time = dt.now()
     log.write("Power button released", level=log.LogLevel.DEBUG)
     log.write("Shutdown by button initialized")
     status.noblink = True
     led.power_pre_off()
-    timer = 0
-    shutdown_delay = 5
-    while timer <= shutdown_delay:
-        if power_button.is_pressed:
-            break
-        sleep(1)
-        timer += 1
-    if not power_button.is_pressed:
-        led.power_on()
-        if config.DEBUG_MODE_ON:
-            log.write("Mock shutting down RPI in debug mode.", log.LogLevel.DEBUG)
-        else:
-            rpi.shutdown()
-    else:
-        status.noblink = False
-        log.write("Shutdown cancelled. Button pressed again.", log.LogLevel.INFO, False)
-        led.power_blink()
 
 
 def _on_wifi_button_pressed() -> None:
@@ -107,37 +99,18 @@ def _on_wifi_button_pressed() -> None:
 
 def _on_wifi_button_held() -> None:
     status.wifi_button_pressed = True
+    status.wifi_button_pressed_time = None
     log.write("Wi-Fi button held", level=log.LogLevel.DEBUG)
-    if not status.wifi_on:
-        rpi.wifi_switch_on()
+    rpi.wifi_switch_on()
 
 
 def _on_wifi_button_released() -> None:
-    status.wifi_button_pressed = False
     log.write("Wi-Fi button released", level=log.LogLevel.DEBUG)
-    if status.wifi_on:
-        led.wifi_pre_off()
-        log.write(f"Turning off Wi-Fi AP in {config.WIFI_DELAY} s")
-        timer = 0
-        while timer <= config.WIFI_DELAY:
-            if wifi_button.is_pressed:
-                break
-            # 💩-FIX to bypass single threaded gpiozero callback handler
-            elif not power_button.is_pressed:
-                _on_power_button_released()
-            elif hour_button.is_pressed:
-                status.hour_button_pressed = True
-            elif not hour_button.is_pressed:
-                status.hour_button_pressed = False
+    status.wifi_button_pressed = False
+    status.wifi_button_pressed_time = dt.now()
 
-            sleep(1)
-            timer += 1
-        if not wifi_button.is_pressed:
-            rpi.wifi_switch_off()
-        else:
-            status.wifi_button_pressed = True
-            log.write("Wi-Fi not turned off. Button pressed again.")
-            led.wifi_on()
+    led.wifi_pre_off()
+    log.write(f"Turning off Wi-Fi AP in {config.WIFI_DELAY} s")
 
 
 def init_wifi_button():
@@ -146,6 +119,28 @@ def init_wifi_button():
         rpi.wifi_switch_on()
     else:
         rpi.wifi_switch_off()
+
+
+def handle_power_button_off_state():
+    """Switches off the system after a 5 second delay."""
+    shutdown_delay = 5
+
+    if status.power_button_pressed_time + timedelta(seconds=shutdown_delay) > dt.now():
+        if config.DEBUG_MODE_ON:
+            log.write("Mock shutting down RPI in debug mode.", log.LogLevel.DEBUG)
+        else:
+            rpi.shutdown()
+        status.power_button_pressed_time = None
+
+
+def handle_wifi_button_off_state():
+    """Switches off the WiFi after config.WIFI_DELAY seconds."""
+    if (
+        status.wifi_button_pressed_time + timedelta(seconds=config.WIFI_DELAY)
+        > dt.now()
+    ):
+        rpi.wifi_switch_off()
+        status.wifi_button_pressed_time = None
 
 
 if config.USE_BUTTONS:
@@ -173,6 +168,7 @@ if config.USE_BUTTONS:
     low_battery_button.when_held = _on_low_battery_button_held
     external_power_button.when_released = _on_external_power_button_released
     external_power_button.when_pressed = _on_external_power_button_pressed
+    power_button.when_pressed = _on_power_button_pressed
     power_button.when_released = _on_power_button_released
     wifi_button.when_pressed = _on_wifi_button_pressed
     wifi_button.when_held = _on_wifi_button_held
@@ -187,6 +183,11 @@ if config.USE_BUTTONS:
     status.hour_button_pressed = hour_button.is_pressed
 
     log.write("Buttons initialized", log.LogLevel.DEBUG)
+
+    if not power_button.is_pressed:
+        # OTCamera is in an illegal state.
+        # The power button should be active for OTCamera to run.
+        rpi.shutdown()
 
     if low_battery_button.is_pressed:
         _on_low_battery_button_held()
