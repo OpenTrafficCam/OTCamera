@@ -193,6 +193,11 @@ if config.USE_BUTTONS:
 
     log.write("Buttons initialized", log.LogLevel.DEBUG)
 
+    if not power_button.is_pressed:
+        # OTCamera is in an illegal state.
+        # The power button should be active for OTCamera to run.
+        rpi.shutdown()
+
     if low_battery_button.is_pressed:
         _on_low_battery_button_held()
 
