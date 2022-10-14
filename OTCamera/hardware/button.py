@@ -125,8 +125,7 @@ def handle_power_button_off_state():
     """Switches off the system after a 5 second delay."""
     shutdown_delay = 5
 
-    if status.power_button_pressed_time + timedelta(seconds=shutdown_delay) <= dt.now():
-        led.power_on()
+    if status.power_button_pressed_time + timedelta(seconds=shutdown_delay) > dt.now():
         if config.DEBUG_MODE_ON:
             log.write("Mock shutting down RPI in debug mode.", log.LogLevel.DEBUG)
         else:
