@@ -130,6 +130,7 @@ def handle_power_button_off_state():
             log.write("Mock shutting down RPI in debug mode.", log.LogLevel.DEBUG)
         else:
             rpi.shutdown()
+        status.power_button_pressed_time = None
 
 
 def handle_wifi_button_off_state():
