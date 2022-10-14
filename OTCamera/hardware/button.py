@@ -99,37 +99,20 @@ def _on_wifi_button_pressed() -> None:
 
 def _on_wifi_button_held() -> None:
     status.wifi_button_pressed = True
+    status.wifi_button_pressed_time = None
     log.write("Wi-Fi button held", level=log.LogLevel.DEBUG)
     if not status.wifi_on:
         rpi.wifi_switch_on()
 
 
 def _on_wifi_button_released() -> None:
-    status.wifi_button_pressed = False
     log.write("Wi-Fi button released", level=log.LogLevel.DEBUG)
+    status.wifi_button_pressed = False
+    status.wifi_button_pressed_time = dt.now()
+
     if status.wifi_on:
         led.wifi_pre_off()
         log.write(f"Turning off Wi-Fi AP in {config.WIFI_DELAY} s")
-        timer = 0
-        while timer <= config.WIFI_DELAY:
-            if wifi_button.is_pressed:
-                break
-            # 💩-FIX to bypass single threaded gpiozero callback handler
-            elif not power_button.is_pressed:
-                _on_power_button_released()
-            elif hour_button.is_pressed:
-                status.hour_button_pressed = True
-            elif not hour_button.is_pressed:
-                status.hour_button_pressed = False
-
-            sleep(1)
-            timer += 1
-        if not wifi_button.is_pressed:
-            rpi.wifi_switch_off()
-        else:
-            status.wifi_button_pressed = True
-            log.write("Wi-Fi not turned off. Button pressed again.")
-            led.wifi_on()
 
 
 def init_wifi_button():
@@ -150,6 +133,15 @@ def handle_power_button_off_state():
             log.write("Mock shutting down RPI in debug mode.", log.LogLevel.DEBUG)
         else:
             rpi.shutdown()
+
+
+def handle_wifi_button_off_state():
+    """Switches off the WiFi after config.WIFI_DELAY seconds."""
+    if (
+        status.wifi_button_pressed_time + timedelta(minutes=config.WIFI_DELAY)
+        > dt.now()
+    ):
+        rpi.wifi_switch_off()
 
 
 if config.USE_BUTTONS:

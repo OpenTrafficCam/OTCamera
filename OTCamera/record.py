@@ -87,6 +87,13 @@ class OTCamera:
         ):
             button.handle_power_button_off_state()
 
+        if (
+            not status.wifi_button_pressed
+            and status.wifi_on
+            and status.wifi_button_pressed_time is not None
+        ):
+            button.handle_wifi_button_off_state()
+
         self._send_alive_signal()
         if status.record_time():
             self._camera.start_recording()
