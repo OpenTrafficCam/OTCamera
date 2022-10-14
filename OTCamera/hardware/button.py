@@ -139,6 +139,7 @@ def handle_wifi_button_off_state():
         > dt.now()
     ):
         rpi.wifi_switch_off()
+        status.wifi_button_pressed_time = None
 
 
 if config.USE_BUTTONS:
