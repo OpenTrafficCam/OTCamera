@@ -101,8 +101,7 @@ def _on_wifi_button_held() -> None:
     status.wifi_button_pressed = True
     status.wifi_button_pressed_time = None
     log.write("Wi-Fi button held", level=log.LogLevel.DEBUG)
-    if not status.wifi_on:
-        rpi.wifi_switch_on()
+    rpi.wifi_switch_on()
 
 
 def _on_wifi_button_released() -> None:
