@@ -41,6 +41,7 @@ more_intervals: bool = True
 preview_taken: bool = False
 current_interval: int = 0
 recording: bool = False
+power_button_pressed_time: Union[dt, None] = None
 
 # Button statuses
 power_button_pressed: bool = False
