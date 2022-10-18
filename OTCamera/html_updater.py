@@ -1,6 +1,7 @@
 import copy
 from abc import ABC
 from dataclasses import dataclass, fields
+from datetime import timedelta
 from enum import Enum
 from pathlib import Path
 from typing import Any, Tuple, Union
@@ -23,6 +24,7 @@ class StatusHtmlId(Enum):
     WIFI_AP_ON = "wifi-ap-on"
     EXT_POWER_SUPPLY_CONNECTED = "ext-power-supply-connected"
     MS_TEAMS_WEBHOOK_ENABLED = "ms-teams-webhook-enabled"
+    TIME_UNTIL_WIFI_OFF = "time-until-wifi-off"
 
 
 class ConfigHtmlId(Enum):
@@ -92,6 +94,7 @@ class StatusDataObject(OTCameraDataObject):
     hour_button_active: Tuple[Enum, bool]
     external_power_supply_connected: Tuple[Enum, bool]
     ms_teams_webhook_enabled: Tuple[Enum, bool]
+    time_until_wifi_off: Tuple[Enum, str]
 
 
 @dataclass
@@ -142,6 +145,7 @@ STATUS_DESC = {
     StatusHtmlId.HOUR_BUTTON_ACTIVE: "24/7 Recording",
     StatusHtmlId.EXT_POWER_SUPPLY_CONNECTED: "External Power Supply Connected",
     StatusHtmlId.MS_TEAMS_WEBHOOK_ENABLED: "MS Teams Webhook Enabled",
+    StatusHtmlId.TIME_UNTIL_WIFI_OFF: "Time Until Wi-Fi Turned Off",
 }
 
 CONFIG_DESC = {

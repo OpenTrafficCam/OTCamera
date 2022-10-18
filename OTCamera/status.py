@@ -21,7 +21,7 @@ Contains all status variables and functions to be used across multiple modules.
 
 import re
 import subprocess
-from datetime import datetime as dt
+from datetime import datetime as dt, timedelta
 from pathlib import Path
 from typing import Union
 
@@ -79,6 +79,13 @@ def get_status_data() -> StatusDataObject:
     low_battery = battery_is_low
     hour_button_active = hour_button_pressed
 
+    time_until_wifi_off = "--:--:--"
+    if wifi_button_pressed_time is not None:
+        wifi_delay = timedelta(seconds=config.WIFI_DELAY)
+        time_until_wifi_off = str_format_timedelta(
+            (wifi_button_pressed_time + wifi_delay) - dt.now()
+        )
+
     return StatusDataObject(
         free_diskspace=(StatusHtmlId.FREE_DISKSPACE, f"{free_diskspace:.2f} GB"),
         num_videos_recorded=(StatusHtmlId.NUM_VIDEOS_RECORDED, num_videos_recorded),
@@ -93,7 +100,33 @@ def get_status_data() -> StatusDataObject:
             StatusHtmlId.MS_TEAMS_WEBHOOK_ENABLED,
             config.USE_MS_TEAMS_WEBHOOK,
         ),
+        time_until_wifi_off=(
+            StatusHtmlId.TIME_UNTIL_WIFI_OFF,
+            time_until_wifi_off,
+        ),
     )
+
+
+def str_format_timedelta(time_delta: timedelta) -> str:
+    """
+    Converts a datetime.timedelta object as a string in the format of
+    'HH:MM:SS'.
+
+    Args:
+        time_delta (timedelta): The time_delta object to be formatted.
+
+    Returns:
+        The timedelta in the format of 'HH:MM:SS' or '00:00:00' if negative.
+
+    """
+    total_seconds = time_delta.total_seconds()
+
+    if time_delta is None or total_seconds <= 0:
+        return "00:00:00"
+
+    hours, rem = divmod(total_seconds, 3600)
+    minutes, seconds = divmod(rem, 60)
+    return f"{hours:02}:{minutes:02}:{seconds}"
 
 
 def _is_wifi_enabled(network_device_name: str = "wlan0") -> bool:
