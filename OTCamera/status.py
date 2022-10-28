@@ -126,7 +126,7 @@ def str_format_timedelta(time_delta: timedelta) -> str:
 
     hours, rem = divmod(total_seconds, 3600)
     minutes, seconds = divmod(rem, 60)
-    return f"{hours:02}:{minutes:02}:{seconds}"
+    return f"{int(hours):02}:{int(minutes):02}:{int(seconds):2}"
 
 
 def _is_wifi_enabled(network_device_name: str = "wlan0") -> bool:
