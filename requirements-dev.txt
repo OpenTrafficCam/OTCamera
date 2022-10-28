@@ -3,3 +3,5 @@ black
 isort
 pytest
 pytest-cov
+pandas
+openpyxl
