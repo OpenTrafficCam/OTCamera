@@ -36,6 +36,7 @@ from OTCamera.config import (
     USE_MS_TEAMS_WEBHOOK,
 )
 from OTCamera.helpers import name
+from OTCamera import status
 
 
 class LogLevel(Enum):
@@ -73,6 +74,7 @@ def write(msg: str, level: LogLevel = LogLevel.INFO, reboot: bool = True):
 
     if (
         USE_MS_TEAMS_WEBHOOK
+        and not status.wifi_on
         and level != LogLevel.DEBUG
         and MS_TEAMS_WEBHOOK_URL
         and not disable_ms_teams_on_failed_attempts
