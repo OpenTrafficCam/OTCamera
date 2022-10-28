@@ -145,7 +145,7 @@ STATUS_DESC = {
     StatusHtmlId.HOUR_BUTTON_ACTIVE: "24/7 Recording",
     StatusHtmlId.EXT_POWER_SUPPLY_CONNECTED: "External Power Supply Connected",
     StatusHtmlId.MS_TEAMS_WEBHOOK_ENABLED: "MS Teams Webhook Enabled",
-    StatusHtmlId.TIME_UNTIL_WIFI_OFF: "Time Until Wi-Fi Turned Off",
+    StatusHtmlId.TIME_UNTIL_WIFI_OFF: "Turn Wi-Fi Off In",
 }
 
 CONFIG_DESC = {
