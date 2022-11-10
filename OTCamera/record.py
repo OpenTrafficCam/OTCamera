@@ -67,6 +67,8 @@ class OTCamera:
         Path(self._video_dir).mkdir(exist_ok=True)
 
         # Initializes the LEDs and Wifi AP
+        if config.OTCAMERA_VERSION is not None:
+            log.write(f"OTCamera Version: {config.OTCAMERA_VERSION}")
         log.breakline()
         log.write("starting periodic record")
         led.power_blink()
