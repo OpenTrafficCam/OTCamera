@@ -105,6 +105,7 @@ def get_status_data() -> StatusDataObject:
             StatusHtmlId.TIME_UNTIL_WIFI_OFF,
             time_until_wifi_off,
         ),
+        otcamera_version=(StatusHtmlId.OTCAMERA_VERSION, config.OTCAMERA_VERSION),
     )
 
 

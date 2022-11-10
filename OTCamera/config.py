@@ -245,6 +245,13 @@ def _print_key_err_msg(key_name: str) -> None:
     print(f"KeyError in config file for: '{key_name}'")
 
 
+def read_text_file(text_file: Path) -> str:
+    """Reads the contents of a text file returns it."""
+    with open(text_file, "r") as f:
+        data = f.read()
+    return data
+
+
 # general config
 DEBUG_MODE_ON = False
 """Turn debug mode on to get additional log entries."""
@@ -339,3 +346,9 @@ PREVIEW_PATH = str(Path(PREVIEW_PATH).expanduser().resolve())
 TEMPLATE_HTML_PATH = str(Path(TEMPLATE_HTML_PATH).expanduser().resolve())
 INDEX_HTML_PATH = str(Path(INDEX_HTML_PATH).expanduser().resolve())
 OFFLINE_HTML_PATH = str(Path(OFFLINE_HTML_PATH).expanduser().resolve())
+
+OTCAMERA_VERSION = (
+    read_text_file(Path("~/otcamera_version.txt").expanduser().resolve())
+    if Path("~/otcamera_version.txt").expanduser().resolve().exists()
+    else None
+)

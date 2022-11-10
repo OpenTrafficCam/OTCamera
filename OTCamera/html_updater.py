@@ -24,6 +24,7 @@ class StatusHtmlId(Enum):
     EXT_POWER_SUPPLY_CONNECTED = "ext-power-supply-connected"
     MS_TEAMS_WEBHOOK_ENABLED = "ms-teams-webhook-enabled"
     TIME_UNTIL_WIFI_OFF = "time-until-wifi-off"
+    OTCAMERA_VERSION = "otcamera-version"
 
 
 class ConfigHtmlId(Enum):
@@ -94,6 +95,7 @@ class StatusDataObject(OTCameraDataObject):
     external_power_supply_connected: Tuple[Enum, bool]
     ms_teams_webhook_enabled: Tuple[Enum, bool]
     time_until_wifi_off: Tuple[Enum, str]
+    otcamera_version: Tuple[Enum, str]
 
 
 @dataclass
@@ -145,6 +147,7 @@ STATUS_DESC = {
     StatusHtmlId.EXT_POWER_SUPPLY_CONNECTED: "External Power Supply Connected",
     StatusHtmlId.MS_TEAMS_WEBHOOK_ENABLED: "MS Teams Webhook Enabled",
     StatusHtmlId.TIME_UNTIL_WIFI_OFF: "Turn Wi-Fi Off In",
+    StatusHtmlId.OTCAMERA_VERSION: "OTCamera Version",
 }
 
 CONFIG_DESC = {
