@@ -32,6 +32,7 @@ from OTCamera.record import record
 
 
 def main():
+    """Starts OTCamera."""
     record()
 
 
