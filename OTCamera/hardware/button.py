@@ -1,7 +1,8 @@
 """OTCamera helper to interact with hardware buttons.
 
 Initializes hardware buttons using gpiozero if configured in config.py.
-Button callbacks are calling functions in rpi helper
+Defines all button callback functions.
+Also includes the basic logic behind button interactions.
 
 """
 # Copyright (C) 2022 OpenTrafficCam Contributors
@@ -51,6 +52,10 @@ def its_record_time() -> bool:
 
 
 def _on_hour_button_switched() -> None:
+    """Sets `status.hour_button_pressed` if `hour.button` is pressed or released.
+
+    Used to determine if user want's to record 24/7 or time based.
+    """
     if hour_button.is_pressed:
         status.hour_button_pressed = True
         log.write("Hour Switch pressed")
@@ -60,6 +65,13 @@ def _on_hour_button_switched() -> None:
 
 
 def _on_low_battery_button_held() -> None:
+    """Shuts down Raspberry Pi if internal battery level is low.
+
+    Adafruit's PowerBoost 1000C has two inputs: USB and LiPo-cell.
+    If LiPo-cell voltage is below threshold, the 1000C Low Voltage PIN is pulled up.
+    The 1000C PIN is connected to GPIO 18 through OTCamera pcb.
+    Aditionally sets `status.battery_is_low` to `True`.
+    """
     status.battery_is_low = True
     log.write("Battery level is low!", log.LogLevel.WARNING)
     rpi.shutdown()
@@ -84,6 +96,12 @@ def _on_power_button_pressed() -> None:
 
 
 def _on_power_button_released() -> None:
+    """Shuts down Raspberry Pi after 5 seconds delay if main switch is switched off.
+
+    If `power_button`is released the power led will blink for 5 seconds.
+    If it's still released the Pi will shutdown.
+    If `power_button` is pressed within the 5 seconds the shutdown will be canceled.
+    """
     status.power_button_pressed = False
     status.power_button_pressed_time = dt.now()
     log.write("Power button released", level=log.LogLevel.DEBUG)
@@ -93,11 +111,20 @@ def _on_power_button_released() -> None:
 
 
 def _on_wifi_button_pressed() -> None:
+    """If `wifi_button` is pressed `status.wifi_button_pressed` will be set `True`.
+
+    This callback function won't do anything else. See `_on_wifi_button_held`.
+    """
     status.wifi_button_pressed = True
     log.write("Wi-Fi button pressed")
 
 
 def _on_wifi_button_held() -> None:
+    """If `wifi_button` is pressed for a certain time Wi-Fi will be turned on.
+
+    The threshold to distinguish between "pressed" and "hold" is set during
+    initialization (`hold_time=2`).
+    """
     status.wifi_button_pressed = True
     status.wifi_button_pressed_time = None
     log.write("Wi-Fi button held", level=log.LogLevel.DEBUG)
@@ -105,6 +132,14 @@ def _on_wifi_button_held() -> None:
 
 
 def _on_wifi_button_released() -> None:
+    """If `wifi_button` is released Wi-Fi will be turned off after a delay.
+
+    After releasing `wifi_button` the Wi-Fi LED will blink until a delay is over.
+    The delay is configured in config.py (`config.WIFI_DELAY`).
+    If `wifi_button` is pressed again within the delay Wi-Fi LED will blink slowly to
+    indicate Wi-Fi is still on.
+    If `wifi_button` is released for whole delay Wi-Fi will be turned off.
+    """
     log.write("Wi-Fi button released", level=log.LogLevel.DEBUG)
     status.wifi_button_pressed = False
     status.wifi_button_pressed_time = dt.now()
@@ -114,6 +149,12 @@ def _on_wifi_button_released() -> None:
 
 
 def init_wifi_button():
+    """Helper to initialize Wi-Fi status on boot according to `wifi_button`
+
+    At boot time Wi-Fi will always be started by `rc.local`.
+    If `wifi_button` is not switched on during boot, Wi-Fi will be immediately turned
+    off.
+    """
     log.write("Initializing Wi-Fi", level=log.LogLevel.DEBUG)
     if wifi_button.is_pressed:
         rpi.wifi_switch_on()
