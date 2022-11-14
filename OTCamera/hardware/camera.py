@@ -35,6 +35,14 @@ log.write("imported camera", level=log.LogLevel.DEBUG)
 
 
 class Singleton(object):
+    """Implements the Singleton design pattern.
+
+    Classes inheriting from `Singleton` become a singleton class.
+    Meaning only one instance is created.
+    Constructing a another instance of the concrete class inheriting from `Singleton`
+    will return the first instance.
+    """
+
     def __new__(cls, *args, **kwds):
         it = cls.__dict__.get("__it__")
         if it is not None:
@@ -48,6 +56,21 @@ class Singleton(object):
 
 
 class Camera(Singleton):
+    """The camera class providing functionality such as starting or stopping a
+    recording, capturing a preview image, or closing the camera
+
+    Attributes:
+        framerate (int, optional): The frame rate. Defaults to config.FPS.
+        resolution (Tuple[int, int], optional): The resolution.
+        Defaults to config.RESOLUTION.
+        annotate_background (Color, optional): Color of text annotation background.
+        Defaults to Color("black").
+        exposure_mode (str, optional): The exposure mode. Defaults to config.EXPOSURE_MODE.
+        awb_mode (str, optional): The awb mode. Defaults to config.AWB_MODE.
+        drc_strength (str, optional): The DRC strength. Defaults to config.DRC_STRENGTH.
+        rotation (int, optional): The image rotation. Defaults to config.ROTATION.
+    """
+
     def init(
         self,
         framerate: int = config.FPS,
@@ -109,6 +132,7 @@ class Camera(Singleton):
             self.capture()
 
     def capture(self):
+        """Capture a preview image if camera is recording."""
         if self._picam.recording:
             self._picam.annotate_text = name.annotate()
             self._picam.capture(
@@ -125,12 +149,18 @@ class Camera(Singleton):
             )
 
     def _wait_recording(self, timeout: Union[int, float] = 0):
+        """Wait timeout seconds recording.
+
+        Args:
+            timeout (Union[int, float], optional): _description_. Defaults to 0.
+        """
         if self._picam.recording:
             self._picam.wait_recording(timeout)
         else:
             sleep(timeout)
 
     def _split(self):
+        """Splits recording and deletes old video files if no disk space available."""
         self._picam.split_recording(name.video())
         delete_old_files()
         log.write("splitted recording")
@@ -161,17 +191,34 @@ class Camera(Singleton):
         self._picam.annotate_text = name.annotate()
 
     def _is_interval_minute(self) -> bool:
+        """Checks if the current minute is the interval minute defined by
+        `config.INTERVAL_LENGTH` and thus defines whether a video should be splitted
+        or not.
+
+        Returns:
+            bool: `True` if the interval minute has been reached. Otherwise `False`.
+        """
         current_minute = dt.now().minute
         interval_minute = (current_minute % config.INTERVAL_LENGTH) == 0
         return interval_minute
 
     def _is_after_new_interval_minute(self) -> bool:
+        """Checks if a minute has passed after an interval minute has been reached.
+
+        Returns:
+            bool: `True` if a minute has passed after the interval minute. Otherwise `False`.
+        """
         after_new_interval = not (
             self._is_interval_minute() or status.interval_finished
         )
         return after_new_interval
 
     def _is_new_interval(self) -> bool:
+        """Checks if a new time interval started.
+
+        Returns:
+            bool: `True` if new time interval started. Otherwise `False`.
+        """
         new_interval = (
             self._is_interval_minute()
             and status.interval_finished
@@ -194,6 +241,12 @@ class Camera(Singleton):
             status.recording = False
 
     def close(self):
+        """Closes `picamera.PiCamera` instance.
+
+        Logs to log file if OTCamera has been already closed. But won't do anything
+        apart from that.
+        """
+
         try:
             self._picam.close()
             log.write("PiCamera closed", log.LogLevel.DEBUG)
@@ -213,6 +266,13 @@ class Camera(Singleton):
         self._picam = self._create_picam()
 
     def _create_picam(self) -> picamera.PiCamera:
+        """Creates PiCamera instance and initialises it with the camera settings passed
+        to the OTCamera class.
+
+        Returns:
+            picamera.PiCamera: The PiCamera instance acting as the interface to control
+            the physical picamera.
+        """
         picam = picamera.PiCamera()
         picam.framerate = self.framerate
         picam.resolution = self.resolution
