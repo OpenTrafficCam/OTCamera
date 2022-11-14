@@ -65,7 +65,8 @@ class Camera(Singleton):
         Defaults to config.RESOLUTION.
         annotate_background (Color, optional): Color of text annotation background.
         Defaults to Color("black").
-        exposure_mode (str, optional): The exposure mode. Defaults to config.EXPOSURE_MODE.
+        exposure_mode (str, optional): The exposure mode. Defaults to
+        config.EXPOSURE_MODE.
         awb_mode (str, optional): The awb mode. Defaults to config.AWB_MODE.
         drc_strength (str, optional): The DRC strength. Defaults to config.DRC_STRENGTH.
         rotation (int, optional): The image rotation. Defaults to config.ROTATION.
@@ -206,7 +207,8 @@ class Camera(Singleton):
         """Checks if a minute has passed after an interval minute has been reached.
 
         Returns:
-            bool: `True` if a minute has passed after the interval minute. Otherwise `False`.
+            bool: `True` if a minute has passed after the interval minute. Otherwise
+            `False`.
         """
         after_new_interval = not (
             self._is_interval_minute() or status.interval_finished

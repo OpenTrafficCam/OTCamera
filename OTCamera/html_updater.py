@@ -234,8 +234,8 @@ CONFIG_DESC = {
     ConfigHtmlId.USE_BUTTONS: "Use Buttons",
     ConfigHtmlId.WIFI_DELAY: "Wi-Fi Delay",
 }
-"""Dictionary that maps a `ConfigHtmlId` to its description to be displayed on the status
-website.
+"""Dictionary that maps a `ConfigHtmlId` to its description to be displayed on the
+status website.
 
 Dictionary of type dict[ConfigHtmlId, str].
 """
@@ -268,13 +268,13 @@ class StatusWebsiteUpdater:
 
     <head>
         <meta charset="utf-8" />
-        <meta content="width=device-width, initial-scale=1" name="viewport" />
+        <meta content="width=device-width, initial-scale=1" name="viewport"/>
         <meta content="5" http-equiv="refresh" />
-        <meta content="no-cache, no-store, must-revalidate" http-equiv="Cache-Control" />
+        <meta content="no-cache, no-store, must-revalidate" http-equiv="Cache-Control"/>
         <meta content="no-cache" http-equiv="Pragma" />
         <meta content="0" http-equiv="Expires" />
         <!-- Bootstrap CSS -->
-        <link href="css/bootstrap.min.css" rel="stylesheet" />
+        <link href="css/bootstrap.min.css" rel="stylesheet"/>
         <title>OTCamera</title>
     </head>
 
@@ -282,7 +282,7 @@ class StatusWebsiteUpdater:
         <div class="container-fluid" id="recording-banner"></div>
         <div class="container-fluid" id="ext-power-supply-banner"></div>
         <div class="container-fluid ">
-            <img class="img-fluid gy-5" alt="Vorschau" src="preview.jpg" />
+            <img class="img-fluid gy-5" alt="Vorschau" src="preview.jpg"/>
         </div>
         <br>
         <div class="container-fluid" id="status-info" style="display: none">
