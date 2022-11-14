@@ -32,6 +32,11 @@ import yaml
 
 
 def parse_user_config(config_file: str):
+    """Parses the OTCamera user configuration YAML file.
+
+    Args:
+        config_file (str): The Path to the user configuration YAML file.
+    """
     config_file = str(Path(config_file).expanduser().resolve())
     try:
         with open(config_file, mode="rb") as f:
@@ -242,6 +247,7 @@ def parse_user_config(config_file: str):
 
 
 def _print_key_err_msg(key_name: str) -> None:
+    """Print key error information to console."""
     print(f"KeyError in config file for: '{key_name}'")
 
 
@@ -338,8 +344,11 @@ NUM_LOG_FILES_HTML = 2
 
 # Microsoft Teams WebHook
 USE_MS_TEAMS_WEBHOOK = False
+"""`True` if MS Teams Webhook should be enabled. Otherwise `False`"""
 MS_TEAMS_WEBHOOK_URL = None
+"""The MS Teams incoming webhook URL."""
 MS_TEAMS_MAX_FAILED_SEND_ATTEMPTS = 2
+"""The number of max failed HTTP Requests send attempts."""
 
 VIDEO_DIR = str(Path(VIDEO_DIR).expanduser().resolve())
 PREVIEW_PATH = str(Path(PREVIEW_PATH).expanduser().resolve())
@@ -352,3 +361,8 @@ OTCAMERA_VERSION = (
     if Path("~/otcamera_version.txt").expanduser().resolve().exists()
     else None
 )
+"""The OTCamera Version installed.
+
+Will look for a file located in `~/otcamera_version.txt`.
+If file is not found `OTCAMERA_VERSION` will be set to `None`
+"""
