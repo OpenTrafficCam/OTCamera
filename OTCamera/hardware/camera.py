@@ -145,7 +145,7 @@ class Camera(Singleton):
         record.py.
 
         """
-        if self._new_interval():
+        if self._is_new_interval():
             log.write("new interval", level=log.LogLevel.DEBUG)
             self._split()
             status.interval_finished = False
@@ -154,24 +154,26 @@ class Camera(Singleton):
                 status.more_intervals = status.current_interval < config.NUM_INTERVALS
             if not status.more_intervals:
                 log.write("last interval", level=log.LogLevel.DEBUG)
-        elif self._after_new_interval():
+        elif self._is_after_new_interval_minute():
             status.interval_finished = True
             log.write("reset new interval", level=log.LogLevel.DEBUG)
         self._wait_recording(0.5)
         self._picam.annotate_text = name.annotate()
 
-    def _interval_minute(self):
+    def _is_interval_minute(self) -> bool:
         current_minute = dt.now().minute
         interval_minute = (current_minute % config.INTERVAL_LENGTH) == 0
         return interval_minute
 
-    def _after_new_interval(self):
-        after_new_interval = not (self._interval_minute() or status.interval_finished)
+    def _is_after_new_interval_minute(self) -> bool:
+        after_new_interval = not (
+            self._is_interval_minute() or status.interval_finished
+        )
         return after_new_interval
 
-    def _new_interval(self):
+    def _is_new_interval(self) -> bool:
         new_interval = (
-            self._interval_minute()
+            self._is_interval_minute()
             and status.interval_finished
             and status.more_intervals
         )
