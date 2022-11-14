@@ -347,7 +347,7 @@ def main() -> None:
     """Start running OTCamera."""
     camera = Camera()
     html_updater = StatusWebsiteUpdater(
-        html_path=config.TEMPLATE_HTML_PATH,
+        template_html_path=config.TEMPLATE_HTML_PATH,
         offline_html_path=config.OFFLINE_HTML_PATH,
         html_save_path=config.INDEX_HTML_PATH,
         status_info_id="status-info",

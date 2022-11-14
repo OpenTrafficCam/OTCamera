@@ -211,7 +211,7 @@ class LogDataObject(OTCameraDataObject):
 class StatusWebsiteUpdater:
     def __init__(
         self,
-        html_path: Union[str, Path],
+        template_html_path: Union[str, Path],
         offline_html_path: Union[str, Path],
         html_save_path: Union[str, Path],
         status_info_id: str = "status-info",
@@ -221,7 +221,7 @@ class StatusWebsiteUpdater:
         config_table_id: str = "config-info-table",
         debug_mode_on: bool = False,
     ) -> None:
-        self._html_data = self._parse_html(html_path)
+        self._html_data = self._parse_html(template_html_path)
         self._offline_html_data = self._parse_html(offline_html_path)
         self.html_save_path = html_save_path
         self.status_info_id = status_info_id
