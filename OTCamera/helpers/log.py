@@ -7,7 +7,7 @@ Use log.write(msg) to write any message, log.breakline() to write a single line 
 or log.otc() to log and print a OpenTrafficCam logo.
 
 """
-# Copyright (C) 2022 OpenTrafficCam Contributors
+# Copyright (C) 2023 OpenTrafficCam Contributors
 # <https://github.com/OpenTrafficCam>
 # <team@opentrafficcam.org>
 

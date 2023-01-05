@@ -3,7 +3,7 @@
 Check if enough filespace is available and delete old files until it's enough.
 
 """
-# Copyright (C) 2022 OpenTrafficCam Contributors
+# Copyright (C) 2023 OpenTrafficCam Contributors
 # <https://github.com/OpenTrafficCam>
 # <team@opentrafficcam.org>
 

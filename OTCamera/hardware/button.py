@@ -5,7 +5,7 @@ Defines all button callback functions.
 Also includes the basic logic behind button interactions.
 
 """
-# Copyright (C) 2022 OpenTrafficCam Contributors
+# Copyright (C) 2023 OpenTrafficCam Contributors
 # <https://github.com/OpenTrafficCam>
 # <team@opentrafficcam.org>
 
