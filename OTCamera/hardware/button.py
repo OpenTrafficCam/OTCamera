@@ -70,7 +70,7 @@ def _on_low_battery_button_held() -> None:
     Adafruit's PowerBoost 1000C has two inputs: USB and LiPo-cell.
     If LiPo-cell voltage is below threshold, the 1000C Low Voltage PIN is pulled up.
     The 1000C PIN is connected to GPIO 18 through OTCamera pcb.
-    Aditionally sets `status.battery_is_low` to `True`.
+    Additionally sets `status.battery_is_low` to `True`.
     """
     status.battery_is_low = True
     log.write("Battery level is low!", log.LogLevel.WARNING)

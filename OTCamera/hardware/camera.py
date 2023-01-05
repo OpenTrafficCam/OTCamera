@@ -153,7 +153,7 @@ class Camera(Singleton):
         """Wait timeout seconds recording.
 
         Args:
-            timeout (Union[int, float], optional): _description_. Defaults to 0.
+            timeout (Union[int, float], optional): Timeout in seconds. Defaults to 0.
         """
         if self._picam.recording:
             self._picam.wait_recording(timeout)
@@ -268,7 +268,7 @@ class Camera(Singleton):
         self._picam = self._create_picam()
 
     def _create_picam(self) -> picamera.PiCamera:
-        """Creates PiCamera instance and initialises it with the camera settings passed
+        """Creates PiCamera instance and initializes it with the camera settings passed
         to the OTCamera class.
 
         Returns:

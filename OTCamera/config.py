@@ -35,7 +35,7 @@ def parse_user_config(config_file: str):
     """Parses the OTCamera user configuration YAML file.
 
     Args:
-        config_file (str): The Path to the user configuration YAML file.
+        config_file (str): The path to the user configuration YAML file.
     """
     config_file = str(Path(config_file).expanduser().resolve())
     try:
