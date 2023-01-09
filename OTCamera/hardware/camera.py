@@ -3,7 +3,7 @@
 Used to start, split and stop recording.
 
 """
-# Copyright (C) 2021 OpenTrafficCam Contributors
+# Copyright (C) 2023 OpenTrafficCam Contributors
 # <https://github.com/OpenTrafficCam>
 # <team@opentrafficcam.org>
 
@@ -35,6 +35,14 @@ log.write("imported camera", level=log.LogLevel.DEBUG)
 
 
 class Singleton(object):
+    """Implements the Singleton design pattern.
+
+    Classes inheriting from `Singleton` become a singleton class.
+    Meaning only one instance is created.
+    Constructing a another instance of the concrete class inheriting from `Singleton`
+    will return the first instance.
+    """
+
     def __new__(cls, *args, **kwds):
         it = cls.__dict__.get("__it__")
         if it is not None:
@@ -48,6 +56,22 @@ class Singleton(object):
 
 
 class Camera(Singleton):
+    """The camera class providing functionality such as starting or stopping a
+    recording, capturing a preview image, or closing the camera
+
+    Attributes:
+        framerate (int, optional): The frame rate. Defaults to config.FPS.
+        resolution (Tuple[int, int], optional): The resolution.
+        Defaults to config.RESOLUTION.
+        annotate_background (Color, optional): Color of text annotation background.
+        Defaults to Color("black").
+        exposure_mode (str, optional): The exposure mode. Defaults to
+        config.EXPOSURE_MODE.
+        awb_mode (str, optional): The awb mode. Defaults to config.AWB_MODE.
+        drc_strength (str, optional): The DRC strength. Defaults to config.DRC_STRENGTH.
+        rotation (int, optional): The image rotation. Defaults to config.ROTATION.
+    """
+
     def init(
         self,
         framerate: int = config.FPS,
@@ -109,6 +133,7 @@ class Camera(Singleton):
             self.capture()
 
     def capture(self):
+        """Capture a preview image if camera is recording."""
         if self._picam.recording:
             self._picam.annotate_text = name.annotate()
             self._picam.capture(
@@ -125,12 +150,18 @@ class Camera(Singleton):
             )
 
     def _wait_recording(self, timeout: Union[int, float] = 0):
+        """Wait timeout seconds recording.
+
+        Args:
+            timeout (Union[int, float], optional): Timeout in seconds. Defaults to 0.
+        """
         if self._picam.recording:
             self._picam.wait_recording(timeout)
         else:
             sleep(timeout)
 
     def _split(self):
+        """Splits recording and deletes old video files if no disk space available."""
         self._picam.split_recording(name.video())
         delete_old_files()
         log.write("splitted recording")
@@ -145,7 +176,7 @@ class Camera(Singleton):
         record.py.
 
         """
-        if self._new_interval():
+        if self._is_new_interval():
             log.write("new interval", level=log.LogLevel.DEBUG)
             self._split()
             status.interval_finished = False
@@ -154,24 +185,44 @@ class Camera(Singleton):
                 status.more_intervals = status.current_interval < config.NUM_INTERVALS
             if not status.more_intervals:
                 log.write("last interval", level=log.LogLevel.DEBUG)
-        elif self._after_new_interval():
+        elif self._is_after_new_interval_minute():
             status.interval_finished = True
             log.write("reset new interval", level=log.LogLevel.DEBUG)
         self._wait_recording(0.5)
         self._picam.annotate_text = name.annotate()
 
-    def _interval_minute(self):
+    def _is_interval_minute(self) -> bool:
+        """Checks if the current minute is the interval minute defined by
+        `config.INTERVAL_LENGTH` and thus defines whether a video should be splitted
+        or not.
+
+        Returns:
+            bool: `True` if the interval minute has been reached. Otherwise `False`.
+        """
         current_minute = dt.now().minute
         interval_minute = (current_minute % config.INTERVAL_LENGTH) == 0
         return interval_minute
 
-    def _after_new_interval(self):
-        after_new_interval = not (self._interval_minute() or status.interval_finished)
+    def _is_after_new_interval_minute(self) -> bool:
+        """Checks if a minute has passed after an interval minute has been reached.
+
+        Returns:
+            bool: `True` if a minute has passed after the interval minute. Otherwise
+            `False`.
+        """
+        after_new_interval = not (
+            self._is_interval_minute() or status.interval_finished
+        )
         return after_new_interval
 
-    def _new_interval(self):
+    def _is_new_interval(self) -> bool:
+        """Checks if a new time interval started.
+
+        Returns:
+            bool: `True` if new time interval started. Otherwise `False`.
+        """
         new_interval = (
-            self._interval_minute()
+            self._is_interval_minute()
             and status.interval_finished
             and status.more_intervals
         )
@@ -192,6 +243,12 @@ class Camera(Singleton):
             status.recording = False
 
     def close(self):
+        """Closes `picamera.PiCamera` instance.
+
+        Logs to log file if OTCamera has been already closed. But won't do anything
+        apart from that.
+        """
+
         try:
             self._picam.close()
             log.write("PiCamera closed", log.LogLevel.DEBUG)
@@ -211,6 +268,13 @@ class Camera(Singleton):
         self._picam = self._create_picam()
 
     def _create_picam(self) -> picamera.PiCamera:
+        """Creates PiCamera instance and initializes it with the camera settings passed
+        to the OTCamera class.
+
+        Returns:
+            picamera.PiCamera: The PiCamera instance acting as the interface to control
+            the physical picamera.
+        """
         picam = picamera.PiCamera()
         picam.framerate = self.framerate
         picam.resolution = self.resolution

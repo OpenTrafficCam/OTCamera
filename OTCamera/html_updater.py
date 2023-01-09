@@ -1,3 +1,40 @@
+"""The `html_updater` module serves the purpose of creating and updating the HTML to be
+displayed on the OTCamera Status Website.
+
+Classes:
+    - StatusWebsiteUpdater
+    - OTCameraDataObject
+    - StatusDataObject
+    - ConfigDataObject
+    - LogDataObject
+
+Enums:
+    - StatusHtmlId
+    - ConfigHtmlId
+    - LogHtmlId
+    - BannerHtmlId
+
+Variables:
+    - STATUS_DESC
+    - CONFIG_DESC
+    - BANNER_DESC
+
+"""
+# Copyright (C) 2023 OpenTrafficCam Contributors
+# <https://github.com/OpenTrafficCam>
+# <team@opentrafficcam.org>
+
+# This program is free software: you can redistribute it and/or modify it under the
+# terms of the GNU General Public License as published by the Free Software Foundation,
+# either version 3 of the License, or (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+
+# PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+# You should have received a copy of the GNU General Public License along with this
+# program.  If not, see <https://www.gnu.org/licenses/>.
+
 import copy
 from abc import ABC
 from dataclasses import dataclass, fields
@@ -11,6 +48,10 @@ from OTCamera.helpers import log
 
 
 class StatusHtmlId(Enum):
+    """Enum that represents OTCamera status variables' HTML ids to be used in the
+    OTCamera status website's HTML.
+    """
+
     TIME = "time"
     HOSTNAME = "hostname"
     FREE_DISKSPACE = "free-diskspace"
@@ -27,6 +68,10 @@ class StatusHtmlId(Enum):
 
 
 class ConfigHtmlId(Enum):
+    """Enum that represents OTCamera config variables' HTML ids to be used in the
+    OTCamera status website's HTML.
+    """
+
     DEBUG_MODE_ON = "debug-mode-on"
     START_HOUR = "start-hour"
     END_HOUR = "end-hour"
@@ -58,10 +103,16 @@ class ConfigHtmlId(Enum):
 
 
 class LogHtmlId(Enum):
+    """Enum representing the HTML id of the OTCamera log data to be used in the
+    OTCamera status website's HTML.
+    """
+
     LOG_DATA = "log-data"
 
 
 class BannerHtmlId(Enum):
+    """Enum that represents the OTCamera status websites' banner HTML ids."""
+
     RECORDING_BANNER = "recording-banner"
     EXT_POWER_SUPPLY_BANNER = "ext-power-supply-banner"
 
@@ -146,6 +197,12 @@ STATUS_DESC = {
     StatusHtmlId.MS_TEAMS_WEBHOOK_ENABLED: "MS Teams Webhook Enabled",
     StatusHtmlId.TIME_UNTIL_WIFI_OFF: "Turn Wi-Fi Off In",
 }
+"""Dictionary that maps a StatusHtmlId to its description to be displayed on the status
+website.
+
+Dictionary of type dict[StatusHtmlId, str].
+"""
+
 
 CONFIG_DESC = {
     ConfigHtmlId.DEBUG_MODE_ON: "Debug Mode On",
@@ -177,6 +234,11 @@ CONFIG_DESC = {
     ConfigHtmlId.USE_BUTTONS: "Use Buttons",
     ConfigHtmlId.WIFI_DELAY: "Wi-Fi Delay",
 }
+"""Dictionary that maps a `ConfigHtmlId` to its description to be displayed on the
+status website.
+
+Dictionary of type dict[ConfigHtmlId, str].
+"""
 
 BANNER_DESC = {
     "BANNER_RECORDING": "Currently recording",
@@ -194,9 +256,78 @@ class LogDataObject(OTCameraDataObject):
 
 
 class StatusWebsiteUpdater:
+    """This class is responsible for the generation of the HTML to be displayed on the
+    OTCamera status website.
+
+    The class requires a template HTML file with the following contents:
+
+    ```html
+    <!DOCTYPE html>
+
+    <html>
+
+    <head>
+        <meta charset="utf-8" />
+        <meta content="width=device-width, initial-scale=1" name="viewport"/>
+        <meta content="5" http-equiv="refresh" />
+        <meta content="no-cache, no-store, must-revalidate" http-equiv="Cache-Control"/>
+        <meta content="no-cache" http-equiv="Pragma" />
+        <meta content="0" http-equiv="Expires" />
+        <!-- Bootstrap CSS -->
+        <link href="css/bootstrap.min.css" rel="stylesheet"/>
+        <title>OTCamera</title>
+    </head>
+
+    <body>
+        <div class="container-fluid" id="recording-banner"></div>
+        <div class="container-fluid" id="ext-power-supply-banner"></div>
+        <div class="container-fluid ">
+            <img class="img-fluid gy-5" alt="Vorschau" src="preview.jpg"/>
+        </div>
+        <br>
+        <div class="container-fluid" id="status-info" style="display: none">
+            <table class="table table-bordered" id="status-info-table">
+                <tr>
+                    <th>Status</th>
+                    <th>Value</th>
+                </tr>
+            </table>
+        </div>
+        <div class="container-fluid" id="config-info" style="display: none">
+            <table class="table table-bordered" id="config-info-table">
+                <tr>
+                    <th>Config Variable</th>
+                    <th>Value</th>
+                </tr>
+            </table>
+        </div>
+    </body>
+
+    </html>
+    ```
+
+    Args:
+        template_html_path (Union[str, Path]): The status websites template HTML file.
+        offline_html_path (Union[str, Path]): The status websites offline HTML file.
+        html_save_path (Union[str, Path]): The actual HTML file that is served on a
+        webserver. I.e. the index.html.
+        status_info_id (str, optional): The HTML div id to hold the status information.
+        Defaults to "status-info".
+        config_info_id (str, optional): The HTML div id to hold the config information.
+        Defaults to "config-info".
+        log_info_id (str, optional): The HTML div id to hold the log information.
+        Defaults to "log-info".
+        status_table_id (str, optional): The HTML table id to hold all status variables.
+        Defaults to "status-info-table".
+        config_table_id (str, optional): The HTML table id to hold all config variables.
+        Defaults to "config-info-table".
+        debug_mode_on (bool, optional): Will display the config data if `True`.
+        Defaults to False.
+    """
+
     def __init__(
         self,
-        html_path: Union[str, Path],
+        template_html_path: Union[str, Path],
         offline_html_path: Union[str, Path],
         html_save_path: Union[str, Path],
         status_info_id: str = "status-info",
@@ -206,7 +337,7 @@ class StatusWebsiteUpdater:
         config_table_id: str = "config-info-table",
         debug_mode_on: bool = False,
     ) -> None:
-        self._html_data = self._parse_html(html_path)
+        self._html_data = self._parse_html(template_html_path)
         self._offline_html_data = self._parse_html(offline_html_path)
         self.html_save_path = html_save_path
         self.status_info_id = status_info_id
@@ -224,6 +355,23 @@ class StatusWebsiteUpdater:
         always_recording: bool,
         external_power_supply_connected: bool,
     ):
+        """Updates the information of the status website.
+
+        Args:
+            status_info (OTCameraDataObject): Dataclass containing all status
+            information required.
+            config_info (OTCameraDataObject): Dataclass containing all config
+            information.
+            currently_recording (bool): Will display the either 'always recording' or
+            the 'not always recording' banner depending on value of `always_recording`
+            if `True`. Otherwise will display the 'not recording' banner.
+            always_recording (bool): If `True` and `currently_recording=True` the
+            'always recording' will be displayed.
+            If `False` and `currently_recording=True` the **not always recording'
+            banner will be displayed.
+            external_power_supply_connected (bool): Will display the 'external power
+            supply connected' banner if `True`.
+        """
         html_tree = copy.copy(self._html_data)
 
         # Update record status banner
@@ -336,6 +484,18 @@ class StatusWebsiteUpdater:
         value_desc: dict,
         data: OTCameraDataObject,
     ):
+        """Builds a data table with the data passed to it.
+
+        Args:
+            soup (BeautifulSoup): Represents the root of html tree.
+            table_id (str): The data table HTML id to append the generated table data
+            to.
+            value_desc (dict): Dictionary containing all descriptions for all fields
+            defined in `OTCameraDataObject`. The key needs to be of type `Enum`
+            (See `StatusHtmlId` class) representing the HTML id to access the
+            description.
+            data (OTCameraDataObject): Encapsulates OTCamera data information.
+        """
         table_tag = soup.find(id=table_id)
         for id, table_content in data.get_properties():
             table_row = soup.new_tag("tr", attrs={"id": id.value})
@@ -349,6 +509,9 @@ class StatusWebsiteUpdater:
             table_row.append(td_status_val)
 
     def disable_info(self):
+        """Disables the status and config info making it invisible
+        on the status website.
+        """
         html_tree = copy.copy(self._html_data)
         self._disable_tag_by_id(html_tree, self.status_info_id)
         self._disable_tag_by_id(html_tree, self.config_info_id)
@@ -358,6 +521,12 @@ class StatusWebsiteUpdater:
         self,
         log_info: LogDataObject,
     ):
+        """Displays OTCamera offline page on the status website.
+
+        Args:
+            log_info (LogDataObject): The log data to be displayed on
+            the status website.
+        """
         html_tree = copy.copy(self._offline_html_data)
         if self.debug_mode_on:
             self._enable_tag_by_id(html_tree, self.log_info_id)
@@ -367,19 +536,28 @@ class StatusWebsiteUpdater:
         self._save(html_tree)
 
     def _parse_html(self, html_filepath: Path) -> BeautifulSoup:
+        """Parses an html file and returns BeautifulSoup object."""
         with open(html_filepath) as html_stream:
             soup = BeautifulSoup(html_stream, "html.parser")
         return soup
 
     def _update_by_id(self, html_tree: Tag, update_info: OTCameraDataObject):
+        """Updates the the contents defined by the HTML ids contained in `update_info`.
+
+        Args:
+            html_tree (Tag): The html tree to updated.
+            update_info (OTCameraDataObject): The information to be used for the update.
+        """
         for id, update_content in update_info.get_properties():
             self._change_content(html_tree.find(id=id.value), str(update_content))
 
     def _save(self, html_tree: Tag):
+        """Saves the HTML to path defined by `self.html_save_path`."""
         with open(self.html_save_path, "w", encoding="utf-8") as f:
             f.write(str(html_tree))
 
     def _disable_tag_by_id(self, html_tag: Tag, id: str) -> None:
+        """Disables a tag by id making it invisible."""
         id_tag = html_tag.find(id=id)
         if id_tag:
             id_tag["style"] = "display: none"

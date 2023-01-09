@@ -3,7 +3,7 @@
 Contains all status variables and functions to be used across multiple modules.
 
 """
-# Copyright (C) 2021 OpenTrafficCam Contributors
+# Copyright (C) 2023 OpenTrafficCam Contributors
 # <https://github.com/OpenTrafficCam>
 # <team@opentrafficcam.org>
 
