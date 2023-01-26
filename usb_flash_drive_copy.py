@@ -7,8 +7,12 @@ import socket
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
+import time
 
 from gpiozero import PWMLED
+
+LED_POWER_PIN = 13
+LED_REC_PIN = 6
 
 
 class IsNotADirectoryError(OSError):
@@ -50,7 +54,6 @@ class Led:
 @dataclass
 class CopyInformation:
     videos: list[Video]
-    csv_field_names: str
     csv_file: Path
     src_dir: Path
     dest_dir: Path
@@ -76,18 +79,18 @@ class CopyInformation:
 class OTCameraUsbCopier:
     def __init__(
         self,
-        red_led: Led,
-        green_led: Led,
+        rec_led: Led,
+        power_led: Led,
         src_dir: Path,
         usb_mount: Path,
     ) -> None:
-        self.red_led = red_led
-        self.green_led = green_led
+        self.rec_led = rec_led
+        self.power_led = power_led
         self.src_dir = src_dir
         self.usb_mount = usb_mount
 
     def copy_over_usb(self, copy_info: CopyInformation) -> None:
-        self.red_led.blink()
+        self.rec_led.blink()
         for video in copy_info.videos:
             if video.copied:
                 logging.info(f"Video at: '{ video.path}' already copied.")
@@ -103,8 +106,8 @@ class OTCameraUsbCopier:
             )
             video.copied = True
             logging.info(f"Video: '{video.path}' copied.")
-        self.red_led.turn_off()
-        self.green_led.blink()
+        # self.rec_led.turn_off()
+        # self.power_led.blink()
 
     def delete(self, copy_info: CopyInformation) -> None:
         for video in copy_info.videos:
@@ -155,9 +158,12 @@ def main():
 
     usb_copy_info = CopyInformation.from_csv(usb_copy_info_path, src_dir, dest_dir)
 
-    green_led = Led(PWMLED(13))
-    red_led = Led(PWMLED(6))
-    usb_copier = OTCameraUsbCopier(red_led, green_led, src_dir, dest_dir)
+    power_led = Led(PWMLED(LED_POWER_PIN))
+    rec_led = Led(PWMLED(LED_REC_PIN))
+    power_led.blink()
+    time.sleep(15)
+    power_led.turn_off()
+    usb_copier = OTCameraUsbCopier(rec_led, power_led, src_dir, dest_dir)
     usb_copier.copy_over_usb(usb_copy_info)
 
 
