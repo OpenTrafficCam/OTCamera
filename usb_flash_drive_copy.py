@@ -1,6 +1,5 @@
 import csv
 import logging
-import os
 import re
 import shutil
 import socket
@@ -67,6 +66,21 @@ class CopyInformation:
                 videos.append(Video.from_dict(_dict, src_dir))
 
         return CopyInformation(videos, file, src_dir, dest_dir)
+
+    @staticmethod
+    def create_new(src_dir: Path, dest_dir: Path, filetype: str):
+        dest_dir.mkdir(parents=True, exist_ok=True)
+        copy_csv_file = Path(dest_dir, f"{get_hostname()}_usb-copy-info.csv")
+        copy_csv_file.touch()
+
+        video_filepaths = get_video_files(src_dir, filetype)
+        videos: list[Video] = []
+
+        for video_filepath in video_filepaths:
+            video = Video(video_filepath.name, video_filepath, False, False)
+            videos.append(video)
+
+        return CopyInformation(videos, copy_csv_file, src_dir, dest_dir)
 
     def to_dict(self) -> list[dict]:
         new_videos: list[Video] = []
@@ -149,22 +163,24 @@ def get_hostname() -> str:
 
 
 def main():
-    src_dir = Path(f"/home/{os.getlogin()}/videos")
-    dest_dir = Path(__file__).parent / "tests/data"
+    src_dir = Path(__file__).parent / "tests/data/example_videos_folder"
+    usb_mount = Path(__file__).parent / "tests/data/example_usb_mount"
     logging.basicConfig(filename=src_dir / "log", encoding="utf-8")
     usb_copy_info_path = (
-        Path(__file__).parent / "tests/data/otcamera-dev01_usb-copy-info.csv"
+        Path(__file__).parent
+        / "tests/data/example_videos_folder/otcamera-dev01_usb-copy-info.csv"
     )
 
-    usb_copy_info = CopyInformation.from_csv(usb_copy_info_path, src_dir, dest_dir)
+    if usb_copy_info_path.exists():
+        usb_copy_info = CopyInformation.from_csv(usb_copy_info_path, src_dir, usb_mount)
+    else:
+        usb_copy_info = CopyInformation.create_new(src_dir, usb_mount, "h264")
 
     power_led = Led(PWMLED(LED_POWER_PIN))
     rec_led = Led(PWMLED(LED_REC_PIN))
-    power_led.blink()
-    time.sleep(15)
-    power_led.turn_off()
-    usb_copier = OTCameraUsbCopier(rec_led, power_led, src_dir, dest_dir)
+    usb_copier = OTCameraUsbCopier(rec_led, power_led, src_dir, usb_mount)
     usb_copier.copy_over_usb(usb_copy_info)
+    usb_copier.update(usb_copy_info)
 
 
 if __name__ == "__main__":
