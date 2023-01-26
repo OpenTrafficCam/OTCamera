@@ -7,6 +7,7 @@ import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 import time
+from signal import pause
 
 from gpiozero import PWMLED
 
@@ -41,13 +42,16 @@ class Led:
         self._led = led
 
     def blink(self) -> None:
-        self._led.blink()
+        self._led.blink(background=True)
+        time.sleep(2)
 
     def turn_off(self) -> None:
         self._led.off()
+        time.sleep(2)
 
     def turn_on(self) -> None:
         self._led.on()
+        time.sleep(2)
 
 
 @dataclass
@@ -105,6 +109,8 @@ class OTCameraUsbCopier:
 
     def copy_over_usb(self, copy_info: CopyInformation) -> None:
         self.rec_led.blink()
+        time.sleep(5)
+        print("Start copying files")
         for video in copy_info.videos:
             if video.copied:
                 logging.info(f"Video at: '{ video.path}' already copied.")
@@ -120,8 +126,9 @@ class OTCameraUsbCopier:
             )
             video.copied = True
             logging.info(f"Video: '{video.path}' copied.")
-        # self.rec_led.turn_off()
-        # self.power_led.blink()
+            print(f"Video: '{video.path}' copied.")
+        self.rec_led.turn_off()
+        self.power_led.blink()
 
     def delete(self, copy_info: CopyInformation) -> None:
         for video in copy_info.videos:
@@ -150,6 +157,7 @@ class OTCameraUsbCopier:
         )
         if completedProcess.returncode != 0:
             logging.error(f"Unable to unmount '{self.usb_mount}'!")
+        self.power_led.turn_on()
 
 
 def get_video_files(dirpath: Path, filetype: str) -> list[Path]:
@@ -181,6 +189,7 @@ def main():
     usb_copier = OTCameraUsbCopier(rec_led, power_led, src_dir, usb_mount)
     usb_copier.copy_over_usb(usb_copy_info)
     usb_copier.update(usb_copy_info)
+    pause()
 
 
 if __name__ == "__main__":
