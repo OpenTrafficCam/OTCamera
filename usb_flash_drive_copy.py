@@ -107,7 +107,7 @@ class OTCameraUsbCopier:
         self.src_dir = src_dir
         self.usb_mount = usb_mount
 
-    def copy_over_usb(self, copy_info: CopyInformation) -> None:
+    def copy_to_usb(self, copy_info: CopyInformation) -> None:
         self.rec_led.blink()
         time.sleep(5)
         print("Start copying files")
@@ -187,7 +187,7 @@ def main():
     power_led = Led(PWMLED(LED_POWER_PIN))
     rec_led = Led(PWMLED(LED_REC_PIN))
     usb_copier = OTCameraUsbCopier(rec_led, power_led, src_dir, usb_mount)
-    usb_copier.copy_over_usb(usb_copy_info)
+    usb_copier.copy_to_usb(usb_copy_info)
     usb_copier.update(usb_copy_info)
     pause()
 
