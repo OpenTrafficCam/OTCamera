@@ -1,22 +1,58 @@
+from abc import ABC, abstractmethod
 import csv
-import logging
 import re
 import shutil
 import socket
 import subprocess
+import time
 from dataclasses import dataclass
 from pathlib import Path
-import time
-from signal import pause
 
 from gpiozero import PWMLED
+from gpiozero import Button as GPIOButton
+
+import OTCamera.config as config
 import OTCamera.helpers.log as log
+
 
 LED_POWER_PIN = 13
 LED_REC_PIN = 6
+BUTTON_POWER_PIN = 17
+
+
+class Subject(ABC):
+    def __init__(self, name: str) -> None:
+        self._observers: list[Observer] = []
+
+    def attach(self, observer: "Observer") -> None:
+        """Attach an observer to the subject."""
+        if observer not in self._observers:
+            self._observers.append(observer)
+
+    def detach(self, observer: "Observer") -> None:
+        """Detach an observer from the subject."""
+        return self._observers.remove(observer)
+
+    def notify(self) -> None:
+        """Notify all observers subscribed to subject about an event."""
+        for observer in self._observers:
+            observer.update(self)
+
+
+class Observer(ABC):
+    """The Observer interface declaring update method used by subjects."""
+
+    @abstractmethod
+    def update(self, subject: Subject):
+        """Receive update from subject."""
+        pass
 
 
 class IsNotADirectoryError(OSError):
+    pass
+
+
+class IllegalStateError(Exception):
     pass
 
 
@@ -40,22 +76,78 @@ class Video:
 
 class Led:
     def __init__(self, led: PWMLED) -> None:
+        """Provides actions to interact with hardware LED.
+
+        Args:
+            led (PWMLED): Interface to hardware LED.
+        """
+
         self._led = led
 
     def blink(self) -> None:
+        """Led blinking action."""
+        if not config.USE_LED:
+            return
         self._led.blink(background=True)
         time.sleep(2)
 
     def turn_off(self) -> None:
+        """Turn off LED."""
+        if not config.USE_LED:
+            return
         self._led.off()
         time.sleep(2)
 
     def turn_on(self) -> None:
+        """Turn on LED."""
+        if not config.USE_LED:
+            return
         self._led.on()
         time.sleep(2)
 
 
-@dataclass
+class Button(Subject):
+    def __init__(self, name: str, button: GPIOButton) -> None:
+        """Automatically notifies list of observers of button state changes.
+
+        Args:
+            name (str): The name of the button.
+            button (GPIOButton): Interface to physical hardware button.
+        """
+        self.name = name.upper()
+        self._button = button
+        self.is_active = button.is_active
+        self._check_button_is_active()
+        self._register_callbacks
+
+    def _register_callbacks(self):
+        self._button.when_activated = self.on_pressed
+        self._button.when_deactivated = self.on_released
+        log.write(f"Register {self.name} button callbacks.", log.LogLevel.DEBUG)
+
+    def on_pressed(self):
+        """Notifies observers about button pressed event."""
+        log.debug(f"{self.name} button pressed.", log.LogLevel.DEBUG)
+        self._check_button_is_active()
+        self.is_active = True
+        self.notify()
+
+    def on_released(self):
+        """Notifies observers about button released event."""
+        if not self._button.is_active:
+            log.write("Power button released.", log.LogLevel.DEBUG)
+            self.is_active = False
+            self.notify()
+            log.write("Observers have been notified", log.LogLevel.Debug)
+
+    def _check_button_is_active(self) -> None:
+        if self._button.is_active:
+            raise IllegalStateError(
+                f"Illegal state detected. {self.name} button needs to be active"
+                "for the script to be running"
+            )
+
+
 class CopyInformation:
     def __init__(
         self, videos: list[Video], csv_file: Path, src_dir: Path, dest_dir: Path
@@ -115,14 +207,14 @@ class CopyInformation:
         return CopyInformation(videos, copy_csv_file, src_dir, dest_dir)
 
     def to_dict(self) -> list[dict]:
-        new_videos: list[Video] = []
+        new_videos: list[dict] = []
         for video in self.videos:
             video_dict = video.to_dict()
             new_videos.append(video_dict)
         return new_videos
 
 
-class OTCameraUsbCopier:
+class OTCameraUsbCopier(Observer):
     def __init__(
         self,
         rec_led: Led,
@@ -135,17 +227,40 @@ class OTCameraUsbCopier:
         self.src_dir = src_dir
         self.usb_mount = usb_mount
 
-    def copy_to_usb(self, copy_info: CopyInformation) -> None:
+    def update(self, subject: Subject) -> None:
+        if isinstance(subject, Button):
+            if subject.is_active:
+                log.write("Shutdown OTCamera.")
+                self.shutdown()
+
+    def shutdown(self):
+        """Shutdown OTCamera."""
+        if self.usb_mount.is_mount():
+            self.unmount_usb()
+            log.write("Unmount USB flash drive", log.LogLevel.DEBUG)
         self.rec_led.blink()
-        time.sleep(5)
-        print("Start copying files")
+        time.sleep(3)
+
+        self.power_led.turn_off()
+        self.rec_led.turn_off()
+
+        log.closefile()
+        subprocess.call("sudo shutdown -h now", shell=True)
+
+    def copy_to_usb(self, copy_info: CopyInformation) -> None:
+        """Copy over videos to USB flash drive."""
+        self.rec_led.blink()
+        time.sleep(3)
+        log.write("Start copying files")
         for video in copy_info.videos:
             if video.copied:
-                logging.info(f"Video at: '{ video.path}' already copied.")
+                log.write(f"Video at: '{ video.path}' already copied.")
                 continue
 
             if not video.path.exists():
-                logging.warning(f"Video at: '{ video.path}' does not exists.")
+                log.write(
+                    f"Video at: '{ video.path}' does not exists.", log.LogLevel.WARNING
+                )
                 continue
 
             shutil.copy2(
@@ -153,24 +268,31 @@ class OTCameraUsbCopier:
                 dst=self.usb_mount / video.filename,
             )
             video.copied = True
-            logging.info(f"Video: '{video.path}' copied.")
-            print(f"Video: '{video.path}' copied.")
+            log.write(f"Video: '{video.path}' copied.")
+            log.write(f"Video: '{video.path}' copied.")
+        log.write("Copying over videso to USB flash drive finished.")
         self.rec_led.turn_off()
         self.power_led.blink()
 
     def delete(self, copy_info: CopyInformation) -> None:
+        """Delete videos marked for deletion on OTCamera."""
         for video in copy_info.videos:
             if not video.path.exists():
-                logging.warning(f"Video at: '{ video.path}' does not exists.")
+                log.write(
+                    f"Video at: '{ video.path}' does not exists.", log.LogLevel.WARNING
+                )
                 continue
             if not video.delete:
-                logging.warning(f"Video at: '{ video.path}' not marked for deletion.")
+                log.write(
+                    f"Video at: '{ video.path}' not marked for deletion.",
+                    log.LogLevel.WARNING,
+                )
                 continue
 
             video.path.unlink()
-            logging.info(f"Video at: '{video.path}' deleted!")
+            log.write(f"Video at: '{video.path}' deleted!")
 
-    def update(self, copy_info: CopyInformation) -> None:
+    def update_copy_info(self, copy_info: CopyInformation) -> None:
         with open(copy_info.csv_file, "w", newline="") as csv_file:
             writer = csv.DictWriter(
                 csv_file, fieldnames=["filename", "copied", "delete"]
@@ -180,11 +302,15 @@ class OTCameraUsbCopier:
                 writer.writerow(video_info)
 
     def unmount_usb(self) -> None:
+        """Unmount USB flash drive."""
+        if not self.usb_mount.is_mount() and self.usb_mount.exists():
+            log.write("USB flash drive already unmounted", log.LogLevel.WARNING)
+
         completedProcess: subprocess.CompletedProcess = subprocess.run(
             f"umount {self.usb_mount}"
         )
         if completedProcess.returncode != 0:
-            logging.error(f"Unable to unmount '{self.usb_mount}'!")
+            log.write(f"Unable to unmount '{self.usb_mount}'!", log.LogLevel.ERROR)
         self.power_led.turn_on()
 
 
@@ -201,7 +327,6 @@ def get_hostname() -> str:
 def main():
     src_dir = Path(__file__).parent / "tests/data/example_videos_folder"
     usb_mount = Path(__file__).parent / "tests/data/example_usb_mount"
-    logging.basicConfig(filename=src_dir / "log", encoding="utf-8")
     usb_copy_info_path = (
         Path(__file__).parent
         / "tests/data/example_videos_folder/otcamera-dev01_usb-copy-info.csv"
@@ -215,9 +340,12 @@ def main():
     power_led = Led(PWMLED(LED_POWER_PIN))
     rec_led = Led(PWMLED(LED_REC_PIN))
     usb_copier = OTCameraUsbCopier(rec_led, power_led, src_dir, usb_mount)
+    if config.USE_BUTTONS:
+        power_button = Button("POWER", GPIOButton(BUTTON_POWER_PIN))
+        power_button.attach(usb_copier)
+
     usb_copier.copy_to_usb(usb_copy_info)
-    usb_copier.update(usb_copy_info)
-    pause()
+    usb_copier.update_copy_info(usb_copy_info)
 
 
 if __name__ == "__main__":
