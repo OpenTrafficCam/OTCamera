@@ -41,10 +41,15 @@ def parse_args() -> Path:
 
 def main():
     parse_args()
+    usb_copy = True
+    if usb_copy:
+        import usb_flash_drive_copy
 
-    import OTCamera.record as record
+        usb_flash_drive_copy.main()
+    else:
+        import OTCamera.record as record
 
-    record.main()
+        record.main()
 
 
 if __name__ == "__main__":
