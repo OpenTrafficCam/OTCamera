@@ -21,7 +21,7 @@ BUTTON_POWER_PIN = 17
 
 
 class Subject(ABC):
-    def __init__(self, name: str) -> None:
+    def __init__(self) -> None:
         self._observers: list[Observer] = []
 
     def attach(self, observer: "Observer") -> None:
@@ -114,6 +114,7 @@ class Button(Subject):
             name (str): The name of the button.
             button (GPIOButton): Interface to physical hardware button.
         """
+        super().__init__()
         self.name = name.upper()
         self._button = button
         self.is_active = button.is_active
