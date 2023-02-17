@@ -10,6 +10,7 @@ import time
 from signal import pause
 
 from gpiozero import PWMLED
+import OTCamera.helpers.log as log
 
 LED_POWER_PIN = 13
 LED_REC_PIN = 6
@@ -56,10 +57,37 @@ class Led:
 
 @dataclass
 class CopyInformation:
-    videos: list[Video]
-    csv_file: Path
-    src_dir: Path
-    dest_dir: Path
+    def __init__(
+        self, videos: list[Video], csv_file: Path, src_dir: Path, dest_dir: Path
+    ) -> None:
+        self.videos = videos
+        self.csv_file = csv_file
+        self.src_dir = src_dir
+        self.dest_dir = dest_dir
+        self._validate_copy_info()
+
+    def _validate_copy_info(self):
+        """Validate and update video copy information with actual videos on disk."""
+        for video in self.videos:
+            if not video.path.exists():
+                log.write(
+                    (
+                        f"File: '{video.path}'does not exist on OTCamera."
+                        "Remove from copy information."
+                    ),
+                    log.LogLevel.WARNING,
+                )
+                self.videos.remove(video)
+
+            if not video.path.is_file():
+                log.write(
+                    (
+                        f"File: '{video.path}'is not a file."
+                        "Remove from copy information."
+                    ),
+                    log.LogLevel.WARNING,
+                )
+                self.videos.remove(video)
 
     @staticmethod
     def from_csv(file: Path, src_dir: Path, dest_dir: Path) -> "CopyInformation":
