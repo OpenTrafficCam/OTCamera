@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 import csv
 import re
 import shutil
+from signal import pause
 import socket
 import subprocess
 import time
@@ -119,7 +120,7 @@ class Button(Subject):
         self._button = button
         self.is_active = button.is_active
         self._check_button_is_active()
-        self._register_callbacks
+        self._register_callbacks()
 
     def _register_callbacks(self):
         self._button.when_activated = self.on_pressed
@@ -128,7 +129,7 @@ class Button(Subject):
 
     def on_pressed(self):
         """Notifies observers about button pressed event."""
-        log.debug(f"{self.name} button pressed.", log.LogLevel.DEBUG)
+        log.write(f"{self.name} button pressed.", log.LogLevel.DEBUG)
         self._check_button_is_active()
         self.is_active = True
         self.notify()
@@ -142,7 +143,7 @@ class Button(Subject):
             log.write("Observers have been notified", log.LogLevel.Debug)
 
     def _check_button_is_active(self) -> None:
-        if self._button.is_active:
+        if not self._button.is_active:
             raise IllegalStateError(
                 f"Illegal state detected. {self.name} button needs to be active"
                 "for the script to be running"
@@ -230,7 +231,7 @@ class OTCameraUsbCopier(Observer):
 
     def update(self, subject: Subject) -> None:
         if isinstance(subject, Button):
-            if subject.is_active:
+            if not subject.is_active:
                 log.write("Shutdown OTCamera.")
                 self.shutdown()
 
@@ -347,6 +348,7 @@ def main():
 
     usb_copier.copy_to_usb(usb_copy_info)
     usb_copier.update_copy_info(usb_copy_info)
+    pause()
 
 
 if __name__ == "__main__":
