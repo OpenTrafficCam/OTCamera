@@ -270,7 +270,7 @@ class OTCameraUsbCopier(Observer):
             video.copied = True
             log.write(f"Video: '{video.path}' copied.")
             log.write(f"Video: '{video.path}' copied.")
-        log.write("Copying over videso to USB flash drive finished.")
+        log.write("Copying over videos to USB flash drive finished.")
         self.rec_led.turn_off()
         self.power_led.blink()
 
