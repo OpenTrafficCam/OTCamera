@@ -414,7 +414,7 @@ def main():
     else:
         usb_copy_info = CopyInformation.create_new(src_dir, usb_mount, "h264")
 
-    usb_copier = build_usb_copier()
+    usb_copier = build_usb_copier(src_dir, usb_mount)
 
     usb_copier.copy_to_usb(usb_copy_info)
     usb_copier.delete(usb_copy_info)
