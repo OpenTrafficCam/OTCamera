@@ -350,7 +350,9 @@ def main():
 
     usb_copier.copy_to_usb(usb_copy_info)
     usb_copier.update_copy_info(usb_copy_info)
-    pause()
+
+    if config.USE_BUTTONS:
+        pause()
 
 
 if __name__ == "__main__":
