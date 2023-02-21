@@ -378,6 +378,29 @@ def get_hostname() -> str:
     return socket.gethostname()
 
 
+def build_usb_copier(src_dir: Path, usb_mount: Path) -> OTCameraUsbCopier:
+    """Builds a `OTCameraUsbCopier` object.
+
+    Args:
+        src_dir (Path): directory where the video files to be copied are located at.
+        usb_mount (Path): path to the USB flash drive.
+
+    Returns:
+        OTCameraUsbCopier: The usb copier object.
+    """
+    power_led = Led(PWMLED(LED_POWER_PIN))
+    rec_led = Led(PWMLED(LED_REC_PIN))
+    wifi_led = Led(PWMLED(LED_WIFI_PIN))
+    usb_copier = OTCameraUsbCopier(power_led, wifi_led, rec_led, src_dir, usb_mount)
+    if config.USE_BUTTONS:
+        power_button = Button(
+            "POWER",
+            GPIOButton(BUTTON_POWER_PIN, pull_up=False, hold_time=2, hold_repeat=False),
+        )
+        power_button.attach(usb_copier)
+        return usb_copier
+
+
 def main():
     src_dir = Path(__file__).parent / "tests/data/example_videos_folder"
     usb_mount = Path(__file__).parent / "tests/data/example_usb_mount"
@@ -391,16 +414,7 @@ def main():
     else:
         usb_copy_info = CopyInformation.create_new(src_dir, usb_mount, "h264")
 
-    power_led = Led(PWMLED(LED_POWER_PIN))
-    rec_led = Led(PWMLED(LED_REC_PIN))
-    wifi_led = Led(PWMLED(LED_WIFI_PIN))
-    usb_copier = OTCameraUsbCopier(power_led, wifi_led, rec_led, src_dir, usb_mount)
-    if config.USE_BUTTONS:
-        power_button = Button(
-            "POWER",
-            GPIOButton(BUTTON_POWER_PIN, pull_up=False, hold_time=2, hold_repeat=False),
-        )
-        power_button.attach(usb_copier)
+    usb_copier = build_usb_copier()
 
     usb_copier.copy_to_usb(usb_copy_info)
     usb_copier.delete(usb_copy_info)
