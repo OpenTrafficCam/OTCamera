@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 import csv
+import os
 import re
 import shutil
 from signal import pause
@@ -240,10 +241,19 @@ class UsbFlashDrive:
 
         self.mount_point.mkdir(parents=True, exist_ok=True)
 
-        completedProcess: subprocess.CompletedProcess = subprocess.run(
-            ["sudo mount", self.usb_device, self.mount_point], shell=True
+        completed_mount_process: subprocess.CompletedProcess = subprocess.run(
+            [
+                "sudo mount",
+                self.usb_device,
+                self.mount_point,
+                "-o",
+                f"uid={os.getlogin()}",
+                "-o",
+                f"gid=os.getlogin()",
+            ],
+            shell=True,
         )
-        if completedProcess.returncode != 0:
+        if completed_mount_process.returncode != 0:
             log.write(
                 (
                     f"Unable to mount USB flash drive '{self.usb_device}' "
@@ -252,7 +262,10 @@ class UsbFlashDrive:
                 log.LogLevel.ERROR,
             )
             raise UsbFlashDriveNotMountableError(
-                f"Unable to mount device '{self.usb_device}' to '{self.mount_point}'"
+                (
+                    f"Unable to mount USB flash drive'{self.usb_device}'"
+                    f" to '{self.mount_point}'"
+                )
             )
 
     def unmount(self) -> None:
@@ -261,10 +274,10 @@ class UsbFlashDrive:
             log.write("USB flash drive already unmounted", log.LogLevel.WARNING)
             return
 
-        completedProcess: subprocess.CompletedProcess = subprocess.run(
+        completed_umount_process: subprocess.CompletedProcess = subprocess.run(
             ["sudo umount", self.mount_point], shell=True
         )
-        if completedProcess.returncode != 0:
+        if completed_umount_process.returncode != 0:
             log.write(
                 (
                     f"Unable to unmount USB flash drive '{self.usb_device}' "
@@ -404,7 +417,7 @@ class OTCameraUsbCopier(Observer):
                 writer.writerow(video_info)
 
     def mount_usb_device(self) -> None:
-        """Mount USB flash drive."""
+        # """Mount USB flash drive."""
         self.usb_flash_drive.mount()
 
     def unmount_usb_device(self) -> None:
@@ -456,9 +469,9 @@ def build_usb_copier(
 
 
 def main(
-    video_dir: str = config.VIDEO_DIR,
-    usb_device: str = "/dev/sda1",
-    mount_point: str = "/mnt/usb",
+    video_dir: str,
+    usb_device: str,
+    mount_point: str,
 ):
     """Start the OTCamera USB copy script.
 
@@ -480,19 +493,24 @@ def main(
     usb_copier = build_usb_copier(src_dir, usb_device_path, usb_device_mount)
     usb_copy_info_path = CopyInformation.get_copy_info_csv(dest_dir)
 
-    usb_copier.mount_usb_device()
-    if usb_copy_info_path.exists():
-        usb_copy_info = CopyInformation.from_csv(usb_copy_info_path, src_dir, dest_dir)
-    else:
-        usb_copy_info = CopyInformation.create_new(src_dir, dest_dir, "h264")
+    try:
+        usb_copier.mount_usb_device()
+        if usb_copy_info_path.exists():
+            usb_copy_info = CopyInformation.from_csv(
+                usb_copy_info_path, src_dir, dest_dir
+            )
+        else:
+            usb_copy_info = CopyInformation.create_new(src_dir, dest_dir, "h264")
 
-    usb_copier.copy_to_usb(usb_copy_info)
-    usb_copier.delete(usb_copy_info)
-    usb_copier.write_copy_info(usb_copy_info)
-    usb_copier.unmount_usb_device()
+        usb_copier.copy_to_usb(usb_copy_info)
+        usb_copier.delete(usb_copy_info)
+        usb_copier.write_copy_info(usb_copy_info)
+        usb_copier.unmount_usb_device()
 
-    if config.USE_BUTTONS:
-        pause()
+        if config.USE_BUTTONS:
+            pause()
+    except Exception as e:
+        log.write(e, log.LogLevel.EXCEPTION)
 
 
 if __name__ == "__main__":
