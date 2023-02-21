@@ -247,7 +247,9 @@ class OTCameraUsbCopier(Observer):
         self.rec_led.turn_off()
 
         log.closefile()
-        subprocess.call("sudo shutdown -h now", shell=True)
+
+        if not config.DEBUG_MODE_ON:
+            subprocess.call("sudo shutdown -h now", shell=True)
 
     def copy_to_usb(self, copy_info: CopyInformation) -> None:
         """Copy over videos to USB flash drive."""
