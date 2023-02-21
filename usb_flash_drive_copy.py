@@ -16,10 +16,11 @@ import OTCamera.config as config
 import OTCamera.helpers.log as log
 
 
-LED_POWER_PIN = 13
-LED_WIFI_PIN = 12
-LED_REC_PIN = 6
-BUTTON_POWER_PIN = 17
+COPY_INFO_CSV_SUFFIX = "_usb-copy-info.csv"
+LED_POWER_PIN: int = 13
+LED_WIFI_PIN: int = 12
+LED_REC_PIN: int = 6
+BUTTON_POWER_PIN: int = 17
 
 
 class Subject(ABC):
@@ -55,6 +56,10 @@ class IsNotADirectoryError(OSError):
 
 
 class IllegalStateError(Exception):
+    pass
+
+
+class UsbFlashDriveNotMountableError(Exception):
     pass
 
 
@@ -195,9 +200,14 @@ class CopyInformation:
         return CopyInformation(videos, file, src_dir, dest_dir)
 
     @staticmethod
+    def get_copy_info_csv(directory: Path) -> Path:
+        """Get the location of the copy information CSV file of this OTCamera."""
+        return Path(directory, f"{get_hostname()}{COPY_INFO_CSV_SUFFIX}")
+
+    @staticmethod
     def create_new(src_dir: Path, dest_dir: Path, filetype: str):
         dest_dir.mkdir(parents=True, exist_ok=True)
-        copy_csv_file = Path(dest_dir, f"{get_hostname()}_usb-copy-info.csv")
+        copy_csv_file = CopyInformation.get_copy_info_csv(dest_dir)
         copy_csv_file.touch()
 
         video_filepaths = get_video_files(src_dir, filetype)
@@ -217,6 +227,53 @@ class CopyInformation:
         return new_videos
 
 
+@dataclass
+class UsbFlashDrive:
+    usb_device: Path
+    mount_point: Path
+
+    def mount(self) -> None:
+        """Mount USB flash drive."""
+        if self.mount_point.is_mount():
+            log.write("USB flash drive already mounted", log.LogLevel.WARNING)
+            return
+
+        self.mount_point.mkdir(parents=True)
+
+        completedProcess: subprocess.CompletedProcess = subprocess.run(
+            f"sudo mount {self.usb_device} {self.mount_point}"
+        )
+        if completedProcess.returncode != 0:
+            log.write(
+                (
+                    f"Unable to mount USB flash drive '{self.usb_device}' "
+                    f"to '{self.mount_point}'!"
+                ),
+                log.LogLevel.ERROR,
+            )
+            raise UsbFlashDriveNotMountableError(
+                f"Unable to mount device '{self.usb_device}' to '{self.mount_point}'"
+            )
+
+    def unmount(self) -> None:
+        """Unmount USB flash drive."""
+        if not self.mount_point.is_mount():
+            log.write("USB flash drive already unmounted", log.LogLevel.WARNING)
+            return
+
+        completedProcess: subprocess.CompletedProcess = subprocess.run(
+            f"sudo umount {self.mount_point}"
+        )
+        if completedProcess.returncode != 0:
+            log.write(
+                (
+                    f"Unable to unmount USB flash drive '{self.usb_device}' "
+                    f"from '{self.mount_point}'!"
+                ),
+                log.LogLevel.ERROR,
+            )
+
+
 class OTCameraUsbCopier(Observer):
     def __init__(
         self,
@@ -224,7 +281,7 @@ class OTCameraUsbCopier(Observer):
         wifi_led: Led,
         rec_led: Led,
         src_dir: Path,
-        usb_mount: Path,
+        usb_flash_drive: UsbFlashDrive,
     ) -> None:
         """This classes' main purpose is to provide methods to copy and delete videos
         with the help of a `CopyInformation` object.
@@ -237,13 +294,13 @@ class OTCameraUsbCopier(Observer):
             rec_led (Led): give user visual feedback to inform about the current
             status of the OTCameraUsbCopier.
             src_dir (Path): directory where the video files to be copied are located at.
-            usb_mount (Path): path to the USB flash drive.
+            usb_flash_drive (UsbFlashdrive): The USB flash drive.
         """
         self.power_led = power_led
         self.wifi_led = wifi_led
         self.rec_led = rec_led
         self.src_dir = src_dir
-        self.usb_mount = usb_mount
+        self.usb_flash_drive = usb_flash_drive
 
     def update(self, subject: Subject) -> None:
         if isinstance(subject, Button):
@@ -253,16 +310,11 @@ class OTCameraUsbCopier(Observer):
 
     def shutdown(self):
         """Shutdown OTCamera."""
-        if self.usb_mount.is_mount():
-            self.unmount_usb()
-            log.write("Unmount USB flash drive", log.LogLevel.DEBUG)
 
         self._turn_off_all_leds()
+        self.power_led.blink()
         self.rec_led.blink()
         time.sleep(3)
-
-        self.power_led.turn_off()
-        self.rec_led.turn_off()
 
         self._turn_off_all_leds()
         log.closefile()
@@ -301,7 +353,7 @@ class OTCameraUsbCopier(Observer):
 
             shutil.copy2(
                 src=video.path,
-                dst=self.usb_mount / video.filename,
+                dst=copy_info.dest_dir / video.filename,
             )
             video.copied = True
             log.write(f"Video: '{video.path}' copied.")
@@ -351,20 +403,17 @@ class OTCameraUsbCopier(Observer):
             for video_info in copy_info.to_dict():
                 writer.writerow(video_info)
 
-    def unmount_usb(self) -> None:
+    def mount_usb_device(self) -> None:
+        """Mount USB flash drive."""
+        self.usb_flash_drive.mount()
+
+    def unmount_usb_device(self) -> None:
         """Unmount USB flash drive.
 
-        The power LED being permanently turned on indicates the succesful unmount of the USB
-        flash drive.
+        The power LED being permanently turned on indicates the succesful unmount of
+        the USB flash drive.
         """
-        if not self.usb_mount.is_mount() and self.usb_mount.exists():
-            log.write("USB flash drive already unmounted", log.LogLevel.WARNING)
-
-        completedProcess: subprocess.CompletedProcess = subprocess.run(
-            f"umount {self.usb_mount}"
-        )
-        if completedProcess.returncode != 0:
-            log.write(f"Unable to unmount '{self.usb_mount}'!", log.LogLevel.ERROR)
+        self.usb_flash_drive.unmount()
         self.power_led.turn_on()
 
 
@@ -378,7 +427,9 @@ def get_hostname() -> str:
     return socket.gethostname()
 
 
-def build_usb_copier(src_dir: Path, usb_mount: Path) -> OTCameraUsbCopier:
+def build_usb_copier(
+    src_dir: Path, usb_device: Path, usb_mount_point: Path
+) -> OTCameraUsbCopier:
     """Builds a `OTCameraUsbCopier` object.
 
     Args:
@@ -391,34 +442,54 @@ def build_usb_copier(src_dir: Path, usb_mount: Path) -> OTCameraUsbCopier:
     power_led = Led(PWMLED(LED_POWER_PIN))
     rec_led = Led(PWMLED(LED_REC_PIN))
     wifi_led = Led(PWMLED(LED_WIFI_PIN))
-    usb_copier = OTCameraUsbCopier(power_led, wifi_led, rec_led, src_dir, usb_mount)
+    usb_flash_drive = UsbFlashDrive(usb_device, usb_mount_point)
+    usb_copier = OTCameraUsbCopier(
+        power_led, wifi_led, rec_led, src_dir, usb_flash_drive
+    )
     if config.USE_BUTTONS:
         power_button = Button(
             "POWER",
             GPIOButton(BUTTON_POWER_PIN, pull_up=False, hold_time=2, hold_repeat=False),
         )
         power_button.attach(usb_copier)
-        return usb_copier
+    return usb_copier
 
 
-def main():
-    src_dir = Path(__file__).parent / "tests/data/example_videos_folder"
-    usb_mount = Path(__file__).parent / "tests/data/example_usb_mount"
-    usb_copy_info_path = (
-        Path(__file__).parent
-        / "tests/data/example_videos_folder/otcamera-dev01_usb-copy-info.csv"
-    )
+def main(
+    video_dir: str = config.VIDEO_DIR,
+    usb_device: str = "/dev/sda1",
+    mount_point: str = "/mnt/usb",
+):
+    """Start the OTCamera USB copy script.
 
+    Args:
+        video_dir (str, optional): Folder containing videos.
+        Defaults to config.VIDEO_DIR.
+        usb_device (str, optional): Location of the usb device.
+        Defaults to "/dev/sda1".
+        mount_point (str, optional): The USB device's mount point.
+        Defaults to "/mnt/usb".
+
+    Raises:
+        UsbFlashDriveNotMountableError: If USB flash drive is not mountable.
+    """
+    usb_device_path = Path(usb_device)
+    usb_device_mount = Path(mount_point)
+    src_dir: Path = Path(video_dir)
+    dest_dir: Path = Path(usb_device_mount, get_hostname())
+    usb_copier = build_usb_copier(src_dir, usb_device_path, usb_device_mount)
+    usb_copy_info_path = CopyInformation.get_copy_info_csv(dest_dir)
+
+    usb_copier.mount_usb_device()
     if usb_copy_info_path.exists():
-        usb_copy_info = CopyInformation.from_csv(usb_copy_info_path, src_dir, usb_mount)
+        usb_copy_info = CopyInformation.from_csv(usb_copy_info_path, src_dir, dest_dir)
     else:
-        usb_copy_info = CopyInformation.create_new(src_dir, usb_mount, "h264")
-
-    usb_copier = build_usb_copier(src_dir, usb_mount)
+        usb_copy_info = CopyInformation.create_new(src_dir, dest_dir, "h264")
 
     usb_copier.copy_to_usb(usb_copy_info)
     usb_copier.delete(usb_copy_info)
     usb_copier.write_copy_info(usb_copy_info)
+    usb_copier.unmount_usb_device()
 
     if config.USE_BUTTONS:
         pause()

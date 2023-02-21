@@ -39,13 +39,21 @@ def parse_args() -> Path:
         config.parse_user_config("~/user_config.yaml")
 
 
+def usb_device_exists(usb_device: str) -> bool:
+    """Whether a usb device at `usb_device` exists."""
+
+    return Path(usb_device).exists()
+
+
 def main():
     parse_args()
-    usb_copy = True
-    if usb_copy:
+    usb_device = "/dev/sda1"
+    usb_mount_point = "/mnt/usb"
+
+    if usb_device_exists(usb_device):
         import usb_flash_drive_copy
 
-        usb_flash_drive_copy.main()
+        usb_flash_drive_copy.main(config.VIDEO_DIR, usb_device, usb_mount_point)
     else:
         import OTCamera.record as record
 
