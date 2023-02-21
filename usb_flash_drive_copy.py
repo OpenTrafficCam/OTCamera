@@ -226,6 +226,19 @@ class OTCameraUsbCopier(Observer):
         src_dir: Path,
         usb_mount: Path,
     ) -> None:
+        """This classes' main purpose is to provide methods to copy and delete videos
+        with the help of a `CopyInformation` object.
+
+        Args:
+            power_led (Led): give user visual feedback to inform about the current
+            status of the OTCameraUsbCopier.
+            wifi_led (Led): give user visual feedback to inform about the current
+            status of the OTCameraUsbCopier.
+            rec_led (Led): give user visual feedback to inform about the current
+            status of the OTCameraUsbCopier.
+            src_dir (Path): directory where the video files to be copied are located at.
+            usb_mount (Path): path to the USB flash drive.
+        """
         self.power_led = power_led
         self.wifi_led = wifi_led
         self.rec_led = rec_led
@@ -324,7 +337,12 @@ class OTCameraUsbCopier(Observer):
             log.write(f"Video at: '{video.path}' deleted!")
         self.rec_led.turn_on()
 
-    def update_copy_info(self, copy_info: CopyInformation) -> None:
+    def write_copy_info(self, copy_info: CopyInformation) -> None:
+        """Writes or overwrites an existing copy information csv.
+
+        Args:
+            copy_info (CopyInformation): The copy information.
+        """
         with open(copy_info.csv_file, "w", newline="") as csv_file:
             writer = csv.DictWriter(
                 csv_file, fieldnames=["filename", "copied", "delete"]
@@ -386,7 +404,7 @@ def main():
 
     usb_copier.copy_to_usb(usb_copy_info)
     usb_copier.delete(usb_copy_info)
-    usb_copier.update_copy_info(usb_copy_info)
+    usb_copier.write_copy_info(usb_copy_info)
 
     if config.USE_BUTTONS:
         pause()
