@@ -17,6 +17,7 @@ import OTCamera.helpers.log as log
 
 
 LED_POWER_PIN = 13
+LED_WIFI_PIN = 12
 LED_REC_PIN = 6
 BUTTON_POWER_PIN = 17
 
@@ -145,7 +146,7 @@ class Button(Subject):
     def _check_button_is_active(self) -> None:
         if not self._button.is_active:
             raise IllegalStateError(
-                f"Illegal state detected. {self.name} button needs to be active"
+                f"Illegal state detected. {self.name} button needs to be active "
                 "for the script to be running"
             )
 
@@ -219,13 +220,15 @@ class CopyInformation:
 class OTCameraUsbCopier(Observer):
     def __init__(
         self,
-        rec_led: Led,
         power_led: Led,
+        wifi_led: Led,
+        rec_led: Led,
         src_dir: Path,
         usb_mount: Path,
     ) -> None:
-        self.rec_led = rec_led
         self.power_led = power_led
+        self.wifi_led = wifi_led
+        self.rec_led = rec_led
         self.src_dir = src_dir
         self.usb_mount = usb_mount
 
@@ -240,20 +243,36 @@ class OTCameraUsbCopier(Observer):
         if self.usb_mount.is_mount():
             self.unmount_usb()
             log.write("Unmount USB flash drive", log.LogLevel.DEBUG)
+
+        self._turn_off_all_leds()
         self.rec_led.blink()
         time.sleep(3)
 
         self.power_led.turn_off()
         self.rec_led.turn_off()
 
+        self._turn_off_all_leds()
         log.closefile()
 
         if not config.DEBUG_MODE_ON:
             subprocess.call("sudo shutdown -h now", shell=True)
 
+    def _turn_off_all_leds(self):
+        """Turn off all LEDs."""
+        self.power_led.turn_off()
+        self.wifi_led.turn_off()
+        self.rec_led.turn_off()
+
     def copy_to_usb(self, copy_info: CopyInformation) -> None:
-        """Copy over videos to USB flash drive."""
-        self.rec_led.blink()
+        """Copy over videos to USB flash drive.
+
+        The WiFi LED blinking indicates the videos being copied over.
+        The WiFi LED constantly being on indicates that the copy process is finished.
+
+        Args:
+            copy_info (CopyInformation): the copy information.
+        """
+        self.wifi_led.blink()
         time.sleep(3)
         log.write("Start copying files")
         for video in copy_info.videos:
@@ -275,11 +294,19 @@ class OTCameraUsbCopier(Observer):
             log.write(f"Video: '{video.path}' copied.")
             log.write(f"Video: '{video.path}' copied.")
         log.write("Copying over videos to USB flash drive finished.")
-        self.rec_led.turn_off()
-        self.power_led.blink()
+        self.wifi_led.turn_on()
 
     def delete(self, copy_info: CopyInformation) -> None:
-        """Delete videos marked for deletion on OTCamera."""
+        """Delete videos marked for deletion on OTCamera.
+
+        The recording LED blinking indicates the videos being deleted.
+        The recording LED constantly being on indicates that the delete process has
+        finished.
+
+        Args:
+            copy_info (CopyInformation): The copy information.
+        """
+        self.rec_led.blink()
         for video in copy_info.videos:
             if not video.path.exists():
                 log.write(
@@ -295,6 +322,7 @@ class OTCameraUsbCopier(Observer):
 
             video.path.unlink()
             log.write(f"Video at: '{video.path}' deleted!")
+        self.rec_led.turn_on()
 
     def update_copy_info(self, copy_info: CopyInformation) -> None:
         with open(copy_info.csv_file, "w", newline="") as csv_file:
@@ -306,7 +334,11 @@ class OTCameraUsbCopier(Observer):
                 writer.writerow(video_info)
 
     def unmount_usb(self) -> None:
-        """Unmount USB flash drive."""
+        """Unmount USB flash drive.
+
+        The power LED being permanently turned on indicates the succesful unmount of the USB
+        flash drive.
+        """
         if not self.usb_mount.is_mount() and self.usb_mount.exists():
             log.write("USB flash drive already unmounted", log.LogLevel.WARNING)
 
@@ -343,7 +375,8 @@ def main():
 
     power_led = Led(PWMLED(LED_POWER_PIN))
     rec_led = Led(PWMLED(LED_REC_PIN))
-    usb_copier = OTCameraUsbCopier(rec_led, power_led, src_dir, usb_mount)
+    wifi_led = Led(PWMLED(LED_WIFI_PIN))
+    usb_copier = OTCameraUsbCopier(power_led, wifi_led, rec_led, src_dir, usb_mount)
     if config.USE_BUTTONS:
         power_button = Button(
             "POWER",
@@ -352,6 +385,7 @@ def main():
         power_button.attach(usb_copier)
 
     usb_copier.copy_to_usb(usb_copy_info)
+    usb_copier.delete(usb_copy_info)
     usb_copier.update_copy_info(usb_copy_info)
 
     if config.USE_BUTTONS:
