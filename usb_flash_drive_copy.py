@@ -345,7 +345,10 @@ def main():
     rec_led = Led(PWMLED(LED_REC_PIN))
     usb_copier = OTCameraUsbCopier(rec_led, power_led, src_dir, usb_mount)
     if config.USE_BUTTONS:
-        power_button = Button("POWER", GPIOButton(BUTTON_POWER_PIN))
+        power_button = Button(
+            "POWER",
+            GPIOButton(BUTTON_POWER_PIN, pull_up=False, hold_time=2, hold_repeat=False),
+        )
         power_button.attach(usb_copier)
 
     usb_copier.copy_to_usb(usb_copy_info)
