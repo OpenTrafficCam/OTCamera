@@ -55,7 +55,7 @@ def main():
     if usb_device_exists(usb_device):
         import usb_flash_drive_copy
 
-        usb_flash_drive_copy.main(config.VIDEO_DIR, usb_device, usb_mount_point)
+        usb_flash_drive_copy.main(config.VIDEO_DIR, usb_mount_point)
     else:
         import OTCamera.record as record
 

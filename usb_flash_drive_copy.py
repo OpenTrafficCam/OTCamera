@@ -64,6 +64,10 @@ class UsbFlashDriveNotMountableError(Exception):
     pass
 
 
+class UsbFlashDriveUnmountableError(Exception):
+    pass
+
+
 @dataclass
 class Video:
     filename: str
@@ -74,8 +78,8 @@ class Video:
     @staticmethod
     def from_dict(d: dict, src: Path) -> "Video":
         filename = d["filename"]
-        copied = bool(re.search(r"yes|y|true|x|ja|j", d["copied"]))
-        delete = bool(re.search(r"yes|y|true|x|ja|j", d["delete"]))
+        copied = bool(re.search(r"yes|y|true|x|ja|j", d["copied"].lower()))
+        delete = bool(re.search(r"yes|y|true|x|ja|j", d["delete"].lower()))
         return Video(filename, src / filename, copied, delete)
 
     def to_dict(self) -> dict:
@@ -173,12 +177,13 @@ class CopyInformation:
             if not video.path.exists():
                 log.write(
                     (
-                        f"File: '{video.path}'does not exist on OTCamera."
+                        f"File: '{video.path}'does not exist on OTCamera. "
                         "Remove from copy information."
                     ),
                     log.LogLevel.WARNING,
                 )
-                self.videos.remove(video)
+                self.remove(video)
+                continue
 
             if not video.path.is_file():
                 log.write(
@@ -188,7 +193,19 @@ class CopyInformation:
                     ),
                     log.LogLevel.WARNING,
                 )
-                self.videos.remove(video)
+                self.remove(video)
+                continue
+
+            if Path(self.dest_dir, video.filename).exists():
+                video.copied = True
+                log.write(
+                    f"Video '{video.filename}' already copied. Set copied=True.",
+                    log.LogLevel.DEBUG,
+                )
+
+    def remove(self, video: Video):
+        """Remove video from videos list."""
+        self.videos.remove(video)
 
     @staticmethod
     def from_csv(file: Path, src_dir: Path, dest_dir: Path) -> "CopyInformation":
@@ -230,43 +247,39 @@ class CopyInformation:
 
 @dataclass
 class UsbFlashDrive:
-    usb_device: Path
+    """Wrapper to usb flash drives providing mount and unmount function.
+
+    IMPORTANT: Requires an entry in /etc/fstab to give user permission to access
+    usb mount device.
+
+    `self.mount_point` must be the same as in /etc/fstab.
+
+    Raises:
+        UsbFlashDriveNotMountableError: If not able to mount usb flash drive.
+    """
+
     mount_point: Path
 
     def mount(self) -> None:
-        """Mount USB flash drive."""
+        """Mount USB flash drive.
+
+        IMPORTANT: Requires an entry in /etc/fstab to give user permission to access
+        usb mount device.
+
+        `self.mount_point` must be the same as in /etc/fstab.
+        """
         if self.mount_point.is_mount():
             log.write("USB flash drive already mounted", log.LogLevel.WARNING)
             return
 
         self.mount_point.mkdir(parents=True, exist_ok=True)
 
-        completed_mount_process: subprocess.CompletedProcess = subprocess.run(
-            [
-                "sudo mount",
-                self.usb_device,
-                self.mount_point,
-                "-o",
-                f"uid={os.getlogin()}",
-                "-o",
-                f"gid=os.getlogin()",
-            ],
-            shell=True,
-        )
-        if completed_mount_process.returncode != 0:
-            log.write(
-                (
-                    f"Unable to mount USB flash drive '{self.usb_device}' "
-                    f"to '{self.mount_point}'!"
-                ),
-                log.LogLevel.ERROR,
-            )
+        return_code: int = subprocess.call(f"sudo mount {self.mount_point}", shell=True)
+        if return_code != 0:
             raise UsbFlashDriveNotMountableError(
-                (
-                    f"Unable to mount USB flash drive'{self.usb_device}'"
-                    f" to '{self.mount_point}'"
-                )
+                (f"Unable to mount USB flash drive to '{self.mount_point}'!",)
             )
+        log.write("USB flash drive mounted.")
 
     def unmount(self) -> None:
         """Unmount USB flash drive."""
@@ -274,17 +287,14 @@ class UsbFlashDrive:
             log.write("USB flash drive already unmounted", log.LogLevel.WARNING)
             return
 
-        completed_umount_process: subprocess.CompletedProcess = subprocess.run(
-            ["sudo umount", self.mount_point], shell=True
+        return_code: int = subprocess.call(
+            f"sudo umount {self.mount_point}", shell=True
         )
-        if completed_umount_process.returncode != 0:
-            log.write(
-                (
-                    f"Unable to unmount USB flash drive '{self.usb_device}' "
-                    f"from '{self.mount_point}'!"
-                ),
-                log.LogLevel.ERROR,
+        if return_code != 0:
+            raise UsbFlashDriveUnmountableError(
+                f"Unable to unmount USB flash drive from '{self.mount_point}'!"
             )
+        log.write("USB flash drive unmounted.")
 
 
 class OTCameraUsbCopier(Observer):
@@ -351,11 +361,10 @@ class OTCameraUsbCopier(Observer):
             copy_info (CopyInformation): the copy information.
         """
         self.wifi_led.blink()
-        time.sleep(3)
         log.write("Start copying files")
         for video in copy_info.videos:
             if video.copied:
-                log.write(f"Video at: '{ video.path}' already copied.")
+                log.write(f"Video at: '{ video.path}' already copied. Skipping.")
                 continue
 
             if not video.path.exists():
@@ -388,17 +397,22 @@ class OTCameraUsbCopier(Observer):
         for video in copy_info.videos:
             if not video.path.exists():
                 log.write(
-                    f"Video at: '{ video.path}' does not exists.", log.LogLevel.WARNING
+                    f"Video at: '{ video.path}' does not exist.", log.LogLevel.WARNING
                 )
+                copy_info.remove(video)
                 continue
             if not video.delete:
                 log.write(
-                    f"Video at: '{ video.path}' not marked for deletion.",
-                    log.LogLevel.WARNING,
+                    f"Video at: '{ video.path}' not marked for deletion. Skipping.",
                 )
                 continue
 
-            video.path.unlink()
+            if config.DEBUG_MODE_ON:
+                log.write("Debug mode on. Only mock deleting file.", log.LogLevel.DEBUG)
+            else:
+                video.path.unlink()
+                copy_info.remove(video)
+
             log.write(f"Video at: '{video.path}' deleted!")
         self.rec_led.turn_on()
 
@@ -440,9 +454,7 @@ def get_hostname() -> str:
     return socket.gethostname()
 
 
-def build_usb_copier(
-    src_dir: Path, usb_device: Path, usb_mount_point: Path
-) -> OTCameraUsbCopier:
+def build_usb_copier(src_dir: Path, usb_mount_point: Path) -> OTCameraUsbCopier:
     """Builds a `OTCameraUsbCopier` object.
 
     Args:
@@ -455,7 +467,7 @@ def build_usb_copier(
     power_led = Led(PWMLED(LED_POWER_PIN))
     rec_led = Led(PWMLED(LED_REC_PIN))
     wifi_led = Led(PWMLED(LED_WIFI_PIN))
-    usb_flash_drive = UsbFlashDrive(usb_device, usb_mount_point)
+    usb_flash_drive = UsbFlashDrive(usb_mount_point)
     usb_copier = OTCameraUsbCopier(
         power_led, wifi_led, rec_led, src_dir, usb_flash_drive
     )
@@ -470,27 +482,21 @@ def build_usb_copier(
 
 def main(
     video_dir: str,
-    usb_device: str,
     mount_point: str,
 ):
     """Start the OTCamera USB copy script.
 
     Args:
         video_dir (str, optional): Folder containing videos.
-        Defaults to config.VIDEO_DIR.
-        usb_device (str, optional): Location of the usb device.
-        Defaults to "/dev/sda1".
         mount_point (str, optional): The USB device's mount point.
-        Defaults to "/mnt/usb".
 
     Raises:
         UsbFlashDriveNotMountableError: If USB flash drive is not mountable.
     """
-    usb_device_path = Path(usb_device)
     usb_device_mount = Path(mount_point)
     src_dir: Path = Path(video_dir)
     dest_dir: Path = Path(usb_device_mount, get_hostname())
-    usb_copier = build_usb_copier(src_dir, usb_device_path, usb_device_mount)
+    usb_copier = build_usb_copier(src_dir, usb_device_mount)
     usb_copy_info_path = CopyInformation.get_copy_info_csv(dest_dir)
 
     try:
@@ -511,7 +517,3 @@ def main(
             pause()
     except Exception as e:
         log.write(e, log.LogLevel.EXCEPTION)
-
-
-if __name__ == "__main__":
-    main()

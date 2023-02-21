@@ -54,10 +54,15 @@ apt install gldriver-test libgl1-mesa-dri -y
 sed $CONFIG -i -e "s/^dtoverlay=vc4-fkms-v3d/#dtoverlay=vc4-fkms-v3d/g"
 sed $CONFIG -i -e "s/^dtoverlay=vc4-kms-v3d/#dtoverlay=vc4-kms-v3d/g"
 
-echo "    Setting power safing variables"
+echo "    Setting power saving variables"
 RCLOCAL="/etc/rc.local"
 cp $RCLOCAL $RCLOCAL.backup
 sed $RCLOCAL -i -e "/^exit 0/i /usr/bin/tvservice -o"
+
+echo "    Setting USB mount access permissions"
+FSTAB="/etc/fstab"
+cp $FSTAB $FSTAB.backup
+echo "/dev/sda1 /home/otc/mnt/usb auto defaults,uid=otc,gid=otc,umask=022 0 1" >> $FSTAB
 
 echo "#### Setting up OTCamera"
 
