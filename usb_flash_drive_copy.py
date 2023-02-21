@@ -238,7 +238,7 @@ class UsbFlashDrive:
             log.write("USB flash drive already mounted", log.LogLevel.WARNING)
             return
 
-        self.mount_point.mkdir(parents=True)
+        self.mount_point.mkdir(parents=True, exist_ok=True)
 
         completedProcess: subprocess.CompletedProcess = subprocess.run(
             f"sudo mount {self.usb_device} {self.mount_point}"
