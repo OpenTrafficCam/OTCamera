@@ -346,9 +346,9 @@ class OTCameraUsbCopier(Observer):
         time.sleep(3)
 
         self._turn_off_all_leds()
-        log.closefile()
 
         if not config.DEBUG_MODE_ON:
+            log.closefile()
             subprocess.call("sudo shutdown -h now", shell=True)
 
     def _turn_off_all_leds(self):
