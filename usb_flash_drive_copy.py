@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 import csv
-import os
 import re
 import shutil
 from signal import pause
@@ -84,6 +83,10 @@ class Video:
 
     def to_dict(self) -> dict:
         return {"filename": self.filename, "copied": self.copied, "delete": self.delete}
+
+    def __eq__(self, __o: "Video") -> bool:
+        """A `Video` object is equal to another Video object if their path is the same."""
+        return self.path == __o.path
 
 
 class Led:
@@ -173,6 +176,8 @@ class CopyInformation:
 
     def _validate_copy_info(self):
         """Validate and update video copy information with actual videos on disk."""
+        videos_on_src = self._get_videos_from_src()
+
         for video in self.videos:
             if not video.path.exists():
                 log.write(
@@ -185,16 +190,7 @@ class CopyInformation:
                 self.remove(video)
                 continue
 
-            if not video.path.is_file():
-                log.write(
-                    (
-                        f"File: '{video.path}'is not a file."
-                        "Remove from copy information."
-                    ),
-                    log.LogLevel.WARNING,
-                )
-                self.remove(video)
-                continue
+            videos_on_src.remove(video)
 
             if Path(self.dest_dir, video.filename).exists():
                 video.copied = True
@@ -202,6 +198,16 @@ class CopyInformation:
                     f"Video '{video.filename}' already copied. Set copied=True.",
                     log.LogLevel.DEBUG,
                 )
+        # Videos remaining in videos_on_src are new ones
+        self.videos.extend(videos_on_src)
+
+    def _get_videos_from_src(self) -> list[Video]:
+        videos_on_src: list[Video] = []
+        for video_path in get_video_files(self.src_dir, "h264"):
+            videos_on_src.append(
+                Video(video_path.name, video_path, copied=False, delete=False)
+            )
+        return videos_on_src
 
     def remove(self, video: Video):
         """Remove video from videos list."""
