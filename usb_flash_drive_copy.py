@@ -240,8 +240,8 @@ class UsbFlashDrive:
 
         self.mount_point.mkdir(parents=True, exist_ok=True)
 
-        completedProcess: subprocess.CompletedProcess = subprocess.run(
-            f"sudo mount {self.usb_device} {self.mount_point}"
+        completedProcess: subprocess.CompletedProcess = subprocess.call(
+            f"sudo mount {self.usb_device} {self.mount_point}", shell=True
         )
         if completedProcess.returncode != 0:
             log.write(
@@ -261,8 +261,8 @@ class UsbFlashDrive:
             log.write("USB flash drive already unmounted", log.LogLevel.WARNING)
             return
 
-        completedProcess: subprocess.CompletedProcess = subprocess.run(
-            f"sudo umount {self.mount_point}"
+        completedProcess: subprocess.CompletedProcess = subprocess.call(
+            f"sudo umount {self.mount_point}", shell=True
         )
         if completedProcess.returncode != 0:
             log.write(
