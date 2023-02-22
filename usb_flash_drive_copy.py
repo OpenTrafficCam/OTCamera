@@ -1,20 +1,20 @@
-from abc import ABC, abstractmethod
 import csv
 import re
 import shutil
-from signal import pause
 import socket
 import subprocess
 import time
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
+from signal import pause
+from typing import Union
 
 from gpiozero import PWMLED
 from gpiozero import Button as GPIOButton
 
 import OTCamera.config as config
 import OTCamera.helpers.log as log
-
 
 COPY_INFO_CSV_SUFFIX = "_usb-copy-info.csv"
 LED_POWER_PIN: int = 13
@@ -85,7 +85,10 @@ class Video:
         return {"filename": self.filename, "copied": self.copied, "delete": self.delete}
 
     def __eq__(self, __o: "Video") -> bool:
-        """A `Video` object is equal to another Video object if their path is the same."""
+        """
+        A `Video` object is equal to another Video object if their path is the
+        same.
+        """
         return self.path == __o.path
 
 
@@ -99,11 +102,19 @@ class Led:
 
         self._led = led
 
-    def blink(self) -> None:
-        """Led blinking action."""
+    def blink(self, n: Union[int, None] = None, background: bool = True) -> None:
+        """Led blinking action.
+
+        Args:
+            n (Union[int, None], optional): Number of times to blink.
+            Defaults to `None` meaning forever.
+            background (bool, optional): Start as background thread.
+            If `False` return only when blink has finished when `n!=None`.
+            Defaults to `True`.
+        """
         if not config.USE_LED:
             return
-        self._led.blink(background=True)
+        self._led.blink(n=n, background=True)
         time.sleep(2)
 
     def turn_off(self) -> None:
@@ -347,9 +358,7 @@ class OTCameraUsbCopier(Observer):
         """Shutdown OTCamera."""
 
         self._turn_off_all_leds()
-        self.power_led.blink()
-        self.rec_led.blink()
-        time.sleep(3)
+        self.rec_led.blink(n=4, background=False)
 
         self._turn_off_all_leds()
 
