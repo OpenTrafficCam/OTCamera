@@ -14,7 +14,6 @@
 # program.  If not, see <https://www.gnu.org/licenses/>.
 
 import argparse
-import os
 from pathlib import Path
 
 import OTCamera.config as config
@@ -49,13 +48,11 @@ def usb_device_exists(usb_device: str) -> bool:
 def main():
     parse_args()
     usb_device = "/dev/sda1"
-    user_name = os.getlogin()
-    usb_mount_point = f"/home/{user_name}/mnt/usb"
 
     if usb_device_exists(usb_device):
         import usb_flash_drive_copy
 
-        usb_flash_drive_copy.main(config.VIDEO_DIR, usb_mount_point)
+        usb_flash_drive_copy.main(config.VIDEO_DIR, config.USB_MOUNT_POINT)
     else:
         import OTCamera.record as record
 
