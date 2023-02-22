@@ -194,7 +194,7 @@ class CopyInformation:
         """Validate and update video copy information with actual videos on disk."""
         videos_on_src = self._get_videos_from_src()
 
-        for video in self.videos:
+        for video in self.videos.copy():
             if not video.path.exists():
                 log.write(
                     (
@@ -418,7 +418,7 @@ class OTCameraUsbCopier(Observer):
             copy_info (CopyInformation): The copy information.
         """
         self.rec_led.blink()
-        for video in copy_info.get_sorted_videos():
+        for video in copy_info.videos.copy():
             if not video.path.exists():
                 log.write(
                     f"Video at: '{ video.path}' does not exist.", log.LogLevel.WARNING
