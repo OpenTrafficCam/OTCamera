@@ -81,14 +81,19 @@ class Video:
         delete = bool(re.search(r"yes|y|true|x|ja|j", d["delete"].lower()))
         return Video(filename, src / filename, copied, delete)
 
+    def __hash__(self) -> int:
+        return hash(self.path)
+
     def to_dict(self) -> dict:
         return {"filename": self.filename, "copied": self.copied, "delete": self.delete}
 
-    def __eq__(self, __o: "Video") -> bool:
+    def __eq__(self, __o: object) -> bool:
         """
         A `Video` object is equal to another Video object if their path is the
         same.
         """
+        if not isinstance(__o, Video):
+            return NotImplemented
         return self.path == __o.path
 
 
@@ -177,7 +182,7 @@ class Button(Subject):
 
 class CopyInformation:
     def __init__(
-        self, videos: list[Video], csv_file: Path, src_dir: Path, dest_dir: Path
+        self, videos: set[Video], csv_file: Path, src_dir: Path, dest_dir: Path
     ) -> None:
         self.videos = videos
         self.csv_file = csv_file
@@ -198,10 +203,10 @@ class CopyInformation:
                     ),
                     log.LogLevel.WARNING,
                 )
-                self.remove(video)
+                self.discard(video)
                 continue
 
-            videos_on_src.remove(video)
+            videos_on_src.discard(video)
 
             if Path(self.dest_dir, video.filename).exists():
                 video.copied = True
@@ -210,32 +215,31 @@ class CopyInformation:
                     log.LogLevel.DEBUG,
                 )
         # Videos remaining in videos_on_src are new ones
-        self.videos.extend(videos_on_src)
-        self.sort_videos()
+        self.videos.update(videos_on_src)
 
-    def _get_videos_from_src(self) -> list[Video]:
-        videos_on_src: list[Video] = []
+    def _get_videos_from_src(self) -> set[Video]:
+        videos_on_src: set[Video] = set()
         for video_path in get_video_files(self.src_dir, "h264"):
-            videos_on_src.append(
+            videos_on_src.add(
                 Video(video_path.name, video_path, copied=False, delete=False)
             )
         return videos_on_src
 
     def remove(self, video: Video):
         """Remove video from videos list."""
-        self.videos.remove(video)
+        self.videos.discard(video)
 
-    def sort_videos(self) -> None:
-        """Sort videos by filename."""
-        self.videos.sort(key=lambda video: video.filename)
+    def get_sorted_videos(self) -> list[Video]:
+        """Get sorted list of videos by filename."""
+        return sorted(self.videos, key=lambda video: video.filename)
 
     @staticmethod
     def from_csv(file: Path, src_dir: Path, dest_dir: Path) -> "CopyInformation":
-        videos: list[Video] = []
+        videos: set[Video] = set()
         with open(file, mode="r") as csv_file:
             csv_reader = csv.DictReader(csv_file)
             for _dict in csv_reader:
-                videos.append(Video.from_dict(_dict, src_dir))
+                videos.add(Video.from_dict(_dict, src_dir))
 
         return CopyInformation(videos, file, src_dir, dest_dir)
 
@@ -251,21 +255,20 @@ class CopyInformation:
         copy_csv_file.touch()
 
         video_filepaths = get_video_files(src_dir, filetype)
-        videos: list[Video] = []
+        videos: set[Video] = set()
 
         for video_filepath in video_filepaths:
             video = Video(video_filepath.name, video_filepath, False, False)
-            videos.append(video)
+            videos.add(video)
 
         return CopyInformation(videos, copy_csv_file, src_dir, dest_dir)
 
     def to_dict(self) -> list[dict]:
-        new_videos: list[dict] = []
-        self.sort_videos()
-        for video in self.videos:
+        dict_videos: list[dict] = []
+        for video in self.get_sorted_videos():
             video_dict = video.to_dict()
-            new_videos.append(video_dict)
-        return new_videos
+            dict_videos.append(video_dict)
+        return dict_videos
 
 
 @dataclass
@@ -537,4 +540,4 @@ def main(
         if config.USE_BUTTONS:
             pause()
     except Exception as e:
-        log.write(e, log.LogLevel.EXCEPTION)
+        log.write(str(e), log.LogLevel.EXCEPTION)
