@@ -418,7 +418,7 @@ class OTCameraUsbCopier(Observer):
             copy_info (CopyInformation): The copy information.
         """
         self.rec_led.blink()
-        for video in copy_info.videos:
+        for video in copy_info.get_sorted_videos():
             if not video.path.exists():
                 log.write(
                     f"Video at: '{ video.path}' does not exist.", log.LogLevel.WARNING
