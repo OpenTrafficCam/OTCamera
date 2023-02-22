@@ -203,7 +203,7 @@ class CopyInformation:
                     ),
                     log.LogLevel.WARNING,
                 )
-                self.discard(video)
+                self.remove(video)
                 continue
 
             videos_on_src.discard(video)
