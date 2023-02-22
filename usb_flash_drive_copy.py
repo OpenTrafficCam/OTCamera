@@ -200,6 +200,7 @@ class CopyInformation:
                 )
         # Videos remaining in videos_on_src are new ones
         self.videos.extend(videos_on_src)
+        self.sort_videos()
 
     def _get_videos_from_src(self) -> list[Video]:
         videos_on_src: list[Video] = []
@@ -212,6 +213,10 @@ class CopyInformation:
     def remove(self, video: Video):
         """Remove video from videos list."""
         self.videos.remove(video)
+
+    def sort_videos(self) -> None:
+        """Sort videos by filename."""
+        self.videos.sort(key=lambda video: video.filename)
 
     @staticmethod
     def from_csv(file: Path, src_dir: Path, dest_dir: Path) -> "CopyInformation":
@@ -245,6 +250,7 @@ class CopyInformation:
 
     def to_dict(self) -> list[dict]:
         new_videos: list[dict] = []
+        self.sort_videos()
         for video in self.videos:
             video_dict = video.to_dict()
             new_videos.append(video_dict)
