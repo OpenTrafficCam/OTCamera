@@ -7,7 +7,6 @@ import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
-from signal import pause
 from typing import Union
 
 from gpiozero import PWMLED
