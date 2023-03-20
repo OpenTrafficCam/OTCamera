@@ -198,7 +198,7 @@ class CopyInformation:
             if not video.path.exists():
                 log.write(
                     (
-                        f"File: '{video.path}'does not exist on OTCamera. "
+                        f"File: '{video.path}' does not exist on OTCamera. "
                         "Remove from copy information."
                     ),
                     log.LogLevel.WARNING,
