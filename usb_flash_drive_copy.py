@@ -167,16 +167,8 @@ class Button(Subject):
             observer.update(self.is_active)
 
     def _register_callbacks(self):
-        self._button.when_activated = self.on_pressed
         self._button.when_deactivated = self.on_released
         log.write(f"Register {self.name} button callbacks.", log.LogLevel.DEBUG)
-
-    def on_pressed(self):
-        """Notifies observers about button pressed event."""
-        log.write(f"{self.name} button pressed.", log.LogLevel.DEBUG)
-        self.is_active = True
-        self.notify()
-        log.write("Observers have been notified", log.LogLevel.Debug)
 
     def on_released(self):
         """Notifies observers about button released event."""
