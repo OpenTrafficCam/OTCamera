@@ -47,9 +47,8 @@ def usb_device_exists(usb_device: str) -> bool:
 
 def main():
     parse_args()
-    usb_device = "/dev/sda1"
 
-    if usb_device_exists(usb_device):
+    if usb_device_exists(config.USB_DEVICE):
         import usb_flash_drive_copy
 
         usb_flash_drive_copy.main(config.VIDEO_DIR, config.USB_MOUNT_POINT)

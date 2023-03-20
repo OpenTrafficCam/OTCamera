@@ -342,6 +342,7 @@ OFFLINE_HTML_PATH = "~/OTCamera/webfiles/offline.html"
 NUM_LOG_FILES_HTML = 2
 """Number of log files to be displayed on the status website"""
 USB_MOUNT_POINT = "~/mnt/usb"
+USB_DEVICE = "/dev/sda1"
 
 # Microsoft Teams WebHook
 USE_MS_TEAMS_WEBHOOK = False
