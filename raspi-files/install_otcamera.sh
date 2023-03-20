@@ -62,7 +62,7 @@ sed $RCLOCAL -i -e "/^exit 0/i /usr/bin/tvservice -o"
 echo "    Setting USB mount access permissions"
 FSTAB="/etc/fstab"
 cp $FSTAB $FSTAB.backup
-echo "/dev/sda1 /home/otc/mnt/usb auto noauto,uid=otc,gid=otc,umask=022 0 0" >> $FSTAB
+echo "/dev/sda1 /home/$SUDO_USER/mnt/usb auto noauto,uid=otc,gid=otc,umask=022 0 0" >> $FSTAB
 
 echo "#### Setting up OTCamera"
 
