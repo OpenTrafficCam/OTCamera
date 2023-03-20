@@ -367,7 +367,7 @@ class OTCameraUsbCopier(Observer):
         self.shutdown_requested = False
 
     def update(self, is_active: bool) -> None:
-        self.shutdown_requested = is_active
+        self.shutdown_requested = not is_active
 
     def shutdown(self):
         """Shutdown OTCamera."""
