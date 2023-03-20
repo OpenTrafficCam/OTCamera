@@ -24,30 +24,33 @@ BUTTON_POWER_PIN: int = 17
 
 
 class Subject(ABC):
-    def __init__(self) -> None:
-        self._observers: list[Observer] = []
-
+    @abstractmethod
     def attach(self, observer: "Observer") -> None:
         """Attach an observer to the subject."""
-        if observer not in self._observers:
-            self._observers.append(observer)
+        pass
 
+    @abstractmethod
     def detach(self, observer: "Observer") -> None:
         """Detach an observer from the subject."""
-        return self._observers.remove(observer)
+        pass
 
+    @abstractmethod
     def notify(self) -> None:
         """Notify all observers subscribed to subject about an event."""
-        for observer in self._observers:
-            observer.update(self)
+        pass
 
 
 class Observer(ABC):
     """The Observer interface declaring update method used by subjects."""
 
     @abstractmethod
-    def update(self, subject: Subject):
-        """Receive update from subject."""
+    def update(self, is_active: bool):
+        """Receive update from subject.
+
+        Args:
+            subject (Subject): the subject.
+            is_active (bool): whether the subject is active
+        """
         pass
 
 
@@ -75,10 +78,10 @@ class Video:
     delete: bool
 
     @staticmethod
-    def from_dict(d: dict, src: Path) -> "Video":
-        filename = d["filename"]
-        copied = bool(re.search(r"yes|y|true|x|ja|j", d["copied"].lower()))
-        delete = bool(re.search(r"yes|y|true|x|ja|j", d["delete"].lower()))
+    def from_dict(data: dict, src: Path) -> "Video":
+        filename = data["filename"]
+        copied = bool(re.search(r"yes|y|true|x|ja|j", data["copied"].lower()))
+        delete = bool(re.search(r"yes|y|true|x|ja|j", data["delete"].lower()))
         return Video(filename, src / filename, copied, delete)
 
     def __hash__(self) -> int:
@@ -107,11 +110,11 @@ class Led:
 
         self._led = led
 
-    def blink(self, n: Union[int, None] = None, background: bool = True) -> None:
+    def blink(self, times: Union[int, None] = None, background: bool = True) -> None:
         """Led blinking action.
 
         Args:
-            n (Union[int, None], optional): Number of times to blink.
+            times (Union[int, None], optional): Number of times to blink.
             Defaults to `None` meaning forever.
             background (bool, optional): Start as background thread.
             If `False` return only when blink has finished when `n!=None`.
@@ -119,7 +122,7 @@ class Led:
         """
         if not config.USE_LED:
             return
-        self._led.blink(n=n, background=True)
+        self._led.blink(n=times, background=True)
         time.sleep(2)
 
     def turn_off(self) -> None:
@@ -146,11 +149,23 @@ class Button(Subject):
             button (GPIOButton): Interface to physical hardware button.
         """
         super().__init__()
+        self._observers: list[Observer] = []
         self.name = name.upper()
         self._button = button
-        self.is_active = button.is_active
+        self.is_active = self._button.is_active
         self._check_button_is_active()
         self._register_callbacks()
+
+    def attach(self, observer: "Observer") -> None:
+        if observer not in self._observers:
+            self._observers.append(observer)
+
+    def detach(self, observer: "Observer") -> None:
+        return self._observers.remove(observer)
+
+    def notify(self) -> None:
+        for observer in self._observers:
+            observer.update(self.is_active)
 
     def _register_callbacks(self):
         self._button.when_activated = self.on_pressed
@@ -160,17 +175,16 @@ class Button(Subject):
     def on_pressed(self):
         """Notifies observers about button pressed event."""
         log.write(f"{self.name} button pressed.", log.LogLevel.DEBUG)
-        self._check_button_is_active()
         self.is_active = True
         self.notify()
+        log.write("Observers have been notified", log.LogLevel.Debug)
 
     def on_released(self):
         """Notifies observers about button released event."""
-        if not self._button.is_active:
-            log.write("Power button released.", log.LogLevel.DEBUG)
-            self.is_active = False
-            self.notify()
-            log.write("Observers have been notified", log.LogLevel.Debug)
+        log.write("Power button released.", log.LogLevel.DEBUG)
+        self.is_active = False
+        self.notify()
+        log.write("Observers have been notified", log.LogLevel.Debug)
 
     def _check_button_is_active(self) -> None:
         if not self._button.is_active:
@@ -233,6 +247,13 @@ class CopyInformation:
         """Get sorted list of videos by filename."""
         return sorted(self.videos, key=lambda video: video.filename)
 
+    def to_dict(self) -> list[dict]:
+        serialized_videos: list[dict] = []
+        for video in self.get_sorted_videos():
+            video_dict = video.to_dict()
+            serialized_videos.append(video_dict)
+        return serialized_videos
+
     @staticmethod
     def from_csv(file: Path, src_dir: Path, dest_dir: Path) -> "CopyInformation":
         videos: set[Video] = set()
@@ -262,13 +283,6 @@ class CopyInformation:
             videos.add(video)
 
         return CopyInformation(videos, copy_csv_file, src_dir, dest_dir)
-
-    def to_dict(self) -> list[dict]:
-        dict_videos: list[dict] = []
-        for video in self.get_sorted_videos():
-            video_dict = video.to_dict()
-            dict_videos.append(video_dict)
-        return dict_videos
 
 
 @dataclass
@@ -350,18 +364,16 @@ class OTCameraUsbCopier(Observer):
         self.rec_led = rec_led
         self.src_dir = src_dir
         self.usb_flash_drive = usb_flash_drive
+        self.shutdown_requested = False
 
-    def update(self, subject: Subject) -> None:
-        if isinstance(subject, Button):
-            if not subject.is_active:
-                log.write("Shutdown OTCamera.")
-                self.shutdown()
+    def update(self, is_active: bool) -> None:
+        self.shutdown_requested = is_active
 
     def shutdown(self):
         """Shutdown OTCamera."""
 
         self._turn_off_all_leds()
-        self.rec_led.blink(n=4, background=False)
+        self.rec_led.blink(times=4, background=False)
 
         self._turn_off_all_leds()
 
@@ -396,14 +408,19 @@ class OTCameraUsbCopier(Observer):
                     f"Video at: '{ video.path}' does not exists.", log.LogLevel.WARNING
                 )
                 continue
-
-            shutil.copy2(
-                src=video.path,
-                dst=copy_info.dest_dir / video.filename,
-            )
-            video.copied = True
-            log.write(f"Video: '{video.path}' copied.")
-            log.write(f"Video: '{video.path}' copied.")
+            try:
+                shutil.copy2(
+                    src=video.path,
+                    dst=copy_info.dest_dir / video.filename,
+                )
+                video.copied = True
+                log.write(f"Video: '{video.path}' copied.")
+                log.write(f"Video: '{video.path}' copied.")
+            except IOError:
+                log.write(
+                    f"Unable to copy video '{video.path}'.",
+                    level=log.LogLevel.EXCEPTION,
+                )
         log.write("Copying over videos to USB flash drive finished.")
         self.wifi_led.turn_on()
 
@@ -434,8 +451,22 @@ class OTCameraUsbCopier(Observer):
             if config.DEBUG_MODE_ON:
                 log.write("Debug mode on. Only mock deleting file.", log.LogLevel.DEBUG)
             else:
-                video.path.unlink()
-                copy_info.remove(video)
+                try:
+                    video.path.unlink()
+                    copy_info.remove(video)
+                except FileNotFoundError:
+                    log.write(
+                        f"Video '{video.path}' could not be found although it should "
+                        "exist.",
+                        log.LogLevel.EXCEPTION,
+                    )
+
+                    pass
+                except IOError:
+                    log.write(
+                        f"Error occurred while trying to delete video '{video.path}'.",
+                        level=log.LogLevel.EXCEPTION,
+                    )
 
             log.write(f"Video at: '{video.path}' deleted!")
         self.rec_led.turn_on()
@@ -468,10 +499,14 @@ class OTCameraUsbCopier(Observer):
         self.power_led.turn_on()
 
 
-def get_video_files(dirpath: Path, filetype: str) -> list[Path]:
-    if not dirpath.is_dir():
-        raise IsNotADirectoryError(f"Path: '{dirpath}' is not a directory!")
-    return [f for f in dirpath.iterdir() if f.is_file() and f.suffix == f".{filetype}"]
+def get_video_files(directory: Path, filetype: str) -> list[Path]:
+    if not directory.is_dir():
+        raise IsNotADirectoryError(f"Path: '{directory}' is not a directory!")
+    return [
+        file
+        for file in directory.iterdir()
+        if file.is_file() and file.suffix == f".{filetype}"
+    ]
 
 
 def get_hostname() -> str:
@@ -538,6 +573,9 @@ def main(
         usb_copier.unmount_usb_device()
 
         if config.USE_BUTTONS:
-            pause()
+            while not usb_copier.shutdown_requested:
+                continue
+            usb_copier.shutdown()
+
     except Exception as e:
         log.write(str(e), log.LogLevel.EXCEPTION)
