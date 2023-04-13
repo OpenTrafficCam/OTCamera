@@ -121,7 +121,7 @@ class Led:
         """
         if not config.USE_LED:
             return
-        self._led.blink(n=times, background=True)
+        self._led.blink(n=times, background=background)
         time.sleep(2)
 
     def turn_off(self) -> None:
