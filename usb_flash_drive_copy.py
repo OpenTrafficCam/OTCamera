@@ -363,9 +363,9 @@ class OTCameraUsbCopier(Observer):
         """Shutdown OTCamera."""
 
         self._turn_off_all_leds()
-        self.rec_led.blink(times=4, background=False)
+        self.power_led.blink(times=4, background=False)
 
-        self._turn_off_all_leds()
+        self.power_led.turn_on()
 
         if not config.DEBUG_MODE_ON:
             log.closefile()
