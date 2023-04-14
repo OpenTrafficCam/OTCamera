@@ -121,7 +121,7 @@ class Led:
         """
         if not config.USE_LED:
             return
-        self._led.blink(n=times, background=True)
+        self._led.blink(n=times, background=background)
         time.sleep(2)
 
     def turn_off(self) -> None:
@@ -129,7 +129,6 @@ class Led:
         if not config.USE_LED:
             return
         self._led.off()
-        time.sleep(2)
 
     def turn_on(self) -> None:
         """Turn on LED."""
@@ -364,9 +363,9 @@ class OTCameraUsbCopier(Observer):
         """Shutdown OTCamera."""
 
         self._turn_off_all_leds()
-        self.rec_led.blink(times=4, background=False)
+        self.power_led.blink(times=4, background=False)
 
-        self._turn_off_all_leds()
+        self.power_led.turn_on()
 
         if not config.DEBUG_MODE_ON:
             log.closefile()
