@@ -1,8 +1,8 @@
-art
-psutil
-gpiozero
-picamerax
-bs4
-rpi-gpio
-pyyaml
-requests
+art==5.9
+psutil==5.9.5
+gpiozero==1.6.2
+picamerax==21.9.8
+beautifulsoup4==4.12.2
+RPi.GPIO==0.7.1
+PyYAML==6.0
+requests==2.29.0
