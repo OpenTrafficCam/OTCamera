@@ -341,6 +341,8 @@ OFFLINE_HTML_PATH = "~/OTCamera/webfiles/offline.html"
 """Path to the HTML to be displayed when OTCamera is offline"""
 NUM_LOG_FILES_HTML = 2
 """Number of log files to be displayed on the status website"""
+USB_MOUNT_POINT = "~/mnt/usb"
+USB_DEVICE = "/dev/sda1"
 
 # Microsoft Teams WebHook
 USE_MS_TEAMS_WEBHOOK = False
@@ -351,6 +353,7 @@ MS_TEAMS_MAX_FAILED_SEND_ATTEMPTS = 2
 """The number of max failed HTTP Requests send attempts."""
 
 VIDEO_DIR = str(Path(VIDEO_DIR).expanduser().resolve())
+USB_MOUNT_POINT = str(Path(USB_MOUNT_POINT).expanduser().resolve())
 PREVIEW_PATH = str(Path(PREVIEW_PATH).expanduser().resolve())
 TEMPLATE_HTML_PATH = str(Path(TEMPLATE_HTML_PATH).expanduser().resolve())
 INDEX_HTML_PATH = str(Path(INDEX_HTML_PATH).expanduser().resolve())
