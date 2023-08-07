@@ -1,4 +1,4 @@
-art==5.9
+art==6.0
 psutil==5.9.5
 gpiozero==1.6.2
 picamerax==21.9.8
