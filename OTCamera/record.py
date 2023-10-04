@@ -122,13 +122,15 @@ class OTCamera:
             self._try_capture_preview()
         else:
             self._camera.stop_recording()
-            self._html_updater.update_info(
-                status.get_status_data(),
-                self._get_config_settings(),
-                status.recording,
-                status.hour_button_pressed,
-                status.external_power_connected,
-            )
+            if not status.html_updated_after_recording:
+                self._html_updater.update_info(
+                    status.get_status_data(),
+                    self._get_config_settings(),
+                    status.recording,
+                    status.hour_button_pressed,
+                    status.external_power_connected,
+                )
+                status.html_updated_after_recording = True
             sleep(0.5)
 
     def _send_alive_signal(self) -> None:
