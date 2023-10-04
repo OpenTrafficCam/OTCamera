@@ -50,13 +50,13 @@ class OTCamera:
     """
 
     def __init__(
-        self,
-        camera: Camera,
-        html_updater: StatusWebsiteUpdater,
-        capture_preview_immediately: bool = False,
-        video_dir: Union[str, Path] = config.VIDEO_DIR,
-        log_dir: Union[str, Path] = config.VIDEO_DIR,
-        num_log_files_html: int = config.NUM_LOG_FILES_HTML,
+            self,
+            camera: Camera,
+            html_updater: StatusWebsiteUpdater,
+            capture_preview_immediately: bool = False,
+            video_dir: Union[str, Path] = config.VIDEO_DIR,
+            log_dir: Union[str, Path] = config.VIDEO_DIR,
+            num_log_files_html: int = config.NUM_LOG_FILES_HTML,
     ) -> None:
         """Constructor to initialise the OTCamera class.
 
@@ -103,15 +103,15 @@ class OTCamera:
 
         """
         if (
-            not status.power_button_pressed
-            and status.power_button_pressed_time is not None
+                not status.power_button_pressed
+                and status.power_button_pressed_time is not None
         ):
             button.handle_power_button_off_state()
 
         if (
-            not status.wifi_button_pressed
-            and status.wifi_on
-            and status.wifi_button_pressed_time is not None
+                not status.wifi_button_pressed
+                and status.wifi_on
+                and status.wifi_button_pressed_time is not None
         ):
             button.handle_wifi_button_off_state()
 
@@ -148,7 +148,7 @@ class OTCamera:
             status.power_led_blinked = False
 
     def _try_capture_preview(
-        self,
+            self,
     ) -> None:
         """Tries capturing a preview image.
 
@@ -167,7 +167,7 @@ class OTCamera:
         time_preview = is_preview_time and status.wifi_on and not status.preview_taken
 
         if (
-            self._capture_preview_immediately or time_preview
+                self._capture_preview_immediately or time_preview
         ) and not status.shutdownactive:
             log.write("new preview", level=log.LogLevel.DEBUG)
             self._camera.capture()
@@ -184,7 +184,7 @@ class OTCamera:
             status.preview_taken = False
 
     def record(
-        self,
+            self,
     ) -> None:
         """Run init and record loop.
 
@@ -219,7 +219,7 @@ class OTCamera:
             self._execute_shutdown()
 
     def _register_shutdown_action(
-        self,
+            self,
     ) -> None:
         """Register call backs to be executed on a signal interrupt or terminate."""
         # Code to execute once terminate or interrupt signal occurs
