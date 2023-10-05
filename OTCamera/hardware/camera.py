@@ -129,6 +129,7 @@ class Camera(Singleton):
             log.write("started recording")
             led.rec_on()
             status.recording = True
+            status.html_updated_after_recording = False
             self._wait_recording(2)
             self.capture()
 

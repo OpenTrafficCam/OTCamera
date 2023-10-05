@@ -122,13 +122,15 @@ class OTCamera:
             self._try_capture_preview()
         else:
             self._camera.stop_recording()
-            self._html_updater.update_info(
-                status.get_status_data(),
-                self._get_config_settings(),
-                status.recording,
-                status.hour_button_pressed,
-                status.external_power_connected,
-            )
+            if not status.html_updated_after_recording:
+                self._html_updater.update_info(
+                    status.get_status_data(),
+                    self._get_config_settings(),
+                    status.recording,
+                    status.hour_button_pressed,
+                    status.external_power_connected,
+                )
+                status.html_updated_after_recording = True
             sleep(0.5)
 
     def _send_alive_signal(self) -> None:
@@ -145,9 +147,7 @@ class OTCamera:
             log.write("reset power_led_blinked", level=log.LogLevel.DEBUG)
             status.power_led_blinked = False
 
-    def _try_capture_preview(
-        self,
-    ) -> None:
+    def _try_capture_preview(self) -> None:
         """Tries capturing a preview image.
 
         Captures a new preview image, if the current second matches the preview interval
@@ -181,9 +181,7 @@ class OTCamera:
             log.write("reset preview_taken", level=log.LogLevel.DEBUG)
             status.preview_taken = False
 
-    def record(
-        self,
-    ) -> None:
+    def record(self) -> None:
         """Run init and record loop.
 
         Initializes the LEDs and Wifi AP.
@@ -216,9 +214,7 @@ class OTCamera:
         finally:
             self._execute_shutdown()
 
-    def _register_shutdown_action(
-        self,
-    ) -> None:
+    def _register_shutdown_action(self) -> None:
         """Register call backs to be executed on a signal interrupt or terminate."""
         # Code to execute once terminate or interrupt signal occurs
         log.write("Register callbacks on SIGINT and SIGTERM", log.LogLevel.DEBUG)
