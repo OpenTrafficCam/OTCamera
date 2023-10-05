@@ -44,7 +44,7 @@ current_interval: int = 0
 recording: bool = False
 power_button_pressed_time: Union[dt, None] = None
 wifi_button_pressed_time: Union[dt, None] = None
-html_updated_after_recording = False
+html_updated_after_recording: bool = False
 
 # Button statuses
 power_button_pressed: bool = False
