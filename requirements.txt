@@ -1,5 +1,5 @@
 art==6.1
-psutil==5.9.5
+psutil==5.9.6
 gpiozero==1.6.2
 picamerax==21.9.8
 beautifulsoup4==4.12.2
