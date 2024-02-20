@@ -96,8 +96,9 @@ class Camera(Singleton):
         self.rotation = rotation
         self.meter_mode = meter_mode
         self._picam = self._create_picam()
-        self._client_socket = self._create_socket(server="10.10.11.114", port=8123)
-        self._connection = self._create_connection()
+        if config.USE_STREAM:
+            self._client_socket = self._create_socket(server=config.SERVER, port=config.PORT)
+            self._connection = self._create_connection()
         log.write("Camera initialized", log.LogLevel.DEBUG)
 
     def start_recording(self):
