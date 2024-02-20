@@ -263,6 +263,7 @@ DEBUG_MODE_ON = False
 """Turn debug mode on to get additional log entries."""
 USE_RELAY = False
 """Enable to start and stop sshrelay.service (need's to be configured)"""
+USE_STREAM = True
 
 # recording config
 START_HOUR = 6

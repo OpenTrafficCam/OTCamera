@@ -119,7 +119,7 @@ class Camera(Singleton):
             delete_old_files()
             self._picam.annotate_text = name.annotate()
 
-            if true:
+            if config.USE_STREAM:
                 video = self._connection
             else:
                 video = name.video()
@@ -173,9 +173,10 @@ class Camera(Singleton):
 
     def _split(self):
         """Splits recording and deletes old video files if no disk space available."""
-        self._picam.split_recording(name.video())
-        delete_old_files()
-        log.write("splitted recording")
+        if not config.USE_STREAM:
+            self._picam.split_recording(name.video())
+            delete_old_files()
+            log.write("splitted recording")
 
     def split_if_interval_ends(self) -> None:
         """Splits the videofile if the configured intervals ends.
