@@ -3,6 +3,7 @@
 Used to start, split and stop recording.
 
 """
+import socket
 # Copyright (C) 2023 OpenTrafficCam Contributors
 # <https://github.com/OpenTrafficCam>
 # <team@opentrafficcam.org>
@@ -20,6 +21,7 @@ Used to start, split and stop recording.
 
 
 from datetime import datetime as dt
+from io import BufferedWriter
 from time import sleep
 from typing import Tuple, Union
 
@@ -94,6 +96,8 @@ class Camera(Singleton):
         self.rotation = rotation
         self.meter_mode = meter_mode
         self._picam = self._create_picam()
+        self._client_socket = self._create_socket(server="10.10.11.114", port=8123)
+        self._connection = self._create_connection()
         log.write("Camera initialized", log.LogLevel.DEBUG)
 
     def start_recording(self):
@@ -114,8 +118,14 @@ class Camera(Singleton):
         if not self._picam.recording and not status.shutdownactive:
             delete_old_files()
             self._picam.annotate_text = name.annotate()
+
+            if true:
+                video = self._connection
+            else:
+                video = name.video()
+
             self._picam.start_recording(
-                output=name.video(),
+                output=video,
                 format=config.VIDEO_FORMAT,
                 resize=config.RESOLUTION_SAVED_VIDEO_FILE,
                 profile=config.H264_PROFILE,
@@ -252,6 +262,7 @@ class Camera(Singleton):
 
         try:
             self._picam.close()
+            self._connection.close()
             log.write("PiCamera closed", log.LogLevel.DEBUG)
         except picamera.PiCameraClosed:
             log.write("Camera already closed.", level=log.LogLevel.DEBUG)
@@ -286,3 +297,12 @@ class Camera(Singleton):
         picam.rotation = self.rotation
         picam.meter_mode = self.meter_mode
         return picam
+
+    def _create_socket(self, server: str, port: int) -> socket.socket:
+        client_socket = socket.socket()
+        client_socket.connect((server, port))
+        return client_socket
+
+
+    def _create_connection(self):
+        return self._client_socket.makefile('wb')
