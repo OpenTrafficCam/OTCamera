@@ -122,8 +122,10 @@ class Camera(Singleton):
 
             if config.USE_STREAM:
                 video = self._connection
+                log.write("Using Stream Mode", level=log.LogLevel.INFO)
             else:
                 video = name.video()
+                log.write("Using File Mode", level=log.LogLevel.INFO)
 
             self._picam.start_recording(
                 output=video,
