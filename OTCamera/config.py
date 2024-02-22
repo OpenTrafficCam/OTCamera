@@ -264,7 +264,7 @@ DEBUG_MODE_ON = False
 USE_RELAY = False
 """Enable to start and stop sshrelay.service (need's to be configured)"""
 USE_STREAM = True
-SERVER = "10.10.11.114"
+SERVER = "10.10.11.50"
 PORT = 8123
 
 # recording config
