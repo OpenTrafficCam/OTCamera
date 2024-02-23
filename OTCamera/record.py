@@ -355,7 +355,7 @@ def main() -> None:
             )
             otcamera = OTCamera(camera=camera, html_updater=html_updater)
             otcamera.record()
-        except BrokenPipeError as cause:
+        except Union[BrokenPipeError, ConnectionRefusedError] as cause:
             print(cause)
 
 
