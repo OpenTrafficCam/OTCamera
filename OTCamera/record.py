@@ -341,18 +341,22 @@ class OTCamera:
 
 def main() -> None:
     """Start running OTCamera."""
-    camera = Camera()
-    html_updater = StatusWebsiteUpdater(
-        template_html_path=config.TEMPLATE_HTML_PATH,
-        offline_html_path=config.OFFLINE_HTML_PATH,
-        html_save_path=config.INDEX_HTML_PATH,
-        status_info_id="status-info",
-        config_info_id="config-info",
-        log_info_id="log-info",
-        debug_mode_on=config.DEBUG_MODE_ON,
-    )
-    otcamera = OTCamera(camera=camera, html_updater=html_updater)
-    otcamera.record()
+    while True:
+        try:
+            camera = Camera()
+            html_updater = StatusWebsiteUpdater(
+                template_html_path=config.TEMPLATE_HTML_PATH,
+                offline_html_path=config.OFFLINE_HTML_PATH,
+                html_save_path=config.INDEX_HTML_PATH,
+                status_info_id="status-info",
+                config_info_id="config-info",
+                log_info_id="log-info",
+                debug_mode_on=config.DEBUG_MODE_ON,
+            )
+            otcamera = OTCamera(camera=camera, html_updater=html_updater)
+            otcamera.record()
+        except BrokenPipeError as cause:
+            print(cause)
 
 
 if __name__ == "__main__":
