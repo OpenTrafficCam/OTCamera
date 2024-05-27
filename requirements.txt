@@ -5,4 +5,4 @@ picamerax==21.9.8
 beautifulsoup4==4.12.2
 RPi.GPIO==0.7.1
 PyYAML==6.0.1
-requests==2.31.0
+requests==2.32.2
