@@ -4,6 +4,7 @@ If LEDs are configured in config.py this modules handels all the interaction (on
 blinking) of the LEDs.
 
 """
+
 # Copyright (C) 2023 OpenTrafficCam Contributors
 # <https://github.com/OpenTrafficCam>
 # <team@opentrafficcam.org>

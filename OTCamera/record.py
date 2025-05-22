@@ -4,6 +4,7 @@ This module can be used to record either some intervals or continuously.
 It is configured by config.py.
 
 """
+
 # Copyright (C) 2023 OpenTrafficCam Contributors
 # <https://github.com/OpenTrafficCam>
 # <team@opentrafficcam.org>

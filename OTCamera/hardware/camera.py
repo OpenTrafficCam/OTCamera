@@ -3,6 +3,7 @@
 Used to start, split and stop recording.
 
 """
+
 # Copyright (C) 2023 OpenTrafficCam Contributors
 # <https://github.com/OpenTrafficCam>
 # <team@opentrafficcam.org>

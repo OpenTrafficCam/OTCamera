@@ -3,6 +3,7 @@
 All the configuration of OTCamera is done here.
 
 """
+
 # Copyright (C) 2023 OpenTrafficCam Contributors
 # <https://github.com/OpenTrafficCam>
 # <team@opentrafficcam.org>

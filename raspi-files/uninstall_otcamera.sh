@@ -6,7 +6,7 @@ OTCAMERA=$USER_HOME/"OTCamera"
 OTCSERVICE="/lib/systemd/system/otcamera.service"
 RCLOCAL="/etc/rc.local"
 NGINXDEFAULT="/etc/nginx/sites-available/default"
-HOSTAPD_DIR="/etc/hostapd" 
+HOSTAPD_DIR="/etc/hostapd"
 DHCPCDCONF="/etc/dhcpcd.conf"
 HWCLOCK="/lib/udev/hwclock-set"
 
@@ -78,7 +78,7 @@ apt remove gldriver-test libgl1-mesa-dri
 
 echo "Disable I2C bus for hwclock"
 raspi-config nonint do_i2c 1
-raspi-config nonint do_legacy 1 
+raspi-config nonint do_legacy 1
 
 systemctl reset-failed
 systemctl daemon-reload

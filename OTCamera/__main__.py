@@ -11,6 +11,7 @@ after recording time ends.
 Stops everthing by keyboard interrupt (Ctrl+C).
 
 """
+
 # Copyright (C) 2023 OpenTrafficCam Contributors
 # <https://github.com/OpenTrafficCam>
 # <team@opentrafficcam.org>

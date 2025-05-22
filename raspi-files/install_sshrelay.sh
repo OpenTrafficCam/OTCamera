@@ -42,4 +42,3 @@ systemctl enable sshrelay.service
 
 echo "### please connect once to add host key using the following command:"
 echo "$SSHCMD"
-
