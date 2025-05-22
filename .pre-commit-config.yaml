@@ -1,0 +1,82 @@
+---
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: check-yaml
+      - id: check-json
+      - id: end-of-file-fixer
+        exclude_types:
+          - json
+      - id: trailing-whitespace
+      - id: no-commit-to-branch
+      - id: debug-statements
+      - id: requirements-txt-fixer
+      - id: check-executables-have-shebangs
+      - id: detect-private-key
+  - repo: local
+    hooks:
+      - id: update-type-stubs
+        name: Check for Type Stubs and Update Config
+        entry: ./update_precommit.py
+        language: system
+        files: ^requirements.*\.txt$
+        stages:
+          - pre-commit
+  - repo: https://github.com/PyCQA/flake8
+    rev: 7.2.0
+    hooks:
+      - id: flake8
+  - repo: https://github.com/pycqa/isort
+    rev: 6.0.1
+    hooks:
+      - id: isort
+        args:
+          - --profile
+          - black
+  - repo: https://github.com/psf/black
+    rev: 25.1.0
+    hooks:
+      - id: black
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.15.0
+    hooks:
+      - id: mypy
+        entry: mypy OTAnalytics tests --config-file=pyproject.toml
+        additional_dependencies:
+          - art==6.5
+          - black==25.1.0
+          - gpiozero==2.0.1
+          - hatch-requirements-txt==0.4.1
+          - isort==6.0.1
+          - mypy==1.15.0
+          - picamerax==24.3.21
+          - pre-commit==4.2.0
+          - pytest-cov==6.1.1
+          - pytest==8.3.5
+          - types-PyYAML
+          - types-RPi.GPIO
+          - types-beautifulsoup4
+          - types-flake8
+          - types-psutil
+          - types-requests
+          - types-requests
+        always_run: true
+        pass_filenames: false
+  - repo: https://github.com/adrienverge/yamllint.git
+    rev: v1.37.1
+    hooks:
+      - id: yamllint
+        args:
+          - -c=./.yamllint.yaml
+  - repo: https://github.com/koalaman/shellcheck-precommit
+    rev: v0.10.0
+    hooks:
+      - id: shellcheck
+  - repo: https://github.com/pecigonzalo/pre-commit-shfmt
+    rev: v2.2.0
+    hooks:
+      - id: shell-fmt-docker
+        args:
+          - -i
+          - '2'
