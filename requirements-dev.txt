@@ -4,8 +4,8 @@ flake8==7.2.0
 hatch-requirements-txt==0.4.1
 isort==6.0.1
 mypy==1.15.0
+opencv-python==4.11.0.86
 pre-commit==4.2.0
 pytest==8.3.5
 pytest-cov==6.1.1
 requests== 2.32.3
-opencv-python==4.11.0.86
