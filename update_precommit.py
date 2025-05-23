@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 from copy import deepcopy
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable
+from typing import Iterable, Union
 
 import requests
 import yaml
@@ -44,7 +44,7 @@ class Package(AdditionalMypyDependency):
 
     @property
     @abstractmethod
-    def version(self) -> str | None:
+    def version(self) -> Union[str, None]:
         raise NotImplementedError
 
     def __hash__(self) -> int:
@@ -62,10 +62,10 @@ class TypeStubPackage(Package):
         return self._name
 
     @property
-    def version(self) -> str | None:
+    def version(self) -> Union[str, None]:
         return self._version
 
-    def __init__(self, name: str, version: str | None) -> None:
+    def __init__(self, name: str, version: Union[str, None]) -> None:
         self._name = name
         self._version = version
 
@@ -79,10 +79,10 @@ class NormalPackage(Package):
         return self._name
 
     @property
-    def version(self) -> str | None:
+    def version(self) -> Union[str, None]:
         return self._version
 
-    def __init__(self, name: str, version: str | None) -> None:
+    def __init__(self, name: str, version: Union[str, None]) -> None:
         self._name = name
         self._version = version
 
@@ -146,7 +146,7 @@ pattern_package = re.compile(
 pattern_extra_index_url = re.compile(r"^--extra-index-url\s+(?P<url>\S+)")
 
 
-def parse_requirement(requirement_line: str) -> AdditionalMypyDependency | None:
+def parse_requirement(requirement_line: str) -> Union[AdditionalMypyDependency, None]:
     """Extract package name from a requirement line using regex."""
     # Regex pattern to capture the package name, ignoring version specifiers
     if match_extra_index_url := pattern_extra_index_url.match(requirement_line):
@@ -169,7 +169,7 @@ def create_extra_index_url(url: str) -> AdditionalMypyDependency:
     return ExtraIndexUrl(url)
 
 
-def create_package(name: str, version: str | None) -> AdditionalMypyDependency:
+def create_package(name: str, version: Union[str, None]) -> AdditionalMypyDependency:
     """Check if a type stub exists for a given package name and return it."""
     types_package_name = f"types-{name}"
     if __check_types_for_package_exists(types_package_name):
@@ -186,12 +186,14 @@ def __check_types_for_package_exists(package_name: str) -> bool:
 
 
 def create_type_stub_package(
-    name: str, version: str | None
+    name: str, version: Union[str, None]
 ) -> AdditionalMypyDependency:
     return TypeStubPackage(name=name, version=version)
 
 
-def create_normal_package(name: str, version: str | None) -> AdditionalMypyDependency:
+def create_normal_package(
+    name: str, version: Union[str, None]
+) -> AdditionalMypyDependency:
     return NormalPackage(name=name, version=version)
 
 

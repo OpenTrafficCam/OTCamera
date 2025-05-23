@@ -42,7 +42,7 @@ repos:
     rev: v1.15.0
     hooks:
       - id: mypy
-        entry: mypy OTAnalytics tests --config-file=pyproject.toml
+        entry: mypy OTCamera tests --config-file=pyproject.toml
         additional_dependencies:
           - art==6.5
           - black==25.1.0
@@ -50,6 +50,7 @@ repos:
           - hatch-requirements-txt==0.4.1
           - isort==6.0.1
           - mypy==1.15.0
+          - opencv-python==4.11.0.86
           - picamerax==24.3.21
           - pre-commit==4.2.0
           - pytest-cov==6.1.1
