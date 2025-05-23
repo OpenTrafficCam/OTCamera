@@ -80,12 +80,12 @@ def delete_old_files(
         oldest_video.unlink()
         log.breakline()
         log.write(f"Deleted {oldest_video}")
-        free_space = psutil.disk_usage(absolute_video_dirpath).free
+        free_space = psutil.disk_usage(str(absolute_video_dirpath)).free
         log.write(f"free space: {free_space}", level=log.LogLevel.INFO)
 
 
 def _enough_space(directory: Path, min_free_space: int) -> bool:
-    free_space = psutil.disk_usage(directory).free
+    free_space = psutil.disk_usage(str(directory)).free
     log.write(f"free space: {free_space}", level=log.LogLevel.DEBUG)
     log.write(f"min space: {min_free_space}", level=log.LogLevel.DEBUG)
     return free_space > min_free_space
@@ -97,4 +97,4 @@ def resolve_path(path: Union[str, Path]) -> Path:
 
 def calc_free_diskspace(directory: Union[str, Path]) -> int:
     resolved_path = resolve_path(directory)
-    return psutil.disk_usage(resolved_path).free
+    return psutil.disk_usage(str(resolved_path)).free

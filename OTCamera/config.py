@@ -25,9 +25,9 @@ import sys
 from pathlib import Path
 
 try:
-    from yaml import CSafeLoader as SafeLoader
+    from yaml import CSafeLoader as SafeLoader  # type: ignore
 except ImportError:
-    from yaml import SafeLoader
+    from yaml import SafeLoader  # type: ignore
 
 import yaml
 
@@ -84,7 +84,6 @@ def parse_user_config(config_file: str) -> None:
         except KeyError:
             _print_key_err_msg("recording.end_hour")
         try:
-            global INTERVAL_LENGTH
             setattr(module, "INTERVAL_LENGTH", section["interval_length"])
         except KeyError:
             _print_key_err_msg("recording.interval_length")

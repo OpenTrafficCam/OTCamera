@@ -19,8 +19,8 @@ from pathlib import Path
 from typing import Iterator, Union
 from unittest import mock
 
-from cv2 import VideoCapture
 import pytest
+from cv2 import VideoCapture
 
 from OTCamera import config
 from OTCamera.hardware.camera import Camera
