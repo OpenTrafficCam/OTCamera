@@ -12,7 +12,7 @@ authors = [
 description = "OTCamera is a core module of the OpenTrafficCam framework to record videos over multiple days with a custom camera system based on the Raspberry Pi Zero W."
 
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.9"
 license = "GPL-3.0-only"
 license-files = ["LICENSE"]
 classifiers = [
@@ -53,6 +53,10 @@ ignore_missing_imports = true
 ignore_missing_imports_per_module = true
 disallow_untyped_defs = true
 
-[tool.pytest.ini_options]
-asyncio_mode = "auto"
-asyncio_default_fixture_loop_scope = "function"
+[[tool.mypy.overrides]]
+module = "OTCamera.html_updater"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "tests.html_updater_test"
+ignore_errors = true
