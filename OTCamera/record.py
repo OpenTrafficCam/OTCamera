@@ -27,7 +27,7 @@ import sys
 from datetime import datetime as dt
 from pathlib import Path
 from time import sleep
-from typing import Union
+from typing import Any, Iterator, Union
 
 from OTCamera import config, status
 from OTCamera.hardware import button, led
@@ -290,30 +290,26 @@ class OTCamera:
         return LogDataObject(log_data=(LogHtmlId.LOG_DATA, log_data))
 
     def _get_num_recent_log_files(self, start_idx: int, num: int) -> list[Path]:
-        """Get  `num` first log files starting from `start_idx`.
+        """Get `num` first log files starting from `start_idx`.
 
         Args:
             start_idx (int): The start index specifies the log files to be considered.
-            The log files are sorted after their time of creation in descending order.
-            Meaning a start_idx of 1 ignores the newest log file.
-            num (int): The num recent log files stasrting from `start_idx` to get their
-            data from.
+                The log files are sorted after their time of creation in descending
+                order. Meaning a start_idx of 1 ignores the newest log file.
+            num (int): The num recent log files starting from `start_idx` to get their
+                data from.
 
         Returns:
             list[Path]: The log `num` log file paths starting from index `start_idx`.
         """
-        # Gather all log files paths in an ordered list
-        log_filepaths = [f for f in self._log_dir.iterdir() if f.suffix == ".log"]
         # Log filepaths sorted in descending order with newest one at index 0
-        sorted_log_filepaths = sorted(
-            log_filepaths, key=name.get_datetime_from_filename, reverse=True
-        )
+        sorted_log_files = get_log_files_sorted(self._log_dir.iterdir())
         # Get num recent log files
-        recent_log_files = sorted_log_filepaths[start_idx:num]
+        recent_log_files = sorted_log_files[start_idx:num]
         recent_log_files.reverse()
         return recent_log_files
 
-    def _execute_shutdown(self, *args):
+    def _execute_shutdown(self, *args: Any) -> None:
         """Code to execute when stopping OTCamera.
 
         ### Following tasks are executed
@@ -338,6 +334,33 @@ class OTCamera:
             self._get_log_info(0, self._num_log_files_html),
         )
         sys.exit(0)
+
+
+def get_log_files_sorted(log_files: Iterator[Path]) -> list[Path]:
+    """
+    Get all log files sorted by their timestamp contained in their file name in
+    descending order.
+
+    Args:
+        log_files (Iterator[Path]): An iterator of log files.
+
+    Return:
+        list[Path]: A list of sorted log files.
+    """
+    log_files_with_timestamp: list[tuple[dt, Path]] = []
+    log_files_without_timestamp: list[Path] = []
+
+    for log_file in log_files:
+        if log_file.suffix == ".log":
+            if timestamp := name.get_datetime_from_filename(log_file):
+                log_files_with_timestamp.append((timestamp, log_file))
+            else:
+                log_files_without_timestamp.append(log_file)
+
+    log_files_with_timestamp.sort(key=lambda entry: entry[0], reverse=True)
+
+    sorted_log_files = [log_file for _, log_file in log_files_with_timestamp]
+    return sorted_log_files + log_files_without_timestamp
 
 
 def main() -> None:
