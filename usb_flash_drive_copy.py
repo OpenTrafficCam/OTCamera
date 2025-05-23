@@ -260,7 +260,7 @@ class CopyInformation:
         return Path(directory, f"{get_hostname()}{COPY_INFO_CSV_SUFFIX}")
 
     @staticmethod
-    def create_new(src_dir: Path, dest_dir: Path, filetype: str)-> CopyInformation:
+    def create_new(src_dir: Path, dest_dir: Path, filetype: str) -> "CopyInformation":
         dest_dir.mkdir(parents=True, exist_ok=True)
         copy_csv_file = CopyInformation.get_copy_info_csv(dest_dir)
         copy_csv_file.touch()

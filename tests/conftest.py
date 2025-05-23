@@ -22,6 +22,7 @@ import pytest
 T = TypeVar("T")
 YieldFixture = Generator[T, None, None]
 
+
 @pytest.fixture
 def test_dir() -> YieldFixture[Path]:
     test_dir = Path(__file__).parent / "data"

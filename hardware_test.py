@@ -17,10 +17,10 @@ import argparse
 import time
 from pathlib import Path
 from subprocess import call
+from typing import Any, Callable, TypeVar
 
 from gpiozero import PWMLED, Button
 from picamerax import PiCamera
-from typing import Any, Callable, TypeVar
 
 # Button GPIO Pins
 BUTTON_POWER_PIN = 17
@@ -55,8 +55,8 @@ wifi_led = PWMLED(LED_WIFI_PIN)
 hour_led = PWMLED(LED_REC_PIN)
 
 
+F = TypeVar("F", bound=Callable[..., Any])
 
-F = TypeVar('F', bound=Callable[..., Any])
 
 def surround_with_dashes(func: F) -> F:
     def wrapper_func(*args: Any, **kwargs: Any) -> Any:

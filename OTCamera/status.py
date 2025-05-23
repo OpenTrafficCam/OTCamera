@@ -22,8 +22,7 @@ Contains all status variables and functions to be used across multiple modules.
 
 import re
 import subprocess
-from datetime import datetime
-from datetime import timedelta
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Union
 

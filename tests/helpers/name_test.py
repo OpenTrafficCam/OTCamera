@@ -116,6 +116,6 @@ def test_get_fps_from_filename_validFpsAsParam(fname: str, expected: int) -> Non
         "fname_FR_",
     ],
 )
-def test_get_fps_from_filename_invalidFilenameAsParam(fname:str) -> None:
+def test_get_fps_from_filename_invalidFilenameAsParam(fname: str) -> None:
     result = name.get_fps_from_filename(fname)
     assert result is None
