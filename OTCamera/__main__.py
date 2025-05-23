@@ -8,7 +8,7 @@ While it is recording time (see status.py), starts recording videos, splits them
 every interval (see config.py), captures a new preview image and stops recording
 after recording time ends.
 
-Stops everthing by keyboard interrupt (Ctrl+C).
+Stops everything by keyboard interrupt (Ctrl+C).
 
 """
 
@@ -29,10 +29,10 @@ Stops everthing by keyboard interrupt (Ctrl+C).
 
 
 # from record import record
-from OTCamera.record import record
+from OTCamera.record import main as record
 
 
-def main():
+def main() -> None:
     """Starts OTCamera."""
     record()
 

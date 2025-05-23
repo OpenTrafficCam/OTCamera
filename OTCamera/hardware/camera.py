@@ -22,7 +22,7 @@ Used to start, split and stop recording.
 
 from datetime import datetime as dt
 from time import sleep
-from typing import Tuple, Union
+from typing import Any, Optional, Tuple, Type, TypeVar, Union
 
 import picamerax as picamera
 from picamerax import Color
@@ -34,25 +34,29 @@ from OTCamera.helpers.filesystem import delete_old_files
 
 log.write("imported camera", level=log.LogLevel.DEBUG)
 
+T = TypeVar("T", bound="Singleton")
+
 
 class Singleton(object):
     """Implements the Singleton design pattern.
 
     Classes inheriting from `Singleton` become a singleton class.
     Meaning only one instance is created.
-    Constructing a another instance of the concrete class inheriting from `Singleton`
+    Constructing another instance of the concrete class inheriting from `Singleton`
     will return the first instance.
     """
 
-    def __new__(cls, *args, **kwds):
+    __it__: Optional["Singleton"] = None
+
+    def __new__(cls: Type[T], *args: Any, **kwargs: Any) -> T:
         it = cls.__dict__.get("__it__")
         if it is not None:
             return it
         cls.__it__ = it = object.__new__(cls)
-        it.init(*args, **kwds)
+        it.init(*args, **kwargs)
         return it
 
-    def init(self, *args, **kwds):
+    def init(self, *args: Any, **kwargs: Any) -> None:
         pass
 
 
@@ -71,6 +75,7 @@ class Camera(Singleton):
         awb_mode (str, optional): The awb mode. Defaults to config.AWB_MODE.
         drc_strength (str, optional): The DRC strength. Defaults to config.DRC_STRENGTH.
         rotation (int, optional): The image rotation. Defaults to config.ROTATION.
+        meter_mode (str, optional): The meter mode. Defaults to config.METER_MODE.
     """
 
     def init(
@@ -97,7 +102,7 @@ class Camera(Singleton):
         self._picam = self._create_picam()
         log.write("Camera initialized", log.LogLevel.DEBUG)
 
-    def start_recording(self):
+    def start_recording(self) -> None:
         """Start a recording a video.
 
         If picam isn't already recording:
@@ -134,7 +139,7 @@ class Camera(Singleton):
             self._wait_recording(2)
             self.capture()
 
-    def capture(self):
+    def capture(self) -> None:
         """Capture a preview image if camera is recording."""
         if self._picam.recording:
             self._picam.annotate_text = name.annotate()
@@ -151,7 +156,7 @@ class Camera(Singleton):
                 level=log.LogLevel.WARNING,
             )
 
-    def _wait_recording(self, timeout: Union[int, float] = 0):
+    def _wait_recording(self, timeout: Union[int, float] = 0) -> None:
         """Wait timeout seconds recording.
 
         Args:
@@ -162,7 +167,7 @@ class Camera(Singleton):
         else:
             sleep(timeout)
 
-    def _split(self):
+    def _split(self) -> None:
         """Splits recording and deletes old video files if no disk space available."""
         self._picam.split_recording(name.video())
         delete_old_files()
@@ -230,7 +235,7 @@ class Camera(Singleton):
         )
         return new_interval
 
-    def stop_recording(self):
+    def stop_recording(self) -> None:
         """Stops the video recording.
 
         If the picamera is recording, the recording is stopped. Additionally, the record
@@ -244,7 +249,7 @@ class Camera(Singleton):
             log.write("recorded {n} videos".format(n=status.current_interval))
             status.recording = False
 
-    def close(self):
+    def close(self) -> None:
         """Closes `picamera.PiCamera` instance.
 
         Logs to log file if OTCamera has been already closed. But won't do anything
@@ -258,7 +263,7 @@ class Camera(Singleton):
             log.write("Camera already closed.", level=log.LogLevel.DEBUG)
             pass
 
-    def restart(self):
+    def restart(self) -> None:
         """
         Restarts the PiCamera instance by closing it and re-initialising it.
 

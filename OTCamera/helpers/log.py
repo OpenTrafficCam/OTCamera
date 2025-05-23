@@ -46,11 +46,11 @@ class LogLevel(Enum):
     ERROR = "ERROR"
     EXCEPTION = "EXCEPTION"
 
-    def __str__(self):
+    def __str__(self) -> str:
         return str(self.value)
 
 
-def write(msg: str, level: LogLevel = LogLevel.INFO, reboot: bool = True):
+def write(msg: str, level: LogLevel = LogLevel.INFO, reboot: bool = True) -> None:
     """Write any message to logfile.
 
     Takes a message, adds date and time and writes it to a logfile (name.log).
@@ -113,7 +113,7 @@ def _send_msg_to_ms_teams(msg: str, teams_url: str, time: str) -> None:
 def _write_exception_msg(
     err_prefix: str,
     exception: Exception,
-):
+) -> None:
     _write(f"{err_prefix} {exception}")
 
 
@@ -121,7 +121,7 @@ def _get_stack_trace() -> str:
     return traceback.format_exc()
 
 
-def breakline(reboot=True):
+def breakline(reboot: bool = True) -> None:
     """Write a breakline.
 
     Write a breakline containing several # to the logfile.
@@ -133,25 +133,25 @@ def breakline(reboot=True):
     _write(msg)
 
 
-def otc():
+def otc() -> None:
     """Generate a ASCII logo and write it to the logfile."""
     otclogo = text2art("OpenTrafficCam")
     _write(otclogo)
 
 
-def _write(msg, reboot=True):
+def _write(msg: str, reboot: bool = True) -> None:
     print(msg)
     logf.write(msg + "\n")
     logf.flush()
 
 
-def closefile():
+def closefile() -> None:
     """Flush and close the logfile."""
     logf.flush()
     logf.close()
 
 
-def _check_log_path():
+def _check_log_path() -> None:
     logfile = name.log()
     logpath = logfile.parent
     if not logpath.exists():

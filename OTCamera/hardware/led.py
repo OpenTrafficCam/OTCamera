@@ -29,7 +29,7 @@ from OTCamera.helpers import log
 log.write("imported led", level=log.LogLevel.DEBUG)
 
 
-def off():
+def off() -> None:
     """Turn all LEDs off."""
     if config.USE_LED:
         power.off()
@@ -37,27 +37,27 @@ def off():
         rec.off()
 
 
-def rec_on():
+def rec_on() -> None:
     """Blink record LED infinite."""
     if config.USE_LED:
         rec.off()
         rec.blink(on_time=0.1, off_time=4.9, n=None, background=True)
 
 
-def rec_off():
+def rec_off() -> None:
     """Pulse record LED 4 times and switch it off."""
     if config.USE_LED:
         rec.off()
         rec.pulse(fade_in_time=0.25, fade_out_time=0.25, n=4, background=True)
 
 
-def power_on():
+def power_on() -> None:
     """Turn power LED on."""
     if config.USE_LED:
         power.on()
 
 
-def power_blink():
+def power_blink() -> None:
     """Blink power LED once."""
     if config.USE_LED:
         if not status.noblink:
@@ -71,28 +71,28 @@ def power_blink():
             )
 
 
-def power_pre_off():
+def power_pre_off() -> None:
     """Rapidly blink power LED."""
     if config.USE_LED:
         power.off()
         power.blink(on_time=0.1, off_time=0.4, n=None, background=True)
 
 
-def wifi_on():
+def wifi_on() -> None:
     """Blink Wi-Fi LED infinite."""
     if config.USE_LED:
         wifi.off()
         wifi.blink(on_time=0.1, off_time=4.9, n=None, background=True)
 
 
-def wifi_off():
+def wifi_off() -> None:
     """Pulse Wi-Fi LED 4 times and switch it off."""
     if config.USE_LED:
         wifi.off()
         wifi.pulse(fade_in_time=0.25, fade_out_time=0.25, n=4, background=True)
 
 
-def wifi_pre_off():
+def wifi_pre_off() -> None:
     """Rapidly blink Wi-Fi LED."""
     if config.USE_LED:
         wifi.off()

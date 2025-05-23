@@ -32,7 +32,7 @@ except ImportError:
 import yaml
 
 
-def parse_user_config(config_file: str):
+def parse_user_config(config_file: str) -> None:
     """Parses the OTCamera user configuration YAML file.
 
     Args:

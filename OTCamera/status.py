@@ -22,7 +22,7 @@ Contains all status variables and functions to be used across multiple modules.
 
 import re
 import subprocess
-from datetime import datetime as dt
+from datetime import datetime
 from datetime import timedelta
 from pathlib import Path
 from typing import Union
@@ -43,8 +43,8 @@ more_intervals: bool = True
 preview_taken: bool = False
 current_interval: int = 0
 recording: bool = False
-power_button_pressed_time: Union[dt, None] = None
-wifi_button_pressed_time: Union[dt, None] = None
+power_button_pressed_time: Union[datetime, None] = None
+wifi_button_pressed_time: Union[datetime, None] = None
 html_updated_after_recording: bool = False
 
 # Button statuses
@@ -64,7 +64,7 @@ def record_time() -> bool:
     Returns:
         bool: Time to record or not.
     """
-    current_hour = dt.now().hour
+    current_hour = datetime.now().hour
     bytime = current_hour >= config.START_HOUR and current_hour < config.END_HOUR
     if config.USE_BUTTONS:
         record = hour_button_pressed or bytime
@@ -86,7 +86,7 @@ def get_status_data() -> StatusDataObject:
     if wifi_button_pressed_time is not None:
         wifi_delay = timedelta(seconds=config.WIFI_DELAY)
         time_until_wifi_off = str_format_timedelta(
-            (wifi_button_pressed_time + wifi_delay) - dt.now()
+            (wifi_button_pressed_time + wifi_delay) - datetime.now()
         )
 
     return StatusDataObject(
@@ -155,7 +155,7 @@ def _is_wifi_enabled(network_device_name: str = "wlan0") -> bool:
     out, error = p.communicate()
     if error:
         err_msg = (
-            f"Error: '{error} occured while checking {network_device_name} status."
+            f"Error: '{error!r} occured while checking {network_device_name} status."
         )
         log.write(err_msg, log.LogLevel.ERROR)
         return False
@@ -170,6 +170,8 @@ def _is_wifi_enabled(network_device_name: str = "wlan0") -> bool:
             f'Network device: "{network_device_name}" does not exist',
             log.LogLevel.WARNING,
         )
+        return False
+    else:
         return False
 
 

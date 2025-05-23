@@ -31,7 +31,7 @@ log.write("imported rpi", level=log.LogLevel.DEBUG)
 camera = Camera()
 
 
-def shutdown():
+def shutdown() -> None:
     """Shutdown the Raspberry Pi.
 
     Shuts down the Raspberry Pi if the power button is still pressed after blink ends
@@ -53,7 +53,7 @@ def shutdown():
     call("sudo shutdown -h now", shell=True)
 
 
-def reboot():
+def reboot() -> None:
     """Reboot the Raspberry Pi.
 
     Reboots the Raspberry Pi if any exception is raised.
@@ -78,7 +78,7 @@ def reboot():
         call("sudo reboot", shell=True)
 
 
-def wifi_switch_on():
+def wifi_switch_on() -> None:
     """Turn on Wi-Fi"""
     if not status.wifi_on:
         if not config.DEBUG_MODE_ON:
@@ -93,7 +93,7 @@ def wifi_switch_on():
     led.wifi_on()
 
 
-def wifi_switch_off():
+def wifi_switch_off() -> None:
     """Turn off Wi-Fi"""
     if status.wifi_on:
         if not config.DEBUG_MODE_ON:

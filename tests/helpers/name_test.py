@@ -23,7 +23,7 @@ from OTCamera.helpers import name
 
 
 @mock.patch("OTCamera.helpers.name._current_dt", return_value="2022-05-18_22-00-59")
-def test_log_correctFilename(mock_current_dt: mock.MagicMock):
+def test_log_correctFilename(mock_current_dt: mock.MagicMock) -> None:
     actual = name.log()
     expected = (
         f"{config.VIDEO_DIR}/{config.PREFIX}_FR{config.FPS}_2022-05-18_22-00-59.log"
@@ -33,7 +33,7 @@ def test_log_correctFilename(mock_current_dt: mock.MagicMock):
 
 
 @mock.patch("OTCamera.helpers.name._current_dt", return_value="2022-05-18_22-00-59")
-def test_video_correctFilename(mock_current_dt: mock.MagicMock):
+def test_video_correctFilename(mock_current_dt: mock.MagicMock) -> None:
     actual = name.video()
     expected = (
         f"{config.VIDEO_DIR}/{config.PREFIX}_FR{config.FPS}_2022-05-18_22-00-59.h264"
@@ -42,9 +42,10 @@ def test_video_correctFilename(mock_current_dt: mock.MagicMock):
     assert actual == expected
 
 
-def test_get_datetime_from_filename_correctFilenameAsParam():
+def test_get_datetime_from_filename_correctFilenameAsParam() -> None:
     timestamp = "otcamera01_2022-05-20_15-57-52.log"
     result_dt = name.get_datetime_from_filename(timestamp)
+    assert result_dt is not None
     assert result_dt.year == 2022
     assert result_dt.month == 5
     assert result_dt.day == 20
@@ -53,9 +54,10 @@ def test_get_datetime_from_filename_correctFilenameAsParam():
     assert result_dt.second == 52
 
 
-def test_get_datetime_from_filename_correctPathAsParam():
+def test_get_datetime_from_filename_correctPathAsParam() -> None:
     timestamp = Path("path/to/otcamera01_2022-05-20_15-57-52.log")
     result_dt = name.get_datetime_from_filename(timestamp)
+    assert result_dt is not None
     assert result_dt.year == 2022
     assert result_dt.month == 5
     assert result_dt.day == 20
@@ -71,7 +73,7 @@ def test_get_datetime_from_filename_correctPathAsParam():
         "fname-13130000-00-00_00-00-00123123",
     ],
 )
-def test_get_datetime_from_filename_invalidDateFormatAsParam(file_name):
+def test_get_datetime_from_filename_invalidDateFormatAsParam(file_name: str) -> None:
     result = name.get_datetime_from_filename(file_name)
     assert result is None
 
@@ -86,7 +88,7 @@ def test_get_datetime_from_filename_invalidDateFormatAsParam(file_name):
         "fname_0001-02-31_70-01-01",
     ],
 )
-def test_get_datetime_from_filename_invalidDateAsParam(file_name):
+def test_get_datetime_from_filename_invalidDateAsParam(file_name: str) -> None:
     result = name.get_datetime_from_filename(file_name)
     assert result is None
 
@@ -100,7 +102,7 @@ def test_get_datetime_from_filename_invalidDateAsParam(file_name):
         ("fname_FR0_-01-01_01-01-01", 0),
     ],
 )
-def test_get_fps_from_filename_validFpsAsParam(fname: str, expected: int):
+def test_get_fps_from_filename_validFpsAsParam(fname: str, expected: int) -> None:
     result = name.get_fps_from_filename(fname)
     assert result == expected
 
@@ -114,6 +116,6 @@ def test_get_fps_from_filename_validFpsAsParam(fname: str, expected: int):
         "fname_FR_",
     ],
 )
-def test_get_fps_from_filename_invalidFilenameAsParam(fname):
+def test_get_fps_from_filename_invalidFilenameAsParam(fname:str) -> None:
     result = name.get_fps_from_filename(fname)
     assert result is None

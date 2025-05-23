@@ -20,6 +20,7 @@ from subprocess import call
 
 from gpiozero import PWMLED, Button
 from picamerax import PiCamera
+from typing import Any, Callable, TypeVar
 
 # Button GPIO Pins
 BUTTON_POWER_PIN = 17
@@ -54,18 +55,21 @@ wifi_led = PWMLED(LED_WIFI_PIN)
 hour_led = PWMLED(LED_REC_PIN)
 
 
-def surround_with_dashes(func):
-    def wrapper_func(*args, **kwargs):
+
+F = TypeVar('F', bound=Callable[..., Any])
+
+def surround_with_dashes(func: F) -> F:
+    def wrapper_func(*args: Any, **kwargs: Any) -> Any:
         print("---")
         func(*args, **kwargs)
         print("---")
 
-    return wrapper_func
+    return wrapper_func  # type: ignore
 
 
 # Callbacks
 @surround_with_dashes
-def on_power_button_pressed():
+def on_power_button_pressed() -> None:
     print("Power button pressed")
     print(f"Power button is on: {power_button.is_pressed}")
     power_led.on()
@@ -73,7 +77,7 @@ def on_power_button_pressed():
 
 
 @surround_with_dashes
-def on_power_button_released():
+def on_power_button_released() -> None:
     print("Power button released")
     print(f"Power button is on: {power_button.is_pressed}")
     power_led.off()
@@ -81,7 +85,7 @@ def on_power_button_released():
 
 
 @surround_with_dashes
-def on_wifi_button_pressed():
+def on_wifi_button_pressed() -> None:
     print("Wifi button pressed")
     print(f"Wifi button is on: {wifi_button.is_pressed}")
     wifi_led.on()
@@ -89,7 +93,7 @@ def on_wifi_button_pressed():
 
 
 @surround_with_dashes
-def on_wifi_button_released():
+def on_wifi_button_released() -> None:
     print("Wifi button released")
     print(f"Wifi button is on: {wifi_button.is_pressed}")
     wifi_led.off()
@@ -97,7 +101,7 @@ def on_wifi_button_released():
 
 
 @surround_with_dashes
-def on_hour_button_pressed():
+def on_hour_button_pressed() -> None:
     print("Hour button pressed")
     print(f"Hour button is on: {hour_button.is_pressed}")
     hour_led.on()
@@ -105,7 +109,7 @@ def on_hour_button_pressed():
 
 
 @surround_with_dashes
-def on_hour_button_released():
+def on_hour_button_released() -> None:
     print("Hour button released")
     print(f"Hour button is on: {hour_button.is_pressed}")
     hour_led.off()
@@ -113,7 +117,7 @@ def on_hour_button_released():
 
 
 @surround_with_dashes
-def on_external_power_button_pressed():
+def on_external_power_button_pressed() -> None:
     print("External power is connected")
     power_led.blink(n=3, on_time=0.25, off_time=0.25)
     hour_led.blink(n=3, on_time=0.25, off_time=0.25)
@@ -124,7 +128,7 @@ def on_external_power_button_pressed():
 
 
 @surround_with_dashes
-def on_external_power_button_released():
+def on_external_power_button_released() -> None:
     print("External power is not connected")
     power_led.blink(n=2, on_time=0.25, off_time=0.25)
     hour_led.blink(n=2, on_time=0.25, off_time=0.25)
@@ -208,7 +212,7 @@ def sync_button_with_led(button: Button, led: PWMLED) -> None:
         led.off()
 
 
-def sync_all_buttons_with_led():
+def sync_all_buttons_with_led() -> None:
     sync_button_with_led(power_button, power_led)
     sync_button_with_led(wifi_button, wifi_led)
     sync_button_with_led(hour_button, hour_led)
@@ -260,7 +264,7 @@ def teardown() -> None:
     print("Test directory removed")
 
 
-def start_app(headless: bool = False):
+def start_app(headless: bool = False) -> None:
     print("Test OTCamera Hardware")
 
     sync_all_buttons_with_led()
@@ -309,7 +313,7 @@ def start_app(headless: bool = False):
     print("Quit app.")
 
 
-def parse_args():
+def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--headless",
@@ -321,7 +325,7 @@ def parse_args():
     return args
 
 
-def main():
+def main() -> None:
     args = parse_args()
     start_app(headless=args.headless)
 

@@ -14,5 +14,5 @@
 # program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-def test_placeholder():
+def test_placeholder() -> None:
     pass
