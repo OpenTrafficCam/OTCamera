@@ -3,8 +3,8 @@ from typing import Tuple
 
 from picamerax import PiCamera
 
+from OTCamera.abstraction.singleton import Singleton
 from OTCamera.domain.camera import Camera, H264Level, H264Profile, VideoFormat
-from OTCamera.hardware.camera import Singleton
 
 
 class PiCameraX(Camera, Singleton):

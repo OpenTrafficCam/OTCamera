@@ -22,42 +22,18 @@ Used to start, split and stop recording.
 
 from datetime import datetime as dt
 from time import sleep
-from typing import Any, Optional, Tuple, Type, TypeVar, Union
+from typing import Tuple, Union
 
 import picamerax as picamera
 from picamerax import Color
 
 from OTCamera import config, status
+from OTCamera.abstraction.singleton import Singleton
 from OTCamera.hardware import led
 from OTCamera.helpers import log, name
 from OTCamera.helpers.filesystem import delete_old_files
 
 log.write("imported camera", level=log.LogLevel.DEBUG)
-
-T = TypeVar("T", bound="Singleton")
-
-
-class Singleton(object):
-    """Implements the Singleton design pattern.
-
-    Classes inheriting from `Singleton` become a singleton class.
-    Meaning only one instance is created.
-    Constructing another instance of the concrete class inheriting from `Singleton`
-    will return the first instance.
-    """
-
-    __it__: Optional["Singleton"] = None
-
-    def __new__(cls: Type[T], *args: Any, **kwargs: Any) -> T:
-        it = cls.__dict__.get("__it__")
-        if it is not None:
-            return it
-        cls.__it__ = it = object.__new__(cls)
-        it.init(*args, **kwargs)
-        return it
-
-    def init(self, *args: Any, **kwargs: Any) -> None:
-        pass
 
 
 class Camera(Singleton):
