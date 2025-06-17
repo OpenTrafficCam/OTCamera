@@ -64,14 +64,14 @@ class Camera(Singleton):
     """The camera class providing functionality such as starting or stopping a
     recording, capturing a preview image, or closing the camera
 
-    Attributes:
+    Args:
         framerate (int, optional): The frame rate. Defaults to config.FPS.
-        resolution (Tuple[int, int], optional): The resolution.
-        Defaults to config.RESOLUTION.
+        resolution (Tuple[int, int], optional): The resolution. Defaults to
+            config.RESOLUTION.
         annotate_background (Color, optional): Color of text annotation background.
-        Defaults to Color("black").
+            Defaults to Color("black").
         exposure_mode (str, optional): The exposure mode. Defaults to
-        config.EXPOSURE_MODE.
+            config.EXPOSURE_MODE.
         awb_mode (str, optional): The awb mode. Defaults to config.AWB_MODE.
         drc_strength (str, optional): The DRC strength. Defaults to config.DRC_STRENGTH.
         rotation (int, optional): The image rotation. Defaults to config.ROTATION.
