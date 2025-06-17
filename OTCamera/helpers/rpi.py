@@ -24,11 +24,11 @@ from subprocess import call
 
 from OTCamera import config, status
 from OTCamera.hardware import led
-from OTCamera.hardware.camera import Camera
+from OTCamera.hardware.camera_controller import CameraController
 from OTCamera.helpers import log
 
 log.write("imported rpi", level=log.LogLevel.DEBUG)
-camera = Camera()
+camera = CameraController()
 
 
 def shutdown() -> None:

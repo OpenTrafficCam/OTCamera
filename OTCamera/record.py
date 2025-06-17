@@ -31,7 +31,7 @@ from typing import Any, Iterator, Union
 
 from OTCamera import config, status
 from OTCamera.hardware import button, led
-from OTCamera.hardware.camera import Camera
+from OTCamera.hardware.camera_controller import CameraController
 from OTCamera.helpers import log, name
 from OTCamera.helpers.filesystem import delete_old_files
 from OTCamera.html_updater import (
@@ -52,7 +52,7 @@ class OTCamera:
 
     def __init__(
         self,
-        camera: Camera,
+        camera_controller: CameraController,
         html_updater: StatusWebsiteUpdater,
         capture_preview_immediately: bool = False,
         video_dir: Union[str, Path] = config.VIDEO_DIR,
@@ -62,7 +62,8 @@ class OTCamera:
         """Constructor to initialise the OTCamera class.
 
         Args:
-            camera (Camera): The Camera class to control the Raspberry Pi camera.
+            camera_controller (CameraController): The class to control the Raspberry Pi
+                camera.
             html_updater (StatusWebsiteUpdater): The class providing functionality to
             update the status website.
             capture_preview_immediately (bool, optional): Whether to capture preview
@@ -74,7 +75,7 @@ class OTCamera:
             num_log_files_html (int, optional): The number of logfiles to be displayed
             on the status website. Defaults to config.NUM_LOG_FILES_HTML.
         """
-        self._camera = camera
+        self._camera = camera_controller
         self._html_updater = html_updater
         self._capture_preview_immediately = capture_preview_immediately
         self._video_dir = Path(video_dir)
@@ -365,7 +366,7 @@ def get_log_files_sorted(log_files: Iterator[Path]) -> list[Path]:
 
 def main() -> None:
     """Start running OTCamera."""
-    camera = Camera()
+    camera_controller = CameraController()
     html_updater = StatusWebsiteUpdater(
         template_html_path=config.TEMPLATE_HTML_PATH,
         offline_html_path=config.OFFLINE_HTML_PATH,
@@ -375,7 +376,7 @@ def main() -> None:
         log_info_id="log-info",
         debug_mode_on=config.DEBUG_MODE_ON,
     )
-    otcamera = OTCamera(camera=camera, html_updater=html_updater)
+    otcamera = OTCamera(camera_controller=camera_controller, html_updater=html_updater)
     otcamera.record()
 
 

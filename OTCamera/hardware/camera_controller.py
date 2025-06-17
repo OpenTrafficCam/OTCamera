@@ -36,9 +36,10 @@ from OTCamera.helpers.filesystem import delete_old_files
 log.write("imported camera", level=log.LogLevel.DEBUG)
 
 
-class Camera(Singleton):
-    """The camera class providing functionality such as starting or stopping a
-    recording, capturing a preview image, or closing the camera
+class CameraController(Singleton):
+    """
+    The camera controller class providing functionality such as starting or stopping
+    a recording, capturing a preview image, or closing the camera
 
     Args:
         framerate (int, optional): The frame rate. Defaults to config.FPS.

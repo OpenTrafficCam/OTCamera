@@ -13,10 +13,10 @@
 # You should have received a copy of the GNU General Public License along with this
 # program.  If not, see <https://www.gnu.org/licenses/>.
 
-import OTCamera.hardware.camera as camera
+import OTCamera.hardware.camera_controller as camera_controller
 
 
 def test_init_camera_same_instance() -> None:
-    cam_1 = camera.Camera()
-    cam_2 = camera.Camera()
+    cam_1 = camera_controller.CameraController()
+    cam_2 = camera_controller.CameraController()
     assert cam_1 == cam_2
