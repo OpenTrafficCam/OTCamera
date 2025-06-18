@@ -41,6 +41,7 @@ from OTCamera.html_updater import (
     LogHtmlId,
     StatusWebsiteUpdater,
 )
+from OTCamera.plugin.camera.camera_provider import CameraProvider
 
 log.write("imported record", level=log.LogLevel.DEBUG)
 
@@ -366,7 +367,8 @@ def get_log_files_sorted(log_files: Iterator[Path]) -> list[Path]:
 
 def main() -> None:
     """Start running OTCamera."""
-    camera_controller = CameraController()
+    camera_provider = CameraProvider()
+    camera_controller = CameraController(camera=camera_provider.provide())
     html_updater = StatusWebsiteUpdater(
         template_html_path=config.TEMPLATE_HTML_PATH,
         offline_html_path=config.OFFLINE_HTML_PATH,

@@ -26,9 +26,10 @@ from OTCamera import config, status
 from OTCamera.hardware import led
 from OTCamera.hardware.camera_controller import CameraController
 from OTCamera.helpers import log
+from OTCamera.plugin.camera.camera_provider import CameraProvider
 
 log.write("imported rpi", level=log.LogLevel.DEBUG)
-camera = CameraController()
+camera = CameraController(CameraProvider().provide())
 
 
 def shutdown() -> None:

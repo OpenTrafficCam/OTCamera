@@ -25,6 +25,7 @@ from cv2 import VideoCapture
 from OTCamera import config
 from OTCamera.hardware.camera_controller import CameraController
 from OTCamera.html_updater import StatusWebsiteUpdater
+from OTCamera.plugin.camera.camera_provider import CameraProvider
 from OTCamera.record import OTCamera, get_log_files_sorted
 from tests.conftest import YieldFixture
 
@@ -63,7 +64,7 @@ def html_updater() -> StatusWebsiteUpdater:
 @pytest.fixture
 def otcamera(html_updater: StatusWebsiteUpdater, temp_dir: Path) -> OTCamera:
     return OTCamera(
-        camera_controller=CameraController(),
+        camera_controller=CameraController(CameraProvider().provide()),
         html_updater=html_updater,
         video_dir=temp_dir,
     )
@@ -125,7 +126,9 @@ def test_record_videoRecordedHasCorrectFrames(
 
 
 def test_get_log_info(log_files_dir: Path) -> None:
-    otcamera = OTCamera(CameraController(), mock.Mock(), log_dir=log_files_dir)
+    otcamera = OTCamera(
+        CameraController(CameraProvider().provide()), mock.Mock(), log_dir=log_files_dir
+    )
     otcamera._log_dir = log_files_dir
 
     log_files = otcamera._get_num_recent_log_files(0, 2)

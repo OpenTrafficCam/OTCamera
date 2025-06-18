@@ -22,13 +22,12 @@ Used to start, split and stop recording.
 
 from datetime import datetime as dt
 from time import sleep
-from typing import Tuple, Union
+from typing import Union
 
 import picamerax as picamera
-from picamerax import Color
 
 from OTCamera import config, status
-from OTCamera.abstraction.singleton import Singleton
+from OTCamera.domain.camera import Camera
 from OTCamera.hardware import led
 from OTCamera.helpers import log, name
 from OTCamera.helpers.filesystem import delete_old_files
@@ -36,56 +35,25 @@ from OTCamera.helpers.filesystem import delete_old_files
 log.write("imported camera", level=log.LogLevel.DEBUG)
 
 
-class CameraController(Singleton):
+class CameraController:
     """
     The camera controller class providing functionality such as starting or stopping
     a recording, capturing a preview image, or closing the camera
 
     Args:
-        framerate (int, optional): The frame rate. Defaults to config.FPS.
-        resolution (Tuple[int, int], optional): The resolution. Defaults to
-            config.RESOLUTION.
-        annotate_background (Color, optional): Color of text annotation background.
-            Defaults to Color("black").
-        exposure_mode (str, optional): The exposure mode. Defaults to
-            config.EXPOSURE_MODE.
-        awb_mode (str, optional): The awb mode. Defaults to config.AWB_MODE.
-        drc_strength (str, optional): The DRC strength. Defaults to config.DRC_STRENGTH.
-        rotation (int, optional): The image rotation. Defaults to config.ROTATION.
-        meter_mode (str, optional): The meter mode. Defaults to config.METER_MODE.
+        camera (Camera): The camera instance that the controller interacts with.
     """
 
-    def init(
-        self,
-        framerate: int = config.FPS,
-        resolution: Tuple[int, int] = config.RESOLUTION,
-        annotate_background: Color = Color("black"),
-        exposure_mode: str = config.EXPOSURE_MODE,
-        awb_mode: str = config.AWB_MODE,
-        drc_strength: str = config.DRC_STRENGTH,
-        rotation: int = config.ROTATION,
-        meter_mode: str = config.METER_MODE,
-    ) -> None:
-        log.write("Initializing Camera", level=log.LogLevel.DEBUG)
-
-        self.framerate = framerate
-        self.resolution = resolution
-        self.annotate_background = annotate_background
-        self.exposure_mode = exposure_mode
-        self.awb_mode = awb_mode
-        self.drc_strength = drc_strength
-        self.rotation = rotation
-        self.meter_mode = meter_mode
-        self._picam = self._create_picam()
-        log.write("Camera initialized", log.LogLevel.DEBUG)
+    def __init__(self, camera: Camera) -> None:
+        self._camera = camera
 
     def start_recording(self) -> None:
-        """Start a recording a video.
+        """Start video recording.
 
         If picam isn't already recording:
-        - Deletes old files, until enough free space is available.
+        - Deletes old files until enough free space is available.
         - Starts a new recording on picam, using the config.py.
-        - Waits 2 seconds and caputres a preview image.
+        - Waits 2 seconds and captures a preview image.
         - Turns on the record LED (if attached).
 
         """
@@ -94,20 +62,21 @@ class CameraController(Singleton):
         # PiCamera error
         # https://picamera.readthedocs.io/en/release-1.13/api_exc.html?highlight=exception
 
-        if not self._picam.recording and not status.shutdownactive:
+        if not self._camera.is_recording and not status.shutdownactive:
             delete_old_files()
-            self._picam.annotate_text = name.annotate()
-            self._picam.start_recording(
-                output=name.video(),
-                format=config.VIDEO_FORMAT,
-                resize=config.RESOLUTION_SAVED_VIDEO_FILE,
-                profile=config.H264_PROFILE,
-                level=config.H264_LEVEL,
+            self.__set_annotation_text()
+            self._camera.start_recording(
+                save_file=name.video(),
+                video_format=config.VIDEO_FORMAT,
+                resolution=config.RESOLUTION_SAVED_VIDEO_FILE,
                 bitrate=config.H264_BITRATE,
-                quality=config.H264_QUALITY,
+                h264_profile=config.H264_PROFILE,
+                h264_level=config.H264_LEVEL,
+                h264_quality=config.H264_QUALITY,
             )
             log.write(
-                f"Picam recording: {self._picam.recording}", level=log.LogLevel.DEBUG
+                f"Picam recording: {self._camera.is_recording}",
+                level=log.LogLevel.DEBUG,
             )
             log.write("started recording")
             led.rec_on()
@@ -117,14 +86,13 @@ class CameraController(Singleton):
             self.capture()
 
     def capture(self) -> None:
-        """Capture a preview image if camera is recording."""
-        if self._picam.recording:
-            self._picam.annotate_text = name.annotate()
-            self._picam.capture(
-                name.preview(),
-                format=config.PREVIEW_FORMAT,
-                resize=config.RESOLUTION_SAVED_VIDEO_FILE,
-                use_video_port=True,
+        """Capture a preview image if the camera is recording."""
+        if self._camera.is_recording:
+            self.__set_annotation_text()
+            self._camera.capture(
+                save_file=name.preview(),
+                image_format=config.PREVIEW_FORMAT,
+                resolution=config.RESOLUTION_SAVED_VIDEO_FILE,
             )
             log.write("preview captured", level=log.LogLevel.DEBUG)
         else:
@@ -139,23 +107,23 @@ class CameraController(Singleton):
         Args:
             timeout (Union[int, float], optional): Timeout in seconds. Defaults to 0.
         """
-        if self._picam.recording:
-            self._picam.wait_recording(timeout)
+        if self._camera.is_recording:
+            self._camera.wait_recording(timeout)
         else:
             sleep(timeout)
 
     def _split(self) -> None:
         """Splits recording and deletes old video files if no disk space available."""
-        self._picam.split_recording(name.video())
+        self._camera.split_recording(name.video())
         delete_old_files()
-        log.write("splitted recording")
+        log.write("split recording")
 
     def split_if_interval_ends(self) -> None:
-        """Splits the videofile if the configured intervals ends.
+        """Splits the video file if the configured interval ends.
 
         An Interval is configured in config.py. If the current minute matches the
         interval length, the video file is split and a new file begins.
-        Counts the full intervals already recorded. If the maximum number of intervals,
+        Counts the full intervals already recorded. If the maximum number of intervals
         configured in config.py is reached, recording stops by breaking the loop in
         record.py.
 
@@ -173,15 +141,18 @@ class CameraController(Singleton):
             status.interval_finished = True
             log.write("reset new interval", level=log.LogLevel.DEBUG)
         self._wait_recording(0.5)
-        self._picam.annotate_text = name.annotate()
+        self.__set_annotation_text()
+
+    def __set_annotation_text(self) -> None:
+        self._camera.set_annotation_text(name.annotate())
 
     def _is_interval_minute(self) -> bool:
         """Checks if the current minute is the interval minute defined by
-        `config.INTERVAL_LENGTH` and thus defines whether a video should be splitted
+        `config.INTERVAL_LENGTH` and thus defines whether a video should be split
         or not.
 
         Returns:
-            bool: `True` if the interval minute has been reached. Otherwise `False`.
+            bool: `True` if the interval minute has been reached. Otherwise, `False`.
         """
         current_minute = dt.now().minute
         interval_minute = (current_minute % config.INTERVAL_LENGTH) == 0
@@ -191,7 +162,7 @@ class CameraController(Singleton):
         """Checks if a minute has passed after an interval minute has been reached.
 
         Returns:
-            bool: `True` if a minute has passed after the interval minute. Otherwise
+            bool: `True` if a minute has passed after the interval minute. Otherwise,
             `False`.
         """
         after_new_interval = not (
@@ -203,7 +174,7 @@ class CameraController(Singleton):
         """Checks if a new time interval started.
 
         Returns:
-            bool: `True` if new time interval started. Otherwise `False`.
+            bool: `True` if the new time interval started. Otherwise, `False`.
         """
         new_interval = (
             self._is_interval_minute()
@@ -216,11 +187,11 @@ class CameraController(Singleton):
         """Stops the video recording.
 
         If the picamera is recording, the recording is stopped. Additionally, the record
-        LED ist switched of (if configured).
+        LED ist switched off (if configured).
 
         """
-        if self._picam.recording:
-            self._picam.stop_recording()
+        if self._camera.is_recording:
+            self._camera.stop_recording()
             led.rec_off()
             log.write("stopped recording")
             log.write("recorded {n} videos".format(n=status.current_interval))
@@ -229,12 +200,12 @@ class CameraController(Singleton):
     def close(self) -> None:
         """Closes `picamera.PiCamera` instance.
 
-        Logs to log file if OTCamera has been already closed. But won't do anything
+        Logs to the log file if OTCamera has been already closed. But won't do anything
         apart from that.
         """
 
         try:
-            self._picam.close()
+            self._camera.close()
             log.write("PiCamera closed", log.LogLevel.DEBUG)
         except picamera.PiCameraClosed:
             log.write("Camera already closed.", level=log.LogLevel.DEBUG)
@@ -242,30 +213,9 @@ class CameraController(Singleton):
 
     def restart(self) -> None:
         """
-        Restarts the PiCamera instance by closing it and re-initialising it.
+        Restarts the internal camera instance by closing it and re-initializing it.
 
-        The initialisation is being done with the current set of parameters.
+        The initialization is being done with the current set of parameters.
         """
         log.write("restarting camera")
-        self.close()
-
-        self._picam = self._create_picam()
-
-    def _create_picam(self) -> picamera.PiCamera:
-        """Creates PiCamera instance and initializes it with the camera settings passed
-        to the OTCamera class.
-
-        Returns:
-            picamera.PiCamera: The PiCamera instance acting as the interface to control
-            the physical picamera.
-        """
-        picam = picamera.PiCamera()
-        picam.framerate = self.framerate
-        picam.resolution = self.resolution
-        picam.annotate_background = self.annotate_background
-        picam.exposure_mode = self.exposure_mode
-        picam.awb_mode = self.awb_mode
-        picam.drc_strength = self.drc_strength
-        picam.rotation = self.rotation
-        picam.meter_mode = self.meter_mode
-        return picam
+        self._camera.reinitialize()

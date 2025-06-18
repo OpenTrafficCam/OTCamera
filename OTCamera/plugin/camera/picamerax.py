@@ -1,13 +1,18 @@
-from pathlib import Path
-from typing import Tuple
+from typing import Tuple, Union
 
-from picamerax import PiCamera
+from picamerax import Color, PiCamera
 
-from OTCamera.abstraction.singleton import Singleton
-from OTCamera.domain.camera import Camera, H264Level, H264Profile, VideoFormat
+from OTCamera import config
+from OTCamera.domain.camera import (
+    Camera,
+    H264Level,
+    H264Profile,
+    VideoFormat,
+)
+from OTCamera.helpers import log
 
 
-class PiCameraX(Camera, Singleton):
+class PiCameraX(Camera):
 
     @property
     def framerate(self) -> int:
@@ -37,30 +42,59 @@ class PiCameraX(Camera, Singleton):
     def meter_mode(self) -> str:
         return self._picamera.meter_mode
 
-    def init(
+    def __init__(
         self,
         picamera: PiCamera,
-        frame_rate: int,
-        resolution: tuple[int, int],
-        exposure_mode: str,
-        awb_mode: str,
-        video_format: str,
-        drc_strength: str,
-        rotation: int,
-        meter_mode: str,
+        frame_rate: int = config.FPS,
+        resolution: tuple[int, int] = config.RESOLUTION,
+        exposure_mode: str = config.EXPOSURE_MODE,
+        awb_mode: str = config.AWB_MODE,
+        drc_strength: str = config.DRC_STRENGTH,
+        rotation: int = config.ROTATION,
+        meter_mode: str = config.METER_MODE,
+        annotation_background_color: Union[Color, None] = Color("black"),
     ) -> None:
-        # TODO: Change init to __init__ when removing Singleton abstract class
-        self._picamera = picamera
-        self._video_format = video_format
+        """
+        The PiCamera wrapper providing functionality such as starting or stopping
+        a recording, capturing a preview image, or closing the camera
 
-        self.set_frame_rate(frame_rate)
-        self.set_resolution(resolution)
-        self.set_exposure_mode(exposure_mode)
-        self.set_awb_mode(awb_mode)
-        self.set_video_format(video_format)
-        self.set_drc_strength(drc_strength)
-        self.set_rotation(rotation)
-        self.set_meter_mode(meter_mode)
+        Args:
+            frame_rate (int): The frame rate. Defaults to config.FPS.
+            resolution (Tuple[int, int]): The resolution. Defaults to
+                config.RESOLUTION.
+            exposure_mode (str): The exposure mode. Defaults to
+                config.EXPOSURE_MODE.
+            awb_mode (str): The awb mode. Defaults to config.AWB_MODE.
+            drc_strength (str): The DRC strength. Defaults to
+                config.DRC_STRENGTH.
+            rotation (int): The image rotation. Defaults to config.ROTATION.
+            meter_mode (str): The meter mode. Defaults to config.METER_MODE.
+            annotation_background_color (Color): The text annotation
+                background color. Defaults to Color("black").
+        """
+        self._picamera = picamera
+        self._frame_rate = frame_rate
+        self._resolution = resolution
+        self._exposure_mode = exposure_mode
+        self._awb_mode = awb_mode
+        self._drc_strength = drc_strength
+        self._rotation = rotation
+        self._meter_mode = meter_mode
+        self._annotation_background_color = annotation_background_color
+
+        log.write("Initializing Camera", level=log.LogLevel.DEBUG)
+        self._setup_picamera()
+        log.write("Camera initialized", log.LogLevel.DEBUG)
+
+    def _setup_picamera(self) -> None:
+        self.set_frame_rate(self._frame_rate)
+        self.set_resolution(self._resolution)
+        self.set_exposure_mode(self._exposure_mode)
+        self.set_awb_mode(self._awb_mode)
+        self.set_drc_strength(self._drc_strength)
+        self.set_rotation(self._rotation)
+        self.set_meter_mode(self._meter_mode)
+        self.set_annotation_background_color(self._annotation_background_color)
 
     @property
     def is_recording(self) -> bool:
@@ -68,7 +102,7 @@ class PiCameraX(Camera, Singleton):
 
     def start_recording(
         self,
-        save_file: Path,
+        save_file: str,
         video_format: VideoFormat,
         resolution: tuple[int, int],
         bitrate: int,
@@ -91,7 +125,6 @@ class PiCameraX(Camera, Singleton):
         save_file: str,
         image_format: str,
         resolution: tuple[int, int],
-        annotation_text: str,
     ) -> None:
         self._picamera.capture(
             output=save_file,
@@ -100,10 +133,10 @@ class PiCameraX(Camera, Singleton):
             use_video_port=True,
         )
 
-    def wait_recording(self, timeout: int) -> None:
+    def wait_recording(self, timeout: Union[int, float]) -> None:
         self._picamera.wait_recording(timeout=timeout)
 
-    def split_recording(self, save_path: Path) -> None:
+    def split_recording(self, save_path: str) -> None:
         self._picamera.split_recording(output=save_path)
 
     def stop_recording(self) -> None:
@@ -112,29 +145,41 @@ class PiCameraX(Camera, Singleton):
     def close(self) -> None:
         self._picamera.close()
 
+    def reinitialize(self) -> None:
+        self.close()
+        self._picamera = PiCamera()
+        self._setup_picamera()
+
     def set_annotation_text(self, value: str) -> None:
         self._picamera.annotate_text = value
 
+    def set_annotation_background_color(self, value: Color) -> None:
+        self._picamera.annotate_background = value
+
     def set_frame_rate(self, value: int) -> None:
+        self._frame_rate = value
         self._picamera.framerate = value
 
     def set_resolution(self, value: tuple[int, int]) -> None:
+        self._resolution = value
         self._picamera.resolution = value
 
     def set_exposure_mode(self, value: str) -> None:
+        self._exposure_mode = value
         self._picamera.exposure_mode = value
 
     def set_awb_mode(self, value: str) -> None:
+        self._awb_mode = value
         self._picamera.awb_mode = value
 
     def set_drc_strength(self, value: str) -> None:
+        self._drc_strength = value
         self._picamera.drc_strength = value
 
     def set_rotation(self, value: int) -> None:
+        self._rotation = value
         self._picamera.rotation = value
 
     def set_meter_mode(self, value: str) -> None:
+        self._meter_mode = value
         self._picamera.meter_mode = value
-
-    def set_video_format(self, value: str) -> None:
-        self._video_format = value  # Usage -> start_recording

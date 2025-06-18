@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
-from pathlib import Path
-from typing import Literal, Tuple
+from typing import Literal, Tuple, Union
 
 H264Profile = Literal["baseline", "main", "high", "constrained"]
 H264Level = Literal[
@@ -80,7 +79,7 @@ class Camera(ABC):
     @abstractmethod
     def start_recording(
         self,
-        save_file: Path,
+        save_file: str,
         video_format: VideoFormat,
         resolution: tuple[int, int],
         bitrate: int,
@@ -91,7 +90,7 @@ class Camera(ABC):
         """Start video recording.
 
         Args:
-            save_file (Path): Save location of the video file.
+            save_file (str): Save location of the video file.
             video_format (VideoFormat): Video format used for recording.
             resolution (tuple[int, int]): Resolution of the saved video file.
             bitrate (int): Bitrate at which the video will be encoded. The maximum
@@ -113,17 +112,16 @@ class Camera(ABC):
         save_file: str,
         image_format: str,
         resolution: tuple[int, int],
-        annotation_text: str,
     ) -> None:
         """Capture a preview image of the camera."""
         raise NotImplementedError
 
     @abstractmethod
-    def wait_recording(self, timeout: int) -> None:
+    def wait_recording(self, timeout: Union[int, float]) -> None:
         raise NotImplementedError
 
     @abstractmethod
-    def split_recording(self, save_path: Path) -> None:
+    def split_recording(self, save_path: str) -> None:
         raise NotImplementedError
 
     @abstractmethod
@@ -133,6 +131,19 @@ class Camera(ABC):
     @abstractmethod
     def close(self) -> None:
         """Close the camera."""
+        raise NotImplementedError
+
+    @abstractmethod
+    def reinitialize(self) -> None:
+        """
+        Restarts the internal camera instance by closing it and re-initializing it.
+
+        The initialization is being done with the current set of parameters.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def set_annotation_text(self, value: str) -> None:
         raise NotImplementedError
 
     @abstractmethod
@@ -149,10 +160,6 @@ class Camera(ABC):
 
     @abstractmethod
     def set_awb_mode(self, value: str) -> None:
-        raise NotImplementedError
-
-    @abstractmethod
-    def set_video_format(self, value: str) -> None:
         raise NotImplementedError
 
     @abstractmethod
