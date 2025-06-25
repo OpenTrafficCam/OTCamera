@@ -64,9 +64,15 @@ sed $NGINXDEFAULT -i -e "s?root $OTCAMERA/webfiles?root /var/www/html?g"
 apt remove nginx -y
 
 echo "Remove OTCamera directory"
-cd "$OTCAMERA" || { echo "Error: Cannot find OTCamera directory"; exit 1; }
+cd "$OTCAMERA" || {
+	echo "Error: Cannot find OTCamera directory"
+	exit 1
+}
 pip uninstall -r requirements.txt -y
-cd "$USER_HOME" || { echo "Error: Cannot find HOME directory"; exit 1; }
+cd "$USER_HOME" || {
+	echo "Error: Cannot find HOME directory"
+	exit 1
+}
 rm -rf "$OTCAMERA"
 
 echo "#### Uninstall packages"

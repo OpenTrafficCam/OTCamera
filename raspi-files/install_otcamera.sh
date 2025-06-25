@@ -15,13 +15,10 @@ read -r -e -p "Use LEDs? [y/n]: " -i "y" USE_LEDS
 read -r -e -p "Activate DEBUG mode? [y/n]: " -i "n" USE_DEBUG
 read -r -e -p "Use relay server? [y/n]: " -i "n" USE_RELAY
 
-
-
-
 echo "#### Configure Rasperry Pi"
 echo "Configure legacy camera mode using raspi-config"
 raspi-config nonint do_legacy 0
-case $USE_RTC in 
+case $USE_RTC in
     [yY] | [yY][eE][sS])
         echo "Enable I2C bus for hwclock"
         raspi-config nonint do_i2c 0
@@ -168,7 +165,7 @@ RCLOCAL="/etc/rc.local"
 cp ./raspi-files/usr/local/bin/wifistart /usr/local/bin/wifistart
 sed $RCLOCAL -i -e "/^exit 0/i /bin/bash /usr/local/bin/wifistart"
 
-case $USE_RTC in 
+case $USE_RTC in
     [yY] | [yY][eE][sS])
         echo "    Setting up RTC"
         HWCLOCK="/lib/udev/hwclock-set"
