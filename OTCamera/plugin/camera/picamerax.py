@@ -3,12 +3,7 @@ from typing import Tuple, Union
 from picamerax import Color, PiCamera
 
 from OTCamera import config
-from OTCamera.domain.camera import (
-    Camera,
-    H264Level,
-    H264Profile,
-    VideoFormat,
-)
+from OTCamera.domain.camera import Camera, H264Level, H264Profile, VideoFormat
 from OTCamera.helpers import log
 
 
