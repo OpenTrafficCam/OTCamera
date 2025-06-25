@@ -28,9 +28,7 @@ from OTCamera.html_updater import (
     StatusDataObject,
 )
 from OTCamera.html_updater import StatusHtmlId as status_id
-from OTCamera.html_updater import (
-    StatusWebsiteUpdater,
-)
+from OTCamera.html_updater import StatusWebsiteUpdater
 
 
 @pytest.fixture
