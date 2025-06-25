@@ -390,12 +390,12 @@ class OTCameraUsbCopier(Observer):
         log.write("Start copying files")
         for video in copy_info.videos:
             if video.copied:
-                log.write(f"Video at: '{ video.path}' already copied. Skipping.")
+                log.write(f"Video at: '{video.path}' already copied. Skipping.")
                 continue
 
             if not video.path.exists():
                 log.write(
-                    f"Video at: '{ video.path}' does not exists.", log.LogLevel.WARNING
+                    f"Video at: '{video.path}' does not exists.", log.LogLevel.WARNING
                 )
                 continue
             try:
@@ -428,13 +428,13 @@ class OTCameraUsbCopier(Observer):
         for video in copy_info.videos.copy():
             if not video.path.exists():
                 log.write(
-                    f"Video at: '{ video.path}' does not exist.", log.LogLevel.WARNING
+                    f"Video at: '{video.path}' does not exist.", log.LogLevel.WARNING
                 )
                 copy_info.remove(video)
                 continue
             if not video.delete:
                 log.write(
-                    f"Video at: '{ video.path}' not marked for deletion. Skipping.",
+                    f"Video at: '{video.path}' not marked for deletion. Skipping.",
                 )
                 continue
 
