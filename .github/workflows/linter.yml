@@ -30,6 +30,7 @@ jobs:
           VALIDATE_PYTHON_MYPY: false
           VALIDATE_JSCPD: false
           VALIDATE_PYTHON_BLACK: false
+          VALIDATE_PYTHON_PYINK: false
           FILTER_REGEX_EXCLUDE: .webfiles/css/bootstrap.*
 
           LINTER_RULES_PATH: .
