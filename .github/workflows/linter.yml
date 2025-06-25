@@ -27,6 +27,6 @@ jobs:
           FILTER_REGEX_EXCLUDE: .webfiles/css/bootstrap.*
 
           LINTER_RULES_PATH: /
-          PYTHON_FLAKE8_CONFIG_FILE: setup.cfg
-          PYTHON_ISORT_CONFIG_FILE: setup.cfg
+          PYTHON_FLAKE8_CONFIG_FILE: .flake8
+          PYTHON_ISORT_CONFIG_FILE: pyproject.toml
           YAML_CONFIG_FILE: .yamllint.yaml
