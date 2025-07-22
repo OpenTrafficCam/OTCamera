@@ -20,28 +20,28 @@ echo "Configure legacy camera mode using raspi-config"
 raspi-config nonint do_legacy 0
 case $USE_RTC in
 [yY] | [yY][eE][sS])
-	echo "Enable I2C bus for hwclock"
-	raspi-config nonint do_i2c 0
-	;;
+  echo "Enable I2C bus for hwclock"
+  raspi-config nonint do_i2c 0
+  ;;
 esac
 
 echo "    Setting config variables"
 CONFIG="/boot/config.txt"
 cp $CONFIG $CONFIG.backup
 {
-	echo "# OTCamera"
-	echo "dtoverlay=disable-bt"
-	echo "disable_camera_led=1"
-	echo "dtparam=act_led_trigger=none"
-	echo "dtparam=act_led_activelow=on"
-	echo "dtparam=audio=off"
-	echo "display_auto_detect=0"
-	echo "gpio=17,22,16,27,26=ip"
-	echo "gpio=22,16,27=pu"
-	echo "gpio=17,26=pd"
-	echo "gpio=6,12,13=op"
-	echo "gpio=6,12=dl"
-	echo "gpio=13=dh"
+  echo "# OTCamera"
+  echo "dtoverlay=disable-bt"
+  echo "disable_camera_led=1"
+  echo "dtparam=act_led_trigger=none"
+  echo "dtparam=act_led_activelow=on"
+  echo "dtparam=audio=off"
+  echo "display_auto_detect=0"
+  echo "gpio=17,22,16,27,26=ip"
+  echo "gpio=22,16,27=pu"
+  echo "gpio=17,26=pd"
+  echo "gpio=6,12,13=op"
+  echo "gpio=6,12=dl"
+  echo "gpio=13=dh"
 } >>$CONFIG
 sed $CONFIG -i -e "s/^dtparam=audio=on/#dtparam=audio=on/g"
 sed $CONFIG -i -e "s/^display_auto_detect=1/#display_auto_detect=1/g"
@@ -68,9 +68,9 @@ apt install python3-pip -y
 apt install python3-venv -y
 
 if [ "$OTC_VERSION" = "latest" ]; then
-	latest_tag=$(curl -s https://api.github.com/repos/OpenTrafficCam/OTCamera/releases/latest | sed -Ene '/^ *"tag_name": *"(v.+)",$/s//\1/p')
+  latest_tag=$(curl -s https://api.github.com/repos/OpenTrafficCam/OTCamera/releases/latest | sed -Ene '/^ *"tag_name": *"(v.+)",$/s//\1/p')
 else
-	latest_tag=$OTC_VERSION
+  latest_tag=$OTC_VERSION
 fi
 PWD=$(pwd)
 
@@ -81,8 +81,8 @@ runuser -l "$SUDO_USER" -c "tar -xvzf $PWD/otcamera.tar.gz -C $PWD/OTCamera/ --s
 rm "$PWD"/otcamera.tar.gz
 
 cd OTCamera || {
-	echo "Error: Cannot find OTCamera directory"
-	exit 1
+  echo "Error: Cannot find OTCamera directory"
+  exit 1
 }
 PIP="venv/bin/pip"
 python -m venv venv
@@ -111,18 +111,18 @@ echo "DAEMON_CONF=\"$HOSTAPDCONF\"" >>$HOSTAPD
 cp $HOSTAPDCONF $HOSTAPDCONF".backup"
 echo "    Current hostapd config moved to $HOSTAPDCONF.backup"
 {
-	echo "channel=$APCHANNEL"
-	echo "ssid=$APNAME"
-	echo "wpa_passphrase=$APPASSWORD"
-	echo "interface=uap0"
-	echo "hw_mode=g"
-	echo "macaddr_acl=0"
-	echo "auth_algs=1"
-	echo "wpa=2"
-	echo "wpa_key_mgmt=WPA-PSK"
-	echo "wpa_pairwise=TKIP"
-	echo "rsn_pairwise=CCMP"
-	echo "country_code=DE"
+  echo "channel=$APCHANNEL"
+  echo "ssid=$APNAME"
+  echo "wpa_passphrase=$APPASSWORD"
+  echo "interface=uap0"
+  echo "hw_mode=g"
+  echo "macaddr_acl=0"
+  echo "auth_algs=1"
+  echo "wpa=2"
+  echo "wpa_key_mgmt=WPA-PSK"
+  echo "wpa_pairwise=TKIP"
+  echo "rsn_pairwise=CCMP"
+  echo "country_code=DE"
 } >>$HOSTAPDCONF
 # echo "ctrl_interface=/var/run/hostapd" >> $HOSTAPDCONF
 # echo "ctrl_interface_group=0" >> $HOSTAPDCONF
@@ -134,22 +134,22 @@ DHCPDCONF="/etc/dhcpcd.conf"
 cp $DHCPDCONF $DHCPDCONF".backup"
 echo "Current DHCPCD config moved to $DHCPDCONF.backup"
 {
-	echo "interface uap0"
-	echo "	static ip_address=$IPRANGE.1/24"
-	echo "	nohook wpa_supplicant"
+  echo "interface uap0"
+  echo "	static ip_address=$IPRANGE.1/24"
+  echo "	nohook wpa_supplicant"
 } >>$DHCPDCONF
 echo "done"
 
 echo "    Configure DNSMASQ"
 DNSMASQCONF="/etc/dnsmasq.conf"
 {
-	echo "interface=lo,uap0"
-	echo "no-dhcp-interface=lo,wlan0"
-	echo "bind-interfaces"
-	echo "server=$IPRANGE.1"
-	echo "domain-needed"
-	echo "bogus-priv"
-	echo "dhcp-range=$IPRANGE.10,$IPRANGE.250,2h"
+  echo "interface=lo,uap0"
+  echo "no-dhcp-interface=lo,wlan0"
+  echo "bind-interfaces"
+  echo "server=$IPRANGE.1"
+  echo "domain-needed"
+  echo "bogus-priv"
+  echo "dhcp-range=$IPRANGE.10,$IPRANGE.250,2h"
 } >>$DNSMASQCONF
 echo "done"
 
@@ -168,66 +168,66 @@ sed $RCLOCAL -i -e "/^exit 0/i /bin/bash /usr/local/bin/wifistart"
 
 case $USE_RTC in
 [yY] | [yY][eE][sS])
-	echo "    Setting up RTC"
-	HWCLOCK="/lib/udev/hwclock-set"
-	cp $HWCLOCK $HWCLOCK.backup
-	apt install i2c-tools -y
-	echo "dtoverlay=i2c-rtc,ds3231" >>$CONFIG
-	apt remove fake-hwclock -y
-	update-rc.d -f fake-hwclock remove
-	systemctl disable fake-hwclock
-	sed $HWCLOCK -i -e "/if.*systemd/ s/^#*/#/"
-	sed $HWCLOCK -i -e "s?^    exit 0?#    exit 0?g"
-	sed $HWCLOCK -i -e "s?^fi?#fi?g"
-	sed $HWCLOCK -i -e "/--systz/ s/^#*/#/"
-	;;
+  echo "    Setting up RTC"
+  HWCLOCK="/lib/udev/hwclock-set"
+  cp $HWCLOCK $HWCLOCK.backup
+  apt install i2c-tools -y
+  echo "dtoverlay=i2c-rtc,ds3231" >>$CONFIG
+  apt remove fake-hwclock -y
+  update-rc.d -f fake-hwclock remove
+  systemctl disable fake-hwclock
+  sed $HWCLOCK -i -e "/if.*systemd/ s/^#*/#/"
+  sed $HWCLOCK -i -e "s?^    exit 0?#    exit 0?g"
+  sed $HWCLOCK -i -e "s?^fi?#fi?g"
+  sed $HWCLOCK -i -e "/--systz/ s/^#*/#/"
+  ;;
 esac
 
 OTCONFIG="$PWD/OTCamera/config.py"
 
 case $USE_BUTTONS in
 [yY] | [yY][eE][sS])
-	echo "Enableing buttons"
-	sed "$OTCONFIG" -i -e "s?^USE_BUTTONS.*?USE_BUTTONS = True?g"
-	;;
+  echo "Enableing buttons"
+  sed "$OTCONFIG" -i -e "s?^USE_BUTTONS.*?USE_BUTTONS = True?g"
+  ;;
 [nN] | [nN][oO])
-	echo "Disableing buttons"
-	sed "$OTCONFIG" -i -e "s?^USE_BUTTONS.*?USE_BUTTONS = False?g"
-	;;
+  echo "Disableing buttons"
+  sed "$OTCONFIG" -i -e "s?^USE_BUTTONS.*?USE_BUTTONS = False?g"
+  ;;
 esac
 
 case $USE_LEDS in
 [yY] | [yY][eE][sS])
-	echo "Enableing LEDs"
-	sed "$OTCONFIG" -i -e "s?^USE_LED.*?USE_LED = True?g"
-	;;
+  echo "Enableing LEDs"
+  sed "$OTCONFIG" -i -e "s?^USE_LED.*?USE_LED = True?g"
+  ;;
 [nN] | [nN][oO])
-	echo "Disableing LEDs"
-	sed "$OTCONFIG" -i -e "s?^USE_LED.*?USE_LED = False?g"
-	;;
+  echo "Disableing LEDs"
+  sed "$OTCONFIG" -i -e "s?^USE_LED.*?USE_LED = False?g"
+  ;;
 esac
 
 case $USE_DEBUG in
 [yY] | [yY][eE][sS])
-	echo "Enableing debug mode"
-	sed "$OTCONFIG" -i -e "s?^DEBUG_MODE_ON.*?DEBUG_MODE_ON = True?g"
-	;;
+  echo "Enableing debug mode"
+  sed "$OTCONFIG" -i -e "s?^DEBUG_MODE_ON.*?DEBUG_MODE_ON = True?g"
+  ;;
 [nN] | [nN][oO])
-	echo "Disableing debug mode"
-	sed "$OTCONFIG" -i -e "s?^DEBUG_MODE_ON.*?DEBUG_MODE_ON = False?g"
-	;;
+  echo "Disableing debug mode"
+  sed "$OTCONFIG" -i -e "s?^DEBUG_MODE_ON.*?DEBUG_MODE_ON = False?g"
+  ;;
 esac
 
 case $USE_RELAY in
 [yY] | [yY][eE][sS])
-	echo "Enableing relay mode"
-	sed "$OTCONFIG" -i -e "s?^USE_RELAY.*?USE_RELAY = True?g"
-	bash ./raspi-files/install_sshrelay.sh
-	;;
+  echo "Enableing relay mode"
+  sed "$OTCONFIG" -i -e "s?^USE_RELAY.*?USE_RELAY = True?g"
+  bash ./raspi-files/install_sshrelay.sh
+  ;;
 [nN] | [nN][oO])
-	echo "Disableing debug mode"
-	sed "$OTCONFIG" -i -e "s?^USE_RELAY.*?USE_RELAY = False?g"
-	;;
+  echo "Disableing debug mode"
+  sed "$OTCONFIG" -i -e "s?^USE_RELAY.*?USE_RELAY = False?g"
+  ;;
 esac
 
 echo "    Activate OTCamera service"

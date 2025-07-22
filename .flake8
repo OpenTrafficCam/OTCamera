@@ -3,5 +3,5 @@ max-line-length=88
 docstring-convention=google
 extend-ignore=E203
 exclude=
-	venv
-	.venv
+    venv
+    .venv
