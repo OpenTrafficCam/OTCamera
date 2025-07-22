@@ -6,8 +6,8 @@ build-backend = "hatchling.build"
 name = "OTCamera"
 dynamic = ["dependencies", "version"]
 authors = [
-  { name="OpenTrafficCam contributors", email="team@opentrafficcam.org" },
-  { name="platomo GmbH", email="info@platomo.de" },
+    { name="OpenTrafficCam contributors", email="team@opentrafficcam.org" },
+    { name="platomo GmbH", email="info@platomo.de" },
 ]
 description = "OTCamera is a core module of the OpenTrafficCam framework to record videos over multiple days with a custom camera system based on the Raspberry Pi Zero W."
 
