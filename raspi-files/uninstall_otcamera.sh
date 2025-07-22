@@ -6,7 +6,7 @@ OTCAMERA=$USER_HOME/"OTCamera"
 OTCSERVICE="/lib/systemd/system/otcamera.service"
 RCLOCAL="/etc/rc.local"
 NGINXDEFAULT="/etc/nginx/sites-available/default"
-HOSTAPD_DIR="/etc/hostapd" 
+HOSTAPD_DIR="/etc/hostapd"
 DHCPCDCONF="/etc/dhcpcd.conf"
 HWCLOCK="/lib/udev/hwclock-set"
 
@@ -64,9 +64,15 @@ sed $NGINXDEFAULT -i -e "s?root $OTCAMERA/webfiles?root /var/www/html?g"
 apt remove nginx -y
 
 echo "Remove OTCamera directory"
-cd "$OTCAMERA" || { echo "Error: Cannot find OTCamera directory"; exit 1; }
+cd "$OTCAMERA" || {
+  echo "Error: Cannot find OTCamera directory"
+  exit 1
+}
 pip uninstall -r requirements.txt -y
-cd "$USER_HOME" || { echo "Error: Cannot find HOME directory"; exit 1; }
+cd "$USER_HOME" || {
+  echo "Error: Cannot find HOME directory"
+  exit 1
+}
 rm -rf "$OTCAMERA"
 
 echo "#### Uninstall packages"
@@ -78,7 +84,7 @@ apt remove gldriver-test libgl1-mesa-dri
 
 echo "Disable I2C bus for hwclock"
 raspi-config nonint do_i2c 1
-raspi-config nonint do_legacy 1 
+raspi-config nonint do_legacy 1
 
 systemctl reset-failed
 systemctl daemon-reload

@@ -5,6 +5,7 @@ Defines all button callback functions.
 Also includes the basic logic behind button interactions.
 
 """
+
 # Copyright (C) 2023 OpenTrafficCam Contributors
 # <https://github.com/OpenTrafficCam>
 # <team@opentrafficcam.org>
@@ -45,9 +46,9 @@ def its_record_time() -> bool:
     """
     current_hour = dt.now().hour
     record_time = (
-        (hour_button.is_pressed)
+        hour_button.is_pressed
         or (current_hour >= config.START_HOUR and current_hour < config.END_HOUR)
-    ) and (not status.SHUTDOWNACTIVE)
+    ) and (not status.shutdownactive)
     return record_time
 
 
@@ -148,7 +149,7 @@ def _on_wifi_button_released() -> None:
     log.write(f"Turning off Wi-Fi AP in {config.WIFI_DELAY} s")
 
 
-def init_wifi_button():
+def init_wifi_button() -> None:
     """Helper to initialize Wi-Fi status on boot according to `wifi_button`
 
     At boot time Wi-Fi will always be started by `rc.local`.
@@ -156,15 +157,18 @@ def init_wifi_button():
     off.
     """
     log.write("Initializing Wi-Fi", level=log.LogLevel.DEBUG)
-    if wifi_button.is_pressed:
+    if wifi_button.is_pressed:  # type: ignore[attr-defined]
         rpi.wifi_switch_on()
     else:
         rpi.wifi_switch_off()
 
 
-def handle_power_button_off_state():
+def handle_power_button_off_state() -> None:
     """Switches off the system after a 5 second delay."""
     shutdown_delay = 5
+
+    if status.power_button_pressed_time is None:
+        return
 
     if status.power_button_pressed_time + timedelta(seconds=shutdown_delay) < dt.now():
         if config.DEBUG_MODE_ON:
@@ -174,8 +178,11 @@ def handle_power_button_off_state():
         status.power_button_pressed_time = None
 
 
-def handle_wifi_button_off_state():
+def handle_wifi_button_off_state() -> None:
     """Switches off the WiFi after config.WIFI_DELAY seconds."""
+    if status.wifi_button_pressed_time is None:
+        return
+
     if (
         status.wifi_button_pressed_time + timedelta(seconds=config.WIFI_DELAY)
         < dt.now()
@@ -218,10 +225,10 @@ if config.USE_BUTTONS:
     hour_button.when_released = _on_hour_button_switched
 
     # Set button statuses in status module
-    status.power_button_pressed = power_button.is_pressed
-    status.hour_button_pressed = hour_button.is_pressed
-    status.wifi_button_pressed = wifi_button.is_pressed
-    status.hour_button_pressed = hour_button.is_pressed
+    status.power_button_pressed = power_button.is_pressed  # type: ignore[attr-defined]
+    status.hour_button_pressed = hour_button.is_pressed  # type: ignore[attr-defined]
+    status.wifi_button_pressed = wifi_button.is_pressed  # type: ignore[attr-defined]
+    status.hour_button_pressed = hour_button.is_pressed  # type: ignore[attr-defined]
 
     log.write("Buttons initialized", log.LogLevel.DEBUG)
 

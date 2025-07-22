@@ -3,6 +3,7 @@
 All the configuration of OTCamera is done here.
 
 """
+
 # Copyright (C) 2023 OpenTrafficCam Contributors
 # <https://github.com/OpenTrafficCam>
 # <team@opentrafficcam.org>
@@ -22,16 +23,17 @@ All the configuration of OTCamera is done here.
 import socket
 import sys
 from pathlib import Path
+from typing import Literal
 
 try:
-    from yaml import CSafeLoader as SafeLoader
+    from yaml import CSafeLoader as SafeLoader  # type: ignore
 except ImportError:
-    from yaml import SafeLoader
+    from yaml import SafeLoader  # type: ignore
 
 import yaml
 
 
-def parse_user_config(config_file: str):
+def parse_user_config(config_file: str) -> None:
     """Parses the OTCamera user configuration YAML file.
 
     Args:
@@ -83,7 +85,6 @@ def parse_user_config(config_file: str):
         except KeyError:
             _print_key_err_msg("recording.end_hour")
         try:
-            global INTERVAL_LENGTH
             setattr(module, "INTERVAL_LENGTH", section["interval_length"])
         except KeyError:
             _print_key_err_msg("recording.interval_length")
@@ -101,6 +102,10 @@ def parse_user_config(config_file: str):
     except KeyError:
         _print_key_err_msg("camera")
     else:
+        try:
+            setattr(module, "CAMERA_TYPE", section["type"])
+        except KeyError:
+            _print_key_err_msg("camera.type")
         try:
             setattr(module, "FPS", section["fps"])
         except KeyError:
@@ -277,6 +282,8 @@ MIN_FREE_SPACE = 1
 """free space in GB on sd card before old videos get deleted."""
 
 # camera config
+CAMERA_TYPE = "legacy"
+"""Camera type. `legacy` for the original camera module."""
 FPS = 20
 """Frames per Second. 10-20 should be enough."""
 RESOLUTION = (1640, 1232)
@@ -305,13 +312,13 @@ PREVIEW_INTERVAL = 5
 # video config
 VIDEO_DIR = "~/videos/"
 """path to safe videofiles."""
-VIDEO_FORMAT = "h264"
+VIDEO_FORMAT: Literal["h264"] = "h264"
 """Encoding format."""
 RESOLUTION_SAVED_VIDEO_FILE = (800, 600)
 """Resolution of the saved videofile, not the camera itself."""
-H264_PROFILE = "high"
+H264_PROFILE: Literal["high"] = "high"
 """Profile used in h264 encoder."""
-H264_LEVEL = "4"
+H264_LEVEL: Literal["4"] = "4"
 """Level used in h264 encoder."""
 H264_BITRATE = 600000
 """Bitrate used in h264 encoder."""

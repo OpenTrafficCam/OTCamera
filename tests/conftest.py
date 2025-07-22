@@ -15,12 +15,16 @@
 
 import shutil
 from pathlib import Path
+from typing import Generator, TypeVar
 
 import pytest
 
+T = TypeVar("T")
+YieldFixture = Generator[T, None, None]
+
 
 @pytest.fixture
-def test_dir() -> Path:
+def test_dir() -> YieldFixture[Path]:
     test_dir = Path(__file__).parent / "data"
     test_dir.mkdir(exist_ok=True)
     yield test_dir

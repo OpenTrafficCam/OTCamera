@@ -1,8 +1,8 @@
-art==6.1
-psutil==5.9.5
-gpiozero==1.6.2
-picamerax==21.9.8
-beautifulsoup4==4.12.2
-RPi.GPIO==0.7.1
-PyYAML==6.0.1
-requests==2.31.0
+art==6.5
+beautifulsoup4==4.13.4
+gpiozero==2.0.1
+picamerax==24.3.21
+psutil==7.0.0
+PyYAML==6.0.2
+requests==2.32.3
+RPi.GPIO==0.7.1; platform_system != "Windows" and platform_system != "Darwin"
