@@ -301,6 +301,10 @@ PREVIEW_FORMAT = "jpeg"
 """Filetype of the static preview image."""
 PREVIEW_INTERVAL = 5
 """Interval between two preview images in seconds."""
+SEND_PREVIEW_TO_EXTERNAL = False
+"""Send preview image to external server."""
+PREVIEW_URL = "http://10.10.50.50:7000/current_frame"
+"""URL to send the preview image to."""
 
 # video config
 VIDEO_DIR = "~/videos/"
