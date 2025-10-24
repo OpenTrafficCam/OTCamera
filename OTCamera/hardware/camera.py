@@ -143,12 +143,31 @@ class Camera(Singleton):
                 resize=config.RESOLUTION_SAVED_VIDEO_FILE,
                 use_video_port=True,
             )
+            self._try_send_preview()
             log.write("preview captured", level=log.LogLevel.DEBUG)
         else:
             log.write(
                 "can not capture preview, camera not recording",
                 level=log.LogLevel.WARNING,
             )
+
+    @staticmethod
+    def _try_send_preview() -> None:
+        """Try to send preview image to an external server."""
+        if config.SEND_PREVIEW_TO_EXTERNAL:
+            try:
+                import requests
+                import urllib3
+                urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+                requests.post(
+                    config.PREVIEW_URL,
+                    files={"file": open(name.preview(), "rb")},
+                    verify=False,
+                )
+                log.write("preview sent to external server", level=log.LogLevel.DEBUG)
+            except Exception as e:
+                log.write(f"Error sending preview to external server: {e}")
+
 
     def _wait_recording(self, timeout: Union[int, float] = 0):
         """Wait timeout seconds recording.
