@@ -40,7 +40,7 @@ log.write("imported camera", level=log.LogLevel.DEBUG)
 
 
 def read_preview() -> str:
-    with  open(name.preview(), "rb") as file:
+    with open(name.preview(), "rb") as file:
         return base64.b64encode(file.read()).decode("utf-8")
 
 
@@ -178,12 +178,15 @@ class Camera(Singleton):
                 )
                 if response.status_code != 200:
                     log.write(
-                        f"Error sending preview to external server: {response.status_code}"
+                        "Error sending preview to external server: "
+                        f"{response.status_code}"
                     )
-                log.write("preview sent to external server", level=log.LogLevel.DEBUG)
+                log.write(
+                    "preview sent to external server",
+                    level=log.LogLevel.DEBUG,
+                )
             except Exception as e:
                 log.write(f"Error sending preview to external server: {e}")
-
 
     def _wait_recording(self, timeout: Union[int, float] = 0):
         """Wait timeout seconds recording.
