@@ -21,12 +21,12 @@ Used to start, split and stop recording.
 
 import base64
 from datetime import datetime as dt
-import requests
 from time import sleep
 from typing import Tuple, Union
-import urllib3
 
 import picamerax as picamera
+import requests
+import urllib3
 from picamerax import Color
 
 from OTCamera import config, status
