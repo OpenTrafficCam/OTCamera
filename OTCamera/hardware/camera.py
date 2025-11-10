@@ -34,7 +34,6 @@ from OTCamera.hardware import led
 from OTCamera.helpers import log, name
 from OTCamera.helpers.filesystem import delete_old_files
 
-
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 log.write("imported camera", level=log.LogLevel.DEBUG)
 
