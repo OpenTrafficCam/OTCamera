@@ -19,9 +19,12 @@ Used to start, split and stop recording.
 # program.  If not, see <https://www.gnu.org/licenses/>.
 
 
+import base64
 from datetime import datetime as dt
 from time import sleep
 from typing import Tuple, Union
+import requests
+import urllib3
 
 import picamerax as picamera
 from picamerax import Color
@@ -31,7 +34,14 @@ from OTCamera.hardware import led
 from OTCamera.helpers import log, name
 from OTCamera.helpers.filesystem import delete_old_files
 
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 log.write("imported camera", level=log.LogLevel.DEBUG)
+
+
+def read_preview() -> str:
+    with  open(name.preview(), "rb") as file:
+        return base64.b64encode(file.read()).decode("utf-8")
 
 
 class Singleton(object):
@@ -156,14 +166,20 @@ class Camera(Singleton):
         """Try to send preview image to an external server."""
         if config.SEND_PREVIEW_TO_EXTERNAL:
             try:
-                import requests
-                import urllib3
-                urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-                requests.post(
+                image = read_preview()
+                response = requests.post(
                     config.PREVIEW_URL,
-                    files={"file": open(name.preview(), "rb")},
+                    json={
+                        "frame": 0,
+                        "image": image,
+                    },
                     verify=False,
+                    stream=True,
                 )
+                if response.status_code != 200:
+                    log.write(
+                        f"Error sending preview to external server: {response.status_code}"
+                    )
                 log.write("preview sent to external server", level=log.LogLevel.DEBUG)
             except Exception as e:
                 log.write(f"Error sending preview to external server: {e}")
