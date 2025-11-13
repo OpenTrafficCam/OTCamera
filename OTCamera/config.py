@@ -152,6 +152,14 @@ def parse_user_config(config_file: str):
             setattr(module, "PREVIEW_INTERVAL", section["interval"])
         except KeyError:
             _print_key_err_msg("preview.interval")
+        try:
+            setattr(module, "SEND_PREVIEW_TO_EXTERNAL", section["send_to_external"])
+        except KeyError:
+            _print_key_err_msg("preview.send_to_external")
+        try:
+            setattr(module, "PREVIEW_URL", section["url"])
+        except KeyError:
+            _print_key_err_msg("preview.url")
 
     try:
         section = user_config["video"]
@@ -301,6 +309,10 @@ PREVIEW_FORMAT = "jpeg"
 """Filetype of the static preview image."""
 PREVIEW_INTERVAL = 5
 """Interval between two preview images in seconds."""
+SEND_PREVIEW_TO_EXTERNAL = False
+"""Send preview image to external server."""
+PREVIEW_URL = "http://localhost:5000/projects/0/sites/1/cameras/2/current_frame"
+"""URL to send the preview image to."""
 
 # video config
 VIDEO_DIR = "~/videos/"

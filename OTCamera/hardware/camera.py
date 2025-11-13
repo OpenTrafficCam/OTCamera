@@ -19,11 +19,14 @@ Used to start, split and stop recording.
 # program.  If not, see <https://www.gnu.org/licenses/>.
 
 
+import base64
 from datetime import datetime as dt
 from time import sleep
 from typing import Tuple, Union
 
 import picamerax as picamera
+import requests
+import urllib3
 from picamerax import Color
 
 from OTCamera import config, status
@@ -31,7 +34,13 @@ from OTCamera.hardware import led
 from OTCamera.helpers import log, name
 from OTCamera.helpers.filesystem import delete_old_files
 
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 log.write("imported camera", level=log.LogLevel.DEBUG)
+
+
+def read_preview() -> str:
+    with open(name.preview(), "rb") as file:
+        return base64.b64encode(file.read()).decode("utf-8")
 
 
 class Singleton(object):
@@ -143,12 +152,40 @@ class Camera(Singleton):
                 resize=config.RESOLUTION_SAVED_VIDEO_FILE,
                 use_video_port=True,
             )
+            self._try_send_preview()
             log.write("preview captured", level=log.LogLevel.DEBUG)
         else:
             log.write(
                 "can not capture preview, camera not recording",
                 level=log.LogLevel.WARNING,
             )
+
+    @staticmethod
+    def _try_send_preview() -> None:
+        """Try to send preview image to an external server."""
+        if config.SEND_PREVIEW_TO_EXTERNAL:
+            try:
+                image = read_preview()
+                response = requests.post(
+                    config.PREVIEW_URL,
+                    json={
+                        "frame": 0,
+                        "image": image,
+                    },
+                    verify=False,
+                    stream=True,
+                )
+                if response.status_code != 200:
+                    log.write(
+                        "Error sending preview to external server: "
+                        f"{response.status_code}"
+                    )
+                log.write(
+                    "preview sent to external server",
+                    level=log.LogLevel.DEBUG,
+                )
+            except Exception as e:
+                log.write(f"Error sending preview to external server: {e}")
 
     def _wait_recording(self, timeout: Union[int, float] = 0):
         """Wait timeout seconds recording.

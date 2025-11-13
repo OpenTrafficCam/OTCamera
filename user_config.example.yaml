@@ -27,6 +27,8 @@ preview:
   path: ~/OTCamera/webfiles/preview.jpg
   format: jpeg
   interval: 5
+  send_to_external: false
+  url: http://your-server:8080/projects/0/sites/1/cameras/2/current_frame
 
 video:
   dir: ~/videos/
