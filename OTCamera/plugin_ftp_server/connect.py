@@ -1,7 +1,7 @@
 from ftplib import FTP, FTP_TLS
 
-from OTCloud.plugin_ftp_server.config import FtpServerConfig
-from OTCloud.plugin_ftp_server.errors import FtpConnectionError
+from OTCamera.plugin_ftp_server.config import FtpServerConfig
+from OTCamera.plugin_ftp_server.errors import FtpConnectionError
 
 DEFAULT_TIMEOUT = 30
 
