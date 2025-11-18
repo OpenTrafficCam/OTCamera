@@ -23,6 +23,7 @@ import base64
 from datetime import datetime as dt
 from time import sleep
 from typing import Tuple, Union
+from pathlib import Path
 
 import picamerax as picamera
 import requests
@@ -33,6 +34,9 @@ from OTCamera import config, status
 from OTCamera.hardware import led
 from OTCamera.helpers import log, name
 from OTCamera.helpers.filesystem import delete_old_files
+from OTCamera.plugin_ftp_server.connect import FtpsServerConnect
+from OTCamera.plugin_ftp_server.upload import FtpUpload
+
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 log.write("imported camera", level=log.LogLevel.DEBUG)
@@ -200,9 +204,21 @@ class Camera(Singleton):
 
     def _split(self):
         """Splits recording and deletes old video files if no disk space available."""
-        self._picam.split_recording(name.video())
+        video_name = name.video()
+        self._picam.split_recording(video_name)
+        self._try_upload_to_cloud(video_name)
         delete_old_files()
         log.write("splitted recording")
+
+    def _try_upload_to_cloud(self, video_name: str) -> None:
+        """Try to upload video file to cloud storage."""
+        if config.SERVER_UPLOAD_TO_CLOUD:
+            client = FtpsServerConnect().connect(
+                config.SERVER_UPLOAD_HOST,
+                config.SERVER_UPLOAD_PORT, config.SERVER_UPLOAD_USER, config.SERVER_UPLOAD_PASSWORD, )
+            uploader = FtpUpload()
+            uploader.upload(client, Path(video_name), Path(video_name))
+
 
     def split_if_interval_ends(self) -> None:
         """Splits the videofile if the configured intervals ends.
