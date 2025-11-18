@@ -167,7 +167,7 @@ def parse_user_config(config_file: str):
         _print_key_err_msg("server_upload")
     else:
         for member, config_key in ({
-            "UPLOAD_TO_CLOUD": "upload_to_cloud",
+            "UPLOAD": "upload",
             "SCHEME" : "scheme",
             "HOST" : "host",
             "PORT" : "port",
@@ -177,7 +177,7 @@ def parse_user_config(config_file: str):
             try:
                 setattr(module, f"SERVER_UPLOAD_{member}", section[config_key])
             except KeyError:
-                _print_key_err_msg(f"server-upload.{config_key}")
+                _print_key_err_msg(f"server_upload.{config_key}")
 
     try:
         section = user_config["video"]
@@ -332,7 +332,7 @@ SEND_PREVIEW_TO_EXTERNAL = False
 PREVIEW_URL = "http://localhost:5000/projects/0/sites/1/cameras/2/current_frame"
 """URL to send the preview image to."""
 
-SERVER_UPLOAD_TO_CLOUD = False
+SERVER_UPLOAD_UPLOAD = False
 """Whether to upload videos to a cloud storage."""
 SERVER_UPLOAD_SCHEME = "ftp"
 """Upload scheme, e.g. ftp, sftp, scp."""
