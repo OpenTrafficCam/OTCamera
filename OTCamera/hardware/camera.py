@@ -21,9 +21,9 @@ Used to start, split and stop recording.
 
 import base64
 from datetime import datetime as dt
+from pathlib import Path
 from time import sleep
 from typing import Tuple, Union
-from pathlib import Path
 
 import picamerax as picamera
 import requests
@@ -36,7 +36,6 @@ from OTCamera.helpers import log, name
 from OTCamera.helpers.filesystem import delete_old_files
 from OTCamera.plugin_ftp_server.connect import FtpsServerConnect
 from OTCamera.plugin_ftp_server.upload import FtpUpload
-
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 log.write("imported camera", level=log.LogLevel.DEBUG)
@@ -231,7 +230,6 @@ class Camera(Singleton):
             finally:
                 if client:
                     client.close()
-
 
     def split_if_interval_ends(self) -> None:
         """Splits the videofile if the configured intervals ends.
