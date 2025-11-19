@@ -1,7 +1,7 @@
 from ftplib import FTP
 from pathlib import Path
 
-from OTCloud.plugin_ftp_server.navigate import FtpNavigateToDirectory
+from OTCamera.plugin_ftp_server.navigate import FtpNavigateToDirectory
 
 
 class FtpGatherFiles:
