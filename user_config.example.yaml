@@ -30,6 +30,15 @@ preview:
   send_to_external: false
   url: http://your-server:8080/projects/0/sites/1/cameras/2/current_frame
 
+#server_upload:
+#  upload: false
+#  scheme: ftps
+#  host:
+#  port:
+#  user:
+#  password:
+#  server_source: /
+
 video:
   dir: ~/videos/
   format: h264
