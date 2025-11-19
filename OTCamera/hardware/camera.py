@@ -223,7 +223,9 @@ class Camera(Singleton):
                     config.SERVER_UPLOAD_PASSWORD,
                 )
                 uploader = FtpUpload()
-                uploader.upload(client, Path(video_name), Path(video_name))
+                source = Path(video_name)
+                dest = Path(config.SERVER_UPLOAD_SERVER_SOURCE) / source.name
+                uploader.upload(client, source=source, dest=dest)
             except Exception as e:
                 log.write(f"Error uploading video to cloud: {e}")
             finally:
