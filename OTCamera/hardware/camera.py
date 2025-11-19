@@ -213,15 +213,22 @@ class Camera(Singleton):
     def _try_upload_to_cloud(self, video_name: str) -> None:
         """Try to upload video file to cloud storage."""
         if config.SERVER_UPLOAD_UPLOAD:
+            client = None
             try:
                 log.write("uploading video to cloud", level=log.LogLevel.DEBUG)
                 client = FtpsServerConnect().connect(
                     config.SERVER_UPLOAD_HOST,
-                    config.SERVER_UPLOAD_PORT, config.SERVER_UPLOAD_USER, config.SERVER_UPLOAD_PASSWORD, )
+                    config.SERVER_UPLOAD_PORT,
+                    config.SERVER_UPLOAD_USER,
+                    config.SERVER_UPLOAD_PASSWORD,
+                )
                 uploader = FtpUpload()
                 uploader.upload(client, Path(video_name), Path(video_name))
             except Exception as e:
                 log.write(f"Error uploading video to cloud: {e}")
+            finally:
+                if client:
+                    client.close()
 
 
     def split_if_interval_ends(self) -> None:
