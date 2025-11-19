@@ -173,6 +173,7 @@ def parse_user_config(config_file: str):
             "PORT" : "port",
             "USER" : "user",
             "PASSWORD": "password",
+            "SERVER_SOURCE": "server_source",
         }).items():
             try:
                 setattr(module, f"SERVER_UPLOAD_{member}", section[config_key])
@@ -344,6 +345,7 @@ SERVER_UPLOAD_USER = "user"
 """Upload user."""
 SERVER_UPLOAD_PASSWORD = "password"
 """Upload password."""
+SERVER_UPLOAD_SERVER_SOURCE = "/"
 
 # video config
 VIDEO_DIR = "~/videos/"
