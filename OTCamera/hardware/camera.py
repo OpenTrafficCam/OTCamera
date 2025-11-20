@@ -106,6 +106,7 @@ class Camera(Singleton):
         self.rotation = rotation
         self.meter_mode = meter_mode
         self._picam = self._create_picam()
+        self._current_video_file: str = name.video()
         log.write("Camera initialized", log.LogLevel.DEBUG)
 
     def start_recording(self):
@@ -126,8 +127,9 @@ class Camera(Singleton):
         if not self._picam.recording and not status.shutdownactive:
             delete_old_files()
             self._picam.annotate_text = name.annotate()
+            self._current_video_file = name.video()
             self._picam.start_recording(
-                output=name.video(),
+                output=self._current_video_file,
                 format=config.VIDEO_FORMAT,
                 resize=config.RESOLUTION_SAVED_VIDEO_FILE,
                 profile=config.H264_PROFILE,
@@ -203,11 +205,13 @@ class Camera(Singleton):
 
     def _split(self):
         """Splits recording and deletes old video files if no disk space available."""
-        video_name = name.video()
-        self._picam.split_recording(video_name)
-        self._try_upload_to_cloud(video_name)
-        delete_old_files()
+        current_video_file = self._current_video_file
+        new_video_file = name.video()
+        self._picam.split_recording(new_video_file)
+        self._current_video_file = new_video_file
         log.write("splitted recording")
+        self._try_upload_to_cloud(current_video_file)
+        delete_old_files()
 
     def _try_upload_to_cloud(self, video_name: str) -> None:
         """Try to upload video file to cloud storage."""
@@ -224,6 +228,7 @@ class Camera(Singleton):
                 uploader = FtpUpload()
                 source = Path(video_name)
                 dest = Path(config.SERVER_UPLOAD_SERVER_SOURCE) / source.name
+                log.write(f"Video file to upload has size: {source.stat().st_size}", level=log.LogLevel.DEBUG)
                 uploader.upload(client, source=source, dest=dest)
             except Exception as e:
                 log.write(f"Error uploading video to cloud: {e}")
@@ -350,3 +355,4 @@ class Camera(Singleton):
         picam.rotation = self.rotation
         picam.meter_mode = self.meter_mode
         return picam
+
