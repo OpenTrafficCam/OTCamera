@@ -18,10 +18,6 @@ class FtpConnectionError(BaseFtpError):
     """
 
 
-class FtpDownloadError(BaseFtpError):
-    """Raised when downloading a file fails."""
-
-
 class FtpUploadError(BaseFtpError):
     """Raised when uploading a file fails."""
 
