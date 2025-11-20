@@ -138,7 +138,8 @@ class Camera(Singleton):
                 quality=config.H264_QUALITY,
             )
             log.write(
-                f"Picam recording: {self._picam.recording}", level=log.LogLevel.DEBUG
+                f"Picam recording: {self._picam.recording}",
+                level=log.LogLevel.DEBUG,
             )
             log.write("started recording")
             led.rec_on()
@@ -228,7 +229,10 @@ class Camera(Singleton):
                 uploader = FtpUpload()
                 source = Path(video_name)
                 dest = Path(config.SERVER_UPLOAD_SERVER_SOURCE) / source.name
-                log.write(f"Video file to upload has size: {source.stat().st_size}", level=log.LogLevel.DEBUG)
+                log.write(
+                    f"Video file to upload has size: {source.stat().st_size}",
+                    level=log.LogLevel.DEBUG,
+                )
                 uploader.upload(client, source=source, dest=dest)
             except Exception as e:
                 log.write(f"Error uploading video to cloud: {e}")
