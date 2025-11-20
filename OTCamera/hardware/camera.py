@@ -359,4 +359,3 @@ class Camera(Singleton):
         picam.rotation = self.rotation
         picam.meter_mode = self.meter_mode
         return picam
-
