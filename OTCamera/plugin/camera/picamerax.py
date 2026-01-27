@@ -1,9 +1,10 @@
 from typing import Tuple, Union
 
-from picamerax import Color, PiCamera
+from picamerax import Color, PiCamera, PiCameraClosed
 
 from OTCamera import config
 from OTCamera.domain.camera import Camera, H264Level, H264Profile, VideoFormat
+from OTCamera.domain.camera_errors import CameraClosedError
 from OTCamera.helpers import log
 
 
@@ -138,7 +139,10 @@ class PiCameraX(Camera):
         self._picamera.stop_recording()
 
     def close(self) -> None:
-        self._picamera.close()
+        try:
+            self._picamera.close()
+        except PiCameraClosed:
+            raise CameraClosedError("Camera is already closed.")
 
     def reinitialize(self) -> None:
         self.close()

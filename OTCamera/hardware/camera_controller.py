@@ -26,13 +26,12 @@ from pathlib import Path
 from time import sleep
 from typing import Union
 
-import picamerax as picamera
 import requests
 import urllib3
-from picamerax import Color
 
 from OTCamera import config, status
 from OTCamera.domain.camera import Camera
+from OTCamera.domain.camera_errors import CameraClosedError
 from OTCamera.hardware import led
 from OTCamera.helpers import log, name
 from OTCamera.helpers.filesystem import delete_old_files
@@ -59,6 +58,7 @@ class CameraController:
 
     def __init__(self, camera: Camera) -> None:
         self._camera = camera
+        self._current_video_file: str = name.video()
 
     def start_recording(self) -> None:
         """Start video recording.
@@ -68,7 +68,6 @@ class CameraController:
         - Starts a new recording on picam, using the config.py.
         - Waits 2 seconds and captures a preview image.
         - Turns on the record LED (if attached).
-
         """
         # TODO: exception handling
         # OSError Errno 28 No space left on device
@@ -78,8 +77,9 @@ class CameraController:
         if not self._camera.is_recording and not status.shutdownactive:
             delete_old_files()
             self.__set_annotation_text()
+            self._current_video_file = name.video()
             self._camera.start_recording(
-                save_file=name.video(),
+                save_file=self._current_video_file,
                 video_format=config.VIDEO_FORMAT,
                 resolution=config.RESOLUTION_SAVED_VIDEO_FILE,
                 bitrate=config.H264_BITRATE,
@@ -115,6 +115,32 @@ class CameraController:
                 level=log.LogLevel.WARNING,
             )
 
+    def _try_send_preview(self) -> None:
+        """Try to send preview image to an external server."""
+        if config.SEND_PREVIEW_TO_EXTERNAL:
+            try:
+                image = read_preview()
+                response = requests.post(
+                    config.PREVIEW_URL,
+                    json={
+                        "frame": 0,
+                        "image": image,
+                    },
+                    verify=False,
+                    stream=True,
+                )
+                if response.status_code != 200:
+                    log.write(
+                        "Error sending preview to external server: "
+                        f"{response.status_code}"
+                    )
+                log.write(
+                    "preview sent to external server",
+                    level=log.LogLevel.DEBUG,
+                )
+            except Exception as e:
+                log.write(f"Error sending preview to external server: {e}")
+
     def _wait_recording(self, timeout: Union[int, float] = 0) -> None:
         """Wait timeout seconds recording.
 
@@ -128,9 +154,13 @@ class CameraController:
 
     def _split(self) -> None:
         """Splits recording and deletes old video files if no disk space available."""
-        self._camera.split_recording(name.video())
-        delete_old_files()
+        current_video_file = self._current_video_file
+        new_video_file = name.video()
+        self._camera.split_recording(new_video_file)
+        self._current_video_file = new_video_file
         log.write("split recording")
+        self._try_upload_to_cloud(current_video_file)
+        delete_old_files()
 
     def _try_upload_to_cloud(self, video_name: str) -> None:
         """Try to upload video file to cloud storage."""
@@ -247,9 +277,8 @@ class CameraController:
         try:
             self._camera.close()
             log.write("PiCamera closed", log.LogLevel.DEBUG)
-        except picamera.PiCameraClosed:
+        except CameraClosedError:
             log.write("Camera already closed.", level=log.LogLevel.DEBUG)
-            pass
 
     def restart(self) -> None:
         """
