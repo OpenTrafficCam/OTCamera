@@ -1,0 +1,2 @@
+class CameraClosedError(Exception):
+    pass

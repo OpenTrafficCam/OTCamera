@@ -15,16 +15,18 @@
 
 import shutil
 from pathlib import Path
+from typing import Union
 from unittest import mock
 
 import pytest
 
 from OTCamera.helpers.errors import NoMoreFilesToDeleteError
 from OTCamera.helpers.filesystem import delete_old_files
+from tests.conftest import YieldFixture
 
 
 @pytest.fixture(scope="function")
-def temp_dir(test_dir: Path) -> Path:
+def temp_dir(test_dir: Path) -> YieldFixture[Path]:
     _dir = test_dir / "filesystem"
     _dir.mkdir(exist_ok=True)
     Path(_dir, "logfile.log").touch()
@@ -38,7 +40,7 @@ def temp_dir(test_dir: Path) -> Path:
 
 
 @pytest.fixture(scope="function")
-def empty_dir(test_dir: Path) -> Path:
+def empty_dir(test_dir: Path) -> YieldFixture[Path]:
     _dir = test_dir / "empty"
     _dir.mkdir(exist_ok=True)
     assert get_dir_size(_dir) == 0
@@ -94,7 +96,7 @@ def test_delete_old_files_emptyDirAsParam_raisesNoMoreFilesToDeleteError(
     assert get_dir_size(empty_dir) == 0
 
 
-def get_dir_size(dir_path: Path, suffix: str = None) -> int:
+def get_dir_size(dir_path: Path, suffix: Union[str, None] = None) -> int:
     assert dir_path.is_dir()
     if suffix:
         return len([f for f in dir_path.iterdir() if f.suffix == suffix])

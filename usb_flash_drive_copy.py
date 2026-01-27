@@ -43,7 +43,7 @@ class Observer(ABC):
     """The Observer interface declaring update method used by subjects."""
 
     @abstractmethod
-    def update(self, is_active: bool):
+    def update(self, is_active: bool) -> None:
         """Receive update from subject.
 
         Args:
@@ -165,16 +165,16 @@ class Button(Subject):
         for observer in self._observers:
             observer.update(self.is_active)
 
-    def _register_callbacks(self):
+    def _register_callbacks(self) -> None:
         self._button.when_deactivated = self.on_released
         log.write(f"Register {self.name} button callbacks.", log.LogLevel.DEBUG)
 
-    def on_released(self):
+    def on_released(self) -> None:
         """Notifies observers about button released event."""
         log.write("Power button released.", log.LogLevel.DEBUG)
         self.is_active = False
         self.notify()
-        log.write("Observers have been notified", log.LogLevel.Debug)
+        log.write("Observers have been notified", log.LogLevel.DEBUG)
 
     def _check_button_is_active(self) -> None:
         if not self._button.is_active:
@@ -194,7 +194,7 @@ class CopyInformation:
         self.dest_dir = dest_dir
         self._validate_copy_info()
 
-    def _validate_copy_info(self):
+    def _validate_copy_info(self) -> None:
         """Validate and update video copy information with actual videos on disk."""
         videos_on_src = self._get_videos_from_src()
 
@@ -229,7 +229,7 @@ class CopyInformation:
             )
         return videos_on_src
 
-    def remove(self, video: Video):
+    def remove(self, video: Video) -> None:
         """Remove video from videos list."""
         self.videos.discard(video)
 
@@ -260,7 +260,7 @@ class CopyInformation:
         return Path(directory, f"{get_hostname()}{COPY_INFO_CSV_SUFFIX}")
 
     @staticmethod
-    def create_new(src_dir: Path, dest_dir: Path, filetype: str):
+    def create_new(src_dir: Path, dest_dir: Path, filetype: str) -> "CopyInformation":
         dest_dir.mkdir(parents=True, exist_ok=True)
         copy_csv_file = CopyInformation.get_copy_info_csv(dest_dir)
         copy_csv_file.touch()
@@ -359,7 +359,7 @@ class OTCameraUsbCopier(Observer):
     def update(self, is_active: bool) -> None:
         self.shutdown_requested = not is_active
 
-    def shutdown(self):
+    def shutdown(self) -> None:
         """Shutdown OTCamera."""
 
         self._turn_off_all_leds()
@@ -371,7 +371,7 @@ class OTCameraUsbCopier(Observer):
             log.closefile()
             subprocess.call("sudo shutdown -h now", shell=True)
 
-    def _turn_off_all_leds(self):
+    def _turn_off_all_leds(self) -> None:
         """Turn off all LEDs."""
         self.power_led.turn_off()
         self.wifi_led.turn_off()
@@ -390,12 +390,12 @@ class OTCameraUsbCopier(Observer):
         log.write("Start copying files")
         for video in copy_info.videos:
             if video.copied:
-                log.write(f"Video at: '{ video.path}' already copied. Skipping.")
+                log.write(f"Video at: '{video.path}' already copied. Skipping.")
                 continue
 
             if not video.path.exists():
                 log.write(
-                    f"Video at: '{ video.path}' does not exists.", log.LogLevel.WARNING
+                    f"Video at: '{video.path}' does not exists.", log.LogLevel.WARNING
                 )
                 continue
             try:
@@ -428,13 +428,13 @@ class OTCameraUsbCopier(Observer):
         for video in copy_info.videos.copy():
             if not video.path.exists():
                 log.write(
-                    f"Video at: '{ video.path}' does not exist.", log.LogLevel.WARNING
+                    f"Video at: '{video.path}' does not exist.", log.LogLevel.WARNING
                 )
                 copy_info.remove(video)
                 continue
             if not video.delete:
                 log.write(
-                    f"Video at: '{ video.path}' not marked for deletion. Skipping.",
+                    f"Video at: '{video.path}' not marked for deletion. Skipping.",
                 )
                 continue
 
@@ -532,7 +532,7 @@ def build_usb_copier(src_dir: Path, usb_mount_point: Path) -> OTCameraUsbCopier:
 def main(
     video_dir: str,
     mount_point: str,
-):
+) -> None:
     """Start the OTCamera USB copy script.
 
     Args:

@@ -4,6 +4,7 @@ Generates strings for use in different modules. For example the logfilename or
 videofilename or the string to annotate the video.
 
 """
+
 # Copyright (C) 2023 OpenTrafficCam Contributors
 # <https://github.com/OpenTrafficCam>
 # <team@opentrafficcam.org>
@@ -22,7 +23,7 @@ videofilename or the string to annotate the video.
 import re
 from datetime import datetime as dt
 from pathlib import Path
-from typing import Union
+from typing import Optional, Union
 
 from OTCamera import config
 
@@ -92,7 +93,7 @@ def preview() -> str:
     return str(Path(filename).expanduser().resolve())
 
 
-def get_datetime_from_filename(filename: Union[str, Path]) -> dt:
+def get_datetime_from_filename(filename: Union[str, Path]) -> Optional[dt]:
     """Retrieves the date and time from a filename
 
     Searches for "_yyyy-mm-dd_hh-mm-ss".
@@ -112,7 +113,7 @@ def get_datetime_from_filename(filename: Union[str, Path]) -> dt:
         return None
 
     # Assume that there is only one timestamp in the file name
-    datetime_str = match.group(1)  # take group withtout underscore
+    datetime_str = match.group(1)  # take the group without the underscore
 
     try:
         date_time = dt.strptime(datetime_str, "%Y-%m-%d_%H-%M-%S")
@@ -122,17 +123,17 @@ def get_datetime_from_filename(filename: Union[str, Path]) -> dt:
     return date_time
 
 
-def get_fps_from_filename(filename: str) -> int:
-    """Get frame rate from file name using regex.
-    Returns None if frame rate is not found in file name.
+def get_fps_from_filename(filename: str) -> Optional[int]:
+    """Get frame rate from the file name using regex.
+    Returns None if the frame rate is not found in the file name.
 
     Args:
-        input_filename (str): file name
+        filename (str): file name
 
     Returns:
         int or None: frame rate in frames per second or None
     """
-    # Get input fps frome filename
+    # Get input fps from filename
 
     match = re.search(r"_FR([\d]+)_", filename)
     if not match:

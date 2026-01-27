@@ -3,6 +3,7 @@
 Contains all functions to control the Raspberry Pi itself.
 
 """
+
 # Copyright (C) 2023 OpenTrafficCam Contributors
 # <https://github.com/OpenTrafficCam>
 # <team@opentrafficcam.org>
@@ -23,14 +24,15 @@ from subprocess import call
 
 from OTCamera import config, status
 from OTCamera.hardware import led
-from OTCamera.hardware.camera import Camera
+from OTCamera.hardware.camera_controller import CameraController
 from OTCamera.helpers import log
+from OTCamera.plugin.camera.camera_provider import CameraProvider
 
 log.write("imported rpi", level=log.LogLevel.DEBUG)
-camera = Camera()
+camera = CameraController(CameraProvider().provide())
 
 
-def shutdown():
+def shutdown() -> None:
     """Shutdown the Raspberry Pi.
 
     Shuts down the Raspberry Pi if the power button is still pressed after blink ends
@@ -52,7 +54,7 @@ def shutdown():
     call("sudo shutdown -h now", shell=True)
 
 
-def reboot():
+def reboot() -> None:
     """Reboot the Raspberry Pi.
 
     Reboots the Raspberry Pi if any exception is raised.
@@ -77,7 +79,7 @@ def reboot():
         call("sudo reboot", shell=True)
 
 
-def wifi_switch_on():
+def wifi_switch_on() -> None:
     """Turn on Wi-Fi"""
     if not status.wifi_on:
         if not config.DEBUG_MODE_ON:
@@ -92,7 +94,7 @@ def wifi_switch_on():
     led.wifi_on()
 
 
-def wifi_switch_off():
+def wifi_switch_off() -> None:
     """Turn off Wi-Fi"""
     if status.wifi_on:
         if not config.DEBUG_MODE_ON:

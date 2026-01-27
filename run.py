@@ -19,7 +19,7 @@ from pathlib import Path
 import OTCamera.config as config
 
 
-def parse_args() -> Path:
+def parse_args() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "-c",
@@ -45,7 +45,7 @@ def usb_device_exists(usb_device: str) -> bool:
     return Path(usb_device).exists()
 
 
-def main():
+def main() -> None:
     parse_args()
 
     if usb_device_exists(config.USB_DEVICE):

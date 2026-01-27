@@ -20,15 +20,15 @@ iw dev wlan0 interface add uap0 type __ap
 #ifconfig uap0 192.168.70.1 netmask 255.255.255.0 broadcast 192.168.70.255
 ifconfig uap0 up
 
-# Start hostapd. 
+# Start hostapd.
 echo "Starting hostapd service..."
 systemctl start hostapd.service
-sleep 1 
+sleep 1
 
-# Start dhcpcd. 
+# Start dhcpcd.
 echo "Starting dhcpcd service..."
 systemctl start dhcpcd.service
-sleep 1 
+sleep 1
 
 echo "Starting dnsmasq service..."
 systemctl start dnsmasq.service
