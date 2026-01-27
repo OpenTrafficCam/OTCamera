@@ -20,19 +20,32 @@ Used to start, split and stop recording.
 # program.  If not, see <https://www.gnu.org/licenses/>.
 
 
+import base64
 from datetime import datetime as dt
+from pathlib import Path
 from time import sleep
 from typing import Union
 
 import picamerax as picamera
+import requests
+import urllib3
+from picamerax import Color
 
 from OTCamera import config, status
 from OTCamera.domain.camera import Camera
 from OTCamera.hardware import led
 from OTCamera.helpers import log, name
 from OTCamera.helpers.filesystem import delete_old_files
+from OTCamera.plugin_ftp_server.connect import FtpsServerConnect
+from OTCamera.plugin_ftp_server.upload import FtpUpload
 
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 log.write("imported camera", level=log.LogLevel.DEBUG)
+
+
+def read_preview() -> str:
+    with open(name.preview(), "rb") as file:
+        return base64.b64encode(file.read()).decode("utf-8")
 
 
 class CameraController:
@@ -94,6 +107,7 @@ class CameraController:
                 image_format=config.PREVIEW_FORMAT,
                 resolution=config.RESOLUTION_SAVED_VIDEO_FILE,
             )
+            self._try_send_preview()
             log.write("preview captured", level=log.LogLevel.DEBUG)
         else:
             log.write(
@@ -117,6 +131,32 @@ class CameraController:
         self._camera.split_recording(name.video())
         delete_old_files()
         log.write("split recording")
+
+    def _try_upload_to_cloud(self, video_name: str) -> None:
+        """Try to upload video file to cloud storage."""
+        if config.SERVER_UPLOAD_UPLOAD:
+            client = None
+            try:
+                log.write("uploading video to cloud", level=log.LogLevel.DEBUG)
+                client = FtpsServerConnect().connect(
+                    config.SERVER_UPLOAD_HOST,
+                    config.SERVER_UPLOAD_PORT,
+                    config.SERVER_UPLOAD_USER,
+                    config.SERVER_UPLOAD_PASSWORD,
+                )
+                uploader = FtpUpload()
+                source = Path(video_name)
+                dest = Path(config.SERVER_UPLOAD_SERVER_SOURCE) / source.name
+                log.write(
+                    f"Video file to upload has size: {source.stat().st_size}",
+                    level=log.LogLevel.DEBUG,
+                )
+                uploader.upload(client, source=source, dest=dest)
+            except Exception as e:
+                log.write(f"Error uploading video to cloud: {e}")
+            finally:
+                if client:
+                    client.close()
 
     def split_if_interval_ends(self) -> None:
         """Splits the video file if the configured interval ends.

@@ -157,6 +157,33 @@ def parse_user_config(config_file: str) -> None:
             setattr(module, "PREVIEW_INTERVAL", section["interval"])
         except KeyError:
             _print_key_err_msg("preview.interval")
+        try:
+            setattr(module, "SEND_PREVIEW_TO_EXTERNAL", section["send_to_external"])
+        except KeyError:
+            _print_key_err_msg("preview.send_to_external")
+        try:
+            setattr(module, "PREVIEW_URL", section["url"])
+        except KeyError:
+            _print_key_err_msg("preview.url")
+
+    try:
+        section = user_config["server_upload"]
+    except KeyError:
+        _print_key_err_msg("server_upload")
+    else:
+        for member, config_key in ({
+            "UPLOAD": "upload",
+            "SCHEME" : "scheme",
+            "HOST" : "host",
+            "PORT" : "port",
+            "USER" : "user",
+            "PASSWORD": "password",
+            "SERVER_SOURCE": "server_source",
+        }).items():
+            try:
+                setattr(module, f"SERVER_UPLOAD_{member}", section[config_key])
+            except KeyError:
+                _print_key_err_msg(f"server_upload.{config_key}")
 
     try:
         section = user_config["video"]
@@ -308,6 +335,24 @@ PREVIEW_FORMAT = "jpeg"
 """Filetype of the static preview image."""
 PREVIEW_INTERVAL = 5
 """Interval between two preview images in seconds."""
+SEND_PREVIEW_TO_EXTERNAL = False
+"""Send preview image to external server."""
+PREVIEW_URL = "http://localhost:5000/projects/0/sites/1/cameras/2/current_frame"
+"""URL to send the preview image to."""
+
+SERVER_UPLOAD_UPLOAD = False
+"""Whether to upload videos to a cloud storage."""
+SERVER_UPLOAD_SCHEME = "ftp"
+"""Upload scheme, e.g. ftp, sftp, scp."""
+SERVER_UPLOAD_HOST = "localhost"
+"""Upload host."""
+SERVER_UPLOAD_PORT = 21
+"""Upload port."""
+SERVER_UPLOAD_USER = "user"
+"""Upload user."""
+SERVER_UPLOAD_PASSWORD = "password"
+"""Upload password."""
+SERVER_UPLOAD_SERVER_SOURCE = "/"
 
 # video config
 VIDEO_DIR = "~/videos/"
