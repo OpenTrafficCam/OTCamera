@@ -268,9 +268,9 @@ class CameraController:
             status.recording = False
 
     def close(self) -> None:
-        """Closes `picamera.PiCamera` instance.
+        """Closes the camera instance.
 
-        Logs to the log file if OTCamera has been already closed. But won't do anything
+        Logs to the log file if the camera has been already closed. But won't do anything
         apart from that.
         """
 

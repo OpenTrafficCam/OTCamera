@@ -310,7 +310,7 @@ MIN_FREE_SPACE = 1
 
 # camera config
 CAMERA_TYPE = "legacy"
-"""Camera type. `legacy` for the original camera module."""
+"""Camera type. `legacy` for the original camera module, `picamera2` for libcamera."""
 FPS = 20
 """Frames per Second. 10-20 should be enough."""
 RESOLUTION = (1640, 1232)

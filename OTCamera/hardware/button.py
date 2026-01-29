@@ -25,7 +25,9 @@ Also includes the basic logic behind button interactions.
 from datetime import datetime as dt
 from datetime import timedelta
 
-from gpiozero import Button
+from gpiozero import Button, Device
+from gpiozero.pins.lgpio import LGPIOFactory
+Device.pin_factory = LGPIOFactory()
 
 from OTCamera import config, status
 from OTCamera.hardware import led

@@ -1,13 +1,11 @@
 from typing import Optional
 
-from picamerax import PiCamera
-
 from OTCamera import config
 from OTCamera.abstraction.singleton import Singleton
 from OTCamera.domain.camera import Camera
-from OTCamera.plugin.camera.picamerax import PiCameraX
 
 LEGACY = "legacy"
+PICAMERA2 = "picamera2"
 
 
 class CameraProvider(Singleton):
@@ -22,9 +20,19 @@ class CameraProvider(Singleton):
 
     def __create(self, camera_type: str = LEGACY) -> Camera:
         if camera_type == LEGACY:
+            from picamerax import PiCamera
+
+            from OTCamera.plugin.camera.picamerax import PiCameraX
+
             return PiCameraX(PiCamera())
+        elif camera_type == PICAMERA2:
+            from picamera2 import Picamera2
+
+            from OTCamera.plugin.camera.picamera2 import PiCamera2
+
+            return PiCamera2(Picamera2())
         else:
             raise ValueError(
                 f"Unknown camera type: {camera_type}. "
-                f"Supported camera types: '{LEGACY}']"
+                f"Supported camera types: '{LEGACY}', '{PICAMERA2}'"
             )

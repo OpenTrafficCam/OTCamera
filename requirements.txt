@@ -1,6 +1,8 @@
 art==6.5
 beautifulsoup4==4.13.4
 gpiozero==2.0.1
+opencv-python-headless>=4.5.0
+picamera2>=0.3.12
 picamerax==24.3.21
 psutil==7.0.0
 PyYAML==6.0.2
