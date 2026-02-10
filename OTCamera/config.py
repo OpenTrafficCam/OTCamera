@@ -410,6 +410,7 @@ _PIN_CONFIG = {
         "BUTTON_WIFI_PIN": 22,
         "BUTTON_LOW_BATTERY_PIN": 16,
         "BUTTON_EXTERNAL_POWER_PIN": 26,
+        "BUTTON_POWER_PULL_UP": False,
     },
     "v2": {
         "LED_POWER_PIN": 11,
@@ -420,6 +421,7 @@ _PIN_CONFIG = {
         "BUTTON_WIFI_PIN": 19,
         "BUTTON_LOW_BATTERY_PIN": None,
         "BUTTON_EXTERNAL_POWER_PIN": None,
+        "BUTTON_POWER_PULL_UP": True,
     },
 }
 
@@ -432,6 +434,7 @@ BUTTON_HOUR_PIN: int = _PIN_CONFIG["v1"]["BUTTON_HOUR_PIN"]
 BUTTON_WIFI_PIN: int = _PIN_CONFIG["v1"]["BUTTON_WIFI_PIN"]
 BUTTON_LOW_BATTERY_PIN: Optional[int] = _PIN_CONFIG["v1"]["BUTTON_LOW_BATTERY_PIN"]
 BUTTON_EXTERNAL_POWER_PIN: Optional[int] = _PIN_CONFIG["v1"]["BUTTON_EXTERNAL_POWER_PIN"]
+BUTTON_POWER_PULL_UP: bool = _PIN_CONFIG["v1"]["BUTTON_POWER_PULL_UP"]
 
 
 def _apply_pin_config() -> None:

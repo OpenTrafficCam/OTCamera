@@ -32,7 +32,7 @@ test_video_dir.mkdir(parents=True, exist_ok=True)
 
 # Initialise buttons
 power_button = Button(
-    config.BUTTON_POWER_PIN, pull_up=False, hold_time=2, hold_repeat=False
+    config.BUTTON_POWER_PIN, pull_up=config.BUTTON_POWER_PULL_UP, hold_time=2, hold_repeat=False
 )
 hour_button = Button(
     config.BUTTON_HOUR_PIN, pull_up=True, hold_time=2, hold_repeat=False

@@ -520,7 +520,7 @@ def build_usb_copier(src_dir: Path, usb_mount_point: Path) -> OTCameraUsbCopier:
         power_button = Button(
             "POWER",
             GPIOButton(
-                config.BUTTON_POWER_PIN, pull_up=False, hold_time=2, hold_repeat=False
+                config.BUTTON_POWER_PIN, pull_up=config.BUTTON_POWER_PULL_UP, hold_time=2, hold_repeat=False
             ),
         )
         power_button.attach(usb_copier)
