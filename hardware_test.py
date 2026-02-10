@@ -22,12 +22,7 @@ from typing import Any, Callable, TypeVar
 from gpiozero import PWMLED, Button
 from picamerax import PiCamera
 
-# Button GPIO Pins
-BUTTON_POWER_PIN = 17
-BUTTON_HOUR_PIN = 27
-BUTTON_WIFI_PIN = 22
-LOWBATTERY_PIN = 16
-EXTERNAL_POWER_PIN = 26
+from OTCamera import config
 
 # Camera
 camera = PiCamera()
@@ -36,23 +31,34 @@ test_video_dir.mkdir(parents=True, exist_ok=True)
 
 
 # Initialise buttons
-low_battery_button = Button(
-    LOWBATTERY_PIN, pull_up=True, hold_time=2, hold_repeat=False
+power_button = Button(
+    config.BUTTON_POWER_PIN, pull_up=False, hold_time=2, hold_repeat=False
 )
-external_power_button = Button(
-    EXTERNAL_POWER_PIN, pull_up=False, hold_time=2, hold_repeat=False
+hour_button = Button(
+    config.BUTTON_HOUR_PIN, pull_up=True, hold_time=2, hold_repeat=False
 )
-power_button = Button(BUTTON_POWER_PIN, pull_up=False, hold_time=2, hold_repeat=False)
-hour_button = Button(BUTTON_HOUR_PIN, pull_up=True, hold_time=2, hold_repeat=False)
-wifi_button = Button(BUTTON_WIFI_PIN, pull_up=True, hold_time=2, hold_repeat=False)
+wifi_button = Button(
+    config.BUTTON_WIFI_PIN, pull_up=True, hold_time=2, hold_repeat=False
+)
+
+# Optional buttons (only available on PCBv1)
+low_battery_button = None
+external_power_button = None
+
+if config.BUTTON_LOW_BATTERY_PIN is not None:
+    low_battery_button = Button(
+        config.BUTTON_LOW_BATTERY_PIN, pull_up=True, hold_time=2, hold_repeat=False
+    )
+
+if config.BUTTON_EXTERNAL_POWER_PIN is not None:
+    external_power_button = Button(
+        config.BUTTON_EXTERNAL_POWER_PIN, pull_up=False, hold_time=2, hold_repeat=False
+    )
 
 # LED GPIO Pins
-LED_POWER_PIN = 13
-LED_WIFI_PIN = 12
-LED_REC_PIN = 6
-power_led = PWMLED(LED_POWER_PIN)
-wifi_led = PWMLED(LED_WIFI_PIN)
-hour_led = PWMLED(LED_REC_PIN)
+power_led = PWMLED(config.LED_POWER_PIN)
+wifi_led = PWMLED(config.LED_WIFI_PIN)
+hour_led = PWMLED(config.LED_REC_PIN)
 
 
 F = TypeVar("F", bound=Callable[..., Any])
@@ -144,8 +150,9 @@ wifi_button.when_pressed = on_wifi_button_pressed
 wifi_button.when_released = on_wifi_button_released
 hour_button.when_pressed = on_hour_button_pressed
 hour_button.when_released = on_hour_button_released
-external_power_button.when_pressed = on_external_power_button_pressed
-external_power_button.when_released = on_external_power_button_released
+if external_power_button is not None:
+    external_power_button.when_pressed = on_external_power_button_pressed
+    external_power_button.when_released = on_external_power_button_released
 
 
 def sanitize(input: str) -> str:
@@ -168,8 +175,14 @@ def print_button_statuses() -> None:
     print(f"Power Button active: {power_button.is_active}")
     print(f"Wifi Button active: {wifi_button.is_active}")
     print(f"Hour Button active: {hour_button.is_active}")
-    print(f"Low Battery active: {low_battery_button.is_active}")
-    print(f"External Power Pin active: {external_power_button.is_active}")
+    if low_battery_button is not None:
+        print(f"Low Battery active: {low_battery_button.is_active}")
+    else:
+        print("Low Battery: N/A (not available on this PCB version)")
+    if external_power_button is not None:
+        print(f"External Power Pin active: {external_power_button.is_active}")
+    else:
+        print("External Power Pin: N/A (not available on this PCB version)")
 
 
 @surround_with_dashes

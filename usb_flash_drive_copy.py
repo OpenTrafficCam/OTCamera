@@ -16,10 +16,6 @@ import OTCamera.config as config
 import OTCamera.helpers.log as log
 
 COPY_INFO_CSV_SUFFIX = "_usb-copy-info.csv"
-LED_POWER_PIN: int = 13
-LED_WIFI_PIN: int = 12
-LED_REC_PIN: int = 6
-BUTTON_POWER_PIN: int = 17
 
 
 class Subject(ABC):
@@ -513,9 +509,9 @@ def build_usb_copier(src_dir: Path, usb_mount_point: Path) -> OTCameraUsbCopier:
     Returns:
         OTCameraUsbCopier: The usb copier object.
     """
-    power_led = Led(PWMLED(LED_POWER_PIN))
-    rec_led = Led(PWMLED(LED_REC_PIN))
-    wifi_led = Led(PWMLED(LED_WIFI_PIN))
+    power_led = Led(PWMLED(config.LED_POWER_PIN))
+    rec_led = Led(PWMLED(config.LED_REC_PIN))
+    wifi_led = Led(PWMLED(config.LED_WIFI_PIN))
     usb_flash_drive = UsbFlashDrive(usb_mount_point)
     usb_copier = OTCameraUsbCopier(
         power_led, wifi_led, rec_led, src_dir, usb_flash_drive
@@ -523,7 +519,9 @@ def build_usb_copier(src_dir: Path, usb_mount_point: Path) -> OTCameraUsbCopier:
     if config.USE_BUTTONS:
         power_button = Button(
             "POWER",
-            GPIOButton(BUTTON_POWER_PIN, pull_up=False, hold_time=2, hold_repeat=False),
+            GPIOButton(
+                config.BUTTON_POWER_PIN, pull_up=False, hold_time=2, hold_repeat=False
+            ),
         )
         power_button.attach(usb_copier)
     return usb_copier

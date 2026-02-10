@@ -197,27 +197,38 @@ if config.USE_BUTTONS:
 
     log.write("Initalizing Buttons", level=log.LogLevel.DEBUG)
 
-    POWERPIN = 17
-    HOURPIN = 27
-    WIFIPIN = 22
-    LOWBATTERYPIN = 16
-    EXTERNALPOWERPIN = 26
-
-    low_battery_button = Button(
-        LOWBATTERYPIN, pull_up=True, hold_time=2, hold_repeat=False
-    )
-    external_power_button = Button(
-        EXTERNALPOWERPIN, pull_up=False, hold_time=2, hold_repeat=False
-    )
     # Initialise buttons
-    power_button = Button(POWERPIN, pull_up=False, hold_time=2, hold_repeat=False)
-    hour_button = Button(HOURPIN, pull_up=True, hold_time=2, hold_repeat=False)
-    wifi_button = Button(WIFIPIN, pull_up=True, hold_time=2, hold_repeat=False)
+    power_button = Button(
+        config.BUTTON_POWER_PIN, pull_up=False, hold_time=2, hold_repeat=False
+    )
+    hour_button = Button(
+        config.BUTTON_HOUR_PIN, pull_up=True, hold_time=2, hold_repeat=False
+    )
+    wifi_button = Button(
+        config.BUTTON_WIFI_PIN, pull_up=True, hold_time=2, hold_repeat=False
+    )
 
-    # Register callbacks
-    low_battery_button.when_held = _on_low_battery_button_held
-    external_power_button.when_released = _on_external_power_button_released
-    external_power_button.when_pressed = _on_external_power_button_pressed
+    # Optional buttons (only available on PCBv1)
+    low_battery_button = None
+    external_power_button = None
+
+    if config.BUTTON_LOW_BATTERY_PIN is not None:
+        low_battery_button = Button(
+            config.BUTTON_LOW_BATTERY_PIN, pull_up=True, hold_time=2, hold_repeat=False
+        )
+        low_battery_button.when_held = _on_low_battery_button_held
+
+    if config.BUTTON_EXTERNAL_POWER_PIN is not None:
+        external_power_button = Button(
+            config.BUTTON_EXTERNAL_POWER_PIN,
+            pull_up=False,
+            hold_time=2,
+            hold_repeat=False,
+        )
+        external_power_button.when_released = _on_external_power_button_released
+        external_power_button.when_pressed = _on_external_power_button_pressed
+
+    # Register callbacks for required buttons
     power_button.when_pressed = _on_power_button_pressed
     power_button.when_released = _on_power_button_released
     wifi_button.when_pressed = _on_wifi_button_pressed
@@ -239,10 +250,10 @@ if config.USE_BUTTONS:
         # The power button should be active for OTCamera to run.
         rpi.shutdown()
 
-    if low_battery_button.is_pressed:
+    if low_battery_button is not None and low_battery_button.is_pressed:
         _on_low_battery_button_held()
 
-    if external_power_button.is_pressed:
+    if external_power_button is not None and external_power_button.is_pressed:
         status.external_power_connected = external_power_button.is_pressed
         _on_external_power_button_pressed()
 

@@ -23,7 +23,7 @@ All the configuration of OTCamera is done here.
 import socket
 import sys
 from pathlib import Path
-from typing import Literal
+from typing import Literal, Optional
 
 try:
     from yaml import CSafeLoader as SafeLoader  # type: ignore
@@ -264,6 +264,16 @@ def parse_user_config(config_file: str) -> None:
             _print_key_err_msg("buttons.enable")
 
     try:
+        section = user_config["hardware"]
+    except KeyError:
+        pass  # hardware section is optional, use defaults
+    else:
+        try:
+            setattr(module, "PCB_VERSION", section["pcb_version"])
+        except KeyError:
+            pass  # pcb_version is optional, use default
+
+    try:
         section = user_config["msteams"]
     except KeyError:
         _print_key_err_msg("msteams")
@@ -276,6 +286,9 @@ def parse_user_config(config_file: str) -> None:
             setattr(module, "MS_TEAMS_WEBHOOK_URL", section["url"])
         except KeyError:
             _print_key_err_msg("msteams.url")
+
+    # Apply pin configuration based on PCB version
+    _apply_pin_config()
 
 
 def _print_key_err_msg(key_name: str) -> None:
@@ -381,6 +394,56 @@ USE_LED = False
 # button config
 USE_BUTTONS = False
 """True if hardware buttons are connected."""
+
+# Hardware PCB version
+PCB_VERSION = "v1"
+"""PCB hardware version. `v1` for original, `v2` for new revision."""
+
+# GPIO pin definitions per PCB version
+_PIN_CONFIG = {
+    "v1": {
+        "LED_POWER_PIN": 13,
+        "LED_WIFI_PIN": 12,
+        "LED_REC_PIN": 6,
+        "BUTTON_POWER_PIN": 17,
+        "BUTTON_HOUR_PIN": 27,
+        "BUTTON_WIFI_PIN": 22,
+        "BUTTON_LOW_BATTERY_PIN": 16,
+        "BUTTON_EXTERNAL_POWER_PIN": 26,
+    },
+    "v2": {
+        "LED_POWER_PIN": 11,
+        "LED_WIFI_PIN": 12,
+        "LED_REC_PIN": 13,
+        "BUTTON_POWER_PIN": 21,
+        "BUTTON_HOUR_PIN": 20,
+        "BUTTON_WIFI_PIN": 19,
+        "BUTTON_LOW_BATTERY_PIN": None,
+        "BUTTON_EXTERNAL_POWER_PIN": None,
+    },
+}
+
+# Resolved pin values (set after PCB_VERSION is known)
+LED_POWER_PIN: int = _PIN_CONFIG["v1"]["LED_POWER_PIN"]
+LED_WIFI_PIN: int = _PIN_CONFIG["v1"]["LED_WIFI_PIN"]
+LED_REC_PIN: int = _PIN_CONFIG["v1"]["LED_REC_PIN"]
+BUTTON_POWER_PIN: int = _PIN_CONFIG["v1"]["BUTTON_POWER_PIN"]
+BUTTON_HOUR_PIN: int = _PIN_CONFIG["v1"]["BUTTON_HOUR_PIN"]
+BUTTON_WIFI_PIN: int = _PIN_CONFIG["v1"]["BUTTON_WIFI_PIN"]
+BUTTON_LOW_BATTERY_PIN: Optional[int] = _PIN_CONFIG["v1"]["BUTTON_LOW_BATTERY_PIN"]
+BUTTON_EXTERNAL_POWER_PIN: Optional[int] = _PIN_CONFIG["v1"]["BUTTON_EXTERNAL_POWER_PIN"]
+
+
+def _apply_pin_config() -> None:
+    """Apply GPIO pin configuration based on PCB_VERSION."""
+    module = sys.modules[__name__]
+    version = getattr(module, "PCB_VERSION")
+    if version not in _PIN_CONFIG:
+        print(f"Unknown PCB version: '{version}'. Using 'v1' as default.")
+        version = "v1"
+    pins = _PIN_CONFIG[version]
+    for pin_name, pin_value in pins.items():
+        setattr(module, pin_name, pin_value)
 
 # other config
 PREFIX = socket.gethostname()

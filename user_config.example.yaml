@@ -61,6 +61,10 @@ leds:
 buttons:
   enable: false
 
+hardware:
+  # PCB hardware version: "v1" for original, "v2" for new revision
+  pcb_version: v1
+
 msteams:
   enable: false
   url: null

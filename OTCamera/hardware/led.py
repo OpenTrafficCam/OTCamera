@@ -103,13 +103,9 @@ if config.USE_LED:
 
     log.write("Initializing LEDs", level=log.LogLevel.DEBUG)
 
-    POWERPIN = 13
-    WIFIPIN = 12
-    RECPIN = 6
-
-    power = PWMLED(POWERPIN)
-    wifi = PWMLED(WIFIPIN)
-    rec = PWMLED(RECPIN)
+    power = PWMLED(config.LED_POWER_PIN)
+    wifi = PWMLED(config.LED_WIFI_PIN)
+    rec = PWMLED(config.LED_REC_PIN)
 
     off()
 
