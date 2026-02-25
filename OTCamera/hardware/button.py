@@ -67,29 +67,6 @@ def _on_hour_button_switched() -> None:
         log.write("Hour Switch released")
 
 
-def _on_low_battery_button_held() -> None:
-    """Shuts down Raspberry Pi if internal battery level is low.
-
-    Adafruit's PowerBoost 1000C has two inputs: USB and LiPo-cell.
-    If LiPo-cell voltage is below threshold, the 1000C Low Voltage PIN is pulled up.
-    The 1000C PIN is connected to GPIO 18 through OTCamera pcb.
-    Additionally sets `status.battery_is_low` to `True`.
-    """
-    status.battery_is_low = True
-    log.write("Battery level is low!", log.LogLevel.WARNING)
-    rpi.shutdown()
-
-
-def _on_external_power_button_pressed() -> None:
-    status.external_power_connected = True
-    log.write("External power connected", log.LogLevel.INFO)
-
-
-def _on_external_power_button_released() -> None:
-    status.external_power_connected = False
-    log.write("External power disconnected!", log.LogLevel.WARNING)
-
-
 def _on_power_button_pressed() -> None:
     status.power_button_pressed = True
     status.power_button_pressed_time = None
@@ -208,27 +185,7 @@ if config.USE_BUTTONS:
         config.BUTTON_WIFI_PIN, pull_up=True, hold_time=2, hold_repeat=False
     )
 
-    # Optional buttons (only available on PCBv1)
-    low_battery_button = None
-    external_power_button = None
-
-    if config.BUTTON_LOW_BATTERY_PIN is not None:
-        low_battery_button = Button(
-            config.BUTTON_LOW_BATTERY_PIN, pull_up=True, hold_time=2, hold_repeat=False
-        )
-        low_battery_button.when_held = _on_low_battery_button_held
-
-    if config.BUTTON_EXTERNAL_POWER_PIN is not None:
-        external_power_button = Button(
-            config.BUTTON_EXTERNAL_POWER_PIN,
-            pull_up=False,
-            hold_time=2,
-            hold_repeat=False,
-        )
-        external_power_button.when_released = _on_external_power_button_released
-        external_power_button.when_pressed = _on_external_power_button_pressed
-
-    # Register callbacks for required buttons
+    # Register callbacks
     power_button.when_pressed = _on_power_button_pressed
     power_button.when_released = _on_power_button_released
     wifi_button.when_pressed = _on_wifi_button_pressed
@@ -249,13 +206,6 @@ if config.USE_BUTTONS:
         # OTCamera is in an illegal state.
         # The power button should be active for OTCamera to run.
         rpi.shutdown()
-
-    if low_battery_button is not None and low_battery_button.is_pressed:
-        _on_low_battery_button_held()
-
-    if external_power_button is not None and external_power_button.is_pressed:
-        status.external_power_connected = external_power_button.is_pressed
-        _on_external_power_button_pressed()
 
 
 else:

@@ -23,7 +23,7 @@ All the configuration of OTCamera is done here.
 import socket
 import sys
 from pathlib import Path
-from typing import Literal, Optional
+from typing import Literal
 
 try:
     from yaml import CSafeLoader as SafeLoader  # type: ignore
@@ -264,16 +264,6 @@ def parse_user_config(config_file: str) -> None:
             _print_key_err_msg("buttons.enable")
 
     try:
-        section = user_config["hardware"]
-    except KeyError:
-        pass  # hardware section is optional, use defaults
-    else:
-        try:
-            setattr(module, "PCB_VERSION", section["pcb_version"])
-        except KeyError:
-            pass  # pcb_version is optional, use default
-
-    try:
         section = user_config["msteams"]
     except KeyError:
         _print_key_err_msg("msteams")
@@ -286,9 +276,6 @@ def parse_user_config(config_file: str) -> None:
             setattr(module, "MS_TEAMS_WEBHOOK_URL", section["url"])
         except KeyError:
             _print_key_err_msg("msteams.url")
-
-    # Apply pin configuration based on PCB version
-    _apply_pin_config()
 
 
 def _print_key_err_msg(key_name: str) -> None:
@@ -322,7 +309,7 @@ MIN_FREE_SPACE = 1
 """free space in GB on sd card before old videos get deleted."""
 
 # camera config
-CAMERA_TYPE = "legacy"
+CAMERA_TYPE = "picamera2"
 """Camera type. `legacy` for the original camera module, `picamera2` for libcamera."""
 FPS = 20
 """Frames per Second. 10-20 should be enough."""
@@ -395,58 +382,24 @@ USE_LED = False
 USE_BUTTONS = False
 """True if hardware buttons are connected."""
 
-# Hardware PCB version
-PCB_VERSION = "v1"
-"""PCB hardware version. `v1` for original, `v2` for new revision."""
+# GPIO pin definitions
+LED_POWER_PIN: int = 11
+LED_WIFI_PIN: int = 12
+LED_REC_PIN: int = 13
+BUTTON_POWER_PIN: int = 21
+BUTTON_HOUR_PIN: int = 20
+BUTTON_WIFI_PIN: int = 19
+BUTTON_POWER_PULL_UP: bool = True
 
-# GPIO pin definitions per PCB version
-_PIN_CONFIG = {
-    "v1": {
-        "LED_POWER_PIN": 13,
-        "LED_WIFI_PIN": 12,
-        "LED_REC_PIN": 6,
-        "BUTTON_POWER_PIN": 17,
-        "BUTTON_HOUR_PIN": 27,
-        "BUTTON_WIFI_PIN": 22,
-        "BUTTON_LOW_BATTERY_PIN": 16,
-        "BUTTON_EXTERNAL_POWER_PIN": 26,
-        "BUTTON_POWER_PULL_UP": False,
-    },
-    "v2": {
-        "LED_POWER_PIN": 11,
-        "LED_WIFI_PIN": 12,
-        "LED_REC_PIN": 13,
-        "BUTTON_POWER_PIN": 21,
-        "BUTTON_HOUR_PIN": 20,
-        "BUTTON_WIFI_PIN": 19,
-        "BUTTON_LOW_BATTERY_PIN": None,
-        "BUTTON_EXTERNAL_POWER_PIN": None,
-        "BUTTON_POWER_PULL_UP": True,
-    },
-}
-
-# Resolved pin values (set after PCB_VERSION is known)
-LED_POWER_PIN: int = _PIN_CONFIG["v1"]["LED_POWER_PIN"]
-LED_WIFI_PIN: int = _PIN_CONFIG["v1"]["LED_WIFI_PIN"]
-LED_REC_PIN: int = _PIN_CONFIG["v1"]["LED_REC_PIN"]
-BUTTON_POWER_PIN: int = _PIN_CONFIG["v1"]["BUTTON_POWER_PIN"]
-BUTTON_HOUR_PIN: int = _PIN_CONFIG["v1"]["BUTTON_HOUR_PIN"]
-BUTTON_WIFI_PIN: int = _PIN_CONFIG["v1"]["BUTTON_WIFI_PIN"]
-BUTTON_LOW_BATTERY_PIN: Optional[int] = _PIN_CONFIG["v1"]["BUTTON_LOW_BATTERY_PIN"]
-BUTTON_EXTERNAL_POWER_PIN: Optional[int] = _PIN_CONFIG["v1"]["BUTTON_EXTERNAL_POWER_PIN"]
-BUTTON_POWER_PULL_UP: bool = _PIN_CONFIG["v1"]["BUTTON_POWER_PULL_UP"]
-
-
-def _apply_pin_config() -> None:
-    """Apply GPIO pin configuration based on PCB_VERSION."""
-    module = sys.modules[__name__]
-    version = getattr(module, "PCB_VERSION")
-    if version not in _PIN_CONFIG:
-        print(f"Unknown PCB version: '{version}'. Using 'v1' as default.")
-        version = "v1"
-    pins = _PIN_CONFIG[version]
-    for pin_name, pin_value in pins.items():
-        setattr(module, pin_name, pin_value)
+# ADC configuration
+ADC_I2C_ADDRESS: int = 0x48
+ADC_FSR: float = 4.096
+ADC_CHANNEL_USB: int = 0
+ADC_CHANNEL_BATTERY: int = 2
+ADC_DIVIDER_RATIO_USB: float = 2.0
+ADC_DIVIDER_RATIO_BATTERY: float = 1510 / 510
+ADC_THRESHOLD_EXTERNAL_POWER: float = 2.5
+ADC_THRESHOLD_LOW_BATTERY: float = 3.3
 
 # other config
 PREFIX = socket.gethostname()

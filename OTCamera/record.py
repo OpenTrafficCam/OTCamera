@@ -41,6 +41,8 @@ from OTCamera.html_updater import (
     LogHtmlId,
     StatusWebsiteUpdater,
 )
+from OTCamera.hardware.power_controller import PowerController
+from OTCamera.plugin.adc.adc_provider import ADCProvider
 from OTCamera.plugin.camera.camera_provider import CameraProvider
 
 log.write("imported record", level=log.LogLevel.DEBUG)
@@ -54,6 +56,7 @@ class OTCamera:
     def __init__(
         self,
         camera_controller: CameraController,
+        power_controller: PowerController | None,
         html_updater: StatusWebsiteUpdater,
         capture_preview_immediately: bool = False,
         video_dir: Union[str, Path] = config.VIDEO_DIR,
@@ -65,6 +68,8 @@ class OTCamera:
         Args:
             camera_controller (CameraController): The class to control the Raspberry Pi
                 camera.
+            power_controller (PowerController | None): The class to monitor power status
+                via ADC, or None if ADC is not available.
             html_updater (StatusWebsiteUpdater): The class providing functionality to
             update the status website.
             capture_preview_immediately (bool, optional): Whether to capture preview
@@ -77,6 +82,7 @@ class OTCamera:
             on the status website. Defaults to config.NUM_LOG_FILES_HTML.
         """
         self._camera = camera_controller
+        self._power_controller = power_controller
         self._html_updater = html_updater
         self._capture_preview_immediately = capture_preview_immediately
         self._video_dir = Path(video_dir)
@@ -117,6 +123,10 @@ class OTCamera:
             and status.wifi_button_pressed_time is not None
         ):
             button.handle_wifi_button_off_state()
+
+        # Power monitoring
+        if self._power_controller:
+            self._power_controller.check_power_status()
 
         self._send_alive_signal()
         if status.record_time():
@@ -369,6 +379,10 @@ def main() -> None:
     """Start running OTCamera."""
     camera_provider = CameraProvider()
     camera_controller = CameraController(camera=camera_provider.provide())
+
+    adc = ADCProvider().provide()
+    power_controller = PowerController(adc) if adc else None
+
     html_updater = StatusWebsiteUpdater(
         template_html_path=config.TEMPLATE_HTML_PATH,
         offline_html_path=config.OFFLINE_HTML_PATH,
@@ -378,7 +392,11 @@ def main() -> None:
         log_info_id="log-info",
         debug_mode_on=config.DEBUG_MODE_ON,
     )
-    otcamera = OTCamera(camera_controller=camera_controller, html_updater=html_updater)
+    otcamera = OTCamera(
+        camera_controller=camera_controller,
+        power_controller=power_controller,
+        html_updater=html_updater,
+    )
     otcamera.record()
 
 
