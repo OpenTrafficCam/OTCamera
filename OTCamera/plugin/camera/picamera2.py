@@ -33,7 +33,15 @@ def load_tuning_with_drc(drc_strength: str) -> dict:
     Returns:
         The modified tuning dictionary, ready to pass to ``Picamera2(tuning=...)``.
     """
-    tuning = Picamera2.load_tuning_file()
+    camera_info = Picamera2.global_camera_info()
+    if not camera_info:
+        log.write(
+            "No camera detected, returning empty tuning",
+            level=log.LogLevel.WARNING,
+        )
+        return {}
+    model = camera_info[0]["Model"]
+    tuning = Picamera2.load_tuning_file(model + ".json")
 
     params = DRC_STRENGTH_MAP.get(drc_strength)
     if params is None:
