@@ -83,7 +83,7 @@ def wifi_switch_on() -> None:
     """Turn on Wi-Fi"""
     if not status.wifi_on:
         if not config.DEBUG_MODE_ON:
-            call("rfkill unblock wlan", shell=True)
+            call("sudo rfkill unblock wlan", shell=True)
 
         if config.USE_RELAY:
             call("sudo systemctl start sshrelay.service", shell=True)
@@ -98,7 +98,7 @@ def wifi_switch_off() -> None:
     """Turn off Wi-Fi"""
     if status.wifi_on:
         if not config.DEBUG_MODE_ON:
-            call("rfkill block wlan", shell=True)
+            call("sudo rfkill block wlan", shell=True)
         if config.USE_RELAY:
             call("sudo systemctl stop sshrelay.service", shell=True)
             log.write("Stopped SSH relay server connection")
