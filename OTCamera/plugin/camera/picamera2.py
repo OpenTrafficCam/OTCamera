@@ -185,9 +185,22 @@ class PiCamera2(Camera):
         self._setup_picamera()
         log.write("PiCamera2 initialized", log.LogLevel.DEBUG)
 
+    def _build_transform(self):
+        """Build a libcamera Transform from the current rotation setting."""
+        from libcamera import Transform
+
+        if self._rotation == 180:
+            return Transform(hflip=True, vflip=True)
+        elif self._rotation == 90:
+            return Transform(transpose=True, vflip=True)
+        elif self._rotation == 270:
+            return Transform(transpose=True, hflip=True)
+        return Transform()
+
     def _setup_picamera(self) -> None:
         video_config = self._picam2.create_video_configuration(
             main={"size": self._resolution},
+            transform=self._build_transform(),
         )
         self._picam2.configure(video_config)
 
@@ -432,18 +445,11 @@ class PiCamera2(Camera):
 
     def set_rotation(self, value: int) -> None:
         self._rotation = value
-        # Rotation in libcamera is handled via Transform
-        from libcamera import Transform
-
-        transform = Transform()
-        if value == 180:
-            transform = Transform(hflip=True, vflip=True)
-        elif value == 90:
-            transform = Transform(transpose=True, vflip=True)
-        elif value == 270:
-            transform = Transform(transpose=True, hflip=True)
-        # Note: Applying transform requires reconfiguration
-        # Store the value for next initialization
+        log.write(
+            f"Rotation set to {value}. "
+            "Takes effect on next reinitialize (requires reconfiguration).",
+            level=log.LogLevel.DEBUG,
+        )
 
     def set_meter_mode(self, value: str) -> None:
         self._meter_mode = value
