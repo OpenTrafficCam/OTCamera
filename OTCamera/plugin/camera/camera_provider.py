@@ -30,7 +30,14 @@ class CameraProvider(Singleton):
 
             from OTCamera.plugin.camera.picamera2 import PiCamera2
 
-            return PiCamera2(Picamera2())
+            try:
+                picam2 = Picamera2()
+            except IndexError:
+                raise RuntimeError(
+                    "No camera detected by libcamera. "
+                    "Check that the camera is connected and the interface is enabled."
+                ) from None
+            return PiCamera2(picam2)
         else:
             raise ValueError(
                 f"Unknown camera type: {camera_type}. "
