@@ -92,8 +92,8 @@ class TLA2024(ADC):
         raw_value = raw_value >> 4
 
         # Convert to voltage
-        # 12-bit ADC: 2^12 = 4096 steps
-        # FSR is ±4.096V, so range is 0 to 4.096V for single-ended
-        voltage = (raw_value / 4096.0) * self._fsr
+        # 12-bit signed two's complement: positive range is 0 to 2047 (2^11 steps)
+        # FSR is ±4.096V, so single-ended range is 0 to +4.096V
+        voltage = (raw_value / 2048.0) * self._fsr
 
         return voltage
