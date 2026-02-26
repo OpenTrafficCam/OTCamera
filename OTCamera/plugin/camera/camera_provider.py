@@ -28,10 +28,11 @@ class CameraProvider(Singleton):
         elif camera_type == PICAMERA2:
             from picamera2 import Picamera2
 
-            from OTCamera.plugin.camera.picamera2 import PiCamera2
+            from OTCamera.plugin.camera.picamera2 import PiCamera2, load_tuning_with_drc
 
+            tuning = load_tuning_with_drc(config.DRC_STRENGTH)
             try:
-                picam2 = Picamera2()
+                picam2 = Picamera2(tuning=tuning)
             except IndexError:
                 raise RuntimeError(
                     "No camera detected by libcamera. "

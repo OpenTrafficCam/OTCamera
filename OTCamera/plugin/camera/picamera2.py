@@ -10,6 +10,56 @@ from OTCamera import config
 from OTCamera.domain.camera import Camera, H264Level, H264Profile, VideoFormat
 from OTCamera.helpers import log
 
+# DRC strength to rpi.contrast CE parameters mapping.
+# Each entry sets ce_enable and lo_max/hi_max which control how aggressively
+# the adaptive contrast enhancement adjusts shadows and highlights.
+DRC_STRENGTH_MAP = {
+    "off": {"ce_enable": 0},
+    "low": {"ce_enable": 1, "lo_max": 500, "hi_max": 2000},
+    "medium": {"ce_enable": 1, "lo_max": 2000, "hi_max": 4000},
+    "high": {"ce_enable": 1, "lo_max": 5000, "hi_max": 8000},
+}
+
+
+def load_tuning_with_drc(drc_strength: str) -> dict:
+    """Load the camera tuning file and apply DRC-equivalent settings.
+
+    Modifies the ``rpi.contrast`` algorithm's adaptive contrast enhancement
+    to approximate the legacy picamera DRC behaviour.
+
+    Args:
+        drc_strength: One of "off", "low", "medium", "high".
+
+    Returns:
+        The modified tuning dictionary, ready to pass to ``Picamera2(tuning=...)``.
+    """
+    tuning = Picamera2.load_tuning_file()
+
+    params = DRC_STRENGTH_MAP.get(drc_strength)
+    if params is None:
+        log.write(
+            f"Unknown DRC strength '{drc_strength}', defaulting to 'off'",
+            level=log.LogLevel.WARNING,
+        )
+        return tuning
+
+    try:
+        algo = Picamera2.find_tuning_algo(tuning, "rpi.contrast")
+    except RuntimeError:
+        log.write(
+            "rpi.contrast algorithm not found in tuning file, "
+            "DRC settings cannot be applied",
+            level=log.LogLevel.WARNING,
+        )
+        return tuning
+
+    for key, value in params.items():
+        algo[key] = value
+
+    log.write(f"Applied DRC strength '{drc_strength}' via rpi.contrast", log.LogLevel.DEBUG)
+    return tuning
+
+
 # Exposure mode mappings from legacy picamera names to libcamera enums
 EXPOSURE_MODE_MAP = {
     "auto": controls.AeExposureModeEnum.Normal,
@@ -104,9 +154,9 @@ class PiCamera2(Camera):
             exposure_mode (str): The exposure mode. Defaults to
                 config.EXPOSURE_MODE.
             awb_mode (str): The awb mode. Defaults to config.AWB_MODE.
-            drc_strength (str): The DRC strength. Defaults to
-                config.DRC_STRENGTH. Note: This has no libcamera equivalent
-                and is silently ignored.
+            drc_strength (str): The DRC strength ("off", "low", "medium",
+                "high"). Defaults to config.DRC_STRENGTH. Applied via the
+                rpi.contrast tuning algorithm at camera creation time.
             rotation (int): The image rotation. Defaults to config.ROTATION.
             meter_mode (str): The meter mode. Defaults to config.METER_MODE.
         """
@@ -323,7 +373,8 @@ class PiCamera2(Camera):
 
     def reinitialize(self) -> None:
         self.close()
-        self._picam2 = Picamera2()
+        tuning = load_tuning_with_drc(self._drc_strength)
+        self._picam2 = Picamera2(tuning=tuning)
         self._setup_picamera()
 
     def set_annotation_text(self, value: str) -> None:
@@ -364,11 +415,10 @@ class PiCamera2(Camera):
             )
 
     def set_drc_strength(self, value: str) -> None:
-        # DRC strength has no direct libcamera equivalent
-        # Store the value but it won't affect the camera
         self._drc_strength = value
         log.write(
-            "drc_strength has no libcamera equivalent, value stored but not applied",
+            f"DRC strength set to '{value}'. "
+            "Takes effect on next reinitialize (tuning is applied at startup).",
             level=log.LogLevel.DEBUG,
         )
 
