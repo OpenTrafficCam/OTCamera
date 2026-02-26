@@ -68,3 +68,6 @@ hardware:
 msteams:
   enable: false
   url: null
+
+adc:
+  enable: false

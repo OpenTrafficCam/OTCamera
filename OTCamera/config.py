@@ -277,6 +277,16 @@ def parse_user_config(config_file: str) -> None:
         except KeyError:
             _print_key_err_msg("msteams.url")
 
+    try:
+        section = user_config["adc"]
+    except KeyError:
+        _print_key_err_msg("adc")
+    else:
+        try:
+            setattr(module, "ADC_ENABLED", section["enable"])
+        except KeyError:
+            _print_key_err_msg("adc.enable")
+
 
 def _print_key_err_msg(key_name: str) -> None:
     """Print key error information to console."""
@@ -392,6 +402,8 @@ BUTTON_WIFI_PIN: int = 19
 BUTTON_POWER_PULL_UP: bool = True
 
 # ADC configuration
+ADC_ENABLED: bool = False
+"""True if an ADC (e.g. for power monitoring) is connected."""
 ADC_I2C_ADDRESS: int = 0x48
 ADC_FSR: float = 4.096
 ADC_CHANNEL_USB: int = 0
