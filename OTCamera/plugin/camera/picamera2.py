@@ -268,6 +268,10 @@ class PiCamera2(Camera):
             )
             ctrl["AeMeteringMode"] = controls.AeMeteringModeEnum.CentreWeighted
 
+        # Apply frame rate
+        frame_duration = int(1000000 / self._frame_rate)
+        ctrl["FrameDurationLimits"] = (frame_duration, frame_duration)
+
         self._picam2.set_controls(ctrl)
 
     def _apply_annotation(self, request) -> None:
