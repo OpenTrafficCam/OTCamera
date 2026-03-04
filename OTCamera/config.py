@@ -323,7 +323,7 @@ CAMERA_TYPE = "picamera2"
 """Camera type. `legacy` for the original camera module, `picamera2` for libcamera."""
 FPS = 20
 """Frames per Second. 10-20 should be enough."""
-RESOLUTION = (1640, 1232)
+RESOLUTION = (2304, 1296)
 """Resolution of the camera module works internally.
 Field of view could be smaller with other values."""
 EXPOSURE_MODE = "nightpreview"
