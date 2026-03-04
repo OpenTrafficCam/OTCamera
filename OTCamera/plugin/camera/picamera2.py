@@ -144,6 +144,7 @@ class PiCamera2(Camera):
         picam2: Picamera2,
         frame_rate: int = config.FPS,
         resolution: tuple[int, int] = config.RESOLUTION,
+        video_resolution: tuple[int, int] = config.RESOLUTION_SAVED_VIDEO_FILE,
         exposure_mode: str = config.EXPOSURE_MODE,
         awb_mode: str = config.AWB_MODE,
         drc_strength: str = config.DRC_STRENGTH,
@@ -157,8 +158,12 @@ class PiCamera2(Camera):
         Args:
             picam2 (Picamera2): The Picamera2 instance to wrap.
             frame_rate (int): The frame rate. Defaults to config.FPS.
-            resolution (Tuple[int, int]): The resolution. Defaults to
+            resolution (Tuple[int, int]): The sensor resolution. Defaults to
                 config.RESOLUTION.
+            video_resolution (Tuple[int, int]): The output resolution for the
+                saved video file. The ISP scales from the sensor resolution to
+                this size, preserving the full field of view. Defaults to
+                config.RESOLUTION_SAVED_VIDEO_FILE.
             exposure_mode (str): The exposure mode. Defaults to
                 config.EXPOSURE_MODE.
             awb_mode (str): The awb mode. Defaults to config.AWB_MODE.
@@ -171,6 +176,7 @@ class PiCamera2(Camera):
         self._picam2 = picam2
         self._frame_rate = frame_rate
         self._resolution = resolution
+        self._video_resolution = video_resolution
         self._exposure_mode = exposure_mode
         self._awb_mode = awb_mode
         self._drc_strength = drc_strength
@@ -186,9 +192,18 @@ class PiCamera2(Camera):
         log.write("PiCamera2 initialized", log.LogLevel.DEBUG)
 
     def _build_transform(self):
-        """Build a libcamera Transform from the current rotation setting."""
+        """Build a libcamera Transform from the current rotation setting.
+
+        Note: 90/270 degree rotation requires transpose support which is only
+        available on Pi 5 (PiSP). On Pi 4 (VC4) only 0 and 180 are supported.
+        """
         from libcamera import Transform
 
+        if self._rotation in (90, 270):
+            log.write(
+                f"Rotation {self._rotation}° requires transpose support (Pi 5 only)",
+                level=log.LogLevel.WARNING,
+            )
         if self._rotation == 180:
             return Transform(hflip=True, vflip=True)
         elif self._rotation == 90:
@@ -199,7 +214,8 @@ class PiCamera2(Camera):
 
     def _setup_picamera(self) -> None:
         video_config = self._picam2.create_video_configuration(
-            main={"size": self._resolution},
+            main={"size": self._video_resolution},
+            sensor={"output_size": self._resolution},
             transform=self._build_transform(),
         )
         self._picam2.configure(video_config)
