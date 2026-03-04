@@ -268,9 +268,10 @@ class PiCamera2(Camera):
             )
             ctrl["AeMeteringMode"] = controls.AeMeteringModeEnum.CentreWeighted
 
-        # Apply frame rate
+        # Apply frame rate as upper bound, allow shorter exposures for
+        # exposure modes like "sports" / Short
         frame_duration = int(1000000 / self._frame_rate)
-        ctrl["FrameDurationLimits"] = (frame_duration, frame_duration)
+        ctrl["FrameDurationLimits"] = (100, frame_duration)
 
         self._picam2.set_controls(ctrl)
 
