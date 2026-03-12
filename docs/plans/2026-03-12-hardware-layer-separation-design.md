@@ -77,6 +77,7 @@ OTCamera/
 │
 ├── bsl/
 │   ├── boards/
+│   │   ├── board.py           # Board Protocol (structural typing contract)
 │   │   ├── v1.py              # Board definition: pins, addresses, ratios for PCB v1
 │   │   └── v2.py              # Board definition: pins, addresses, ratios for PCB v2
 │   ├── board_provider.py      # Selects board def by pcb_version, instantiates all BSL components
@@ -223,7 +224,7 @@ from OTCamera.domain.button import Button
 from OTCamera.domain.led import LED
 
 # Board registry: maps pcb_version string to board definition class
-_BOARD_REGISTRY: Dict[str, type] = {
+_BOARD_REGISTRY: Dict[str, type[Board]] = {
     "v1": BoardV1,
     "v2": BoardV2,
 }
@@ -384,7 +385,11 @@ server_upload:
 
 ADC thresholds (`adc_threshold_low_battery`, `adc_threshold_external_power`) remain in the user config since they are deployment-specific, not board-specific.
 
+The enable toggles (`use_leds`, `use_buttons`, `use_adc`) move from their previous separate YAML sections (`leds.enable`, `buttons.enable`, `adc.enable`) into the `hardware:` section, since they are board-level concerns.
+
 Config access in pseudocode uses nested attributes matching the YAML structure (e.g., `config.hardware.pcb_version`, `config.hardware.use_leds`). The `Config` dataclass (designed in the original spec) validates and provides these as typed fields.
+
+All directories (`bsl/`, `bsl/boards/`, `bsl/led/`, etc.) are Python packages with `__init__.py` files. These are omitted from the directory tree for brevity.
 
 ## Wiring (updated `__main__.py`)
 
@@ -428,6 +433,23 @@ otcamera.record()
 ```
 
 Note: The original design's wiring had an undefined `upload_plugin` variable. This amendment fixes that by explicitly showing `upload = UploadProvider.provide(CONFIG)` in step 5.
+
+### PowerController Constructor Change
+
+This amendment introduces `ADCConfig` as a new concept. The `PowerController` constructor changes from `PowerController(adc: ADC)` to:
+
+```python
+class PowerController:
+    def __init__(
+        self,
+        adc: Optional[ADC],
+        adc_config: Optional[ADCConfig],
+        event_bus: EventBus,
+        config: Config,
+    ) -> None:
+```
+
+`PowerController` uses `adc_config.channel_usb`, `adc_config.divider_ratio_battery`, etc. instead of reading from config globals. ADC thresholds (`adc_threshold_low_battery`, `adc_threshold_external_power`) come from `config` since they are deployment-specific.
 
 ## Future Extensibility (updated)
 
