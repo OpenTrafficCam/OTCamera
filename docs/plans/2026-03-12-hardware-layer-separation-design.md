@@ -68,12 +68,12 @@ Pure software, no hardware dependency. Connect the domain to external systems.
 ```
 OTCamera/
 ├── domain/
-│   ├── camera.py              # Camera ABC + CameraClosedError
-│   ├── adc.py                 # ADC ABC
-│   ├── led.py                 # LED ABC (on, off, blink, pulse)
-│   ├── button.py              # Button ABC
-│   ├── upload.py              # Upload ABC
-│   └── events.py              # EventBus + event dataclasses
+│   ├── camera.py              # Camera ABC + CameraClosedError (exists)
+│   ├── adc.py                 # ADC ABC (exists)
+│   ├── led.py                 # LED ABC (to be created, designed in original spec)
+│   ├── button.py              # Button ABC (to be created, designed in original spec)
+│   ├── upload.py              # Upload ABC (to be created, designed in original spec)
+│   └── events.py              # EventBus + event dataclasses (to be created)
 │
 ├── bsl/
 │   ├── boards/
@@ -116,8 +116,9 @@ OTCamera/
 └── version.py
 ```
 
-### Deleted (updated, same as original design)
+### Deleted (updated from original design)
 
+From original design (unchanged):
 - `hardware/` directory -- controllers move to `controller/`, BSL components to `bsl/`
 - `plugin/camera/picamerax.py` -- legacy camera backend dropped
 - `plugin_ftp_server/` -- replaced by `adapter/upload/`
@@ -125,11 +126,49 @@ OTCamera/
 - `helpers/filesystem.py` -- absorbed into camera controller
 - `helpers/rpi.py` -- absorbed into power controller
 
+Added by this amendment:
+- `plugin/adc/` (both `adc_provider.py` and `tla2024.py`) -- moves to `bsl/adc/`, selection handled by `BoardProvider`
+- `plugin/led/` and `plugin/button/` -- originally planned in `plugin/` by the original design, now superseded by `bsl/led/` and `bsl/button/`
+
 ## Board Support Layer Details
 
 ### Board Definitions
 
 Each PCB version has a frozen dataclass in `bsl/boards/` containing all board-specific parameters. These are pure data -- no logic, no imports beyond stdlib.
+
+All board definitions share the same field names. A `Board` protocol enforces this contract at the type level:
+
+```python
+# bsl/boards/board.py
+from typing import Protocol
+
+
+class Board(Protocol):
+    """Contract for board definitions. All boards must provide these fields."""
+
+    # LEDs
+    led_power_pin: int
+    led_wifi_pin: int
+    led_rec_pin: int
+
+    # Buttons
+    button_power_pin: int
+    button_hour_pin: int
+    button_wifi_pin: int
+    button_power_pull_up: bool
+    button_hour_pull_up: bool
+    button_wifi_pull_up: bool
+
+    # ADC
+    adc_i2c_address: int
+    adc_fsr: float
+    adc_channel_usb: int
+    adc_channel_battery: int
+    adc_divider_ratio_usb: float
+    adc_divider_ratio_battery: float
+```
+
+Example board definition:
 
 ```python
 # bsl/boards/v2.py
@@ -145,11 +184,13 @@ class BoardV2:
     led_wifi_pin: int = 12
     led_rec_pin: int = 13
 
-    # Buttons (GPIO pin numbers + config)
+    # Buttons (GPIO pin numbers + pull-up config)
     button_power_pin: int = 21
     button_hour_pin: int = 20
     button_wifi_pin: int = 19
     button_power_pull_up: bool = True
+    button_hour_pull_up: bool = True
+    button_wifi_pull_up: bool = True
 
     # ADC (TLA2024)
     adc_i2c_address: int = 0x48
@@ -160,27 +201,62 @@ class BoardV2:
     adc_divider_ratio_battery: float = 1510 / 510
 ```
 
+**Optional BSL components:** Not all boards may have every component (e.g., accelerometer only on PCB v2+). Board definitions use `Optional` fields with `None` defaults for components that are not present on every board. The `BoardProvider` checks these before instantiation.
+
 ### BoardProvider
 
-The `BoardProvider` is the single entry point for all BSL components. It reads `hardware.pcb_version` from the config, loads the corresponding board definition, and instantiates all BSL components with the correct parameters.
+The `BoardProvider` is the single entry point for all BSL components. It reads `hardware.pcb_version` from the config, loads the corresponding board definition via a registry, and instantiates all BSL components with the correct parameters.
 
 ```python
 # bsl/board_provider.py
 from dataclasses import dataclass
 from typing import Dict, Optional
 
+from OTCamera.bsl.adc.tla2024 import TLA2024
+from OTCamera.bsl.boards.board import Board
+from OTCamera.bsl.boards.v1 import BoardV1
+from OTCamera.bsl.boards.v2 import BoardV2
+from OTCamera.bsl.button.gpio_button import GpioButton
+from OTCamera.bsl.led.pwm_led import PwmLed
 from OTCamera.domain.adc import ADC
 from OTCamera.domain.button import Button
 from OTCamera.domain.led import LED
 
+# Board registry: maps pcb_version string to board definition class
+_BOARD_REGISTRY: Dict[str, type] = {
+    "v1": BoardV1,
+    "v2": BoardV2,
+}
+
+
+@dataclass
+class ADCConfig:
+    """Board-specific ADC operational parameters for the power controller."""
+
+    channel_usb: int
+    channel_battery: int
+    divider_ratio_usb: float
+    divider_ratio_battery: float
+
 
 @dataclass
 class BoardComponents:
-    """All hardware components provided by the board."""
+    """All hardware components and parameters provided by the board."""
 
     leds: Dict[str, LED]
     buttons: Dict[str, Button]
     adc: Optional[ADC]
+    adc_config: Optional[ADCConfig]
+
+
+def _load_board_definition(pcb_version: str) -> Board:
+    """Load board definition by PCB version string."""
+    if pcb_version not in _BOARD_REGISTRY:
+        raise ValueError(
+            f"Unknown PCB version: {pcb_version!r}. "
+            f"Available: {list(_BOARD_REGISTRY.keys())}"
+        )
+    return _BOARD_REGISTRY[pcb_version]()
 
 
 class BoardProvider:
@@ -188,40 +264,79 @@ class BoardProvider:
 
     @staticmethod
     def provide(config) -> BoardComponents:
-        board = _load_board_definition(config.pcb_version)
+        board = _load_board_definition(config.hardware.pcb_version)
 
-        leds = {}
-        if config.use_leds:
+        leds: Dict[str, LED] = {}
+        if config.hardware.use_leds:
             leds = {
                 "power": PwmLed(board.led_power_pin),
                 "recording": PwmLed(board.led_rec_pin),
                 "wifi": PwmLed(board.led_wifi_pin),
             }
 
-        buttons = {}
-        if config.use_buttons:
+        buttons: Dict[str, Button] = {}
+        if config.hardware.use_buttons:
             buttons = {
-                "power": GpioButton(board.button_power_pin, board.button_power_pull_up),
-                "hour": GpioButton(board.button_hour_pin),
-                "wifi": GpioButton(board.button_wifi_pin),
+                "power": GpioButton(
+                    board.button_power_pin, pull_up=board.button_power_pull_up
+                ),
+                "hour": GpioButton(
+                    board.button_hour_pin, pull_up=board.button_hour_pull_up
+                ),
+                "wifi": GpioButton(
+                    board.button_wifi_pin, pull_up=board.button_wifi_pull_up
+                ),
             }
 
-        adc = None
-        if config.use_adc:
+        adc: Optional[ADC] = None
+        adc_config: Optional[ADCConfig] = None
+        if config.hardware.use_adc:
             adc = TLA2024(board.adc_i2c_address, board.adc_fsr)
+            adc_config = ADCConfig(
+                channel_usb=board.adc_channel_usb,
+                channel_battery=board.adc_channel_battery,
+                divider_ratio_usb=board.adc_divider_ratio_usb,
+                divider_ratio_battery=board.adc_divider_ratio_battery,
+            )
 
-        return BoardComponents(leds=leds, buttons=buttons, adc=adc)
+        return BoardComponents(
+            leds=leds, buttons=buttons, adc=adc, adc_config=adc_config
+        )
 ```
 
 ### BSL Implementations
 
 BSL implementations are generic. They implement domain ABCs and receive all board-specific parameters via constructor injection. There is one implementation per component type (not per PCB version).
 
-- `bsl/led/pwm_led.py` -- generic PWM LED, receives GPIO pin
-- `bsl/button/gpio_button.py` -- generic GPIO button, receives GPIO pin + pull config
-- `bsl/adc/tla2024.py` -- TLA2024 ADC, receives I2C address + FSR
+- `bsl/led/pwm_led.py` -- generic PWM LED, receives GPIO pin. Constructor: `PwmLed(pin: int)`
+- `bsl/button/gpio_button.py` -- generic GPIO button, receives GPIO pin + pull config. Constructor: `GpioButton(pin: int, pull_up: bool = True, hold_time: float = 3.0)`
+- `bsl/adc/tla2024.py` -- TLA2024 ADC, receives I2C address + FSR. Constructor: `TLA2024(i2c_address: int = 0x48, fsr: float = 4.096)`
 
 If a future PCB version uses a different ADC chip, a new implementation is added to `bsl/adc/` and the board definition references it (the `BoardProvider` would need to know which ADC class to instantiate per board).
+
+### Button Event Binding
+
+The `Button` domain ABC includes a `bind(name, event_bus)` method. This is part of the abstract interface — all button implementations must support it. The method registers the button's press/hold callbacks to emit `ButtonPressed(name)` and `ButtonHeld(name)` events on the given event bus.
+
+```python
+# domain/button.py (relevant part)
+from abc import ABC, abstractmethod
+
+
+class Button(ABC):
+    """Abstract button interface."""
+
+    @abstractmethod
+    def bind(self, name: str, event_bus: "EventBus") -> None:
+        """Register this button to emit named events on the event bus."""
+        ...
+```
+
+This means `bind()` is called during wiring, not during construction. The `GpioButton` implementation sets up gpiozero callbacks that emit `ButtonPressed(name)` and `ButtonHeld(name)` events.
+
+### Controller Contracts
+
+Controllers must tolerate empty LED/button dicts. When `config.hardware.use_leds` is `false`, `board.leds` is `{}`. Controllers that use LEDs (e.g., `CameraController`, `WifiController`) check for key presence before calling LED methods. This is a contract: controllers never assume a specific LED exists.
 
 ## Plugin and Adapter Details
 
@@ -258,7 +373,9 @@ hardware:
 camera:
   type: picamera2        # plugin selection, independent of PCB
   fps: 20
-  resolution: [1920, 1080]
+  resolution:
+    width: 1920
+    height: 1080
 
 server_upload:
   scheme: ftp            # adapter selection
@@ -266,6 +383,8 @@ server_upload:
 ```
 
 ADC thresholds (`adc_threshold_low_battery`, `adc_threshold_external_power`) remain in the user config since they are deployment-specific, not board-specific.
+
+Config access in pseudocode uses nested attributes matching the YAML structure (e.g., `config.hardware.pcb_version`, `config.hardware.use_leds`). The `Config` dataclass (designed in the original spec) validates and provides these as typed fields.
 
 ## Wiring (updated `__main__.py`)
 
@@ -287,7 +406,7 @@ upload = UploadProvider.provide(CONFIG)
 
 # 6. Controllers -- work against domain ABCs only
 camera_controller = CameraController(camera, board.leds, CONFIG)
-power_controller = PowerController(board.adc, EVENT_BUS, CONFIG)
+power_controller = PowerController(board.adc, board.adc_config, EVENT_BUS, CONFIG)
 wifi_controller = WifiController(board.leds, EVENT_BUS)
 schedule_controller = ScheduleController(CONFIG, EVENT_BUS)
 upload_controller = UploadController(upload, CONFIG, EVENT_BUS)
@@ -308,13 +427,15 @@ otcamera = OTCamera(
 otcamera.record()
 ```
 
+Note: The original design's wiring had an undefined `upload_plugin` variable. This amendment fixes that by explicitly showing `upload = UploadProvider.provide(CONFIG)` in step 5.
+
 ## Future Extensibility (updated)
 
 ### New BSL component (e.g., accelerometer)
 
 1. Add ABC in `domain/accelerometer.py`
 2. Add implementation in `bsl/accelerometer/`
-3. Add fields to board definitions in `bsl/boards/`
+3. Add fields to board definitions in `bsl/boards/` (use `Optional` fields with `None` default for boards that lack the component)
 4. Extend `BoardComponents` and `BoardProvider` to include it
 5. Add controller in `controller/` if needed
 6. Wire in `__main__.py`
@@ -336,15 +457,15 @@ otcamera.record()
 
 ### New PCB version
 
-1. Add board definition in `bsl/boards/v3.py`
-2. Register in `BoardProvider`
+1. Add board definition in `bsl/boards/v3.py` (must satisfy the `Board` protocol)
+2. Register in `_BOARD_REGISTRY` in `board_provider.py`
 3. No changes to BSL implementations, controllers, or domain
 
 ## Unchanged from Original Design
 
-The following sections from `2026-03-05-v2-architecture-refactor-design.md` remain valid without modification:
+The following **design decisions** from `2026-03-05-v2-architecture-refactor-design.md` carry forward without modification. Note: some of these (LED, Button, Upload ABCs; EventBus) are planned work from the original design that has not yet been implemented in code.
 
-- **Domain ABCs** -- Camera, ADC, LED, Button, Upload interfaces unchanged
+- **Domain ABCs** -- Camera, ADC, LED, Button, Upload interface designs unchanged
 - **Event Bus** -- all event types, error handling, synchronous pub/sub
 - **Recording Pipeline** -- direct method calls for critical path
 - **Controllers** -- same responsibilities and interfaces
