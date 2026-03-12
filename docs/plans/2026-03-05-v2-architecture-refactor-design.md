@@ -3,6 +3,7 @@
 **Date:** 2026-03-05
 **Branch:** new branch from `v2` (e.g., `v2-refactor`)
 **Status:** Approved
+**Amended by:** `2026-03-12-hardware-layer-separation-design.md` (splits `plugin/` into `bsl/`, `plugin/`, `adapter/`)
 
 ## Context
 
