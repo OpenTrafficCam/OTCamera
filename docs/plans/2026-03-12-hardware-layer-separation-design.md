@@ -60,8 +60,11 @@ Pure software, no hardware dependency. Connect the domain to external systems.
 | `adapter/` | External system integrations + providers | domain |
 | `controller/` | Orchestration logic | domain (via injection) |
 | `config.py` | Validated Config dataclass, global `CONFIG` | None |
-| `status.py` | Event-driven read model, global `STATUS` | domain (events) |
+| ~~`status.py`~~ | ~~Event-driven read model, global `STATUS`~~ | ~~domain (events)~~ |
 | `__main__.py` | Wiring + main loop | Everything |
+
+> **Superseded:** `status.py` is eliminated in the implementation plan. Controllers are
+> queried directly by the `OTCamera` class in `__main__.py`.
 
 ### Directory Structure (updated)
 
@@ -230,14 +233,9 @@ _BOARD_REGISTRY: Dict[str, type[Board]] = {
 }
 
 
-@dataclass
-class ADCConfig:
-    """Board-specific ADC operational parameters for the power controller."""
-
-    channel_usb: int
-    channel_battery: int
-    divider_ratio_usb: float
-    divider_ratio_battery: float
+# NOTE: ADCConfig has been moved to domain/adc.py in the implementation plan
+# to keep controllers independent of the BSL layer.
+from OTCamera.domain.adc import ADCConfig
 
 
 @dataclass
@@ -250,7 +248,7 @@ class BoardComponents:
     adc_config: Optional[ADCConfig]
 
 
-def _load_board_definition(pcb_version: str) -> Board:
+def load_board_definition(pcb_version: str) -> Board:
     """Load board definition by PCB version string."""
     if pcb_version not in _BOARD_REGISTRY:
         raise ValueError(
@@ -265,7 +263,7 @@ class BoardProvider:
 
     @staticmethod
     def provide(config) -> BoardComponents:
-        board = _load_board_definition(config.hardware.pcb_version)
+        board = load_board_definition(config.hardware.pcb_version)
 
         leds: Dict[str, LED] = {}
         if config.hardware.use_leds:
@@ -410,19 +408,18 @@ camera = CameraProvider.provide(CONFIG)
 upload = UploadProvider.provide(CONFIG)
 
 # 6. Controllers -- work against domain ABCs only
-camera_controller = CameraController(camera, board.leds, CONFIG)
-power_controller = PowerController(board.adc, board.adc_config, EVENT_BUS, CONFIG)
-wifi_controller = WifiController(board.leds, EVENT_BUS)
+camera_controller = CameraController(camera, CONFIG, EVENT_BUS, board.leds)
+power_controller = PowerController(CONFIG, EVENT_BUS, board.leds, board.adc, board.adc_config)
+wifi_controller = WifiController(CONFIG, EVENT_BUS, board.leds)
 schedule_controller = ScheduleController(CONFIG, EVENT_BUS)
-upload_controller = UploadController(upload, CONFIG, EVENT_BUS)
+upload_controller = UploadController(EVENT_BUS, upload)
 
 # 7. Wire buttons to event bus
 for name, button in board.buttons.items():
     button.bind(name, EVENT_BUS)
 
-# 8. Read models
-STATUS = Status(EVENT_BUS)
-html_updater = StatusWebsiteUpdater(STATUS, CONFIG)
+# 8. HTML updater (no separate Status class — controllers queried directly)
+html_updater = StatusWebsiteUpdater(template_path, offline_path, index_path, ...)
 
 # 9. Run
 otcamera = OTCamera(
@@ -442,14 +439,15 @@ This amendment introduces `ADCConfig` as a new concept. The `PowerController` co
 class PowerController:
     def __init__(
         self,
-        adc: Optional[ADC],
-        adc_config: Optional[ADCConfig],
-        event_bus: EventBus,
         config: Config,
+        event_bus: EventBus,
+        leds: Dict[str, LED],
+        adc: Optional[ADC] = None,
+        adc_config: Optional[ADCConfig] = None,
     ) -> None:
 ```
 
-`PowerController` uses `adc_config.channel_usb`, `adc_config.divider_ratio_battery`, etc. instead of reading from config globals. ADC thresholds (`adc_threshold_low_battery`, `adc_threshold_external_power`) come from `config` since they are deployment-specific.
+`PowerController` uses `adc_config.channel_usb`, `adc_config.divider_ratio_battery`, etc. instead of reading from config globals. ADC thresholds (`adc_threshold_low_battery`, `adc_threshold_external_power`) come from `config` since they are deployment-specific. `leds` are needed for power LED patterns (alive signal, shutdown warning).
 
 ## Future Extensibility (updated)
 
@@ -491,7 +489,7 @@ The following **design decisions** from `2026-03-05-v2-architecture-refactor-des
 - **Event Bus** -- all event types, error handling, synchronous pub/sub
 - **Recording Pipeline** -- direct method calls for critical path
 - **Controllers** -- same responsibilities and interfaces
-- **Config & Status** -- global singletons as dataclasses
+- **Config** -- global singleton as dataclass (Status eliminated; controllers queried directly)
 - **Buttons** -- emit events via event bus, source-agnostic handlers
 - **Schedule Controller** -- owns "should we record" logic
 - **Entry Points** -- `run.py` and `python -m OTCamera`

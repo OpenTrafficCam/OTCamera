@@ -13,16 +13,24 @@ OTCamera v2 targets new hardware: RPi Zero W2, RPi Camera Module v3, new PCB, Ra
 
 ### Layers
 
+> **Superseded:** The layers below are from the original design. The amendment splits
+> `plugin/` into `bsl/`, `plugin/`, and `adapter/`. See the amendment for current layers.
+
 | Layer | Responsibility | Dependencies |
 |-------|---------------|-------------|
 | `domain/` | ABCs, events, errors | None |
 | `plugin/` | Hardware implementations + providers | domain |
 | `controller/` | Orchestration logic | domain, plugin (via injection) |
 | `config.py` | Validated Config dataclass, global `CONFIG` | None |
-| `status.py` | Event-driven read model, global `STATUS` | domain (events) |
+| ~~`status.py`~~ | ~~Event-driven read model, global `STATUS`~~ | ~~domain (events)~~ |
 | `__main__.py` | Wiring + main loop | Everything |
 
 ### Directory Structure
+
+> **Superseded:** The directory structure below is from the original design. The amendment
+> (`2026-03-12-hardware-layer-separation-design.md`) replaces `plugin/adc/`, `plugin/led/`,
+> and `plugin/button/` with `bsl/` and adds `adapter/`. See the amendment for the current
+> directory structure.
 
 ```
 OTCamera/
@@ -83,9 +91,12 @@ OTCamera/
 
 ### Config & Status (global singletons as classes)
 
+> **Superseded (Status):** The implementation plan eliminates `status.py`. Controllers are
+> queried directly by the `OTCamera` class in `__main__.py`. Config remains as designed.
+
 - `Config`: dataclass with typed fields, validated on YAML load. Accessed as `from OTCamera.config import CONFIG`.
-- `Status`: read model that subscribes to events and accumulates current state. Accessed as `from OTCamera.status import STATUS`. Read-only from outside; updated only by event handlers.
-- No full dependency injection for config/status — global singletons are pragmatic for this scale.
+- ~~`Status`: read model that subscribes to events and accumulates current state.~~
+- No full dependency injection for config — global singleton is pragmatic for this scale.
 
 ### Hardware Abstractions
 
@@ -120,6 +131,7 @@ ExternalPowerConnected()
 ExternalPowerDisconnected()
 ButtonPressed(name: str)
 ButtonHeld(name: str)
+ButtonReleased(name: str)
 PreviewCaptured(path: str)
 WifiOn()
 WifiOff()
@@ -143,13 +155,16 @@ Buttons emit events via the event bus. Both physical buttons and future UI butto
 
 ### Schedule Controller
 
-Owns "should we record" logic. Currently: check if current hour is within start/end hour range. Future: calendar-based recording windows. Hour button override (24/7 mode) handled here via `ButtonHeld("hour")` event subscription.
+Owns "should we record" logic. Currently: check if current hour is within start/end hour range. Future: calendar-based recording windows. Hour switch override (24/7 mode) handled here: `ButtonPressed("hour")` enables 24/7 mode (switch ON), `ButtonReleased("hour")` restores scheduled hours (switch OFF).
 
 ### Upload
 
 Upload controller subscribes to `RecordingSplit` events. Camera controller emits the event and doesn't know about uploading. Clean separation.
 
 ## Wiring (in `__main__.py`)
+
+> **Superseded:** The wiring below uses the original `plugin/` layout. See the amendment
+> for updated wiring with `BoardProvider`, `CameraProvider`, and `UploadProvider`.
 
 ```python
 # 1. Load config
