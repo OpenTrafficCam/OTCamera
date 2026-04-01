@@ -2630,8 +2630,7 @@ class TestPowerControllerWithADC:
         received: list = []
         bus.subscribe(ExternalPowerConnected, received.append)
         adc.voltages[0] = 2.0  # now external power
-        pc.check_power_status()
-        bus.process_pending()
+        pc.check_power_status()  # publishes ExternalPowerConnected synchronously
         assert len(received) == 1
 
     def test_adc_timeout_battery_assumes_ok(
@@ -2669,8 +2668,7 @@ class TestPowerButtonCountdown:
         bus.process_pending()
         # Simulate time passing
         pc._power_off_time = dt.now() - timedelta(seconds=_POWER_SHUTDOWN_DELAY + 1)
-        pc.check_pending_shutdown()
-        bus.process_pending()
+        pc.check_pending_shutdown()  # publishes ShutdownRequested synchronously
         assert len(received) == 1
         assert received[0].source == "button"
 
@@ -2932,8 +2930,7 @@ class TestWifiControllerSwitchOff:
         received: list = []
         bus.subscribe(WifiOff, received.append)
         wc._switch_off_time = dt.now() - timedelta(seconds=config.wifi.delay + 1)
-        wc.check_pending_wifi_off()
-        bus.process_pending()
+        wc.check_pending_wifi_off()  # publishes WifiOff synchronously
         assert len(received) == 1
 
 
@@ -3291,8 +3288,7 @@ class TestStartRecording:
         bus.subscribe(RecordingStarted, received.append)
         type(mock_camera).is_recording = PropertyMock(side_effect=[False, True, True])
         cc = CameraController(mock_camera, config, bus, {})
-        cc.start_recording()
-        bus.process_pending()
+        cc.start_recording()  # publishes RecordingStarted synchronously
         assert len(received) == 1
         assert received[0].filename.endswith(".h264")
 
@@ -3321,8 +3317,7 @@ class TestStopRecording:
         bus.subscribe(RecordingStopped, received.append)
         type(mock_camera).is_recording = PropertyMock(return_value=True)
         cc = CameraController(mock_camera, config, bus, {})
-        cc.stop_recording()
-        bus.process_pending()
+        cc.stop_recording()  # publishes RecordingStopped synchronously
         assert len(received) == 1
 
     def test_stop_skips_if_not_recording(
@@ -3353,9 +3348,8 @@ class TestSplitRecording:
         ) as mock_dt:
             mock_dt.now.return_value = datetime(2026, 1, 1, 12, 0, 0)
             mock_dt.strftime = datetime.strftime
-            cc.split_if_interval_ends()
+            cc.split_if_interval_ends()  # publishes RecordingSplit synchronously
 
-        bus.process_pending()
         if received:
             assert received[0].filename == previous
 
