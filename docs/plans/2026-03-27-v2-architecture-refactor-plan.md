@@ -4,7 +4,7 @@
 
 **Goal:** Refactor OTCamera into clean layers (domain / bsl / module / plugin / controller) with queue-based event bus, hardware ABCs, board support layer, and provider pattern for swappable components.
 
-**Architecture:** Domain ABCs define contracts. BSL (Board Support Layer) implements board-specific hardware (LEDs, buttons, ADC) selected by PCB version via a single BoardProvider. Modules implement pluggable hardware (camera). Plugins handle swappable software components (upload). Controllers orchestrate logic against domain ABCs only. Queue-based EventBus connects non-critical communication with thread-safe `emit()` and main-thread `process_pending()`.
+**Architecture:** Domain ABCs define contracts. BSL (Board Support Layer) implements board-specific hardware (LEDs, buttons, ADC) selected by PCB version via a single BoardProvider. Modules implement pluggable hardware (camera). Plugins handle swappable software components (upload). Controllers orchestrate logic against domain ABCs only. Hybrid EventBus provides synchronous `publish()` for main-thread controllers and thread-safe `enqueue()` for gpiozero callbacks, with `process_pending()` dispatching queued events once per loop iteration.
 
 **Tech Stack:** Python >=3.11, gpiozero, picamera2, smbus2, psutil, pyyaml, beautifulsoup4, pytest
 
@@ -57,7 +57,7 @@ git commit -m "chore: scaffold new package directories for refactor"
 
 ---
 
-### Task 2: Queue-based Event Bus (domain/events.py)
+### Task 2: Hybrid Event Bus (domain/events.py)
 
 **Files:**
 - Create: `OTCamera/domain/events.py`
@@ -90,37 +90,33 @@ from OTCamera.domain.events import (
 )
 
 
-class TestEventBus:
-    def test_subscribe_and_process(self) -> None:
+class TestPublish:
+    def test_publish_dispatches_immediately(self) -> None:
         bus = EventBus()
         received: list[RecordingStarted] = []
         bus.subscribe(RecordingStarted, received.append)
         event = RecordingStarted(filename="/tmp/video.h264")
-        bus.emit(event)
-        assert received == []  # not dispatched yet
-        bus.process_pending()
+        bus.publish(event)
         assert received == [event]
 
-    def test_multiple_subscribers(self) -> None:
+    def test_publish_multiple_subscribers(self) -> None:
         bus = EventBus()
         results_a: list[BatteryLow] = []
         results_b: list[BatteryLow] = []
         bus.subscribe(BatteryLow, results_a.append)
         bus.subscribe(BatteryLow, results_b.append)
-        bus.emit(BatteryLow())
-        bus.process_pending()
+        bus.publish(BatteryLow())
         assert len(results_a) == 1
         assert len(results_b) == 1
 
-    def test_no_cross_talk(self) -> None:
+    def test_publish_no_cross_talk(self) -> None:
         bus = EventBus()
         received: list[WifiOn] = []
         bus.subscribe(WifiOn, received.append)
-        bus.emit(WifiOff())
-        bus.process_pending()
+        bus.publish(WifiOff())
         assert received == []
 
-    def test_callback_exception_does_not_propagate(self) -> None:
+    def test_publish_exception_does_not_propagate(self) -> None:
         bus = EventBus()
         results: list[BatteryLow] = []
 
@@ -129,19 +125,36 @@ class TestEventBus:
 
         bus.subscribe(BatteryLow, bad_callback)
         bus.subscribe(BatteryLow, results.append)
-        bus.emit(BatteryLow())
-        bus.process_pending()
+        bus.publish(BatteryLow())
         assert len(results) == 1
 
-    def test_emit_is_thread_safe(self) -> None:
+
+class TestEnqueue:
+    def test_enqueue_does_not_dispatch_immediately(self) -> None:
+        bus = EventBus()
+        received: list[RecordingStarted] = []
+        bus.subscribe(RecordingStarted, received.append)
+        bus.enqueue(RecordingStarted(filename="/tmp/video.h264"))
+        assert received == []
+
+    def test_process_pending_dispatches_enqueued(self) -> None:
+        bus = EventBus()
+        received: list[RecordingStarted] = []
+        bus.subscribe(RecordingStarted, received.append)
+        event = RecordingStarted(filename="/tmp/video.h264")
+        bus.enqueue(event)
+        bus.process_pending()
+        assert received == [event]
+
+    def test_enqueue_is_thread_safe(self) -> None:
         bus = EventBus()
         received: list[ButtonPressed] = []
         bus.subscribe(ButtonPressed, received.append)
 
-        def emit_from_thread() -> None:
-            bus.emit(ButtonPressed(name="power"))
+        def enqueue_from_thread() -> None:
+            bus.enqueue(ButtonPressed(name="power"))
 
-        t = threading.Thread(target=emit_from_thread)
+        t = threading.Thread(target=enqueue_from_thread)
         t.start()
         t.join()
         bus.process_pending()
@@ -152,19 +165,33 @@ class TestEventBus:
         bus = EventBus()
         received: list[BatteryLow] = []
         bus.subscribe(BatteryLow, received.append)
-        bus.emit(BatteryLow())
-        bus.emit(BatteryLow())
-        bus.emit(BatteryLow())
+        bus.enqueue(BatteryLow())
+        bus.enqueue(BatteryLow())
+        bus.enqueue(BatteryLow())
         bus.process_pending()
         assert len(received) == 3
 
+    def test_process_pending_exception_does_not_propagate(self) -> None:
+        bus = EventBus()
+        results: list[BatteryLow] = []
+
+        def bad_callback(event: BatteryLow) -> None:
+            raise RuntimeError("boom")
+
+        bus.subscribe(BatteryLow, bad_callback)
+        bus.subscribe(BatteryLow, results.append)
+        bus.enqueue(BatteryLow())
+        bus.process_pending()
+        assert len(results) == 1
+
+
+class TestSubscriptionManagement:
     def test_unsubscribe(self) -> None:
         bus = EventBus()
         received: list[BatteryLow] = []
         bus.subscribe(BatteryLow, received.append)
         bus.unsubscribe(BatteryLow, received.append)
-        bus.emit(BatteryLow())
-        bus.process_pending()
+        bus.publish(BatteryLow())
         assert received == []
 
     def test_clear(self) -> None:
@@ -172,10 +199,11 @@ class TestEventBus:
         received: list[BatteryLow] = []
         bus.subscribe(BatteryLow, received.append)
         bus.clear()
-        bus.emit(BatteryLow())
-        bus.process_pending()
+        bus.publish(BatteryLow())
         assert received == []
 
+
+class TestEventDataclasses:
     def test_event_dataclass_fields(self) -> None:
         assert RecordingStarted(filename="vid.h264").filename == "vid.h264"
         assert RecordingSplit(filename="vid2.h264").filename == "vid2.h264"
@@ -208,11 +236,14 @@ Expected: FAIL (module not found)
 
 ```python
 # OTCamera/domain/events.py
-"""Queue-based event bus and event types for OTCamera.
+"""Hybrid event bus and event types for OTCamera.
 
-emit() enqueues events into a thread-safe queue. process_pending()
-dispatches all queued events on the main thread. Exceptions in
-callbacks are logged and swallowed — never crash the caller.
+Two dispatch paths:
+- publish(event) dispatches synchronously to subscribers (main thread).
+- enqueue(event) adds to a thread-safe queue (background threads).
+- process_pending() dispatches all queued events on the calling thread.
+
+Exceptions in callbacks are logged and swallowed — never crash the caller.
 """
 
 import logging
@@ -302,9 +333,10 @@ class ShutdownRequested:
 
 
 class EventBus:
-    """Queue-based in-process event bus.
+    """Hybrid in-process event bus with synchronous and queued dispatch.
 
-    emit() is thread-safe — enqueues events into a queue.
+    publish() dispatches synchronously — for main-thread controllers.
+    enqueue() adds to a thread-safe queue — for background threads.
     process_pending() dispatches all queued events on the calling thread.
     """
 
@@ -326,8 +358,15 @@ class EventBus:
             except ValueError:
                 pass
 
-    def emit(self, event: Any) -> None:
-        """Enqueue an event. Thread-safe."""
+    def publish(self, event: Any) -> None:
+        """Dispatch event synchronously to all subscribers.
+
+        For main-thread use only. Exceptions are logged and swallowed.
+        """
+        self._dispatch(event)
+
+    def enqueue(self, event: Any) -> None:
+        """Enqueue an event for later dispatch. Thread-safe."""
         self._queue.put(event)
 
     def process_pending(self) -> None:
@@ -337,15 +376,7 @@ class EventBus:
                 event = self._queue.get_nowait()
             except queue.Empty:
                 break
-            for callback in self._subscribers.get(type(event), []):
-                try:
-                    callback(event)
-                except Exception:
-                    logger.exception(
-                        "Event callback %s failed for %s",
-                        callback,
-                        type(event).__name__,
-                    )
+            self._dispatch(event)
 
     def clear(self) -> None:
         """Remove all subscribers and drain the queue."""
@@ -355,6 +386,18 @@ class EventBus:
                 self._queue.get_nowait()
             except queue.Empty:
                 break
+
+    def _dispatch(self, event: Any) -> None:
+        """Dispatch event to subscribers. Log and swallow exceptions."""
+        for callback in self._subscribers.get(type(event), []):
+            try:
+                callback(event)
+            except Exception:
+                logger.exception(
+                    "Event callback %s failed for %s",
+                    callback,
+                    type(event).__name__,
+                )
 ```
 
 - [ ] **Step 4: Run tests to verify they pass**
@@ -366,7 +409,7 @@ Expected: all PASS
 
 ```bash
 git add OTCamera/domain/events.py tests/domain/test_events.py
-git commit -m "feat: add queue-based event bus with event types"
+git commit -m "feat: add hybrid event bus with publish/enqueue dispatch"
 ```
 
 ---
@@ -2131,7 +2174,7 @@ class TestScheduleController:
         config.recording.end_hour = 22
         bus = EventBus()
         sc = ScheduleController(config, bus)
-        bus.emit(ButtonPressed(name="hour"))
+        bus.enqueue(ButtonPressed(name="hour"))
         bus.process_pending()
         with patch.object(sc, "_current_hour", return_value=23):
             assert sc.should_record() is True
@@ -2142,8 +2185,8 @@ class TestScheduleController:
         config.recording.end_hour = 22
         bus = EventBus()
         sc = ScheduleController(config, bus)
-        bus.emit(ButtonPressed(name="hour"))
-        bus.emit(ButtonReleased(name="hour"))
+        bus.enqueue(ButtonPressed(name="hour"))
+        bus.enqueue(ButtonReleased(name="hour"))
         bus.process_pending()
         with patch.object(sc, "_current_hour", return_value=23):
             assert sc.should_record() is False
@@ -2174,7 +2217,7 @@ class TestScheduleController:
         config.recording.end_hour = 22
         bus = EventBus()
         sc = ScheduleController(config, bus)
-        bus.emit(ButtonPressed(name="wifi"))
+        bus.enqueue(ButtonPressed(name="wifi"))
         bus.process_pending()
         with patch.object(sc, "_current_hour", return_value=23):
             assert sc.should_record() is False
@@ -2410,11 +2453,11 @@ class PowerController:
         if is_connected and not was_connected:
             self._external_power_connected = True
             logger.info("External power connected")
-            self._event_bus.emit(ExternalPowerConnected())
+            self._event_bus.publish(ExternalPowerConnected())
         elif not is_connected and was_connected:
             self._external_power_connected = False
             logger.warning("External power disconnected")
-            self._event_bus.emit(ExternalPowerDisconnected())
+            self._event_bus.publish(ExternalPowerDisconnected())
 
     def check_pending_shutdown(self) -> None:
         """Check if shutdown countdown has elapsed. Called from main loop."""
@@ -2425,12 +2468,10 @@ class PowerController:
             self.shutdown(source="button")
 
     def shutdown(self, source: str = "unknown") -> None:
-        """Emit ShutdownRequested event. Does NOT execute OS shutdown."""
+        """Publish ShutdownRequested (triggers cleanup synchronously), then OS shutdown."""
         logger.info("Shutdown requested by %s", source)
-        self._event_bus.emit(ShutdownRequested(source=source))
+        self._event_bus.publish(ShutdownRequested(source=source))
 
-    def execute_system_shutdown(self) -> None:
-        """Execute OS shutdown. Call after software cleanup is complete."""
         power_led = self._leds.get("power")
         if power_led:
             power_led.on()
@@ -2477,7 +2518,7 @@ class PowerController:
     def _on_low_battery(self) -> None:
         self._battery_is_low = True
         logger.warning("Battery level is low!")
-        self._event_bus.emit(BatteryLow())
+        self._event_bus.publish(BatteryLow())
         self.shutdown(source="battery")
 ```
 
@@ -2607,15 +2648,15 @@ class TestPowerButtonCountdown:
     def test_button_released_starts_countdown(self) -> None:
         bus = EventBus()
         pc = PowerController(Config(debug_mode_on=True), bus, {})
-        bus.emit(ButtonReleased(name="power"))
+        bus.enqueue(ButtonReleased(name="power"))
         bus.process_pending()
         assert pc.shutdown_active
 
     def test_button_pressed_cancels_countdown(self) -> None:
         bus = EventBus()
         pc = PowerController(Config(debug_mode_on=True), bus, {})
-        bus.emit(ButtonReleased(name="power"))
-        bus.emit(ButtonPressed(name="power"))
+        bus.enqueue(ButtonReleased(name="power"))
+        bus.enqueue(ButtonPressed(name="power"))
         bus.process_pending()
         assert not pc.shutdown_active
 
@@ -2624,7 +2665,7 @@ class TestPowerButtonCountdown:
         received: list = []
         bus.subscribe(ShutdownRequested, received.append)
         pc = PowerController(Config(debug_mode_on=True), bus, {})
-        bus.emit(ButtonReleased(name="power"))
+        bus.enqueue(ButtonReleased(name="power"))
         bus.process_pending()
         # Simulate time passing
         pc._power_off_time = dt.now() - timedelta(seconds=_POWER_SHUTDOWN_DELAY + 1)
@@ -2637,7 +2678,7 @@ class TestPowerButtonCountdown:
     def test_other_button_ignored(self) -> None:
         bus = EventBus()
         pc = PowerController(Config(debug_mode_on=True), bus, {})
-        bus.emit(ButtonReleased(name="wifi"))
+        bus.enqueue(ButtonReleased(name="wifi"))
         bus.process_pending()
         assert not pc.shutdown_active
 ```
@@ -2730,7 +2771,7 @@ class WifiController:
                 logger.info("Started SSH relay")
             self._wifi_on = True
             logger.info("Wi-Fi on")
-            self._event_bus.emit(WifiOn())
+            self._event_bus.publish(WifiOn())
 
         wifi_led = self._leds.get("wifi")
         if wifi_led:
@@ -2745,7 +2786,7 @@ class WifiController:
                 logger.info("Stopped SSH relay")
             self._wifi_on = False
             logger.info("Wi-Fi off")
-            self._event_bus.emit(WifiOff())
+            self._event_bus.publish(WifiOff())
 
         wifi_led = self._leds.get("wifi")
         if wifi_led:
@@ -2832,7 +2873,7 @@ class TestWifiControllerSwitchOn:
         bus = EventBus()
         wc = WifiController(config, bus, {})
         wc._wifi_on = False
-        bus.emit(ButtonPressed(name="wifi"))
+        bus.enqueue(ButtonPressed(name="wifi"))
         bus.process_pending()
         assert wc.wifi_on
 
@@ -2840,7 +2881,7 @@ class TestWifiControllerSwitchOn:
         bus = EventBus()
         wc = WifiController(config, bus, {})
         wc._switch_off_time = dt.now()
-        bus.emit(ButtonPressed(name="wifi"))
+        bus.enqueue(ButtonPressed(name="wifi"))
         bus.process_pending()
         assert wc.switch_off_time is None
 
@@ -2848,7 +2889,7 @@ class TestWifiControllerSwitchOn:
         bus = EventBus()
         wc = WifiController(config, bus, {})
         wc._wifi_on = False
-        bus.emit(ButtonHeld(name="wifi"))
+        bus.enqueue(ButtonHeld(name="wifi"))
         bus.process_pending()
         assert wc.wifi_on
 
@@ -2858,9 +2899,8 @@ class TestWifiControllerSwitchOn:
         wc._wifi_on = False
         received: list = []
         bus.subscribe(WifiOn, received.append)
-        bus.emit(ButtonPressed(name="wifi"))
-        bus.process_pending()
-        bus.process_pending()  # process WifiOn emitted by switch_on
+        bus.enqueue(ButtonPressed(name="wifi"))
+        bus.process_pending()  # dispatches ButtonPressed → switch_on → publishes WifiOn
         assert len(received) == 1
 
 
@@ -2868,7 +2908,7 @@ class TestWifiControllerSwitchOff:
     def test_switch_released_starts_delay(self, config: Config) -> None:
         bus = EventBus()
         wc = WifiController(config, bus, {})
-        bus.emit(ButtonReleased(name="wifi"))
+        bus.enqueue(ButtonReleased(name="wifi"))
         bus.process_pending()
         assert wc.switch_off_time is not None
 
@@ -2917,14 +2957,14 @@ class TestWifiControllerOtherButtons:
         bus = EventBus()
         wc = WifiController(config, bus, {})
         wc._wifi_on = False
-        bus.emit(ButtonPressed(name="power"))
+        bus.enqueue(ButtonPressed(name="power"))
         bus.process_pending()
         assert not wc.wifi_on
 
     def test_other_button_released_ignored(self, config: Config) -> None:
         bus = EventBus()
         wc = WifiController(config, bus, {})
-        bus.emit(ButtonReleased(name="hour"))
+        bus.enqueue(ButtonReleased(name="hour"))
         bus.process_pending()
         assert wc.switch_off_time is None
 ```
@@ -3036,7 +3076,7 @@ class CameraController:
         self._last_split_minute = dt.now().minute  # prevent immediate split
         logger.info("Started recording: %s", self._current_video_file)
         self._led_recording_on()
-        self._event_bus.emit(RecordingStarted(filename=self._current_video_file))
+        self._event_bus.publish(RecordingStarted(filename=self._current_video_file))
         self._wait_recording(2)
         self.capture()
 
@@ -3045,7 +3085,7 @@ class CameraController:
             self._camera.stop_recording()
             self._led_recording_off()
             logger.info("Stopped recording. Videos: %d", self._current_interval)
-            self._event_bus.emit(RecordingStopped())
+            self._event_bus.publish(RecordingStopped())
 
     def split_if_interval_ends(self) -> None:
         current_minute = dt.now().minute
@@ -3078,7 +3118,7 @@ class CameraController:
         )
         logger.debug("Preview captured")
         self._try_send_preview(preview_path)
-        self._event_bus.emit(PreviewCaptured(path=preview_path))
+        self._event_bus.publish(PreviewCaptured(path=preview_path))
 
     def close(self) -> None:
         try:
@@ -3143,7 +3183,7 @@ class CameraController:
         self._camera.split_recording(new_file)
         self._current_video_file = new_file
         logger.info("Split recording: %s", new_file)
-        self._event_bus.emit(RecordingSplit(filename=previous_file))
+        self._event_bus.publish(RecordingSplit(filename=previous_file))
         self.delete_old_files()
 
     def _wait_recording(self, timeout: int | float = 0) -> None:
@@ -3681,13 +3721,10 @@ class OTCamera:
             self._execute_shutdown()
 
     def _loop(self) -> None:
-        # First pass: dispatch button events so controllers have current state
+        # Dispatch enqueued button events from gpiozero background threads
         self._event_bus.process_pending()
         self._power.check_power_status()
         self._power.check_pending_shutdown()
-        # Second pass: dispatch events emitted by power checks (e.g. ShutdownRequested)
-        # before recording logic runs
-        self._event_bus.process_pending()
         self._wifi.check_pending_wifi_off()
         self._send_alive_signal()
 
@@ -3833,10 +3870,7 @@ class OTCamera:
         return LogDataObject(log_data=(LogHtmlId.LOG_DATA, log_data))
 
     def _on_shutdown_requested(self, event: ShutdownRequested) -> None:
-        try:
-            self._execute_shutdown()
-        finally:
-            self._power.execute_system_shutdown()
+        self._execute_shutdown()
 
     def _execute_shutdown(self, *args: Any) -> None:
         if self._shutdown:
@@ -3901,19 +3935,19 @@ def main(config: Config | None = None, config_file: str = "~/user_config.yaml") 
 
         # Wire buttons to event bus
         for name, button in board.buttons.items():
-            button.on_pressed(lambda n=name: event_bus.emit(ButtonPressed(n)))
-            button.on_released(lambda n=name: event_bus.emit(ButtonReleased(n)))
-            button.on_held(lambda n=name: event_bus.emit(ButtonHeld(n)))
+            button.on_pressed(lambda n=name: event_bus.enqueue(ButtonPressed(n)))
+            button.on_released(lambda n=name: event_bus.enqueue(ButtonReleased(n)))
+            button.on_held(lambda n=name: event_bus.enqueue(ButtonHeld(n)))
 
         # Boot checks — abort before further init if shutdown is needed
         if "power" in board.buttons and not board.buttons["power"].is_pressed:
             logger.info("Power switch OFF at boot — immediate shutdown")
-            power_controller.execute_system_shutdown()
+            power_controller.shutdown(source="boot")
             return
 
         if power_controller.has_adc and power_controller.is_low_battery:
             logger.warning("Battery low at startup!")
-            power_controller.execute_system_shutdown()
+            power_controller.shutdown(source="battery")
             return
 
         # Reconcile initial switch positions

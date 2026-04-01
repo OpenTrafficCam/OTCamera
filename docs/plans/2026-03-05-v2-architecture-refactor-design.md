@@ -148,7 +148,13 @@ Controllers must tolerate absent hardware. When BSL components are disabled via 
 
 ### Event Bus
 
-Queue-based in-process pub/sub. Single instance passed via constructor injection. `emit()` must be thread-safe (gpiozero callbacks call it from background threads). API: `subscribe()`, `emit()`, `process_pending()`, `unsubscribe()`, `clear()`. The latter two are for teardown and test isolation.
+Hybrid in-process pub/sub with two dispatch paths. Single instance passed via constructor injection.
+
+API: `publish()`, `enqueue()`, `process_pending()`, `subscribe()`, `unsubscribe()`, `clear()`. The latter two are for teardown and test isolation.
+
+- `publish(event)` — dispatches synchronously to all subscribers. Used by controllers on the main thread for events that require immediate handling (e.g., `ShutdownRequested`).
+- `enqueue(event)` — thread-safe, adds to queue. Used by gpiozero button callbacks from background threads.
+- `process_pending()` — dispatches all queued events. Called once at the start of each main loop iteration.
 
 **Event types:**
 ```
@@ -168,9 +174,9 @@ WifiOff()
 ShutdownRequested(source: str)  # "battery", "button", "ui", "messagebroker"
 ```
 
-**Error handling:** Log and continue on callback exceptions. Never crash the caller.
+**Error handling:** Log and continue on callback exceptions for both `publish()` and `process_pending()`. Never crash the caller.
 
-**Threading:** `emit()` enqueues events. `process_pending()` is called once per main loop iteration and dispatches all queued events on the main thread. All `subscribe()` calls must complete before any `emit()` — the wiring order in `__main__.py` guarantees this.
+**Threading:** `enqueue()` is thread-safe (gpiozero callbacks). `publish()` is for main-thread use only. All `subscribe()` calls must complete before any `enqueue()` — the wiring order in `__main__.py` guarantees this.
 
 ### Recording Pipeline (direct method calls)
 
@@ -241,16 +247,16 @@ wifi_controller = WifiController(config, event_bus, board.leds)
 schedule_controller = ScheduleController(config, event_bus)
 upload_controller = UploadController(event_bus, upload)
 
-# 7. Wire buttons to event bus
+# 7. Wire buttons to event bus (enqueue — background thread safe)
 for name, button in board.buttons.items():
-    button.on_pressed(lambda n=name: event_bus.emit(ButtonPressed(n)))
-    button.on_released(lambda n=name: event_bus.emit(ButtonReleased(n)))
-    button.on_held(lambda n=name: event_bus.emit(ButtonHeld(n)))
+    button.on_pressed(lambda n=name: event_bus.enqueue(ButtonPressed(n)))
+    button.on_released(lambda n=name: event_bus.enqueue(ButtonReleased(n)))
+    button.on_held(lambda n=name: event_bus.enqueue(ButtonHeld(n)))
 
 # 8. Boot checks — abort before further init if shutdown is needed
 if "power" in board.buttons and not board.buttons["power"].is_pressed:
     # Power switch OFF at boot → immediate shutdown
-    power_controller.execute_system_shutdown()
+    power_controller.shutdown(source="boot")
     return
 
 # 9. Reconcile initial switch positions (if buttons present)
