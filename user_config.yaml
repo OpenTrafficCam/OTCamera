@@ -1,0 +1,80 @@
+---
+debug_mode:
+  enable: false
+
+relay_server:
+  enable: false
+
+recording:
+  start_hour: 6
+  end_hour: 22
+  interval_length: 15
+  num_intervals: 0
+  min_free_space: 1
+
+camera:
+  fps: 20
+  resolution:
+    width: 2304
+    height: 1296
+  exposure_mode: nightpreview
+  drc_strength: high
+  rotation: 180
+  awb_mode: greyworld
+  meter_mode: average
+
+preview:
+  path: ~/OTCamera/webfiles/preview.jpg
+  format: jpeg
+  interval: 5
+  send_to_external: false
+  url: http://localhost:5000/projects/0/sites/1/cameras/2/current_frame
+
+server_upload:
+  enable: false
+  scheme: ftp
+  host: localhost
+  port: 21
+  user: user
+  password: password
+  server_source: /
+
+video:
+  dir: ~/videos/
+  format: h264
+  resolution:
+    width: 800
+    height: 600
+  encoder:
+    profile: high
+    level: 4
+    bitrate: 600000
+    quality: 30
+
+hardware:
+  pcb_version: v2
+  use_leds: false
+  use_buttons: false
+  use_adc: false
+
+wifi:
+  delay: 900
+
+msteams:
+  enable: false
+  url: null
+  max_failed_send_attempts: 2
+
+adc:
+  threshold_external_power: 2.5
+  threshold_low_battery: 3.3
+
+# The following top-level Config fields exist in the code but are currently not
+# read from YAML by parse_user_config():
+# prefix: your-camera-name
+# template_html_path: ~/OTCamera/webfiles/template.html
+# index_html_path: ~/OTCamera/webfiles/index.html
+# offline_html_path: ~/OTCamera/webfiles/offline.html
+# num_log_files_html: 2
+# usb_mount_point: ~/mnt/usb
+# usb_device: /dev/sda1
