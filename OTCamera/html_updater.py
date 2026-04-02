@@ -37,6 +37,7 @@ Variables:
 # program.  If not, see <https://www.gnu.org/licenses/>.
 
 import copy
+import logging
 from abc import ABC
 from dataclasses import dataclass, fields
 from enum import Enum
@@ -45,7 +46,7 @@ from typing import Any, Tuple, Union
 
 from bs4 import BeautifulSoup, Tag
 
-from OTCamera.helpers import log
+logger = logging.getLogger(__name__)
 
 
 class StatusHtmlId(Enum):
@@ -403,7 +404,7 @@ class StatusWebsiteUpdater:
             )
 
         self._save(html_tree)
-        log.write("index.html status information updated", log.LogLevel.DEBUG)
+        logger.debug("index.html status information updated")
 
     def _set_record_status_banner(
         self, soup: BeautifulSoup, currently_recording: bool, always_recording: bool

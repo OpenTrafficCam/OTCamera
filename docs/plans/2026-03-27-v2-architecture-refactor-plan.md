@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED: Use superpowers:subagent-driven-development (if subagents available) or superpowers:executing-plans to implement this plan. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Refactor OTCamera into clean layers (domain / bsl / module / plugin / controller) with queue-based event bus, hardware ABCs, board support layer, and provider pattern for swappable components.
+**Goal:** Refactor OTCamera into clean layers (domain / bsl / module / plugin / controller) with a hybrid event bus, hardware ABCs, board support layer, and provider pattern for swappable components.
 
 **Architecture:** Domain ABCs define contracts. BSL (Board Support Layer) implements board-specific hardware (LEDs, buttons, ADC) selected by PCB version via a single BoardProvider. Modules implement pluggable hardware (camera). Plugins handle swappable software components (upload). Controllers orchestrate logic against domain ABCs only. Hybrid EventBus provides synchronous `publish()` for main-thread controllers and thread-safe `enqueue()` for gpiozero callbacks, with `process_pending()` dispatching queued events once per loop iteration.
 
@@ -2468,7 +2468,7 @@ class PowerController:
             self.shutdown(source="button")
 
     def shutdown(self, source: str = "unknown") -> None:
-        """Publish ShutdownRequested (triggers cleanup synchronously), then OS shutdown."""
+        """Publish ShutdownRequested, then continue with OS shutdown."""
         logger.info("Shutdown requested by %s", source)
         self._event_bus.publish(ShutdownRequested(source=source))
 
@@ -3871,13 +3871,31 @@ class OTCamera:
             return
         self._shutdown = True
         logger.info("Stopping OTCamera")
-        self._schedule.set_shutdown_active(True)
-        self._camera.stop_recording()
-        self._camera.close()
-        logger.info("OTCamera stopped")
-        self._html_updater.display_offline_info(
-            self._get_log_info(0, self._config.num_log_files_html),
-        )
+
+        # Best-effort shutdown: one failing step must not prevent the others.
+        try:
+            self._schedule.set_shutdown_active(True)
+        except Exception:
+            logger.exception("Failed to set shutdown_active")
+
+        try:
+            self._camera.stop_recording()
+        except Exception:
+            logger.exception("Failed to stop recording")
+
+        try:
+            self._camera.close()
+        except Exception:
+            logger.exception("Failed to close camera")
+
+        try:
+            self._html_updater.display_offline_info(
+                self._get_log_info(0, self._config.num_log_files_html),
+            )
+        except Exception:
+            logger.exception("Failed to display offline info")
+
+        logger.info("OTCamera shutdown cleanup finished")
 
 
 def _get_log_files_sorted(log_files: Iterator[Path]) -> list[Path]:
@@ -3993,7 +4011,7 @@ if __name__ == "__main__":
 
 ```bash
 git add OTCamera/__main__.py
-git commit -m "refactor: rewrite __main__.py with BSL/module/plugin wiring and queue-based event bus"
+git commit -m "refactor: rewrite __main__.py with BSL/module/plugin wiring and hybrid event bus"
 ```
 
 ---

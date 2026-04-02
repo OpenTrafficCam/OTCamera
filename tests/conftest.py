@@ -13,7 +13,6 @@
 # You should have received a copy of the GNU General Public License along with this
 # program.  If not, see <https://www.gnu.org/licenses/>.
 
-import shutil
 from pathlib import Path
 from typing import Generator, TypeVar
 
@@ -24,15 +23,10 @@ YieldFixture = Generator[T, None, None]
 
 
 @pytest.fixture
-def test_dir() -> YieldFixture[Path]:
-    test_dir = Path(__file__).parent / "data"
+def test_dir(tmp_path: Path) -> YieldFixture[Path]:
+    test_dir = tmp_path / "data"
     test_dir.mkdir(exist_ok=True)
     yield test_dir
-    for f in test_dir.iterdir():
-        try:
-            f.unlink()
-        except IsADirectoryError:
-            shutil.rmtree(f)
 
 
 @pytest.fixture

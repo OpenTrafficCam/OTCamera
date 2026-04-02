@@ -1,3 +1,5 @@
+"""Abstract camera interface and camera-specific exceptions."""
+
 from abc import ABC, abstractmethod
 from typing import Literal, Tuple, Union
 
@@ -34,7 +36,12 @@ bgra: Write the raw video data to a file in 32-bit BGRA format
 """
 
 
+class CameraClosedError(Exception):
+    """Raised when an operation is attempted on a closed camera."""
+
+
 class Camera(ABC):
+    """Abstract camera contract for recording and capture backends."""
 
     @property
     @abstractmethod

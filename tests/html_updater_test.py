@@ -26,26 +26,45 @@ from OTCamera.html_updater import (
     LogHtmlId,
     OTCameraDataObject,
     StatusDataObject,
+    StatusHtmlId,
+    StatusWebsiteUpdater,
 )
-from OTCamera.html_updater import StatusHtmlId as status_id
-from OTCamera.html_updater import StatusWebsiteUpdater
 
 
 @pytest.fixture
-def html_updater() -> StatusWebsiteUpdater:
-    return StatusWebsiteUpdater(debug_mode_on=True)
+def template_html_path() -> Path:
+    return Path("webfiles/template.html")
+
+
+@pytest.fixture
+def offline_html_path() -> Path:
+    return Path("webfiles/offline.html")
+
+
+@pytest.fixture
+def html_save_path(test_dir: Path) -> Path:
+    return test_dir / "index.html"
+
+
+@pytest.fixture
+def html_updater(
+    template_html_path: Path,
+    offline_html_path: Path,
+    html_save_path: Path,
+) -> StatusWebsiteUpdater:
+    return StatusWebsiteUpdater(
+        template_html_path=template_html_path,
+        offline_html_path=offline_html_path,
+        html_save_path=html_save_path,
+        debug_mode_on=True,
+    )
 
 
 @pytest.fixture
 def create_html_file(test_dir: Path) -> Callable[[str, str], Path]:
     def _create_html_file(file_name: str, content: str) -> Path:
-        print("iam here")
         html_path = test_dir / file_name
-        html_path.touch(exist_ok=True)
-
-        with open(html_path, "w") as f:
-            f.write(content)
-
+        html_path.write_text(content, encoding="utf-8")
         return html_path
 
     return _create_html_file
@@ -54,37 +73,35 @@ def create_html_file(test_dir: Path) -> Callable[[str, str], Path]:
 @pytest.fixture
 def status_data() -> StatusDataObject:
     return StatusDataObject(
-        time=(status_id.TIME, "2022-05-05T11:26:30"),
-        hostname=(status_id.HOSTNAME, "my-name"),
-        free_diskspace=(status_id.FREE_DISKSPACE, 12),
-        num_videos_recorded=(status_id.NUM_VIDEOS_RECORDED, 4),
-        currently_recording=(status_id.CURRENTLY_RECORDING, True),
-        wifi_active=(status_id.WIFI_ACTIVE, True),
-        low_battery=(status_id.LOW_BATTERY, False),
-        power_button_active=(status_id.POWER_BUTTON_ACTIVE, True),
-        hour_button_active=(status_id.HOUR_BUTTON_ACTIVE, False),
-        wifi_ap_on=(status_id.WIFI_AP_ON, False),
+        free_diskspace=(StatusHtmlId.FREE_DISKSPACE, "12 GB"),
+        num_videos_recorded=(StatusHtmlId.NUM_VIDEOS_RECORDED, 4),
+        currently_recording=(StatusHtmlId.CURRENTLY_RECORDING, True),
+        low_battery=(StatusHtmlId.LOW_BATTERY, False),
+        hour_button_active=(StatusHtmlId.HOUR_BUTTON_ACTIVE, False),
+        external_power_supply_connected=(
+            StatusHtmlId.EXT_POWER_SUPPLY_CONNECTED,
+            True,
+        ),
+        ms_teams_webhook_enabled=(StatusHtmlId.MS_TEAMS_WEBHOOK_ENABLED, False),
+        time_until_wifi_off=(StatusHtmlId.TIME_UNTIL_WIFI_OFF, "300s"),
     )
 
 
 @pytest.fixture
-def config_data() -> ConfigDataObject:
+def config_data(template_html_path: Path, html_save_path: Path) -> ConfigDataObject:
     return ConfigDataObject(
         debug_mode_on=(ConfigHtmlId.DEBUG_MODE_ON, True),
         start_hour=(ConfigHtmlId.START_HOUR, 6),
         end_hour=(ConfigHtmlId.END_HOUR, 22),
-        interval_video_split=(
-            ConfigHtmlId.INTERVAL_VIDEO_SPLIT,
-            15,
-        ),
+        interval_video_split=(ConfigHtmlId.INTERVAL_VIDEO_SPLIT, 15),
         num_intervals=(ConfigHtmlId.NUM_INTERVALS, 0),
         preview_interval=(ConfigHtmlId.PREVIEW_INTERVAL, 5),
         min_free_space=(ConfigHtmlId.MIN_FREE_SPACE, 1),
         prefix=(ConfigHtmlId.PREFIX, "my_prefix"),
         video_dir=(ConfigHtmlId.VIDEO_DIR, "path/to/video/dir"),
         preview_path=(ConfigHtmlId.PREVIEW_PATH, "path/to/preview.jpeg"),
-        template_html_path=(ConfigHtmlId.TEMPLATE_HTML_PATH, "path/to/template.html"),
-        index_html_path=(ConfigHtmlId.INDEX_HTML_PATH, "path/to/index.html"),
+        template_html_path=(ConfigHtmlId.TEMPLATE_HTML_PATH, str(template_html_path)),
+        index_html_path=(ConfigHtmlId.INDEX_HTML_PATH, str(html_save_path)),
         fps=(ConfigHtmlId.FPS, 20),
         resolution=(ConfigHtmlId.RESOLUTION, (1640, 1232)),
         exposure_mode=(ConfigHtmlId.EXPOSURE_MODE, "nightpreview"),
@@ -93,10 +110,7 @@ def config_data() -> ConfigDataObject:
         awb_mode=(ConfigHtmlId.AWB_MODE, "greyworld"),
         video_format=(ConfigHtmlId.VIDEO_FORMAT, "h264"),
         preview_format=(ConfigHtmlId.PREVIEW_FORMAT, "jpeg"),
-        res_of_saved_video_file=(
-            ConfigHtmlId.RESOLUTION_SAVED_VIDEO_FILE,
-            (800, 600),
-        ),
+        res_of_saved_video_file=(ConfigHtmlId.RESOLUTION_SAVED_VIDEO_FILE, (800, 600)),
         h264_profile=(ConfigHtmlId.H264_PROFILE, "high"),
         h264_level=(ConfigHtmlId.H264_LEVEL, "4"),
         h264_bitrate=(ConfigHtmlId.H264_BITRATE, 600000),
@@ -110,12 +124,12 @@ def config_data() -> ConfigDataObject:
 @pytest.fixture
 def log_data() -> LogDataObject:
     return LogDataObject(
-        log_data=(LogHtmlId.LOG_DATA, "Log File Number 1\n Log line 1\n Log line 2")
+        log_data=(LogHtmlId.LOG_DATA, "Log File Number 1\nLog line 1\nLog line 2")
     )
 
 
 @pytest.mark.parametrize(
-    "html, expected",
+    ("html", "expected"),
     [
         (
             '<div id="status-info" style="display: revert"></div>',
@@ -135,21 +149,20 @@ def log_data() -> LogDataObject:
         ),
     ],
 )
-def test_disable_info_visibleHtmlAsParam_returnsDisabledTag(
+def test_disable_tag_by_id(
     html_updater: StatusWebsiteUpdater,
-    create_html_file: Callable[[str, str], Path],
     html: str,
     expected: str,
 ) -> None:
-    html_filepath = create_html_file(file_name="test.html", content=html)
-    html_updater.disable_info(html_filepath)
-    result = parse_html(html_filepath)
+    html_tree = BeautifulSoup(html, "html.parser")
 
-    assert result == expected
+    html_updater._disable_tag_by_id(html_tree, "status-info")
+
+    assert str(html_tree) == expected
 
 
 @pytest.mark.parametrize(
-    "html, expected",
+    ("html", "expected"),
     [
         (
             '<div id="status-info" style="display: revert"></div>',
@@ -174,17 +187,15 @@ def test_enable_tag_by_id(
     html: str,
     expected: str,
 ) -> None:
-
     html_tree = BeautifulSoup(html, "html.parser")
 
-    html_updater._enable_tag_by_id(html_tag=html_tree, id="status-info")
-    result = str(html_tree)
+    html_updater._enable_tag_by_id(html_tree, "status-info")
 
-    assert result == expected
+    assert str(html_tree) == expected
 
 
 @pytest.mark.parametrize(
-    "html,text, expected",
+    ("html", "text", "expected"),
     [
         (
             '<div id="status-info" style="display: revert"></div>',
@@ -213,95 +224,90 @@ def test_change_content(
     html: str,
     text: str,
     expected: str,
-):
+) -> None:
     html_tree = BeautifulSoup(html, "html.parser")
-    html_updater._change_content(html_tag=html_tree.div, content=text)
-    result = str(html_tree)
 
-    assert result == expected
+    html_updater._change_content(html_tree.div, text)
+
+    assert str(html_tree) == expected
 
 
-@pytest.mark.parametrize(
-    "html, expected",
-    [
-        (
-            '<div id="status-info" style="display: revert">I am some content.</div>',
-            '<div id="status-info" style="display: revert">I am some content.</div>',
-        ),
-        (
-            '<div id="status-info"><p id="hostname"></p></div>',
-            '<div id="status-info"><p id="hostname">my-name</p></div>',
-        ),
-    ],
-)
 def test_update_by_id(
     html_updater: StatusWebsiteUpdater,
-    html: str,
-    expected: str,
     status_data: OTCameraDataObject,
-):
-    html_tree = BeautifulSoup(html, "html.parser")
-    html_updater._update_by_id(html_tree=html_tree, update_info=status_data)
-    result = str(html_tree)
-
-    assert result == expected
-
-
-@pytest.mark.parametrize(
-    "html, expected",
-    [
+) -> None:
+    html_tree = BeautifulSoup(
         (
-            '<div id="status-info" style="display: revert">I am some content.</div>',
-            '<div id="status-info" style="display: revert">I am some content.</div>',
+            '<div id="status-info">'
+            '<p id="free-diskspace"></p>'
+            '<p id="num-videos"></p>'
+            "</div>"
         ),
-        (
-            '<div id="status-info"><p id="hostname"></p></div>',
-            (
-                '<div id="status-info" style="display: revert">'
-                '<p id="hostname">my-name</p></div>'
-            ),
-        ),
-    ],
-)
-def test_update_info(
-    html_updater: StatusWebsiteUpdater,
-    create_html_file: Callable[[str, str], Path],
-    html: str,
-    expected: str,
-    status_data: OTCameraDataObject,
-    config_data: OTCameraDataObject,
-):
-    html_filepath = create_html_file("test.html", html)
-    html_updater.update_info(html_filepath, html_filepath, status_data, config_data)
-
-    result = parse_html(html_filepath)
-
-    assert result == expected
-
-
-def test_update_info_htmlWithAllIdsAsParam(
-    html_updater: StatusWebsiteUpdater,
-    status_data: OTCameraDataObject,
-    config_data: OTCameraDataObject,
-    test_dir: Path,
-    resources_dir: Path,
-):
-    template_html_filepath = resources_dir / "template.html"
-    expected_html_filepath = resources_dir / "expected.html"
-    result_save_path = test_dir / "result.html"
-
-    html_updater.update_info(
-        template_html_filepath, result_save_path, status_data, config_data
+        "html.parser",
     )
-    soup_result = parse_html(result_save_path)
-    soup_expected = parse_html(expected_html_filepath)
-    str_result = str(soup_result)
-    str_expected = str(soup_expected)
 
-    assert str_result == str_expected
+    html_updater._update_by_id(html_tree, status_data)
+
+    assert html_tree.find(id="free-diskspace").string == "12 GB"
+    assert html_tree.find(id="num-videos").string == "4"
 
 
-def parse_html(path: Path) -> str:
-    with open(path) as html_stream:
-        soup = BeautifulSoup(html_stream, "html.parser")
-        return str(soup)
+def test_disable_info_writes_hidden_sections(
+    html_updater: StatusWebsiteUpdater,
+    html_save_path: Path,
+) -> None:
+    html_updater.disable_info()
+
+    soup = parse_html(html_save_path)
+
+    assert soup.find(id="status-info")["style"] == "display: none"
+    assert soup.find(id="config-info")["style"] == "display: none"
+
+
+def test_update_info_builds_status_and_config_tables(
+    html_updater: StatusWebsiteUpdater,
+    status_data: OTCameraDataObject,
+    config_data: OTCameraDataObject,
+    html_save_path: Path,
+) -> None:
+    html_updater.update_info(
+        status_info=status_data,
+        config_info=config_data,
+        currently_recording=True,
+        always_recording=False,
+        external_power_supply_connected=False,
+    )
+
+    soup = parse_html(html_save_path)
+
+    assert soup.find(id="status-info")["style"] == "display: revert"
+    assert soup.find(id="config-info")["style"] == "display: revert"
+    assert soup.find(id="recording-banner").get_text(strip=True) == (
+        "Currently recording (not 24/7)"
+    )
+    assert soup.find(id="ext-power-supply-banner").get_text(strip=True) == (
+        "Not connected to external power supply"
+    )
+    assert soup.find(id="free-diskspace").find_all("td")[1].get_text(strip=True) == (
+        "12 GB"
+    )
+    assert soup.find(id="debug-mode-on").find_all("td")[1].get_text(strip=True) == (
+        "True"
+    )
+
+
+def test_display_offline_info_includes_log_output(
+    html_updater: StatusWebsiteUpdater,
+    log_data: LogDataObject,
+    html_save_path: Path,
+) -> None:
+    html_updater.display_offline_info(log_data)
+
+    soup = parse_html(html_save_path)
+
+    assert soup.find(id="log-info") is not None
+    assert "Log File Number 1" in soup.find(id="log-data").get_text()
+
+
+def parse_html(path: Path) -> BeautifulSoup:
+    return BeautifulSoup(path.read_text(encoding="utf-8"), "html.parser")

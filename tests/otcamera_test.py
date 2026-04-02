@@ -1,18 +1,43 @@
-# Copyright (C) 2023 OpenTrafficCam Contributors
-# <https://github.com/OpenTrafficCam>
-# <team@opentrafficcam.org>
+from pathlib import Path
+from unittest.mock import MagicMock
 
-# This program is free software: you can redistribute it and/or modify it under the
-# terms of the GNU General Public License as published by the Free Software Foundation,
-# either version 3 of the License, or (at your option) any later version.
+from pytest import MonkeyPatch
 
-# This program is distributed in the hope that it will be useful, but WITHOUT ANY
-# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
-
-# PARTICULAR PURPOSE.  See the GNU General Public License for more details.
-# You should have received a copy of the GNU General Public License along with this
-# program.  If not, see <https://www.gnu.org/licenses/>.
+from OTCamera.__main__ import OTCamera
+from OTCamera.config import Config
+from OTCamera.domain.events import EventBus
 
 
-def test_placeholder() -> None:
-    pass
+def test_execute_shutdown_stops_recording_without_closing_camera(
+    monkeypatch: MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    config = Config()
+    config.video.dir = str(tmp_path)
+
+    event_bus = EventBus()
+    camera_controller = MagicMock()
+    power_controller = MagicMock()
+    wifi_controller = MagicMock()
+    schedule_controller = MagicMock()
+    html_updater = MagicMock()
+
+    monkeypatch.setattr("OTCamera.__main__.signal.signal", lambda *_args: None)
+
+    app = OTCamera(
+        config=config,
+        event_bus=event_bus,
+        camera_controller=camera_controller,
+        power_controller=power_controller,
+        wifi_controller=wifi_controller,
+        schedule_controller=schedule_controller,
+        html_updater=html_updater,
+        leds={},
+    )
+
+    app._execute_shutdown()
+
+    schedule_controller.set_shutdown_active.assert_called_once_with(True)
+    camera_controller.stop_recording.assert_called_once_with()
+    camera_controller.close.assert_not_called()
+    html_updater.display_offline_info.assert_called_once()

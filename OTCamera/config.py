@@ -1,454 +1,346 @@
-"""OTCamera config variables.
+"""OTCamera configuration dataclasses and YAML parsing."""
 
-All the configuration of OTCamera is done here.
-
-"""
-
-# Copyright (C) 2023 OpenTrafficCam Contributors
-# <https://github.com/OpenTrafficCam>
-# <team@opentrafficcam.org>
-
-# This program is free software: you can redistribute it and/or modify it under the
-# terms of the GNU General Public License as published by the Free Software Foundation,
-# either version 3 of the License, or (at your option) any later version.
-
-# This program is distributed in the hope that it will be useful, but WITHOUT ANY
-# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
-
-# PARTICULAR PURPOSE.  See the GNU General Public License for more details.
-# You should have received a copy of the GNU General Public License along with this
-# program.  If not, see <https://www.gnu.org/licenses/>.
-
-
+import logging
 import socket
-import sys
+from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Literal
+from typing import Any, Mapping
 
 try:
-    from yaml import CSafeLoader as SafeLoader  # type: ignore
+    from yaml import CSafeLoader as SafeLoader  # type: ignore[attr-defined]
 except ImportError:
-    from yaml import SafeLoader  # type: ignore
+    from yaml import SafeLoader  # type: ignore[assignment]
 
 import yaml
 
+logger = logging.getLogger(__name__)
 
-def parse_user_config(config_file: str) -> None:
-    """Parses the OTCamera user configuration YAML file.
 
-    Args:
-        config_file (str): The path to the user configuration YAML file.
-    """
-    config_file = str(Path(config_file).expanduser().resolve())
+@dataclass
+class RecordingConfig:
+    """Recording schedule and disk-space settings."""
+
+    start_hour: int = 6
+    end_hour: int = 22
+    interval_length: int = 15
+    num_intervals: int = 0
+    min_free_space: int = 1
+
+
+@dataclass
+class CameraConfig:
+    """Camera hardware and ISP settings."""
+
+    fps: int = 20
+    resolution: tuple[int, int] = (2304, 1296)
+    exposure_mode: str = "nightpreview"
+    drc_strength: str = "high"
+    rotation: int = 180
+    awb_mode: str = "greyworld"
+    meter_mode: str = "average"
+
+
+@dataclass
+class PreviewConfig:
+    """Preview capture and preview upload settings."""
+
+    path: str = "~/OTCamera/webfiles/preview.jpg"
+    format: str = "jpeg"
+    interval: int = 5
+    send_to_external: bool = False
+    url: str = "http://localhost:5000/projects/0/sites/1/cameras/2/current_frame"
+
+
+@dataclass
+class ServerUploadConfig:
+    """Remote upload settings."""
+
+    enable: bool = False
+    scheme: str = "ftp"
+    host: str = "localhost"
+    port: int = 21
+    user: str = "user"
+    password: str = "password"
+    server_source: str = "/"
+
+
+@dataclass
+class VideoConfig:
+    """Recorded video output settings."""
+
+    dir: str = "~/videos/"
+    format: str = "h264"
+    resolution: tuple[int, int] = (800, 600)
+    h264_profile: str = "high"
+    h264_level: str = "4"
+    h264_bitrate: int = 600000
+    h264_quality: int = 30
+
+
+@dataclass
+class WifiConfig:
+    """Wi-Fi access point settings."""
+
+    delay: int = 900
+
+
+@dataclass
+class HardwareConfig:
+    """Hardware feature toggles and board selection."""
+
+    pcb_version: str = "v2"
+    use_leds: bool = False
+    use_buttons: bool = False
+    use_adc: bool = False
+
+
+@dataclass
+class MsTeamsConfig:
+    """MS Teams logging webhook settings."""
+
+    enable: bool = False
+    url: str | None = None
+    max_failed_send_attempts: int = 2
+
+
+@dataclass
+class AdcConfig:
+    """Voltage thresholds used by power monitoring."""
+
+    threshold_external_power: float = 2.5
+    threshold_low_battery: float = 3.3
+
+
+@dataclass
+class Config:
+    """Top-level OTCamera configuration."""
+
+    debug_mode_on: bool = False
+    use_relay: bool = False
+    prefix: str = field(default_factory=socket.gethostname)
+    recording: RecordingConfig = field(default_factory=RecordingConfig)
+    camera: CameraConfig = field(default_factory=CameraConfig)
+    preview: PreviewConfig = field(default_factory=PreviewConfig)
+    server_upload: ServerUploadConfig = field(default_factory=ServerUploadConfig)
+    video: VideoConfig = field(default_factory=VideoConfig)
+    wifi: WifiConfig = field(default_factory=WifiConfig)
+    hardware: HardwareConfig = field(default_factory=HardwareConfig)
+    msteams: MsTeamsConfig = field(default_factory=MsTeamsConfig)
+    adc: AdcConfig = field(default_factory=AdcConfig)
+    template_html_path: str = "~/OTCamera/webfiles/template.html"
+    index_html_path: str = "~/OTCamera/webfiles/index.html"
+    offline_html_path: str = "~/OTCamera/webfiles/offline.html"
+    num_log_files_html: int = 2
+    usb_mount_point: str = "~/mnt/usb"
+    usb_device: str = "/dev/sda1"
+
+    def resolve_paths(self) -> None:
+        """Resolve path-valued settings to absolute paths."""
+        self.video.dir = _resolve_path(self.video.dir)
+        self.preview.path = _resolve_path(self.preview.path)
+        self.template_html_path = _resolve_path(self.template_html_path)
+        self.index_html_path = _resolve_path(self.index_html_path)
+        self.offline_html_path = _resolve_path(self.offline_html_path)
+        self.usb_mount_point = _resolve_path(self.usb_mount_point)
+
+
+def parse_user_config(config_file: str) -> Config:
+    """Parse a YAML config file and return a Config instance."""
+    config_path = Path(config_file).expanduser().resolve()
+    config = Config()
+
     try:
-        with open(config_file, mode="rb") as f:
-            user_config = yaml.load(f, Loader=SafeLoader)
+        with open(config_path, mode="rb") as file_handle:
+            loaded_data = yaml.load(file_handle, Loader=SafeLoader)
     except FileNotFoundError:
-        # TODO: use log module
-        print("No user config found.")
-        return
+        logger.warning("No user config found at %s, using defaults.", config_path)
+        config.resolve_paths()
+        return config
 
-    module = sys.modules[__name__]
-    setattr(module, "DEBUG_MODE_ON", user_config["debug_mode"]["enable"])
+    data = _as_section(loaded_data)
+    if not data:
+        config.resolve_paths()
+        return config
 
-    try:
-        section = user_config["debug_mode"]
-    except KeyError:
-        _print_key_err_msg("debug_mode")
-    else:
-        try:
-            setattr(module, "DEBUG_MODE_ON", section["enable"])
-        except KeyError:
-            _print_key_err_msg("debug_mode.enable")
+    _parse_general_config(config, data)
+    _parse_recording_config(config, _get_section(data, "recording"))
+    _parse_camera_config(config, _get_section(data, "camera"))
+    _parse_preview_config(config, _get_section(data, "preview"))
+    _parse_server_upload_config(config, _get_section(data, "server_upload"))
+    _parse_video_config(config, _get_section(data, "video"))
+    _parse_wifi_config(config, _get_section(data, "wifi"))
+    _parse_hardware_config(config, _get_section(data, "hardware"))
+    _parse_msteams_config(config, _get_section(data, "msteams"))
+    _parse_adc_config(config, _get_section(data, "adc"))
 
-    try:
-        section = user_config["relay_server"]
-    except KeyError:
-        _print_key_err_msg("relay_server")
-    else:
-        try:
-            setattr(module, "USE_RELAY", section["enable"])
-        except KeyError:
-            _print_key_err_msg("relay_server.enable")
-
-    try:
-        section = user_config["recording"]
-    except KeyError:
-        _print_key_err_msg("recording")
-    else:
-        try:
-            setattr(module, "START_HOUR", section["start_hour"])
-        except KeyError:
-            _print_key_err_msg("recording.start_hour")
-        try:
-            setattr(module, "END_HOUR", section["end_hour"])
-        except KeyError:
-            _print_key_err_msg("recording.end_hour")
-        try:
-            setattr(module, "INTERVAL_LENGTH", section["interval_length"])
-        except KeyError:
-            _print_key_err_msg("recording.interval_length")
-        try:
-            setattr(module, "NUM_INTERVALS", section["num_intervals"])
-        except KeyError:
-            _print_key_err_msg("recording.num_invervals")
-        try:
-            setattr(module, "MIN_FREE_SPACE", section["min_free_space"])
-        except KeyError:
-            _print_key_err_msg("recording.min_free_space")
-
-    try:
-        section = user_config["camera"]
-    except KeyError:
-        _print_key_err_msg("camera")
-    else:
-        try:
-            setattr(module, "CAMERA_TYPE", section["type"])
-        except KeyError:
-            _print_key_err_msg("camera.type")
-        try:
-            setattr(module, "FPS", section["fps"])
-        except KeyError:
-            _print_key_err_msg("camera.fps")
-        try:
-            setattr(
-                module,
-                "RESOLUTION",
-                (section["resolution"]["width"], section["resolution"]["height"]),
-            )
-        except KeyError:
-            _print_key_err_msg("camera.resolution.width, camera.resolution.height")
-        try:
-            setattr(module, "EXPOSURE_MODE", section["exposure_mode"])
-        except KeyError:
-            _print_key_err_msg("camera.exposure_mode")
-        try:
-            setattr(module, "DRC_STRENGTH", section["drc_strength"])
-        except KeyError:
-            _print_key_err_msg("camera.drc_strength")
-        try:
-            setattr(module, "ROTATION", section["rotation"])
-        except KeyError:
-            _print_key_err_msg("cammera.rotation")
-        try:
-            setattr(module, "AWB_MODE", section["awb_mode"])
-        except KeyError:
-            _print_key_err_msg("camera.awb_mode")
-        try:
-            setattr(module, "METER_MODE", section["meter_mode"])
-        except KeyError:
-            _print_key_err_msg("camera.meter_mode")
-
-    try:
-        section = user_config["preview"]
-    except KeyError:
-        _print_key_err_msg("preview")
-    else:
-        try:
-            preview_path = str(Path(section["path"]).expanduser().resolve())
-            setattr(module, "PREVIEW_PATH", preview_path)
-        except KeyError:
-            _print_key_err_msg("preview.path")
-        try:
-            setattr(module, "PREVIEW_FORMAT", section["format"])
-        except KeyError:
-            print("preview.format")
-        try:
-            setattr(module, "PREVIEW_INTERVAL", section["interval"])
-        except KeyError:
-            _print_key_err_msg("preview.interval")
-        try:
-            setattr(module, "SEND_PREVIEW_TO_EXTERNAL", section["send_to_external"])
-        except KeyError:
-            _print_key_err_msg("preview.send_to_external")
-        try:
-            setattr(module, "PREVIEW_URL", section["url"])
-        except KeyError:
-            _print_key_err_msg("preview.url")
-
-    try:
-        section = user_config["server_upload"]
-    except KeyError:
-        _print_key_err_msg("server_upload")
-    else:
-        for member, config_key in ({
-            "UPLOAD": "upload",
-            "SCHEME" : "scheme",
-            "HOST" : "host",
-            "PORT" : "port",
-            "USER" : "user",
-            "PASSWORD": "password",
-            "SERVER_SOURCE": "server_source",
-        }).items():
-            try:
-                setattr(module, f"SERVER_UPLOAD_{member}", section[config_key])
-            except KeyError:
-                _print_key_err_msg(f"server_upload.{config_key}")
-
-    try:
-        section = user_config["video"]
-    except KeyError:
-        _print_key_err_msg("video")
-    else:
-        try:
-            video_dir = str(Path(section["dir"]).expanduser().resolve())
-            setattr(module, "VIDEO_DIR", video_dir)
-        except KeyError:
-            _print_key_err_msg("video.dir")
-        try:
-            setattr(module, "VIDEO_FORMAT", section["format"])
-        except KeyError:
-            _print_key_err_msg("video.format")
-        try:
-            setattr(
-                module,
-                "RESOLUTION_SAVED_VIDEO_FILE",
-                (section["resolution"]["width"], section["resolution"]["height"]),
-            )
-        except KeyError:
-            print("KeyError in config file.")
-            _print_key_err_msg("video.resolution.width, video.resolution.height")
-
-        try:
-            section = section["encoder"]
-        except KeyError:
-            _print_key_err_msg("encoder")
-        else:
-            try:
-                setattr(module, "H264_PROFILE", section["profile"])
-            except KeyError:
-                _print_key_err_msg("encoder.profile")
-            try:
-                setattr(module, "H264_LEVEL", str(section["level"]))
-            except KeyError:
-                _print_key_err_msg("encoder.level")
-            try:
-                setattr(module, "H264_BITRATE", section["bitrate"])
-            except KeyError:
-                _print_key_err_msg("encoder.bitrate")
-            try:
-                global H264_QUALITY
-                H264_QUALITY = section["quality"]
-                setattr(module, "H264_QUALITY", section["quality"])
-            except KeyError:
-                _print_key_err_msg("encoder.quality")
-
-    try:
-        section = user_config["wifi"]
-    except KeyError:
-        _print_key_err_msg("wifi")
-    else:
-        try:
-            setattr(module, "WIFI_DELAY", section["delay"])
-        except KeyError:
-            _print_key_err_msg("wifi.delay")
-
-    try:
-        section = user_config["leds"]
-    except KeyError:
-        _print_key_err_msg("leds")
-    else:
-        try:
-            setattr(module, "USE_LED", section["enable"])
-        except KeyError:
-            _print_key_err_msg("leds.enable")
-
-    try:
-        section = user_config["buttons"]
-    except KeyError:
-        _print_key_err_msg("buttons")
-    else:
-        try:
-            setattr(module, "USE_BUTTONS", section["enable"])
-        except KeyError:
-            _print_key_err_msg("buttons.enable")
-
-    try:
-        section = user_config["msteams"]
-    except KeyError:
-        _print_key_err_msg("msteams")
-    else:
-        try:
-            setattr(module, "USE_MS_TEAMS_WEBHOOK", section["enable"])
-        except KeyError:
-            _print_key_err_msg("msteams.enable")
-        try:
-            setattr(module, "MS_TEAMS_WEBHOOK_URL", section["url"])
-        except KeyError:
-            _print_key_err_msg("msteams.url")
-
-    try:
-        section = user_config["adc"]
-    except KeyError:
-        _print_key_err_msg("adc")
-    else:
-        try:
-            setattr(module, "ADC_ENABLED", section["enable"])
-        except KeyError:
-            _print_key_err_msg("adc.enable")
+    config.resolve_paths()
+    return config
 
 
-def _print_key_err_msg(key_name: str) -> None:
-    """Print key error information to console."""
-    print(f"KeyError in config file for: '{key_name}'")
+def _parse_general_config(config: Config, data: Mapping[str, Any]) -> None:
+    debug_mode = _get_section(data, "debug_mode")
+    relay_server = _get_section(data, "relay_server")
+    config.debug_mode_on = _read_bool(
+        debug_mode,
+        "enable",
+        config.debug_mode_on,
+    )
+    config.use_relay = _read_bool(relay_server, "enable", config.use_relay)
 
 
-def read_text_file(text_file: Path) -> str:
-    """Reads the contents of a text file returns it."""
-    with open(text_file, "r") as f:
-        data = f.read()
-    return data
+def _parse_recording_config(config: Config, data: Mapping[str, Any]) -> None:
+    recording = config.recording
+    recording.start_hour = _read_int(data, "start_hour", recording.start_hour)
+    recording.end_hour = _read_int(data, "end_hour", recording.end_hour)
+    recording.interval_length = _read_int(
+        data,
+        "interval_length",
+        recording.interval_length,
+    )
+    recording.num_intervals = _read_int(data, "num_intervals", recording.num_intervals)
+    recording.min_free_space = _read_int(
+        data,
+        "min_free_space",
+        recording.min_free_space,
+    )
 
 
-# general config
-DEBUG_MODE_ON = False
-"""Turn debug mode on to get additional log entries."""
-USE_RELAY = False
-"""Enable to start and stop sshrelay.service (need's to be configured)"""
+def _parse_camera_config(config: Config, data: Mapping[str, Any]) -> None:
+    camera = config.camera
+    camera.fps = _read_int(data, "fps", camera.fps)
+    camera.resolution = _read_resolution(data, "resolution", camera.resolution)
+    camera.exposure_mode = _read_str(data, "exposure_mode", camera.exposure_mode)
+    camera.drc_strength = _read_str(data, "drc_strength", camera.drc_strength)
+    camera.rotation = _read_int(data, "rotation", camera.rotation)
+    camera.awb_mode = _read_str(data, "awb_mode", camera.awb_mode)
+    camera.meter_mode = _read_str(data, "meter_mode", camera.meter_mode)
 
-# recording config
-START_HOUR = 6
-"""Hour of day when to start recording."""
-END_HOUR = 22
-"""Hour of day when to end recording."""
-INTERVAL_LENGTH = 15
-"""Interval length in minutes before video splits."""
-NUM_INTERVALS = 0
-"""Number of full intervals to record (0=infinit)."""
-MIN_FREE_SPACE = 1
-"""free space in GB on sd card before old videos get deleted."""
 
-# camera config
-CAMERA_TYPE = "picamera2"
-"""Camera type. `legacy` for the original camera module, `picamera2` for libcamera."""
-FPS = 20
-"""Frames per Second. 10-20 should be enough."""
-RESOLUTION = (2304, 1296)
-"""Resolution of the camera module works internally.
-Field of view could be smaller with other values."""
-EXPOSURE_MODE = "nightpreview"
-"""Controls the analog and digital gains."""
-DRC_STRENGTH = "high"
-"""Sets dynamic range compression to lighten dark areas and to darken light areas."""
-ROTATION = 180
-"""Rotate the whole camera image."""
-AWB_MODE = "greyworld"
-"""Controls the auto white balancing mode. `greyworld`
-is a specific mode for NoIR modules."""
-METER_MODE = "average"
-"""Controls the size of the center region to adjust exposure."""
+def _parse_preview_config(config: Config, data: Mapping[str, Any]) -> None:
+    preview = config.preview
+    preview.path = _read_str(data, "path", preview.path)
+    preview.format = _read_str(data, "format", preview.format)
+    preview.interval = _read_int(data, "interval", preview.interval)
+    preview.send_to_external = _read_bool(
+        data,
+        "send_to_external",
+        preview.send_to_external,
+    )
+    preview.url = _read_str(data, "url", preview.url)
 
-# preview settings
-PREVIEW_PATH = "~/OTCamera/webfiles/preview.jpg"
-"""path to save preview."""
-PREVIEW_FORMAT = "jpeg"
-"""Filetype of the static preview image."""
-PREVIEW_INTERVAL = 5
-"""Interval between two preview images in seconds."""
-SEND_PREVIEW_TO_EXTERNAL = False
-"""Send preview image to external server."""
-PREVIEW_URL = "http://localhost:5000/projects/0/sites/1/cameras/2/current_frame"
-"""URL to send the preview image to."""
 
-SERVER_UPLOAD_UPLOAD = False
-"""Whether to upload videos to a cloud storage."""
-SERVER_UPLOAD_SCHEME = "ftp"
-"""Upload scheme, e.g. ftp, sftp, scp."""
-SERVER_UPLOAD_HOST = "localhost"
-"""Upload host."""
-SERVER_UPLOAD_PORT = 21
-"""Upload port."""
-SERVER_UPLOAD_USER = "user"
-"""Upload user."""
-SERVER_UPLOAD_PASSWORD = "password"
-"""Upload password."""
-SERVER_UPLOAD_SERVER_SOURCE = "/"
+def _parse_server_upload_config(config: Config, data: Mapping[str, Any]) -> None:
+    server_upload = config.server_upload
+    server_upload.enable = _read_bool(data, "enable", server_upload.enable)
+    server_upload.scheme = _read_str(data, "scheme", server_upload.scheme)
+    server_upload.host = _read_str(data, "host", server_upload.host)
+    server_upload.port = _read_int(data, "port", server_upload.port)
+    server_upload.user = _read_str(data, "user", server_upload.user)
+    server_upload.password = _read_str(data, "password", server_upload.password)
+    server_upload.server_source = _read_str(
+        data,
+        "server_source",
+        server_upload.server_source,
+    )
 
-# video config
-VIDEO_DIR = "~/videos/"
-"""path to safe videofiles."""
-VIDEO_FORMAT: Literal["h264"] = "h264"
-"""Encoding format."""
-RESOLUTION_SAVED_VIDEO_FILE = (800, 600)
-"""Resolution of the saved videofile, not the camera itself."""
-H264_PROFILE: Literal["high"] = "high"
-"""Profile used in h264 encoder."""
-H264_LEVEL: Literal["4"] = "4"
-"""Level used in h264 encoder."""
-H264_BITRATE = 600000
-"""Bitrate used in h264 encoder."""
-H264_QUALITY = 30
-"""Quality used in h264 encoder."""
 
-# Wi-Fi config
-WIFI_DELAY = 900
-"""Delay in seconds before wifi turns off."""
+def _parse_video_config(config: Config, data: Mapping[str, Any]) -> None:
+    video = config.video
+    video.dir = _read_str(data, "dir", video.dir)
+    video.format = _read_str(data, "format", video.format)
+    video.resolution = _read_resolution(data, "resolution", video.resolution)
 
-# LED config
-USE_LED = False
-"""True if Status-LEDs are connected."""
+    encoder = _get_section(data, "encoder")
+    video.h264_profile = _read_str(encoder, "profile", video.h264_profile)
+    video.h264_level = _read_str(encoder, "level", video.h264_level)
+    video.h264_bitrate = _read_int(encoder, "bitrate", video.h264_bitrate)
+    video.h264_quality = _read_int(encoder, "quality", video.h264_quality)
 
-# button config
-USE_BUTTONS = False
-"""True if hardware buttons are connected."""
 
-# GPIO pin definitions
-LED_POWER_PIN: int = 11
-LED_WIFI_PIN: int = 12
-LED_REC_PIN: int = 13
-BUTTON_POWER_PIN: int = 21
-BUTTON_HOUR_PIN: int = 20
-BUTTON_WIFI_PIN: int = 19
-BUTTON_POWER_PULL_UP: bool = True
+def _parse_wifi_config(config: Config, data: Mapping[str, Any]) -> None:
+    config.wifi.delay = _read_int(data, "delay", config.wifi.delay)
 
-# ADC configuration
-ADC_ENABLED: bool = False
-"""True if an ADC (e.g. for power monitoring) is connected."""
-ADC_I2C_ADDRESS: int = 0x48
-ADC_FSR: float = 4.096
-ADC_CHANNEL_USB: int = 0
-ADC_CHANNEL_BATTERY: int = 2
-ADC_DIVIDER_RATIO_USB: float = 2.0
-ADC_DIVIDER_RATIO_BATTERY: float = 1510 / 510
-ADC_THRESHOLD_EXTERNAL_POWER: float = 2.5
-ADC_THRESHOLD_LOW_BATTERY: float = 3.3
 
-# other config
-PREFIX = socket.gethostname()
-"""prefix for videoname and annotation."""
-TEMPLATE_HTML_PATH = "~/OTCamera/webfiles/template.html"
-"""Path to template HTML"""
-INDEX_HTML_PATH = "~/OTCamera/webfiles/index.html"
-"""Path to the auto generated index HTML."""
-OFFLINE_HTML_PATH = "~/OTCamera/webfiles/offline.html"
-"""Path to the HTML to be displayed when OTCamera is offline"""
-NUM_LOG_FILES_HTML = 2
-"""Number of log files to be displayed on the status website"""
-USB_MOUNT_POINT = "~/mnt/usb"
-USB_DEVICE = "/dev/sda1"
+def _parse_hardware_config(config: Config, data: Mapping[str, Any]) -> None:
+    hardware = config.hardware
+    hardware.pcb_version = _read_str(data, "pcb_version", hardware.pcb_version)
+    hardware.use_leds = _read_bool(data, "use_leds", hardware.use_leds)
+    hardware.use_buttons = _read_bool(data, "use_buttons", hardware.use_buttons)
+    hardware.use_adc = _read_bool(data, "use_adc", hardware.use_adc)
 
-# Microsoft Teams WebHook
-USE_MS_TEAMS_WEBHOOK = False
-"""`True` if MS Teams Webhook should be enabled. Otherwise `False`"""
-MS_TEAMS_WEBHOOK_URL = None
-"""The MS Teams incoming webhook URL."""
-MS_TEAMS_MAX_FAILED_SEND_ATTEMPTS = 2
-"""The number of max failed HTTP Requests send attempts."""
 
-VIDEO_DIR = str(Path(VIDEO_DIR).expanduser().resolve())
-USB_MOUNT_POINT = str(Path(USB_MOUNT_POINT).expanduser().resolve())
-PREVIEW_PATH = str(Path(PREVIEW_PATH).expanduser().resolve())
-TEMPLATE_HTML_PATH = str(Path(TEMPLATE_HTML_PATH).expanduser().resolve())
-INDEX_HTML_PATH = str(Path(INDEX_HTML_PATH).expanduser().resolve())
-OFFLINE_HTML_PATH = str(Path(OFFLINE_HTML_PATH).expanduser().resolve())
+def _parse_msteams_config(config: Config, data: Mapping[str, Any]) -> None:
+    msteams = config.msteams
+    msteams.enable = _read_bool(data, "enable", msteams.enable)
+    if "url" in data:
+        msteams.url = None if data["url"] is None else str(data["url"])
+    msteams.max_failed_send_attempts = _read_int(
+        data,
+        "max_failed_send_attempts",
+        msteams.max_failed_send_attempts,
+    )
 
-OTCAMERA_VERSION = (
-    read_text_file(Path("~/otcamera_version.txt").expanduser().resolve())
-    if Path("~/otcamera_version.txt").expanduser().resolve().exists()
-    else None
-)
-"""The OTCamera Version installed.
 
-Will look for a file located in `~/otcamera_version.txt`.
-If file is not found `OTCAMERA_VERSION` will be set to `None`
-"""
+def _parse_adc_config(config: Config, data: Mapping[str, Any]) -> None:
+    adc = config.adc
+    adc.threshold_external_power = _read_float(
+        data,
+        "threshold_external_power",
+        adc.threshold_external_power,
+    )
+    adc.threshold_low_battery = _read_float(
+        data,
+        "threshold_low_battery",
+        adc.threshold_low_battery,
+    )
+
+
+def _get_section(data: Mapping[str, Any], key: str) -> Mapping[str, Any]:
+    """Return a nested mapping or an empty mapping if the value is not a mapping."""
+    return _as_section(data.get(key))
+
+
+def _as_section(value: Any) -> Mapping[str, Any]:
+    """Normalize a potential YAML section to a string-keyed mapping."""
+    if isinstance(value, dict):
+        return value
+    return {}
+
+
+def _read_bool(data: Mapping[str, Any], key: str, default: bool) -> bool:
+    """Read a boolean-like config value."""
+    return bool(data.get(key, default))
+
+
+def _read_int(data: Mapping[str, Any], key: str, default: int) -> int:
+    """Read an integer config value."""
+    return int(data.get(key, default))
+
+
+def _read_float(data: Mapping[str, Any], key: str, default: float) -> float:
+    """Read a float config value."""
+    return float(data.get(key, default))
+
+
+def _read_str(data: Mapping[str, Any], key: str, default: str) -> str:
+    """Read a string config value."""
+    return str(data.get(key, default))
+
+
+def _read_resolution(
+    data: Mapping[str, Any],
+    key: str,
+    default: tuple[int, int],
+) -> tuple[int, int]:
+    """Read a resolution mapping with width and height."""
+    raw_resolution = data.get(key)
+    if not isinstance(raw_resolution, dict):
+        return default
+    width = int(raw_resolution.get("width", default[0]))
+    height = int(raw_resolution.get("height", default[1]))
+    return (width, height)
+
+
+def _resolve_path(path: str) -> str:
+    """Resolve a configured path to an absolute path."""
+    return str(Path(path).expanduser().resolve())

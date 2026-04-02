@@ -21,11 +21,23 @@ camera:
   drc_strength: drc_strength
   rotation: rotation
   awb_mode: awb_mode
+  meter_mode: meter_mode
 
 preview:
   path: path
   format: format
   interval: interval
+  send_to_external: send_to_external
+  url: url
+
+server_upload:
+  enable: enable
+  scheme: scheme
+  host: host
+  port: port
+  user: user
+  password: password
+  server_source: server_source
 
 video:
   dir: dir
@@ -42,8 +54,17 @@ video:
 wifi:
   delay: delay
 
-leds:
-  enable: leds
+hardware:
+  pcb_version: pcb_version
+  use_leds: leds
+  use_buttons: buttons
+  use_adc: adc
 
-buttons:
-  enable: buttons
+msteams:
+  enable: msteams
+  url: url
+  max_failed_send_attempts: max_failed_send_attempts
+
+adc:
+  threshold_external_power: threshold_external_power
+  threshold_low_battery: threshold_low_battery

@@ -1,4 +1,7 @@
+"""Abstract ADC interface and board-specific ADC parameters."""
+
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
 
 
 class ADC(ABC):
@@ -28,3 +31,22 @@ class ADC(ABC):
             The measured voltage in volts.
         """
         raise NotImplementedError
+
+    @abstractmethod
+    def close(self) -> None:
+        """Release ADC resources."""
+        raise NotImplementedError
+
+
+class ADCTimeoutError(Exception):
+    """Raised when the ADC cannot complete a read operation in time."""
+
+
+@dataclass(frozen=True)
+class ADCConfig:
+    """Board-specific ADC operational parameters."""
+
+    channel_usb: int
+    channel_battery: int
+    divider_ratio_usb: float
+    divider_ratio_battery: float
