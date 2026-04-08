@@ -2,7 +2,7 @@ beautifulsoup4==4.13.4
 gpiozero==2.0.1
 lgpio; platform_system == "Linux"
 opencv-python-headless>=4.5.0
-picamera2>=0.3.12
+picamera2>=0.3.12; platform_system == "Linux"
 psutil==7.0.0
 PyYAML==6.0.2
 requests==2.32.3
