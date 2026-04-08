@@ -17,7 +17,7 @@ from OTCamera.config import Config, parse_user_config
 from OTCamera.controller.camera_controller import CameraController
 from OTCamera.controller.power_controller import PowerController
 from OTCamera.controller.schedule_controller import ScheduleController
-from OTCamera.controller.upload_controller import UploadController
+from OTCamera.controller.upload_controller import ThreadedUploadController
 from OTCamera.controller.wifi_controller import WifiController
 from OTCamera.domain.events import (
     ButtonHeld,
@@ -361,6 +361,7 @@ def main(config: Config | None = None, config_file: str = "~/user_config.yaml") 
 
     camera = None
     upload = None
+    upload_controller = None
     try:
         camera = CameraProvider.provide(config)
         upload = UploadProvider.provide(config)
@@ -375,7 +376,7 @@ def main(config: Config | None = None, config_file: str = "~/user_config.yaml") 
         )
         wifi_controller = WifiController(config, event_bus, board.leds)
         schedule_controller = ScheduleController(config, event_bus)
-        _ = UploadController(event_bus, upload)
+        upload_controller = ThreadedUploadController(event_bus, upload)
 
         for name, button in board.buttons.items():
             button.on_pressed(
@@ -423,7 +424,7 @@ def main(config: Config | None = None, config_file: str = "~/user_config.yaml") 
         )
         application.record()
     finally:
-        for resource in [camera, upload]:
+        for resource in [camera, upload, upload_controller]:
             if resource is None:
                 continue
             try:

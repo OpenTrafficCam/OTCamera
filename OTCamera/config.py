@@ -52,16 +52,40 @@ class PreviewConfig:
 
 
 @dataclass
-class ServerUploadConfig:
-    """Remote upload settings."""
-
-    enable: bool = False
-    scheme: str = "ftp"
+class FtpUploadConfig:
     host: str = "localhost"
     port: int = 21
     user: str = "user"
     password: str = "password"
     server_source: str = "/"
+
+
+@dataclass
+class S3Config:
+    """Configuration for S3-compatible object storage.
+
+    Attributes:
+        endpoint_url (str | None): S3 endpoint URL (None for AWS S3).
+        access_key (str): S3 access key for authentication.
+        secret_key (str): S3 secret key for authentication.
+        bucket (str): S3 bucket name.
+        region (str | None): AWS region (None if not applicable).
+    """
+
+    endpoint_url: str | None = None
+    access_key: str = ""
+    secret_key: str = ""
+    bucket: str = ""
+    region: str | None = None
+
+
+@dataclass
+class ServerUploadConfig:
+    """Remote upload settings."""
+
+    enable: bool = False
+    scheme: str = "s3"
+    config: FtpUploadConfig | S3Config | None = None
 
 
 @dataclass
@@ -229,19 +253,38 @@ def _parse_preview_config(config: Config, data: Mapping[str, Any]) -> None:
     preview.url = _read_str(data, "url", preview.url)
 
 
+def _parse_ftp_upload_config(ftp_config: FtpUploadConfig, data: Mapping[str, Any]) -> None:
+    ftp_config.host = _read_str(data, "host", ftp_config.host)
+    ftp_config.port = _read_int(data, "port", ftp_config.port)
+    ftp_config.user = _read_str(data, "user", ftp_config.user)
+    ftp_config.password = _read_str(data, "password", ftp_config.password)
+    ftp_config.server_source = _read_str(data, "server_source", ftp_config.server_source)
+
+
+def _parse_s3_config(s3_config: S3Config, data: Mapping[str, Any]) -> None:
+    if "endpoint_url" in data:
+        s3_config.endpoint_url = None if data["endpoint_url"] is None else str(data["endpoint_url"])
+    s3_config.access_key = _read_str(data, "access_key", s3_config.access_key)
+    s3_config.secret_key = _read_str(data, "secret_key", s3_config.secret_key)
+    s3_config.bucket = _read_str(data, "bucket", s3_config.bucket)
+    if "region" in data:
+        s3_config.region = None if data["region"] is None else str(data["region"])
+
+
 def _parse_server_upload_config(config: Config, data: Mapping[str, Any]) -> None:
     server_upload = config.server_upload
     server_upload.enable = _read_bool(data, "enable", server_upload.enable)
     server_upload.scheme = _read_str(data, "scheme", server_upload.scheme)
-    server_upload.host = _read_str(data, "host", server_upload.host)
-    server_upload.port = _read_int(data, "port", server_upload.port)
-    server_upload.user = _read_str(data, "user", server_upload.user)
-    server_upload.password = _read_str(data, "password", server_upload.password)
-    server_upload.server_source = _read_str(
-        data,
-        "server_source",
-        server_upload.server_source,
-    )
+
+    upload_data = _get_section(data, "config")
+    if server_upload.scheme == "ftp":
+        ftp_config = FtpUploadConfig()
+        _parse_ftp_upload_config(ftp_config, upload_data)
+        server_upload.config = ftp_config
+    else:
+        s3_config = S3Config()
+        _parse_s3_config(s3_config, upload_data)
+        server_upload.config = s3_config
 
 
 def _parse_video_config(config: Config, data: Mapping[str, Any]) -> None:
