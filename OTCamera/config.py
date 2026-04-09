@@ -65,17 +65,18 @@ class S3Config:
     """Configuration for S3-compatible object storage.
 
     Attributes:
-        endpoint_url (str | None): S3 endpoint URL (None for AWS S3).
         access_key (str): S3 access key for authentication.
         secret_key (str): S3 secret key for authentication.
         bucket (str): S3 bucket name.
+        endpoint_url (str | None): S3 endpoint URL (None for AWS S3).
         region (str | None): AWS region (None if not applicable).
+        retry_max_attempts (int): The maximum number of attempts to try
     """
 
+    access_key: str
+    secret_key: str
+    bucket: str
     endpoint_url: str | None = None
-    access_key: str = ""
-    secret_key: str = ""
-    bucket: str = ""
     region: str | None = None
     retry_max_attempts: int = 5
 
@@ -263,11 +264,13 @@ def _parse_ftp_upload_config(ftp_config: FtpUploadConfig, data: Mapping[str, Any
 
 
 def _parse_s3_config(s3_config: S3Config, data: Mapping[str, Any]) -> None:
+    s3_config.access_key = _read_str_required(data, "access_key")
+    s3_config.secret_key = _read_str_required(data, "secret_key")
+    s3_config.bucket = _read_str_required(data, "bucket")
     if "endpoint_url" in data:
         s3_config.endpoint_url = None if data["endpoint_url"] is None else str(data["endpoint_url"])
-    s3_config.access_key = _read_str(data, "access_key", s3_config.access_key)
-    s3_config.secret_key = _read_str(data, "secret_key", s3_config.secret_key)
-    s3_config.bucket = _read_str(data, "bucket", s3_config.bucket)
+    else:
+        logger.warning("No endpoint url defined, assuming AWS")
     if "region" in data:
         s3_config.region = None if data["region"] is None else str(data["region"])
 
@@ -369,6 +372,11 @@ def _read_float(data: Mapping[str, Any], key: str, default: float) -> float:
 def _read_str(data: Mapping[str, Any], key: str, default: str) -> str:
     """Read a string config value."""
     return str(data.get(key, default))
+
+
+def _read_str_required(data: Mapping[str, Any], key: str) -> str:
+    """Read a required string config value. Will throw an error if missing."""
+    return str(data[key])
 
 
 def _read_resolution(
