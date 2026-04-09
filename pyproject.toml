@@ -52,6 +52,9 @@ profile = "black"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+markers = [
+    "integration: marks tests that require external services (e.g. a running S3 server)",
+]
 
 [tool.mypy]
 ignore_missing_imports = true

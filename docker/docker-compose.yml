@@ -1,16 +1,13 @@
 
 services:
-  # RustFS main service
-  # This is an s3-compatible service that is used for local testing
-  # of the s3 upload feature.
+  # RustFS — S3-compatible service for local development/testing only
   rustfs:
     image: rustfs/rustfs:1.0.0-alpha.90
     container_name: rustfs-server
-    security_opt:
-      - "no-new-privileges:true"
+    restart: unless-stopped
     ports:
-      - "9000:9000" # S3 API port
-      - "9001:9001" # Console port
+      - "127.0.0.1:9000:9000" # S3 API port
+      - "127.0.0.1:9001:9001" # Console port
     environment:
       - RUSTFS_VOLUMES=/data/rustfs{0...3}
       - RUSTFS_ADDRESS=0.0.0.0:9000
@@ -18,10 +15,11 @@ services:
       - RUSTFS_CONSOLE_ENABLE=true
       - RUSTFS_CORS_ALLOWED_ORIGINS=*
       - RUSTFS_CONSOLE_CORS_ALLOWED_ORIGINS=*
-      - RUSTFS_ACCESS_KEY=rustfsadmin # CHANGEME
-      - RUSTFS_SECRET_KEY=rustfsadmin # CHANGEME
+      - RUSTFS_ACCESS_KEY=rustfsadmin
+      - RUSTFS_SECRET_KEY=rustfsadmin
       - RUSTFS_OBS_LOGGER_LEVEL=info
-      - RUSTFS_TLS_PATH=/opt/tls
-      # Object Cache
-      - RUSTFS_OBJECT_CACHE_ENABLE=true
-      - RUSTFS_OBJECT_CACHE_TTL_SECS=300
+    volumes:
+      - rustfs-data:/data
+
+volumes:
+  rustfs-data:

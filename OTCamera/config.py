@@ -77,6 +77,7 @@ class S3Config:
     secret_key: str = ""
     bucket: str = ""
     region: str | None = None
+    retry_max_attempts: int = 5
 
 
 @dataclass

@@ -4,7 +4,7 @@ import logging
 
 from OTCamera.config import Config, FtpUploadConfig, S3Config
 from OTCamera.domain.upload import Upload
-from plugin.upload.s3_upload import S3Upload
+from OTCamera.plugin.upload.s3_upload import S3Upload
 
 logger = logging.getLogger(__name__)
 
@@ -31,8 +31,11 @@ class UploadProvider:
                     password=ftp_config.password,
                     server_source=ftp_config.server_source,
                 )
+
             case "s3":
                 s3_config: S3Config = config.server_upload.config
-                return S3Upload(s3_config)
+
+                return S3Upload.from_config(s3_config)
+
             case _:
                 raise RuntimeError(f"invalid scheme: {config.server_upload.scheme}")
