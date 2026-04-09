@@ -35,7 +35,14 @@ class UploadProvider:
             case "s3":
                 s3_config: S3Config = config.server_upload.config
 
-                return S3Upload.from_config(s3_config)
+                s3upload = S3Upload.from_config(s3_config)
+
+                if s3_config.endpoint_url:
+                    logger.info("Provided S3Uploader to custom endpoint %s, bucket name: %s" % (s3_config.endpoint_url, s3_config.bucket))
+                else:
+                    logger.info("Provided S3Uploader to AWS, bucket name: %s", s3_config.bucket)
+
+                return s3upload
 
             case _:
                 raise RuntimeError(f"invalid scheme: {config.server_upload.scheme}")
