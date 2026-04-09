@@ -272,13 +272,15 @@ def _parse_s3_config(data: Mapping[str, Any]) -> S3Config:
     secret_key = _read_str_required(data, "secret_key")
     bucket = _read_str_required(data, "bucket")
     if "endpoint_url" in data:
-        endpoint_url = (
+        endpoint_url: str | None = (
             None if data["endpoint_url"] is None else str(data["endpoint_url"])
         )
     else:
         logger.warning("No endpoint url defined, assuming AWS")
-    if "region" in data:
-        region = None if data["region"] is None else str(data["region"])
+        endpoint_url = None
+    region: str | None = (
+        None if data.get("region") is None else str(data["region"])
+    )
 
     return S3Config(
         access_key=access_key,
@@ -388,6 +390,8 @@ def _read_str(data: Mapping[str, Any], key: str, default: str) -> str:
 
 def _read_str_required(data: Mapping[str, Any], key: str) -> str:
     """Read a required string config value. Will throw an error if missing."""
+    if key not in data:
+        raise ValueError(f"Required config key '{key}' is missing.")
     return str(data[key])
 
 
