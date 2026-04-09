@@ -255,24 +255,38 @@ def _parse_preview_config(config: Config, data: Mapping[str, Any]) -> None:
     preview.url = _read_str(data, "url", preview.url)
 
 
-def _parse_ftp_upload_config(ftp_config: FtpUploadConfig, data: Mapping[str, Any]) -> None:
+def _parse_ftp_upload_config(
+    ftp_config: FtpUploadConfig, data: Mapping[str, Any]
+) -> None:
     ftp_config.host = _read_str(data, "host", ftp_config.host)
     ftp_config.port = _read_int(data, "port", ftp_config.port)
     ftp_config.user = _read_str(data, "user", ftp_config.user)
     ftp_config.password = _read_str(data, "password", ftp_config.password)
-    ftp_config.server_source = _read_str(data, "server_source", ftp_config.server_source)
+    ftp_config.server_source = _read_str(
+        data, "server_source", ftp_config.server_source
+    )
 
 
-def _parse_s3_config(s3_config: S3Config, data: Mapping[str, Any]) -> None:
-    s3_config.access_key = _read_str_required(data, "access_key")
-    s3_config.secret_key = _read_str_required(data, "secret_key")
-    s3_config.bucket = _read_str_required(data, "bucket")
+def _parse_s3_config(data: Mapping[str, Any]) -> S3Config:
+    access_key = _read_str_required(data, "access_key")
+    secret_key = _read_str_required(data, "secret_key")
+    bucket = _read_str_required(data, "bucket")
     if "endpoint_url" in data:
-        s3_config.endpoint_url = None if data["endpoint_url"] is None else str(data["endpoint_url"])
+        endpoint_url = (
+            None if data["endpoint_url"] is None else str(data["endpoint_url"])
+        )
     else:
         logger.warning("No endpoint url defined, assuming AWS")
     if "region" in data:
-        s3_config.region = None if data["region"] is None else str(data["region"])
+        region = None if data["region"] is None else str(data["region"])
+
+    return S3Config(
+        access_key=access_key,
+        secret_key=secret_key,
+        bucket=bucket,
+        endpoint_url=endpoint_url,
+        region=region,
+    )
 
 
 def _parse_server_upload_config(config: Config, data: Mapping[str, Any]) -> None:
@@ -286,9 +300,7 @@ def _parse_server_upload_config(config: Config, data: Mapping[str, Any]) -> None
         _parse_ftp_upload_config(ftp_config, upload_data)
         server_upload.config = ftp_config
     else:
-        s3_config = S3Config()
-        _parse_s3_config(s3_config, upload_data)
-        server_upload.config = s3_config
+        server_upload.config = _parse_s3_config(upload_data)
 
 
 def _parse_video_config(config: Config, data: Mapping[str, Any]) -> None:
