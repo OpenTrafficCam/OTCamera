@@ -27,6 +27,7 @@ from OTCamera.domain.events import (
     ShutdownRequested,
 )
 from OTCamera.domain.led import LED
+from OTCamera.exceptions import UploadUnavailableError
 from OTCamera.html_updater import (
     ConfigDataObject,
     ConfigHtmlId,
@@ -364,7 +365,12 @@ def main(config: Config | None = None, config_file: str = "~/user_config.yaml") 
     upload_controller = None
     try:
         camera = CameraProvider.provide(config)
-        upload = UploadProvider.provide(config)
+
+        try:
+            upload = UploadProvider.provide(config)
+        except UploadUnavailableError:
+            logger.error("Upload backend %r is configured, but not available" % upload)
+            raise
 
         camera_controller = CameraController(camera, config, event_bus, board.leds)
         power_controller = PowerController(

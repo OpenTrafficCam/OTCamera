@@ -4,6 +4,7 @@ from typing import Any
 
 import boto3
 from botocore.config import Config as Boto3Config
+from botocore.exceptions import ClientError
 from boto3.s3.transfer import TransferConfig
 
 from OTCamera.domain.upload import Upload
@@ -77,10 +78,22 @@ class S3Upload(Upload):
 
             self.client.upload_file(file_path, self.bucket_name, key, Config=TRANSFER_CONFIG)
         except Exception as e:
-            logging.error(e)
+            logger.error(e)
 
-    def is_available(self):
-        """Always returns ``True`` for S3; connectivity errors surface during
-        ``upload`` instead.
-        """
+    def is_available(self) -> bool:
+        """Perform a quick pre-flight check to confirm that we are ready to upload files."""
+
+        key = ".preflight_check"
+
+        try:
+            self.client.put_object(Bucket=self.bucket_name, Key=key, Body=b"")
+            self.client.delete_object(Bucket=self.bucket_name, Key=key)
+        except ClientError as e:
+            code = e.response["Error"]["Code"]
+            logger.error("S3 availability check failed with ClientError: %s" % code)
+            return False
+        except Exception as e:
+            logger.error(e)
+            return False
+
         return True
