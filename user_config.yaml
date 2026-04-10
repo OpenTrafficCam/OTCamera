@@ -1,9 +1,7 @@
 ---
-debug_mode:
-  enable: false
+debug_mode: false
 
-relay_server:
-  enable: false
+relay_server: false
 
 recording:
   start_hour: 6
@@ -68,13 +66,3 @@ msteams:
 adc:
   threshold_external_power: 2.5
   threshold_low_battery: 3.3
-
-# The following top-level Config fields exist in the code but are currently not
-# read from YAML by parse_user_config():
-# prefix: your-camera-name
-# template_html_path: ~/OTCamera/webfiles/template.html
-# index_html_path: ~/OTCamera/webfiles/index.html
-# offline_html_path: ~/OTCamera/webfiles/offline.html
-# num_log_files_html: 2
-# usb_mount_point: ~/mnt/usb
-# usb_device: /dev/sda1

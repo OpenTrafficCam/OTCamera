@@ -19,7 +19,7 @@ from OTCamera.domain.events import (
 def config() -> Config:
     config = Config()
     config.wifi.delay = 10
-    config.debug_mode_on = True
+    config.debug_mode = True
     return config
 
 

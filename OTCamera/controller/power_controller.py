@@ -141,11 +141,11 @@ class PowerController:
         if power_led is not None:
             power_led.on()
 
-        if self._config.use_relay:
+        if self._config.relay_server:
             call(["sudo", "systemctl", "stop", "sshrelay.service"])
             logger.info("Stopped SSH relay")
 
-        if not self._config.debug_mode_on:
+        if not self._config.debug_mode:
             logging.shutdown()
             call(["sudo", "shutdown", "-h", "now"])
 
@@ -156,10 +156,10 @@ class PowerController:
         if power_led is not None:
             power_led.blink(on_time=0.1, off_time=0.1, n=None, background=True)
 
-        if self._config.use_relay:
+        if self._config.relay_server:
             call(["sudo", "systemctl", "stop", "sshrelay.service"])
 
-        if not self._config.debug_mode_on:
+        if not self._config.debug_mode:
             logging.shutdown()
             call(["sudo", "reboot"])
 

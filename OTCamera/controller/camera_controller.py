@@ -82,10 +82,10 @@ class CameraController:
             save_file=self._current_video_file,
             video_format=cast(VideoFormat, video.format),
             resolution=video.resolution,
-            bitrate=video.h264_bitrate,
-            h264_profile=cast(H264Profile, video.h264_profile),
-            h264_level=cast(H264Level, video.h264_level),
-            h264_quality=video.h264_quality,
+            bitrate=video.encoder.bitrate,
+            h264_profile=cast(H264Profile, video.encoder.profile),
+            h264_level=cast(H264Level, video.encoder.level),
+            h264_quality=video.encoder.quality,
         )
         self._last_split_minute = dt.now().minute
         logger.info("Started recording: %s", self._current_video_file)

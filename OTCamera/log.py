@@ -50,7 +50,7 @@ def setup_logging(config: Config) -> None:
     log_path = _log_file_path(config)
     log_path.parent.mkdir(parents=True, exist_ok=True)
 
-    level = logging.DEBUG if config.debug_mode_on else logging.INFO
+    level = logging.DEBUG if config.debug_mode else logging.INFO
     formatter = logging.Formatter("%(asctime)s %(levelname)s: %(message)s")
 
     root_logger = logging.getLogger()

@@ -37,10 +37,10 @@ def config(tmp_path: Path) -> Config:
     config.video.dir = str(tmp_path)
     config.video.format = "h264"
     config.video.resolution = (640, 480)
-    config.video.h264_bitrate = 600000
-    config.video.h264_profile = "high"
-    config.video.h264_level = "4"
-    config.video.h264_quality = 30
+    config.video.encoder.bitrate = 600000
+    config.video.encoder.profile = "high"
+    config.video.encoder.level = "4"
+    config.video.encoder.quality = 30
     config.camera.fps = 20
     config.prefix = "test"
     config.preview.path = str(tmp_path / "preview.jpg")
