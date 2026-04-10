@@ -58,9 +58,8 @@ def test_parse_user_config_minimal(tmp_path: Path) -> None:
             adc:
               threshold_external_power: 2.5
               threshold_low_battery: 3.3
-            server_upload:
+            ftp_upload:
               enable: true
-              scheme: ftp
               host: example.com
               port: 21
               user: user
@@ -85,7 +84,7 @@ def test_parse_user_config_minimal(tmp_path: Path) -> None:
     assert config.hardware.use_buttons is True
     assert config.hardware.use_adc is True
     assert config.adc.threshold_low_battery == 3.3
-    assert config.server_upload.enable is True
+    assert config.ftp_upload.enable is True
 
 
 def test_missing_file_returns_defaults(tmp_path: Path) -> None:
@@ -105,13 +104,13 @@ def test_default_config_has_sensible_values() -> None:
     assert config.hardware.use_leds is False
     assert config.hardware.use_buttons is False
     assert config.hardware.use_adc is False
-    assert config.server_upload.enable is False
+    assert config.ftp_upload.enable is False
 
 
-def test_server_upload_requires_host_when_enabled() -> None:
+def test_ftp_upload_requires_host_when_enabled() -> None:
     with pytest.raises(ValidationError, match="host"):
         Config.model_validate(
-            {"server_upload": {"enable": True, "user": "u", "password": "p"}}
+            {"ftp_upload": {"enable": True, "user": "u", "password": "p"}}
         )
 
 

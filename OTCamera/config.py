@@ -61,11 +61,35 @@ class PreviewConfig(BaseModel):
     url: StrFromYaml = "http://localhost:5000/projects/0/sites/1/cameras/2/current_frame"
 
 
-class ServerUploadConfig(BaseModel):
-    """Remote upload settings."""
+class S3Config(BaseModel):
+    """Config for S3-compatible object storage."""
 
     enable: bool = False
-    scheme: StrFromYaml = "ftp"
+    access_key: StrFromYaml | None = None
+    secret_key: StrFromYaml | None = None
+    bucket: StrFromYaml | None = None
+    endpoint_url: StrFromYaml | None = None
+    region: StrFromYaml | None = None
+    retry_max_attempts: int = 5
+
+    @model_validator(mode="after")
+    def _require_credentials_when_enabled(self) -> "S3Config":
+        if self.enable:
+            missing = [
+                f for f in ("access_key", "secret_key", "bucket")
+                if getattr(self, f) is None
+            ]
+            if missing:
+                raise ValueError(
+                    f"Fields required when s3.enable is true: {missing}"
+                )
+        return self
+
+
+class FtpUploadConfig(BaseModel):
+    """FTP upload settings."""
+
+    enable: bool = False
     host: StrFromYaml | None = None
     port: int = 21
     user: StrFromYaml | None = None
@@ -73,12 +97,12 @@ class ServerUploadConfig(BaseModel):
     server_source: StrFromYaml = "/"
 
     @model_validator(mode="after")
-    def _require_credentials_when_enabled(self) -> "ServerUploadConfig":
+    def _require_credentials_when_enabled(self) -> "FtpUploadConfig":
         if self.enable:
             missing = [f for f in ("host", "user", "password") if getattr(self, f) is None]
             if missing:
                 raise ValueError(
-                    f"Fields required when server_upload.enable is true: {missing}"
+                    f"Fields required when ftp_upload.enable is true: {missing}"
                 )
         return self
 
@@ -153,7 +177,8 @@ class Config(BaseModel):
     recording: RecordingConfig = Field(default_factory=RecordingConfig)
     camera: CameraConfig = Field(default_factory=CameraConfig)
     preview: PreviewConfig = Field(default_factory=PreviewConfig)
-    server_upload: ServerUploadConfig = Field(default_factory=ServerUploadConfig)
+    ftp_upload: FtpUploadConfig = Field(default_factory=FtpUploadConfig)
+    s3_upload: S3Config = Field(default_factory=S3Config)
     video: VideoConfig = Field(default_factory=VideoConfig)
     wifi: WifiConfig = Field(default_factory=WifiConfig)
     hardware: HardwareConfig = Field(default_factory=HardwareConfig)

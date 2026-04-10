@@ -28,14 +28,21 @@ preview:
   send_to_external: false
   url: http://localhost:5000/projects/0/sites/1/cameras/2/current_frame
 
-server_upload:
+ftp_upload:
   enable: false
-  scheme: ftp
   host: localhost
   port: 21
   user: user
   password: password
   server_source: /
+
+s3_upload:
+  enable: false
+  access_key:
+  secret_key:
+  bucket:
+  region:
+  endpoint_url:
 
 video:
   dir: ~/videos/
