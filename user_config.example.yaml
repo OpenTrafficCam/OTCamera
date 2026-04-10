@@ -1,9 +1,7 @@
 ---
-debug_mode:
-  enable: false
+debug_mode: false
 
-relay_server:
-  enable: false
+relay_server: false
 
 recording:
   start_hour: 6

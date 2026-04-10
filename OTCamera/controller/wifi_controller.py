@@ -60,9 +60,9 @@ class WifiController:
         """Turn Wi-Fi on immediately and cancel delayed-off state."""
         self._switch_off_time = None
         if not self._wifi_on:
-            if not self._config.debug_mode_on:
+            if not self._config.debug_mode:
                 subprocess.call(["sudo", "rfkill", "unblock", "wlan"])
-            if self._config.use_relay:
+            if self._config.relay_server:
                 subprocess.call(["sudo", "systemctl", "start", "sshrelay.service"])
                 logger.info("Started SSH relay")
             self._wifi_on = True
@@ -76,9 +76,9 @@ class WifiController:
     def switch_off(self) -> None:
         """Turn Wi-Fi off immediately."""
         if self._wifi_on:
-            if not self._config.debug_mode_on:
+            if not self._config.debug_mode:
                 subprocess.call(["sudo", "rfkill", "block", "wlan"])
-            if self._config.use_relay:
+            if self._config.relay_server:
                 subprocess.call(["sudo", "systemctl", "stop", "sshrelay.service"])
                 logger.info("Stopped SSH relay")
             self._wifi_on = False

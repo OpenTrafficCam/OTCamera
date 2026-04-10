@@ -1,6 +1,9 @@
 import textwrap
 from pathlib import Path
 
+import pytest
+from pydantic import ValidationError
+
 from OTCamera.config import Config, parse_user_config
 
 
@@ -8,8 +11,7 @@ def test_parse_user_config_minimal(tmp_path: Path) -> None:
     config_file = tmp_path / "config.yaml"
     config_file.write_text(
         textwrap.dedent("""\
-            debug_mode:
-              enable: true
+            debug_mode: true
             recording:
               start_hour: 7
               end_hour: 20
@@ -70,12 +72,14 @@ def test_parse_user_config_minimal(tmp_path: Path) -> None:
 
     config = parse_user_config(str(config_file))
 
-    assert config.debug_mode_on is True
+    assert config.debug_mode is True
     assert config.recording.start_hour == 7
     assert config.recording.end_hour == 20
     assert config.camera.fps == 15
     assert config.camera.resolution == (1920, 1080)
     assert config.video.resolution == (640, 480)
+    assert config.video.encoder.profile == "high"
+    assert config.video.encoder.bitrate == 600000
     assert config.hardware.pcb_version == "v2"
     assert config.hardware.use_leds is True
     assert config.hardware.use_buttons is True
@@ -88,7 +92,7 @@ def test_missing_file_returns_defaults(tmp_path: Path) -> None:
     config = parse_user_config(str(tmp_path / "missing.yaml"))
 
     assert config.camera.fps == 20
-    assert config.debug_mode_on is False
+    assert config.debug_mode is False
 
 
 def test_default_config_has_sensible_values() -> None:
@@ -102,3 +106,15 @@ def test_default_config_has_sensible_values() -> None:
     assert config.hardware.use_buttons is False
     assert config.hardware.use_adc is False
     assert config.server_upload.enable is False
+
+
+def test_server_upload_requires_host_when_enabled() -> None:
+    with pytest.raises(ValidationError, match="host"):
+        Config.model_validate(
+            {"server_upload": {"enable": True, "user": "u", "password": "p"}}
+        )
+
+
+def test_msteams_requires_url_when_enabled() -> None:
+    with pytest.raises(ValidationError, match="url"):
+        Config.model_validate({"msteams": {"enable": True}})

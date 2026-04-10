@@ -368,7 +368,7 @@ def build_usb_copier(
         rec_led=rec_led,
         src_dir=src_dir,
         usb_flash_drive=usb_flash_drive,
-        debug_mode_on=config.debug_mode_on,
+        debug_mode_on=config.debug_mode,
     )
 
     power_button: PowerButton | None = None

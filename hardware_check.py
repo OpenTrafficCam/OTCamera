@@ -203,10 +203,10 @@ class HardwareCheck:
             save_file=str(output),
             video_format=cast(VideoFormat, self._config.video.format),
             resolution=self._config.video.resolution,
-            bitrate=self._config.video.h264_bitrate,
-            h264_profile=cast(H264Profile, self._config.video.h264_profile),
-            h264_level=cast(H264Level, self._config.video.h264_level),
-            h264_quality=self._config.video.h264_quality,
+            bitrate=self._config.video.encoder.bitrate,
+            h264_profile=cast(H264Profile, self._config.video.encoder.profile),
+            h264_level=cast(H264Level, self._config.video.encoder.level),
+            h264_quality=self._config.video.encoder.quality,
         )
         print(f"Started recording to {output}")
 
@@ -262,7 +262,7 @@ class HardwareCheck:
     def _shutdown(self) -> None:
         print("System shutdown requested")
         self._turn_leds_off()
-        if not self._config.debug_mode_on:
+        if not self._config.debug_mode:
             logging.shutdown()
             subprocess.call(["sudo", "shutdown", "-h", "now"])
 

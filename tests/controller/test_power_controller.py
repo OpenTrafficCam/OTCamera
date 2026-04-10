@@ -47,7 +47,7 @@ def config() -> Config:
     config = Config()
     config.adc.threshold_external_power = 2.5
     config.adc.threshold_low_battery = 3.3
-    config.debug_mode_on = True
+    config.debug_mode = True
     return config
 
 
@@ -108,7 +108,7 @@ def test_adc_timeout_battery_assumes_ok(
 
 def test_power_button_countdown() -> None:
     bus = EventBus()
-    controller = PowerController(Config(debug_mode_on=True), bus, {})
+    controller = PowerController(Config(debug_mode=True), bus, {})
     bus.enqueue(ButtonReleased(name="power"))
     bus.process_pending()
 
@@ -124,7 +124,7 @@ def test_countdown_expires_triggers_shutdown() -> None:
     bus = EventBus()
     received: list[ShutdownRequested] = []
     bus.subscribe(ShutdownRequested, received.append)
-    controller = PowerController(Config(debug_mode_on=True), bus, {})
+    controller = PowerController(Config(debug_mode=True), bus, {})
     bus.enqueue(ButtonReleased(name="power"))
     bus.process_pending()
     controller._power_off_time = dt.now() - timedelta(
@@ -141,7 +141,7 @@ def test_shutdown_closes_logging_before_os_shutdown(
     monkeypatch: MonkeyPatch,
 ) -> None:
     bus = EventBus()
-    controller = PowerController(Config(debug_mode_on=False), bus, {})
+    controller = PowerController(Config(debug_mode=False), bus, {})
     actions: list[object] = []
 
     def fake_call(command: list[str]) -> int:
@@ -169,7 +169,7 @@ def test_reboot_closes_logging_before_os_reboot(
     monkeypatch: MonkeyPatch,
 ) -> None:
     bus = EventBus()
-    controller = PowerController(Config(debug_mode_on=False), bus, {})
+    controller = PowerController(Config(debug_mode=False), bus, {})
     actions: list[object] = []
 
     def fake_call(command: list[str]) -> int:

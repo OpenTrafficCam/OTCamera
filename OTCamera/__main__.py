@@ -243,7 +243,7 @@ class OTCamera:
         """Build the config DTO for the HTML updater."""
         config = self._config
         return ConfigDataObject(
-            debug_mode_on=(ConfigHtmlId.DEBUG_MODE_ON, config.debug_mode_on),
+            debug_mode_on=(ConfigHtmlId.DEBUG_MODE_ON, config.debug_mode),
             start_hour=(ConfigHtmlId.START_HOUR, config.recording.start_hour),
             end_hour=(ConfigHtmlId.END_HOUR, config.recording.end_hour),
             interval_video_split=(
@@ -276,10 +276,10 @@ class OTCamera:
                 ConfigHtmlId.RESOLUTION_SAVED_VIDEO_FILE,
                 config.video.resolution,
             ),
-            h264_profile=(ConfigHtmlId.H264_PROFILE, config.video.h264_profile),
-            h264_level=(ConfigHtmlId.H264_LEVEL, config.video.h264_level),
-            h264_bitrate=(ConfigHtmlId.H264_BITRATE, config.video.h264_bitrate),
-            h264_quality=(ConfigHtmlId.H264_QUALITY, config.video.h264_quality),
+            h264_profile=(ConfigHtmlId.H264_PROFILE, config.video.encoder.profile),
+            h264_level=(ConfigHtmlId.H264_LEVEL, config.video.encoder.level),
+            h264_bitrate=(ConfigHtmlId.H264_BITRATE, config.video.encoder.bitrate),
+            h264_quality=(ConfigHtmlId.H264_QUALITY, config.video.encoder.quality),
             use_led=(ConfigHtmlId.USE_LED, config.hardware.use_leds),
             use_buttons=(ConfigHtmlId.USE_BUTTONS, config.hardware.use_buttons),
             wifi_delay=(ConfigHtmlId.WIFI_DELAY, config.wifi.delay),
@@ -406,7 +406,7 @@ def main(config: Config | None = None, config_file: str = "~/user_config.yaml") 
             template_html_path=config.template_html_path,
             offline_html_path=config.offline_html_path,
             html_save_path=config.index_html_path,
-            debug_mode_on=config.debug_mode_on,
+            debug_mode_on=config.debug_mode,
         )
 
         event_bus.process_pending()
