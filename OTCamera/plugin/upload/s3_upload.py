@@ -90,7 +90,13 @@ class S3Upload(Upload):
             self.client.delete_object(Bucket=self.bucket_name, Key=key)
         except ClientError as e:
             code = e.response["Error"]["Code"]
-            logger.error("S3 availability check failed with ClientError: %s" % code)
+
+            # TODO: Add more speaking log statements for common error codes.
+            match code:
+                case "NoSuchBucket":
+                    logger.error("S3 is reachable, but the configured bucket does not exist.")
+                case _:
+                    logger.error("S3 availability check failed with ClientError: %s" % code)
             return False
         except Exception as e:
             logger.error(e)
