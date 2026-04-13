@@ -81,3 +81,8 @@ repos:
         args:
           - -i
           - "2"
+  - repo: https://github.com/editorconfig-checker/editorconfig-checker.python
+    rev: 3.6.1
+    hooks:
+      - id: editorconfig-checker
+        alias: ec
