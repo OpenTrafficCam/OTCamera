@@ -369,7 +369,9 @@ def main(config: Config | None = None, config_file: str = "~/user_config.yaml") 
         try:
             upload = UploadProvider.provide(config)
         except BackendUnavailableError:
-            logger.error("Upload backend is configured, but not available for uploading.")
+            logger.error(
+                "Upload backend is configured, but not available for uploading."
+            )
             raise
 
         camera_controller = CameraController(camera, config, event_bus, board.leds)
