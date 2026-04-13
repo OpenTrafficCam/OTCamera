@@ -1,4 +1,4 @@
-
+---
 services:
   # RustFS — S3-compatible service for local development/testing only
   rustfs:
