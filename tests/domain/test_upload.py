@@ -1,14 +1,16 @@
 import pytest
 
-from OTCamera.domain.upload import Upload, UploadError
+from OTCamera.domain.upload import Upload
+from OTCamera.exceptions import UploadError
 
 
 class FakeUpload(Upload):
     def __init__(self, available: bool = True) -> None:
+        super().__init__()
         self._available = available
         self.uploaded_files: list[str] = []
 
-    def upload(self, file_path: str) -> None:
+    def _do_upload(self, file_path: str) -> None:
         self.uploaded_files.append(file_path)
 
     def is_available(self) -> bool:

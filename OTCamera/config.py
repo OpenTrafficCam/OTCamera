@@ -179,6 +179,7 @@ class Config(BaseModel):
     preview: PreviewConfig = Field(default_factory=PreviewConfig)
     ftp_upload: FtpUploadConfig = Field(default_factory=FtpUploadConfig)
     s3_upload: S3Config = Field(default_factory=S3Config)
+    delete_after_upload: bool = False
     video: VideoConfig = Field(default_factory=VideoConfig)
     wifi: WifiConfig = Field(default_factory=WifiConfig)
     hardware: HardwareConfig = Field(default_factory=HardwareConfig)

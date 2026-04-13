@@ -50,10 +50,11 @@ class ThreadedUploadController(UploadController):
             return
 
         def log_finished(f: Future):
-            logger.debug("Future %r finisehd", f)
+            logger.debug("Future %d finisehd", id(f))
         
         f = self.thread_pool.submit(self._upload.upload, event.filename)
-        logger.debug("Scheduled new upload: %r", f)
+
+        logger.debug("Scheduled new upload task %d", id(f))
         f.add_done_callback(log_finished)
 
 

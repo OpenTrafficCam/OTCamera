@@ -1,15 +1,13 @@
 import logging
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
-import boto3
-from botocore.config import Config as Boto3Config
-from botocore.exceptions import ClientError
 from boto3.s3.transfer import TransferConfig
+from botocore.exceptions import ClientError
 
 from OTCamera.domain.upload import Upload
-from OTCamera.config import S3Config
-
+from OTCamera.exceptions import UploadError
 
 logger = logging.getLogger(__name__)
 
@@ -32,40 +30,18 @@ class S3Upload(Upload):
     is controlled entirely by the caller.
     """
 
-    def __init__(self, s3client: Any, bucket_name: str):
+    def __init__(self, s3client: Any, bucket_name: str, on_success: Callable[[str], None] | None = None):
         """
         Args:
             s3client: A boto3 S3 client instance.
             bucket_name: Name of the target S3 bucket.
         """
+        super().__init__(on_success=on_success)
+
         self.client = s3client
         self.bucket_name = bucket_name
 
-    @classmethod
-    def from_config(cls, s3_config: S3Config) -> "S3Upload":
-        """Create an ``S3Upload`` instance from an ``S3Config``.
-
-        Args:
-            s3_config: Configuration object containing endpoint URL, credentials,
-                region, bucket name, and retry settings.
-
-        Returns:
-            A fully configured ``S3Upload`` instance.
-        """
-        client = boto3.client(
-            "s3",
-            endpoint_url=s3_config.endpoint_url,
-            aws_access_key_id=s3_config.access_key,
-            aws_secret_access_key=s3_config.secret_key,
-            region_name=s3_config.region,
-            config=Boto3Config(
-                retries={"total_max_attempts": s3_config.retry_max_attempts}
-            ),
-        )
-
-        return cls(s3client=client, bucket_name=s3_config.bucket)
-
-    def upload(self, file_path) -> None:
+    def _do_upload(self, file_path) -> None:
         """Upload a single file to the configured S3 bucket.
 
         The file is stored under a key equal to its basename.
@@ -78,10 +54,11 @@ class S3Upload(Upload):
 
             self.client.upload_file(file_path, self.bucket_name, key, Config=TRANSFER_CONFIG)
         except Exception as e:
-            logger.error(e)
+            logger.error("Unexpected error during S3 upload: %s", e)
+            raise UploadError(f"Could not upload to S3 bucket. Error: {e}") from e
 
     def is_available(self) -> bool:
-        """Perform a quick pre-flight check to confirm that we are ready to upload files."""
+        """Perform a quick check to confirm that we are ready to upload files."""
 
         key = ".preflight_check"
 
