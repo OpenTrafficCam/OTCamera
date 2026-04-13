@@ -9,7 +9,9 @@ from OTCamera.config import Config, parse_user_config
 
 def test_parse_user_config_minimal(tmp_path: Path) -> None:
     config_file = tmp_path / "config.yaml"
+
     config_file.write_text(
+        # editorconfig-checker-disable
         textwrap.dedent(
             """\
             debug_mode: true
@@ -66,6 +68,7 @@ def test_parse_user_config_minimal(tmp_path: Path) -> None:
               password: pass
               server_source: /
             """
+            # editorconfig-checker-enable
         ),
         encoding="utf-8",
     )
