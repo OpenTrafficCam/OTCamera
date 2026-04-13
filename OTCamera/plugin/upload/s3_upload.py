@@ -14,8 +14,11 @@ logger = logging.getLogger(__name__)
 
 # Disable boto3-internal split and threading, let us handle concurrency
 TRANSFER_CONFIG = TransferConfig(
-    multipart_threshold=100 * 1024 * 1024 * 1024,  # effectively disable multipart (100GB)
-    max_concurrency=1,                             # no internal threads
+    multipart_threshold=100
+    * 1024
+    * 1024
+    * 1024,  # effectively disable multipart (100GB)
+    max_concurrency=1,  # no internal threads
     use_threads=False,
 )
 
@@ -30,7 +33,12 @@ class S3Upload(Upload):
     is controlled entirely by the caller.
     """
 
-    def __init__(self, s3client: Any, bucket_name: str, on_success: Callable[[str], None] | None = None):
+    def __init__(
+        self,
+        s3client: Any,
+        bucket_name: str,
+        on_success: Callable[[str], None] | None = None,
+    ):
         """
         Args:
             s3client: A boto3 S3 client instance.
@@ -41,7 +49,7 @@ class S3Upload(Upload):
         self.client = s3client
         self.bucket_name = bucket_name
 
-    def _do_upload(self, file_path) -> None:
+    def _do_upload(self, file_path: str) -> None:
         """Upload a single file to the configured S3 bucket.
 
         The file is stored under a key equal to its basename.
@@ -52,7 +60,9 @@ class S3Upload(Upload):
         try:
             key = Path(file_path).name
 
-            self.client.upload_file(file_path, self.bucket_name, key, Config=TRANSFER_CONFIG)
+            self.client.upload_file(
+                file_path, self.bucket_name, key, Config=TRANSFER_CONFIG
+            )
         except Exception as e:
             logger.error("Unexpected error during S3 upload: %s", e)
             raise UploadError(f"Could not upload to S3 bucket. Error: {e}") from e
@@ -71,9 +81,13 @@ class S3Upload(Upload):
             # TODO: Add more speaking log statements for common error codes.
             match code:
                 case "NoSuchBucket":
-                    logger.error("S3 is reachable, but the configured bucket does not exist.")
+                    logger.error(
+                        "S3 is reachable, but the configured bucket does not exist."
+                    )
                 case _:
-                    logger.error("S3 availability check failed with ClientError: %s" % code)
+                    logger.error(
+                        "S3 availability check failed with ClientError: %s" % code
+                    )
             return False
         except Exception as e:
             logger.error(e)

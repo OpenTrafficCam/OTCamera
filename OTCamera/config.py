@@ -10,9 +10,9 @@ try:
 except ImportError:
     from yaml import SafeLoader  # type: ignore[assignment]
 
-import yaml
 from typing import Annotated
 
+import yaml
 from pydantic import BaseModel, BeforeValidator, Field, field_validator, model_validator
 
 # YAML interprets values like `off`, `on`, `yes`, `no` as booleans.
@@ -58,53 +58,30 @@ class PreviewConfig(BaseModel):
     format: StrFromYaml = "jpeg"
     interval: int = 5
     send_to_external: bool = False
-    url: StrFromYaml = "http://localhost:5000/projects/0/sites/1/cameras/2/current_frame"
+    url: StrFromYaml = (
+        "http://localhost:5000/projects/0/sites/1/cameras/2/current_frame"
+    )
 
 
 class S3Config(BaseModel):
     """Config for S3-compatible object storage."""
 
-    enable: bool = False
-    access_key: StrFromYaml | None = None
-    secret_key: StrFromYaml | None = None
-    bucket: StrFromYaml | None = None
+    access_key: StrFromYaml
+    secret_key: StrFromYaml
+    bucket: StrFromYaml
     endpoint_url: StrFromYaml | None = None
     region: StrFromYaml | None = None
     retry_max_attempts: int = 5
-
-    @model_validator(mode="after")
-    def _require_credentials_when_enabled(self) -> "S3Config":
-        if self.enable:
-            missing = [
-                f for f in ("access_key", "secret_key", "bucket")
-                if getattr(self, f) is None
-            ]
-            if missing:
-                raise ValueError(
-                    f"Fields required when s3.enable is true: {missing}"
-                )
-        return self
 
 
 class FtpUploadConfig(BaseModel):
     """FTP upload settings."""
 
-    enable: bool = False
-    host: StrFromYaml | None = None
+    host: StrFromYaml
     port: int = 21
-    user: StrFromYaml | None = None
-    password: StrFromYaml | None = None
+    user: StrFromYaml
+    password: StrFromYaml
     server_source: StrFromYaml = "/"
-
-    @model_validator(mode="after")
-    def _require_credentials_when_enabled(self) -> "FtpUploadConfig":
-        if self.enable:
-            missing = [f for f in ("host", "user", "password") if getattr(self, f) is None]
-            if missing:
-                raise ValueError(
-                    f"Fields required when ftp_upload.enable is true: {missing}"
-                )
-        return self
 
 
 class EncoderConfig(BaseModel):
@@ -177,8 +154,8 @@ class Config(BaseModel):
     recording: RecordingConfig = Field(default_factory=RecordingConfig)
     camera: CameraConfig = Field(default_factory=CameraConfig)
     preview: PreviewConfig = Field(default_factory=PreviewConfig)
-    ftp_upload: FtpUploadConfig = Field(default_factory=FtpUploadConfig)
-    s3_upload: S3Config = Field(default_factory=S3Config)
+    ftp_upload: FtpUploadConfig | None = None
+    s3_upload: S3Config | None = None
     delete_after_upload: bool = False
     video: VideoConfig = Field(default_factory=VideoConfig)
     wifi: WifiConfig = Field(default_factory=WifiConfig)

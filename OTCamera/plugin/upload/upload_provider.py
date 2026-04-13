@@ -4,12 +4,12 @@ import logging
 
 import boto3
 from botocore.config import Config as Boto3Config
-from OTCamera.plugin.upload.helpers import delete_file
 
 from OTCamera.config import Config
 from OTCamera.domain.upload import Upload
-from OTCamera.exceptions import BackendUnavailableError
+from OTCamera.exceptions import BackendUnavailableError, UploadError
 from OTCamera.plugin.upload.ftp_upload import FtpUpload
+from OTCamera.plugin.upload.helpers import delete_file
 from OTCamera.plugin.upload.s3_upload import S3Upload
 
 logger = logging.getLogger(__name__)
@@ -23,26 +23,20 @@ class UploadProvider:
         """Return the configured upload backend, or None when none is enabled.
 
         Raises:
-            ValueError: If more than one upload backend is enabled simultaneously.
-            UploadUnavailableError: When the upload backend is not available.
+            UploadError: If more than one upload backend is enabled simultaneously.
+            BackendUnavailableError: When the upload backend is not available.
         """
-        ftp_enabled = config.ftp_upload.enable
-        s3_enabled = config.s3_upload.enable
-
-        if ftp_enabled and s3_enabled:
-            raise ValueError(
-                "Only one upload backend may be enabled at a time "
-                "(ftp_upload.enable and s3_upload.enable are both true)."
-            )
+        if config.ftp_upload and config.s3_upload:
+            raise UploadError("Only one upload backend may be enabled at a time.")
 
         on_success_callback = None
         if config.delete_after_upload:
             on_success_callback = delete_file
 
-        upload = None
-        if ftp_enabled:
-
+        upload: Upload | None = None
+        if config.ftp_upload:
             ftp = config.ftp_upload
+
             logger.debug("FTP upload backend enabled for host %s", ftp.host)
             upload = FtpUpload(
                 host=ftp.host,
@@ -53,7 +47,7 @@ class UploadProvider:
                 on_success=on_success_callback,
             )
 
-        if s3_enabled:
+        if config.s3_upload:
             s3config = config.s3_upload
 
             s3client = boto3.client(
@@ -66,9 +60,10 @@ class UploadProvider:
                     retries={"total_max_attempts": s3config.retry_max_attempts}
                 ),
             )
-
             upload = S3Upload(
-                s3client=s3client, bucket_name=s3config.bucket, on_success=on_success_callback
+                s3client=s3client,
+                bucket_name=s3config.bucket,
+                on_success=on_success_callback,
             )
 
         if upload is None:

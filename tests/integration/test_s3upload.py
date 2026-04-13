@@ -19,7 +19,7 @@ EXAMPLE_VIDEOS_PATHS = set(EXAMPLE_VIDEOS_FOLDER.glob("*.h264"))
 
 
 @pytest.fixture
-def local_s3_config():
+def local_s3_config() -> S3Config:
     return S3Config(
         endpoint_url="http://127.0.0.1:9000",
         access_key="rustfsadmin",
@@ -43,7 +43,7 @@ def s3client(local_s3_config: S3Config) -> Any:
 
 
 @pytest.fixture
-def reset_s3_bucket(s3client, local_s3_config: S3Config):
+def reset_s3_bucket(s3client: Any, local_s3_config: S3Config) -> None:
     bucket_name = local_s3_config.bucket
 
     try:
@@ -64,7 +64,9 @@ def reset_s3_bucket(s3client, local_s3_config: S3Config):
 
 
 @pytest.mark.integration
-def test_s3_upload(reset_s3_bucket, s3client, local_s3_config: S3Config):
+def test_s3_upload(
+    reset_s3_bucket: Any, s3client: Any, local_s3_config: S3Config
+) -> None:
     upload = S3Upload(s3client, bucket_name=local_s3_config.bucket)
 
     event_bus = EventBus()

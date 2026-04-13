@@ -1,3 +1,5 @@
+from collections.abc import Callable
+
 import pytest
 
 from OTCamera.domain.upload import Upload
@@ -5,8 +7,12 @@ from OTCamera.exceptions import UploadError
 
 
 class FakeUpload(Upload):
-    def __init__(self, available: bool = True, **kwargs) -> None:
-        super().__init__(**kwargs)
+    def __init__(
+        self,
+        available: bool = True,
+        on_success: Callable[[str], None] | None = None,
+    ) -> None:
+        super().__init__(on_success=on_success)
         self._available = available
         self.uploaded_files: list[str] = []
 
