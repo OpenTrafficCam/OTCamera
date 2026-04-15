@@ -1,7 +1,7 @@
 """Upload controller that reacts to recording split events."""
 
-import abc
 import logging
+from abc import ABC, abstractmethod
 from concurrent.futures import Future, ThreadPoolExecutor
 
 from OTCamera.domain.events import EventBus, FileUploaded, RecordingSplit
@@ -10,7 +10,7 @@ from OTCamera.domain.upload import Upload
 logger = logging.getLogger(__name__)
 
 
-class UploadController(abc.ABC):
+class UploadController(ABC):
     """Upload completed recording segments when they are split."""
 
     def __init__(self, event_bus: EventBus, upload: Upload | None = None) -> None:
@@ -20,7 +20,7 @@ class UploadController(abc.ABC):
             event_bus.subscribe(RecordingSplit, self._on_recording_split)
             logger.debug("Upload controller active")
 
-    @abc.abstractmethod
+    @abstractmethod
     def _on_recording_split(self, event: RecordingSplit) -> None:
         """Handle a completed recording segment.
 
