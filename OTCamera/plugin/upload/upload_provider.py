@@ -9,7 +9,6 @@ from OTCamera.config import Config
 from OTCamera.domain.upload import Upload
 from OTCamera.exceptions import BackendUnavailableError, UploadError
 from OTCamera.plugin.upload.ftp_upload import FtpUpload
-from OTCamera.plugin.upload.helpers import delete_file
 from OTCamera.plugin.upload.s3_upload import S3Upload
 
 logger = logging.getLogger(__name__)
@@ -29,10 +28,6 @@ class UploadProvider:
         if config.ftp_upload and config.s3_upload:
             raise UploadError("Only one upload backend may be enabled at a time.")
 
-        on_success_callback = None
-        if config.delete_after_upload:
-            on_success_callback = delete_file
-
         upload: Upload | None = None
         if config.ftp_upload:
             ftp = config.ftp_upload
@@ -44,7 +39,6 @@ class UploadProvider:
                 user=ftp.user,
                 password=ftp.password,
                 server_source=ftp.server_source,
-                on_success=on_success_callback,
             )
 
         if config.s3_upload:
@@ -63,7 +57,6 @@ class UploadProvider:
             upload = S3Upload(
                 s3client=s3client,
                 bucket_name=s3config.bucket,
-                on_success=on_success_callback,
             )
 
         if upload is None:

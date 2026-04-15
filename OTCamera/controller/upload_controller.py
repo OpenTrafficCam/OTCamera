@@ -4,7 +4,7 @@ import abc
 import logging
 from concurrent.futures import Future, ThreadPoolExecutor
 
-from OTCamera.domain.events import EventBus, RecordingSplit
+from OTCamera.domain.events import EventBus, FileUploaded, RecordingSplit
 from OTCamera.domain.upload import Upload
 
 logger = logging.getLogger(__name__)
@@ -15,12 +15,20 @@ class UploadController(abc.ABC):
 
     def __init__(self, event_bus: EventBus, upload: Upload | None = None) -> None:
         self._upload = upload
+        self._event_bus = event_bus
         if upload is not None:
             event_bus.subscribe(RecordingSplit, self._on_recording_split)
             logger.debug("Upload controller active")
 
     @abc.abstractmethod
-    def _on_recording_split(self, event: RecordingSplit) -> None: ...
+    def _on_recording_split(self, event: RecordingSplit) -> None:
+        """Handle a completed recording segment.
+
+        Implementations must upload the file at ``event.filename`` and publish a
+        ``FileUploaded`` event on success. On failure the error should be logged
+        without propagating.
+        """
+        ...
 
 
 class BlockingUpoloadController(UploadController):
@@ -32,6 +40,7 @@ class BlockingUpoloadController(UploadController):
         try:
             logger.info("Uploading %s", event.filename)
             self._upload.upload(event.filename)
+            self._event_bus.publish(FileUploaded(filename=event.filename))
         except Exception as exc:
             logger.warning("Upload failed: %s", exc)
 
@@ -50,13 +59,18 @@ class ThreadedUploadController(UploadController):
         if self._upload is None:
             return
 
-        def log_finished(f: Future) -> None:
-            logger.debug("Future %d finisehd", id(f))
+        filename = event.filename
 
-        f = self.thread_pool.submit(self._upload.upload, event.filename)
+        def on_done(f: Future) -> None:
+            try:
+                f.result()
+                self._event_bus.publish(FileUploaded(filename=filename))
+            except Exception as exc:
+                logger.warning("Upload failed: %s", exc)
 
+        f = self.thread_pool.submit(self._upload.upload, filename)
         logger.debug("Scheduled new upload task %d", id(f))
-        f.add_done_callback(log_finished)
+        f.add_done_callback(on_done)
 
     def close(self, wait: bool = True, cancel_pending: bool = True) -> None:
         """Terminate the underlying ThreadPoolExecutor."""

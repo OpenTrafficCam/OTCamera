@@ -24,6 +24,7 @@ from OTCamera.domain.events import (
     ButtonPressed,
     ButtonReleased,
     EventBus,
+    FileUploaded,
     ShutdownRequested,
 )
 from OTCamera.domain.led import LED
@@ -39,6 +40,7 @@ from OTCamera.html_updater import (
 )
 from OTCamera.log import setup_logging
 from OTCamera.module.camera.camera_provider import CameraProvider
+from OTCamera.plugin.upload.helpers import delete_file
 from OTCamera.plugin.upload.upload_provider import UploadProvider
 
 logger = logging.getLogger(__name__)
@@ -373,6 +375,9 @@ def main(config: Config | None = None, config_file: str = "~/user_config.yaml") 
                 "Upload backend is configured, but not available for uploading."
             )
             raise
+
+        if config.delete_after_upload:
+            event_bus.subscribe(FileUploaded, lambda e: delete_file(e.filename))
 
         camera_controller = CameraController(camera, config, event_bus, board.leds)
         power_controller = PowerController(

@@ -1,7 +1,6 @@
 """FTPS upload backend."""
 
 import logging
-from collections.abc import Callable
 from ftplib import FTP_TLS
 from pathlib import Path
 
@@ -21,17 +20,14 @@ class FtpUpload(Upload):
         user: str,
         password: str,
         server_source: str = "/",
-        on_success: Callable[[str], None] | None = None
     ) -> None:
-        super().__init__(on_success=on_success)
-
         self._host = host
         self._port = port
         self._user = user
         self._password = password
         self._server_source = server_source
 
-    def _do_upload(self, file_path: str) -> None:
+    def upload(self, file_path: str) -> None:
         """Upload a local file to the configured FTPS target directory."""
         source = Path(file_path)
         destination = Path(self._server_source) / source.name

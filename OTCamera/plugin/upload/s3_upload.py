@@ -1,5 +1,4 @@
 import logging
-from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
@@ -37,19 +36,16 @@ class S3Upload(Upload):
         self,
         s3client: Any,
         bucket_name: str,
-        on_success: Callable[[str], None] | None = None,
     ):
         """
         Args:
             s3client: A boto3 S3 client instance.
             bucket_name: Name of the target S3 bucket.
         """
-        super().__init__(on_success=on_success)
-
         self.client = s3client
         self.bucket_name = bucket_name
 
-    def _do_upload(self, file_path: str) -> None:
+    def upload(self, file_path: str) -> None:
         """Upload a single file to the configured S3 bucket.
 
         The file is stored under a key equal to its basename.
