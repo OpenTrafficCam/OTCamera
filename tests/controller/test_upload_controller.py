@@ -1,5 +1,5 @@
 from OTCamera.controller.upload_controller import (
-    BlockingUpoloadController,
+    BlockingUploadController,
     ThreadedUploadController,
 )
 from OTCamera.domain.events import EventBus, FileUploaded, RecordingSplit
@@ -30,7 +30,7 @@ def test_blocking_controller_publishes_file_uploaded_on_success() -> None:
     bus = EventBus()
     received: list[FileUploaded] = []
     bus.subscribe(FileUploaded, received.append)
-    BlockingUpoloadController(bus, FakeUpload())
+    BlockingUploadController(bus, FakeUpload())
 
     bus.publish(RecordingSplit(filename="/tmp/video.h264"))
 
@@ -41,7 +41,7 @@ def test_blocking_controller_does_not_publish_file_uploaded_on_failure() -> None
     bus = EventBus()
     received: list[FileUploaded] = []
     bus.subscribe(FileUploaded, received.append)
-    BlockingUpoloadController(bus, FailingUpload())
+    BlockingUploadController(bus, FailingUpload())
 
     bus.publish(RecordingSplit(filename="/tmp/video.h264"))
 

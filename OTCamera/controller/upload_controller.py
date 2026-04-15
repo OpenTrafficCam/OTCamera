@@ -31,7 +31,7 @@ class UploadController(ABC):
         ...
 
 
-class BlockingUpoloadController(UploadController):
+class BlockingUploadController(UploadController):
 
     def _on_recording_split(self, event: RecordingSplit) -> None:
         """Upload the completed recording segment."""
