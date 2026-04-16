@@ -1,8 +1,10 @@
 """Upload controller that reacts to recording split events."""
 
 import logging
+import threading
 from abc import ABC, abstractmethod
 from concurrent.futures import Future, ThreadPoolExecutor
+from concurrent.futures import wait as futures_wait
 
 from OTCamera.domain.events import EventBus, FileUploaded, RecordingSplit
 from OTCamera.domain.upload import Upload
@@ -54,6 +56,8 @@ class ThreadedUploadController(UploadController):
         super().__init__(event_bus=event_bus, upload=upload)
 
         self.thread_pool = ThreadPoolExecutor(max_workers=max_workers)
+        self._active_futures: set[Future] = set()
+        self._futures_lock = threading.Lock()
 
     def _on_recording_split(self, event: RecordingSplit) -> None:
         if self._upload is None:
@@ -62,6 +66,8 @@ class ThreadedUploadController(UploadController):
         filename = event.filename
 
         def on_done(f: Future) -> None:
+            with self._futures_lock:
+                self._active_futures.discard(f)
             try:
                 f.result()
                 self._event_bus.publish(FileUploaded(filename=filename))
@@ -69,9 +75,37 @@ class ThreadedUploadController(UploadController):
                 logger.warning("Upload failed: %s", exc)
 
         f = self.thread_pool.submit(self._upload.upload, filename)
+        with self._futures_lock:
+            self._active_futures.add(f)
         logger.debug("Scheduled new upload task %d", id(f))
         f.add_done_callback(on_done)
 
-    def close(self, wait: bool = True, cancel_pending: bool = True) -> None:
-        """Terminate the underlying ThreadPoolExecutor."""
-        self.thread_pool.shutdown(wait=wait, cancel_futures=cancel_pending)
+    def close(
+        self,
+        wait: bool = True,
+        cancel_pending: bool = True,
+        grace_timeout: float | None = None,
+    ) -> None:
+        """Terminate the underlying ThreadPoolExecutor.
+
+        Args:
+            wait: Block until all running uploads finish (ignored when
+                ``grace_timeout`` is set).
+            cancel_pending: Cancel futures that have not started yet.
+            grace_timeout: Seconds to wait for active uploads before forcing
+                shutdown. When ``None`` the behaviour of ``wait`` applies
+                without a deadline.
+        """
+        if grace_timeout is not None:
+            with self._futures_lock:
+                active = set(self._active_futures)
+            if active:
+                _, still_running = futures_wait(active, timeout=grace_timeout)
+                if still_running:
+                    logger.warning(
+                        "Grace period expired; %d upload(s) still running",
+                        len(still_running),
+                    )
+            self.thread_pool.shutdown(wait=False, cancel_futures=cancel_pending)
+        else:
+            self.thread_pool.shutdown(wait=wait, cancel_futures=cancel_pending)

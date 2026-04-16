@@ -10,7 +10,10 @@ class Upload(ABC):
     def upload(self, file_path: str) -> None:
         """Upload a file.
 
-        Implementations must raise UploadError on failure.
+        Implementations must raise UploadError on failure and must configure
+        I/O-level timeouts (e.g. socket or request timeouts) so that this
+        method cannot block indefinitely. The caller runs uploads on a thread
+        and has no reliable way to interrupt a hung thread from the outside.
         """
         raise NotImplementedError
 
