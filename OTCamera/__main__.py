@@ -8,7 +8,7 @@ from datetime import datetime as dt
 from datetime import timedelta
 from pathlib import Path
 from time import sleep
-from typing import Any, Iterator
+from typing import Any, Iterator, Protocol
 
 import psutil
 
@@ -353,6 +353,21 @@ def _get_log_files_sorted(log_files: Iterator[Path]) -> list[Path]:
     return [log_file for _, log_file in with_timestamp] + without_timestamp
 
 
+class Closable(Protocol):
+    def close(self) -> None: ...
+
+
+def close_resources(*resources: Closable | None) -> None:
+    """ "Try to close all resources, ignoring errors."""
+    for resource in resources:
+        if resource is None:
+            continue
+        try:
+            resource.close()
+        except Exception:
+            logger.warning(f"Error closing resource {resource!r}", exc_info=True)
+
+
 def main(config: Config | None = None, config_file: str = "~/user_config.yaml") -> None:
     """Wire all components and start OTCamera."""
     if config is None:
@@ -437,14 +452,7 @@ def main(config: Config | None = None, config_file: str = "~/user_config.yaml") 
         )
         application.record()
     finally:
-        for resource in [camera, upload, upload_controller]:
-            if resource is None:
-                continue
-            try:
-                resource.close()
-            except Exception:
-                logger.debug("Error closing resource", exc_info=True)
-        board.close()
+        close_resources(camera, upload, upload_controller, board)
 
 
 if __name__ == "__main__":
