@@ -399,6 +399,12 @@ def main(config: Config | None = None, config_file: str = "~/user_config.yaml") 
         schedule_controller = ScheduleController(config, event_bus)
         upload_controller = ThreadedUploadController(event_bus, upload)
 
+        if config.rabbitmq is not None:
+            from OTCamera.controller.rabbitmq_controller import RabbitMqController
+            from OTCamera.plugin.rabbitmq.rabbitmq_publisher import RabbitMqPublisher
+
+            RabbitMqController(event_bus, RabbitMqPublisher(config.rabbitmq))
+
         for name, button in board.buttons.items():
             button.on_pressed(
                 _make_button_event_callback(event_bus, ButtonPressed, name)

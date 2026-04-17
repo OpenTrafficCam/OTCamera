@@ -151,6 +151,20 @@ class AdcConfig(BaseModel):
     threshold_low_battery: float = 3.3
 
 
+class RabbitMqConfig(BaseModel):
+    """RabbitMQ connection and exchange settings."""
+
+    host: StrFromYaml
+    port: int = 5672
+    user: StrFromYaml = "guest"
+    password: StrFromYaml = "guest"
+    vhost: StrFromYaml = "/"
+    exchange: StrFromYaml = ""
+    exchange_type: StrFromYaml = "direct"
+    routing_key: StrFromYaml = ""
+    durable: bool = True
+
+
 class Config(BaseModel):
     """Top-level OTCamera configuration."""
 
@@ -170,6 +184,7 @@ class Config(BaseModel):
     hardware: HardwareConfig = Field(default_factory=HardwareConfig)
     msteams: MsTeamsConfig = Field(default_factory=MsTeamsConfig)
     adc: AdcConfig = Field(default_factory=AdcConfig)
+    rabbitmq: RabbitMqConfig | None = None
     template_html_path: StrFromYaml = "~/OTCamera/webfiles/template.html"
     index_html_path: StrFromYaml = "~/OTCamera/webfiles/index.html"
     offline_html_path: StrFromYaml = "~/OTCamera/webfiles/offline.html"
