@@ -6,7 +6,7 @@ from boto3.s3.transfer import TransferConfig
 from botocore.exceptions import ClientError
 
 from OTCamera.domain.upload import Upload
-from OTCamera.exceptions import UploadError
+from OTCamera.plugin.upload.exceptions import FileUploadError
 
 logger = logging.getLogger(__name__)
 
@@ -68,7 +68,7 @@ class S3Upload(Upload):
             )
         except Exception as e:
             logger.error("Unexpected error during S3 upload: %s", e)
-            raise UploadError(f"Could not upload to S3 bucket. Error: {e}") from e
+            raise FileUploadError(f"Could not upload to S3 bucket. Error: {e}") from e
 
     def is_available(self) -> bool:
         """Perform a quick check to confirm that we are ready to upload files."""

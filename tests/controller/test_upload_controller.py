@@ -4,7 +4,7 @@ from OTCamera.controller.upload_controller import (
 )
 from OTCamera.domain.events import EventBus, FileUploaded, RecordingSplit
 from OTCamera.domain.upload import Upload
-from OTCamera.exceptions import UploadError
+from OTCamera.plugin.upload.exceptions import UploadError
 
 
 class FakeUpload(Upload):

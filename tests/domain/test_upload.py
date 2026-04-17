@@ -1,7 +1,7 @@
 import pytest
 
 from OTCamera.domain.upload import Upload
-from OTCamera.exceptions import UploadError
+from OTCamera.plugin.upload.exceptions import UploadError
 
 
 class FakeUpload(Upload):
