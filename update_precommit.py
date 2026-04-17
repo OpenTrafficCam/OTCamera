@@ -65,12 +65,25 @@ class TypeStubPackage(Package):
     def version(self) -> Union[str, None]:
         return self._version
 
-    def __init__(self, name: str, version: Union[str, None]) -> None:
+    def __init__(self, name: str, version: Union[str, None], marker: str = "") -> None:
         self._name = name
         self._version = version
+        self._marker = marker
+
+    def __hash__(self) -> int:
+        return hash((self.name, self.version, self._marker))
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, TypeStubPackage):
+            return False
+        return (self.name, self.version, self._marker) == (
+            other.name,
+            other.version,
+            other._marker,
+        )
 
     def serialize(self) -> str:
-        return self.name
+        return self.name + self._marker
 
 
 class NormalPackage(Package):
@@ -82,14 +95,27 @@ class NormalPackage(Package):
     def version(self) -> Union[str, None]:
         return self._version
 
-    def __init__(self, name: str, version: Union[str, None]) -> None:
+    def __init__(self, name: str, version: Union[str, None], marker: str = "") -> None:
         self._name = name
         self._version = version
+        self._marker = marker
+
+    def __hash__(self) -> int:
+        return hash((self.name, self.version, self._marker))
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, NormalPackage):
+            return False
+        return (self.name, self.version, self._marker) == (
+            other.name,
+            other.version,
+            other._marker,
+        )
 
     def serialize(self) -> str:
         if self.version:
-            return self.name + "==" + self.version
-        return self.name
+            return self.name + "==" + self.version + self._marker
+        return self.name + self._marker
 
 
 @dataclass
@@ -158,36 +184,47 @@ pattern_extra_index_url = re.compile(r"^--extra-index-url\s+(?P<url>\S+)")
 
 def parse_requirement(requirement_line: str) -> Union[AdditionalMypyDependency, None]:
     """Extract package name from a requirement line using regex."""
-    # Regex pattern to capture the package name, ignoring version specifiers
-    if match_extra_index_url := pattern_extra_index_url.match(requirement_line):
+    # Split off PEP 508 environment marker (e.g. "; platform_system == 'Linux'")
+    marker = ""
+    spec_line = requirement_line
+    if ";" in requirement_line:
+        spec_line, marker_part = requirement_line.split(";", 1)
+        marker = "; " + marker_part.strip()
+
+    if match_extra_index_url := pattern_extra_index_url.match(spec_line.strip()):
         return create_extra_index_url(
             match_extra_index_url.group(CAPTURE_GROUP_URL).strip()
         )
 
-    match = pattern_package.match(requirement_line)
+    match = pattern_package.match(spec_line.strip())
     if not match:
         return None
 
     package_name = match.group(CAPTURE_GROUP_PACKAGE).strip()
-    if package_version := match.group(CAPTURE_GROUP_VERSION):
-        package_version = package_version.strip()
+    package_version: Union[str, None] = None
+    if pv := match.group(CAPTURE_GROUP_VERSION):
+        package_version = pv.strip()
 
-    return create_package(name=package_name, version=package_version)
+    return create_package(name=package_name, version=package_version, marker=marker)
 
 
 def create_extra_index_url(url: str) -> AdditionalMypyDependency:
     return ExtraIndexUrl(url)
 
 
-def create_package(name: str, version: Union[str, None]) -> AdditionalMypyDependency:
+def create_package(
+    name: str, version: Union[str, None], marker: str = ""
+) -> AdditionalMypyDependency:
     """Check if a type stub exists for a given package name and return it."""
     types_package_name = f"types-{name}"
     if __check_types_for_package_exists(types_package_name):
-        return create_type_stub_package(name=types_package_name, version=version)
+        return create_type_stub_package(
+            name=types_package_name, version=version, marker=marker
+        )
 
     # Some packages already provide type stubs with their package
     # If they don't pre-commit mypy won't fail
-    return create_normal_package(name=name, version=version)
+    return create_normal_package(name=name, version=version, marker=marker)
 
 
 def __check_types_for_package_exists(package_name: str) -> bool:
@@ -196,15 +233,15 @@ def __check_types_for_package_exists(package_name: str) -> bool:
 
 
 def create_type_stub_package(
-    name: str, version: Union[str, None]
+    name: str, version: Union[str, None], marker: str = ""
 ) -> AdditionalMypyDependency:
-    return TypeStubPackage(name=name, version=version)
+    return TypeStubPackage(name=name, version=version, marker=marker)
 
 
 def create_normal_package(
-    name: str, version: Union[str, None]
+    name: str, version: Union[str, None], marker: str = ""
 ) -> AdditionalMypyDependency:
-    return NormalPackage(name=name, version=version)
+    return NormalPackage(name=name, version=version, marker=marker)
 
 
 def serialize_packages(packages: Iterable[AdditionalMypyDependency]) -> list[str]:

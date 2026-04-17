@@ -44,21 +44,25 @@ repos:
       - id: mypy
         entry: mypy OTCamera tests --config-file=pyproject.toml
         additional_dependencies:
-          - art==6.5
           - black==25.1.0
           - gpiozero==2.0.1
           - hatch-requirements-txt==0.4.1
           - isort==6.0.1
+          - lgpio; platform_system == "Linux"
           - mypy==1.15.0
-          - opencv-python==4.11.0.86
-          - picamerax==24.3.21
+          - opencv-python-headless==4.12.0.88
+          - picamera2==0.3.12; platform_system == "Linux"
           - pre-commit==4.2.0
+          - pydantic==2.12.5
           - pytest-cov==6.1.1
           - pytest==8.3.5
+          - smbus2
           - types-PyYAML
-          - types-RPi.GPIO
           - types-beautifulsoup4
+          - types-boto3
           - types-flake8
+          - types-opencv-python
+          - types-pika
           - types-psutil
           - types-requests
           - types-requests

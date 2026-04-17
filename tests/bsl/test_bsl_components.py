@@ -1,6 +1,6 @@
 import sys
 from types import ModuleType
-from typing import Any
+from typing import Any, cast
 
 import pytest
 
@@ -159,7 +159,8 @@ class TestTLA2024:
         voltage = adc.get_voltage(0)
         adc.close()
 
+        fake_bus = cast(FakeSMBus, adc._bus)
         assert adc.channels == 4
         assert pytest.approx(voltage, rel=1e-6) == 2.048
-        assert adc._bus.closed
-        assert adc._bus.write_calls[0][0] == 0x48
+        assert fake_bus.closed
+        assert fake_bus.write_calls[0][0] == 0x48
