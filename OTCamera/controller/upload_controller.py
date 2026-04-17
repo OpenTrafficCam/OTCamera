@@ -98,6 +98,12 @@ class ThreadedUploadController(UploadController):
                 behaviour of ``wait`` applies without a deadline.
         """
         if grace_timeout is not None:
+            logger.info(
+                "Requested graceful shutdown with %f second timeout", grace_timeout
+            )
+            logger.info(
+                "Waiting for %d active uploads to finish", len(self._active_futures)
+            )
             with self._futures_lock:
                 active = set(self._active_futures)
             if active:
