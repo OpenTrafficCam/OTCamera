@@ -92,9 +92,10 @@ class ThreadedUploadController(UploadController):
             wait: Block until all running uploads finish (ignored when
                 ``grace_timeout`` is set).
             cancel_pending: Cancel futures that have not started yet.
-            grace_timeout: Seconds to wait for active uploads before forcing
-                shutdown. When ``None`` the behaviour of ``wait`` applies
-                without a deadline.
+            grace_timeout: Seconds to wait for active uploads before returning
+                without waiting further. Running uploads cannot be interrupted
+                and will continue in the background. When ``None`` the
+                behaviour of ``wait`` applies without a deadline.
         """
         if grace_timeout is not None:
             with self._futures_lock:
