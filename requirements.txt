@@ -1,11 +1,12 @@
 beautifulsoup4==4.13.4
-pydantic==2.12.5
+boto3==1.42.85
 gpiozero==2.0.1
 lgpio; platform_system == "Linux"
-picamera2>=0.3.12; platform_system == "Linux"
 opencv-python-headless==4.12.0.88
+picamera2>=0.3.12; platform_system == "Linux"
+pika==1.3.2
 psutil==7.0.0
+pydantic==2.12.5
 PyYAML==6.0.2
 requests==2.32.3
 smbus2
-boto3==1.42.85
