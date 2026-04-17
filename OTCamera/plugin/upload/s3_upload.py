@@ -36,25 +36,32 @@ class S3Upload(Upload):
         self,
         s3client: Any,
         bucket_name: str,
+        key_prefix: str | None = None,
     ):
         """
         Args:
             s3client: A boto3 S3 client instance.
             bucket_name: Name of the target S3 bucket.
+            key_prefix: Optional prefix prepended to the filename to form the
+                S3 key, e.g. ``project/site/camera``. When omitted the
+                filename is used as the key directly.
         """
         self.client = s3client
         self.bucket_name = bucket_name
+        self.key_prefix = key_prefix
 
     def upload(self, file_path: str) -> None:
         """Upload a single file to the configured S3 bucket.
 
-        The file is stored under a key equal to its basename.
+        The file is stored under the key ``{key_prefix}/{filename}`` when a
+        prefix is set, or just ``{filename}`` otherwise.
 
         Args:
             file_path: Path to the local file to upload.
         """
         try:
-            key = Path(file_path).name
+            name = Path(file_path).name
+            key = f"{self.key_prefix}/{name}" if self.key_prefix else name
 
             self.client.upload_file(
                 file_path, self.bucket_name, key, Config=TRANSFER_CONFIG

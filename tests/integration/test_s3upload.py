@@ -63,11 +63,16 @@ def reset_s3_bucket(s3client: Any, local_s3_config: S3Config) -> None:
     s3client.create_bucket(Bucket=bucket_name)
 
 
+KEY_PREFIX = "project/site/camera"
+
+
 @pytest.mark.integration
 def test_s3_upload(
     reset_s3_bucket: Any, s3client: Any, local_s3_config: S3Config
 ) -> None:
-    upload = S3Upload(s3client, bucket_name=local_s3_config.bucket)
+    upload = S3Upload(
+        s3client, bucket_name=local_s3_config.bucket, key_prefix=KEY_PREFIX
+    )
 
     event_bus = EventBus()
     upload_controller = ThreadedUploadController(event_bus=event_bus, upload=upload)
@@ -82,6 +87,6 @@ def test_s3_upload(
 
     keys = {el["Key"] for el in response["Contents"]}
 
-    expected = {p.name for p in EXAMPLE_VIDEOS_PATHS}
+    expected = {f"{KEY_PREFIX}/{p.name}" for p in EXAMPLE_VIDEOS_PATHS}
 
     assert keys == expected

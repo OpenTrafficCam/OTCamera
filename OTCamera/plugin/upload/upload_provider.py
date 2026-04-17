@@ -57,6 +57,11 @@ class UploadProvider:
             upload = S3Upload(
                 s3client=s3client,
                 bucket_name=s3config.bucket,
+                key_prefix=(
+                    f"{config.project_name}"
+                    f"/{config.site_name}"
+                    f"/{config.camera_name}"
+                ),
             )
 
         if upload is None:
