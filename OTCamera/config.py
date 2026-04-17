@@ -162,6 +162,7 @@ class Config(BaseModel):
     ftp_upload: FtpUploadConfig | None = None
     s3_upload: S3Config | None = None
     delete_after_upload: bool = False
+    upload_grace_timeout: int = 60
     video: VideoConfig = Field(default_factory=VideoConfig)
     wifi: WifiConfig = Field(default_factory=WifiConfig)
     hardware: HardwareConfig = Field(default_factory=HardwareConfig)

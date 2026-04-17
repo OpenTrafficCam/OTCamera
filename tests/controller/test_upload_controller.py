@@ -56,6 +56,7 @@ def test_threaded_controller_publishes_file_uploaded_on_success() -> None:
 
     bus.publish(RecordingSplit(filename="/tmp/video.h264"))
     controller.close()
+    bus.process_pending()
 
     assert received == [FileUploaded(filename="/tmp/video.h264")]
 
