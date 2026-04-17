@@ -70,7 +70,7 @@ class ThreadedUploadController(UploadController):
                 self._active_futures.discard(f)
             try:
                 f.result()
-                self._event_bus.publish(FileUploaded(filename=filename))
+                self._event_bus.enqueue(FileUploaded(filename=filename))
             except Exception as exc:
                 logger.warning("Upload failed: %s", exc)
 
