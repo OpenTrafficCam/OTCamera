@@ -66,6 +66,7 @@ class S3Upload(Upload):
             self.client.upload_file(
                 file_path, self.bucket_name, key, Config=TRANSFER_CONFIG
             )
+            logger.info("Uploaded %s", name)
         except Exception as e:
             logger.error("Unexpected error during S3 upload: %s", e)
             raise FileUploadError(f"Could not upload to S3 bucket. Error: {e}") from e
