@@ -21,5 +21,18 @@ services:
     volumes:
       - rustfs-data:/data
 
+  # RabbitMQ — message broker for local development/testing only
+  rabbitmq:
+    image: rabbitmq:4.2.5-management
+    container_name: rabbitmq
+    hostname: rabbitmq
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:5672:5672"   # AMQP port
+      - "127.0.0.1:15672:15672" # Management UI port
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+
 volumes:
   rustfs-data:
