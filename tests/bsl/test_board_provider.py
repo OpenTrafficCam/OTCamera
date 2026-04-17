@@ -75,17 +75,17 @@ class FailingAdc(FakeCloseable):
 
 
 def _make_config(
+    base: Config,
     pcb_version: str = "v2",
     use_leds: bool = False,
     use_buttons: bool = False,
     use_adc: bool = False,
 ) -> Config:
-    config = Config()
-    config.hardware.pcb_version = pcb_version
-    config.hardware.use_leds = use_leds
-    config.hardware.use_buttons = use_buttons
-    config.hardware.use_adc = use_adc
-    return config
+    base.hardware.pcb_version = pcb_version
+    base.hardware.use_leds = use_leds
+    base.hardware.use_buttons = use_buttons
+    base.hardware.use_adc = use_adc
+    return base
 
 
 def _install_fake_gpiozero(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -153,7 +153,7 @@ class TestBoardComponents:
 
 class TestBoardProvider:
     def test_provide_cleans_up_on_partial_failure(
-        self, monkeypatch: pytest.MonkeyPatch
+        self, monkeypatch: pytest.MonkeyPatch, default_config: Config
     ) -> None:
         _install_fake_gpiozero(monkeypatch)
         FakeLed.instances = []
@@ -164,7 +164,9 @@ class TestBoardProvider:
         monkeypatch.setattr("OTCamera.bsl.button.gpio_button.GpioButton", FakeButton)
         monkeypatch.setattr("OTCamera.bsl.adc.tla2024.TLA2024", FailingAdc)
 
-        config = _make_config(use_leds=True, use_buttons=True, use_adc=True)
+        config = _make_config(
+            default_config, use_leds=True, use_buttons=True, use_adc=True
+        )
 
         with pytest.raises(RuntimeError, match="adc init failed"):
             BoardProvider.provide(config)
@@ -173,10 +175,10 @@ class TestBoardProvider:
         assert all(button.closed for button in FakeButton.instances)
 
     def test_provide_with_features_disabled_returns_empty_components(
-        self, monkeypatch: pytest.MonkeyPatch
+        self, monkeypatch: pytest.MonkeyPatch, default_config: Config
     ) -> None:
         _install_fake_gpiozero(monkeypatch)
-        config = _make_config()
+        config = _make_config(default_config)
 
         components = BoardProvider.provide(config)
 

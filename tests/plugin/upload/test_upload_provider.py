@@ -5,8 +5,8 @@ from OTCamera.exceptions import UploadError
 from OTCamera.plugin.upload.upload_provider import UploadProvider
 
 
-def test_only_one_provider_can_be_active() -> None:
-    config = Config()
+def test_only_one_provider_can_be_active(default_config: Config) -> None:
+    config = default_config
 
     config.ftp_upload = FtpUploadConfig(
         host="localhost",

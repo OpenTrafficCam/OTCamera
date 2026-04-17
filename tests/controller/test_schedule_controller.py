@@ -6,7 +6,7 @@ from OTCamera.domain.events import ButtonPressed, ButtonReleased, EventBus
 
 
 def _build_schedule_controller() -> tuple[Config, EventBus, ScheduleController]:
-    config = Config()
+    config = Config(site_name="test-site", project_name="test-project")
     config.recording.start_hour = 6
     config.recording.end_hour = 22
     bus = EventBus()

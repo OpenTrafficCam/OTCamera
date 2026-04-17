@@ -150,7 +150,9 @@ class Config(BaseModel):
 
     debug_mode: bool = False
     relay_server: bool = False
-    prefix: StrFromYaml = Field(default_factory=socket.gethostname)
+    camera_name: StrFromYaml = Field(default_factory=socket.gethostname)
+    site_name: StrFromYaml
+    project_name: StrFromYaml
     recording: RecordingConfig = Field(default_factory=RecordingConfig)
     camera: CameraConfig = Field(default_factory=CameraConfig)
     preview: PreviewConfig = Field(default_factory=PreviewConfig)

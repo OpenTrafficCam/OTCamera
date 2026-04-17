@@ -15,6 +15,8 @@ def test_parse_user_config_minimal(tmp_path: Path) -> None:
         textwrap.dedent(
             """\
             debug_mode: true
+            site_name: test-site
+            project_name: test-project
             recording:
               start_hour: 7
               end_hour: 20
@@ -91,14 +93,19 @@ def test_parse_user_config_minimal(tmp_path: Path) -> None:
 
 
 def test_missing_file_returns_defaults(tmp_path: Path) -> None:
-    config = parse_user_config(str(tmp_path / "missing.yaml"))
+    # site_name and project_name are required; all other fields fall back to defaults
+    config_file = tmp_path / "config.yaml"
+    config_file.write_text(
+        "site_name: test-site\nproject_name: test-project\n", encoding="utf-8"
+    )
+    config = parse_user_config(str(config_file))
 
     assert config.camera.fps == 20
     assert config.debug_mode is False
 
 
 def test_default_config_has_sensible_values() -> None:
-    config = Config()
+    config = Config(site_name="test-site", project_name="test-project")
 
     assert config.camera.fps == 20
     assert config.recording.start_hour == 6
@@ -111,4 +118,10 @@ def test_default_config_has_sensible_values() -> None:
 
 def test_msteams_requires_url_when_enabled() -> None:
     with pytest.raises(ValidationError, match="url"):
-        Config.model_validate({"msteams": {"enable": True}})
+        Config.model_validate(
+            {
+                "site_name": "test-site",
+                "project_name": "test-project",
+                "msteams": {"enable": True},
+            }
+        )
