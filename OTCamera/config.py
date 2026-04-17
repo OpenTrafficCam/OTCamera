@@ -72,6 +72,8 @@ class S3Config(BaseModel):
     endpoint_url: StrFromYaml | None = None
     region: StrFromYaml | None = None
     retry_max_attempts: int = 5
+    connect_timeout: int = 10
+    read_timeout: int = 30
 
 
 class FtpUploadConfig(BaseModel):

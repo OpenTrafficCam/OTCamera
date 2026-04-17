@@ -42,7 +42,9 @@ class UploadProvider:
             aws_secret_access_key=s3config.secret_key,
             region_name=s3config.region,
             config=Boto3Config(
-                retries={"total_max_attempts": s3config.retry_max_attempts}
+                retries={"total_max_attempts": s3config.retry_max_attempts},
+                connect_timeout=s3config.connect_timeout,
+                read_timeout=s3config.read_timeout,
             ),
         )
         return S3Upload(
