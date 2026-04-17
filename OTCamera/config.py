@@ -10,7 +10,7 @@ try:
 except ImportError:
     from yaml import SafeLoader  # type: ignore[assignment]
 
-from typing import Annotated
+from typing import Annotated, Literal
 
 import yaml
 from pydantic import BaseModel, BeforeValidator, Field, field_validator, model_validator
@@ -156,6 +156,7 @@ class Config(BaseModel):
     recording: RecordingConfig = Field(default_factory=RecordingConfig)
     camera: CameraConfig = Field(default_factory=CameraConfig)
     preview: PreviewConfig = Field(default_factory=PreviewConfig)
+    upload: Literal["ftp", "s3"] | None = None
     ftp_upload: FtpUploadConfig | None = None
     s3_upload: S3Config | None = None
     delete_after_upload: bool = False
@@ -170,6 +171,14 @@ class Config(BaseModel):
     num_log_files_html: int = 2
     usb_mount_point: StrFromYaml = "~/mnt/usb"
     usb_device: StrFromYaml = "/dev/sda1"
+
+    @model_validator(mode="after")
+    def _validate_upload_config(self) -> "Config":
+        if self.upload == "ftp" and self.ftp_upload is None:
+            raise ValueError("ftp_upload config is required when upload is 'ftp'")
+        if self.upload == "s3" and self.s3_upload is None:
+            raise ValueError("s3_upload config is required when upload is 's3'")
+        return self
 
     def resolve_paths(self) -> None:
         """Resolve path-valued settings to absolute paths."""

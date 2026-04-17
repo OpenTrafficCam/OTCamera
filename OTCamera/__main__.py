@@ -28,7 +28,6 @@ from OTCamera.domain.events import (
     ShutdownRequested,
 )
 from OTCamera.domain.led import LED
-from OTCamera.exceptions import BackendUnavailableError
 from OTCamera.html_updater import (
     ConfigDataObject,
     ConfigHtmlId,
@@ -383,13 +382,7 @@ def main(config: Config | None = None, config_file: str = "~/user_config.yaml") 
     try:
         camera = CameraProvider.provide(config)
 
-        try:
-            upload = UploadProvider.provide(config)
-        except BackendUnavailableError:
-            logger.error(
-                "Upload backend is configured, but not available for uploading."
-            )
-            raise
+        upload = UploadProvider.provide(config)
 
         if config.delete_after_upload:
             event_bus.subscribe(FileUploaded, lambda e: delete_file(e.filename))
