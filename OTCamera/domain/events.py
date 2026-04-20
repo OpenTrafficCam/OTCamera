@@ -3,6 +3,7 @@
 import logging
 import queue
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Any, Callable, TypeVar, cast
 
 _E = TypeVar("_E", bound="Event")
@@ -106,6 +107,21 @@ class FileUploaded(Event):
     """A file was successfully uploaded to remote storage."""
 
     filename: str
+    timestamp: datetime
+
+
+@dataclass(frozen=True)
+class S3FileUploaded(FileUploaded):
+    """A file was successfully uploaded to S3."""
+
+    # the bucket to which the file was uploaded.
+    bucket: str
+
+    # the key as which the file was stored in S3.
+    key: str
+
+    # the basename of the original local file.
+    original_filename: str
 
 
 class EventBus:

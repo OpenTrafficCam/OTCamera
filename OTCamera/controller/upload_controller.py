@@ -5,9 +5,16 @@ import threading
 from abc import ABC, abstractmethod
 from concurrent.futures import Future, ThreadPoolExecutor
 from concurrent.futures import wait as futures_wait
+from datetime import datetime, timezone
+from pathlib import Path
 
-from OTCamera.domain.events import EventBus, FileUploaded, RecordingSplit
-from OTCamera.domain.upload import Upload
+from OTCamera.domain.events import (
+    EventBus,
+    FileUploaded,
+    RecordingSplit,
+    S3FileUploaded,
+)
+from OTCamera.domain.upload import S3UploadResult, Upload, UploadResult
 
 logger = logging.getLogger(__name__)
 
@@ -32,6 +39,20 @@ class UploadController(ABC):
         """
         ...
 
+    def _make_uploaded_event(self, result: UploadResult) -> FileUploaded:
+        """Build the appropriate FileUploaded domain event from an upload result."""
+        ts = datetime.now(tz=timezone.utc)
+
+        if isinstance(result, S3UploadResult):
+            return S3FileUploaded(
+                filename=result.local_path,
+                timestamp=ts,
+                bucket=result.bucket,
+                key=result.key,
+                original_filename=Path(result.local_path).name,
+            )
+        return FileUploaded(filename=result.local_path, timestamp=ts)
+
 
 class BlockingUploadController(UploadController):
 
@@ -41,8 +62,8 @@ class BlockingUploadController(UploadController):
             return
         try:
             logger.info("Uploading %s", event.filename)
-            self._upload.upload(event.filename)
-            self._event_bus.publish(FileUploaded(filename=event.filename))
+            result = self._upload.upload(event.filename)
+            self._event_bus.publish(self._make_uploaded_event(result))
         except Exception as exc:
             logger.warning("Upload failed: %s", exc)
 
@@ -69,8 +90,8 @@ class ThreadedUploadController(UploadController):
             with self._futures_lock:
                 self._active_futures.discard(f)
             try:
-                f.result()
-                self._event_bus.enqueue(FileUploaded(filename=filename))
+                result = f.result()
+                self._event_bus.enqueue(self._make_uploaded_event(result))
             except Exception as exc:
                 logger.warning("Upload failed: %s", exc)
 

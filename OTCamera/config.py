@@ -165,6 +165,14 @@ class RabbitMqConfig(BaseModel):
     durable: bool = True
 
 
+class OTCloudSettings(BaseModel):
+    """Settings that are specific to OTCloud."""
+
+    camera_id: int
+    project_id: int
+    site_id: int
+
+
 class Config(BaseModel):
     """Top-level OTCamera configuration."""
 
@@ -175,6 +183,7 @@ class Config(BaseModel):
     camera: CameraConfig = Field(default_factory=CameraConfig)
     preview: PreviewConfig = Field(default_factory=PreviewConfig)
     upload: Literal["ftp", "s3"] | None = None
+    notification: Literal["rabbitmq"] | None = None
     ftp_upload: FtpUploadConfig | None = None
     s3_upload: S3Config | None = None
     delete_after_upload: bool = False
@@ -184,6 +193,7 @@ class Config(BaseModel):
     hardware: HardwareConfig = Field(default_factory=HardwareConfig)
     msteams: MsTeamsConfig = Field(default_factory=MsTeamsConfig)
     adc: AdcConfig = Field(default_factory=AdcConfig)
+    ot_cloud: OTCloudSettings | None = None
     rabbitmq: RabbitMqConfig | None = None
     template_html_path: StrFromYaml = "~/OTCamera/webfiles/template.html"
     index_html_path: StrFromYaml = "~/OTCamera/webfiles/index.html"
@@ -198,6 +208,15 @@ class Config(BaseModel):
             raise ValueError("ftp_upload config is required when upload is 'ftp'")
         if self.upload == "s3" and self.s3_upload is None:
             raise ValueError("s3_upload config is required when upload is 's3'")
+        if self.notification == "rabbitmq":
+            if self.rabbitmq is None:
+                raise ValueError(
+                    "rabbitmq config is required when notification is 'rabbitmq'"
+                )
+            if self.ot_cloud is None:
+                raise ValueError(
+                    "ot_cloud config is required when notification is 'rabbitmq'"
+                )
         return self
 
     def resolve_paths(self) -> None:

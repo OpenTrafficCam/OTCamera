@@ -1,13 +1,29 @@
 """Abstract upload interface."""
 
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
+
+
+@dataclass
+class UploadResult:
+    """Information about a completed upload."""
+
+    local_path: str
+
+
+@dataclass
+class S3UploadResult(UploadResult):
+    """S3-specific upload result."""
+
+    bucket: str
+    key: str
 
 
 class Upload(ABC):
     """Contract for uploading recorded files to external storage."""
 
     @abstractmethod
-    def upload(self, file_path: str) -> None:
+    def upload(self, file_path: str) -> UploadResult:
         """Upload a file.
 
         Implementations must raise FileUploadError on failure and must configure

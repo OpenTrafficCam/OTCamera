@@ -1,7 +1,7 @@
 """Integration test for RabbitMQ notification after file upload."""
 
 import json
-from pathlib import Path
+from datetime import datetime, timezone
 from typing import Generator
 
 import pika
@@ -9,16 +9,33 @@ import pika.adapters.blocking_connection
 import pika.exchange_type
 import pytest
 
-from OTCamera.config import RabbitMqConfig
-from OTCamera.controller.rabbitmq_controller import RabbitMqController
-from OTCamera.domain.events import EventBus, FileUploaded
-from OTCamera.plugin.rabbitmq.rabbitmq_publisher import RabbitMqPublisher
+from OTCamera.config import OTCloudSettings, RabbitMqConfig
+from OTCamera.controller.upload_notification_controller import (
+    UploadNotificationController,
+)
+from OTCamera.domain.events import EventBus, S3FileUploaded
+from OTCamera.plugin.upload_notifier.rabbitmq_upload_notifier import (
+    RabbitMqUploadNotifier,
+)
 
 EXCHANGE = "test_otcamera"
 ROUTING_KEY = "file_uploaded"
 QUEUE = "test_otcamera_queue"
 
-FILENAMES = ["/videos/clip_001.h264", "/videos/clip_002.h264"]
+FILES = [
+    {
+        "local_path": "/videos/clip_001.h264",
+        "key": "camera1/clip_001.h264",
+        "bucket": "my-bucket",
+    },
+    {
+        "local_path": "/videos/clip_002.h264",
+        "key": "camera1/clip_002.h264",
+        "bucket": "my-bucket",
+    },
+]
+
+OT_CLOUD = OTCloudSettings(camera_id=2, project_id=0, site_id=1)
 
 
 @pytest.fixture
@@ -68,18 +85,37 @@ def test_rabbitmq_notification(
     local_rabbitmq_config: RabbitMqConfig,
 ) -> None:
     event_bus = EventBus()
-    RabbitMqController(event_bus, RabbitMqPublisher(local_rabbitmq_config))
+    UploadNotificationController(
+        event_bus, RabbitMqUploadNotifier(local_rabbitmq_config), OT_CLOUD
+    )
 
-    for filename in FILENAMES:
-        event_bus.publish(FileUploaded(filename=filename))
+    ts = datetime.now(tz=timezone.utc)
+    for f in FILES:
+        event_bus.publish(
+            S3FileUploaded(
+                filename=f["local_path"],
+                timestamp=ts,
+                bucket=f["bucket"],
+                key=f["key"],
+                original_filename=f["local_path"].split("/")[-1],
+            )
+        )
 
     received = []
-    for _ in FILENAMES:
+    for _ in FILES:
         method, _, body = rabbitmq_channel.basic_get(queue=QUEUE, auto_ack=True)
         assert (
             method is not None and body is not None
         ), "Expected a message but queue was empty"
         received.append(json.loads(body))
 
-    expected = {Path(f).name for f in FILENAMES}
-    assert {msg["filename"] for msg in received} == expected
+    assert {msg["s3_key"] for msg in received} == {f["key"] for f in FILES}
+    assert {msg["original_filename"] for msg in received} == {
+        "clip_001.h264",
+        "clip_002.h264",
+    }
+    assert {msg["bucket_name"] for msg in received} == {"my-bucket"}
+    assert all(
+        msg["camera_id"] == {"camera_id": 2, "project_id": 0, "site_id": 1}
+        for msg in received
+    )

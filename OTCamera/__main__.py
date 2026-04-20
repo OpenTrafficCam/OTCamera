@@ -367,6 +367,23 @@ def close_resources(*resources: Closable | None) -> None:
             logger.warning(f"Error closing resource {resource!r}", exc_info=True)
 
 
+def _wire_notification(config: Config, event_bus: EventBus) -> None:
+    """Instantiate and register the configured upload notification backend."""
+    if config.notification == "rabbitmq":
+        from OTCamera.controller.upload_notification_controller import (
+            UploadNotificationController,
+        )
+        from OTCamera.plugin.upload_notifier.rabbitmq_upload_notifier import (
+            RabbitMqUploadNotifier,
+        )
+
+        assert config.rabbitmq is not None  # guaranteed by config validation
+        assert config.ot_cloud is not None  # guaranteed by config validation
+        UploadNotificationController(
+            event_bus, RabbitMqUploadNotifier(config.rabbitmq), config.ot_cloud
+        )
+
+
 def main(config: Config | None = None, config_file: str = "~/user_config.yaml") -> None:
     """Wire all components and start OTCamera."""
     if config is None:
@@ -399,11 +416,7 @@ def main(config: Config | None = None, config_file: str = "~/user_config.yaml") 
         schedule_controller = ScheduleController(config, event_bus)
         upload_controller = ThreadedUploadController(event_bus, upload)
 
-        if config.rabbitmq is not None:
-            from OTCamera.controller.rabbitmq_controller import RabbitMqController
-            from OTCamera.plugin.rabbitmq.rabbitmq_publisher import RabbitMqPublisher
-
-            RabbitMqController(event_bus, RabbitMqPublisher(config.rabbitmq))
+        _wire_notification(config, event_bus)
 
         for name, button in board.buttons.items():
             button.on_pressed(
