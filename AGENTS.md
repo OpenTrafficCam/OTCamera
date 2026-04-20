@@ -126,7 +126,8 @@ Pytest test discovery is configured in `pyproject.toml` via `testpaths =
 ### General
 - Type-annotate all function signatures, including private helpers.
 - Use Google-style docstrings on public modules, classes, and functions.
-- No wildcard imports.
+- No wildcard imports (`from x import *`).
+- Import only what is needed: prefer `from module import Name` over importing the whole module when only specific names are used.
 - Raise specific exceptions and preserve context with `raise ... from`.
 - Prefer `pathlib.Path` over `os.path`.
 - Use `logging`, not `print`, in library code.
