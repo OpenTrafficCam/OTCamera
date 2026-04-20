@@ -30,9 +30,6 @@ class UploadProvider:
     @staticmethod
     def _create_s3_upload(
         s3config: S3Config,
-        project_name: str,
-        site_name: str,
-        camera_name: str,
     ) -> S3Upload:
         logger.debug("S3 upload backend enabled for bucket %s", s3config.bucket)
         s3client = boto3.client(
@@ -50,7 +47,7 @@ class UploadProvider:
         return S3Upload(
             s3client=s3client,
             bucket_name=s3config.bucket,
-            key_prefix=f"{project_name}/{site_name}/{camera_name}",
+            key_prefix=s3config.key_prefix,
         )
 
     @staticmethod
@@ -64,9 +61,6 @@ class UploadProvider:
             assert config.s3_upload is not None
             return UploadProvider._create_s3_upload(
                 config.s3_upload,
-                config.project_name,
-                config.site_name,
-                config.camera_name,
             )
 
         logger.info("No upload backend configured")

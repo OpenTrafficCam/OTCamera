@@ -74,6 +74,10 @@ class S3Config(BaseModel):
     retry_max_attempts: int = 5
     connect_timeout: int = 10
     read_timeout: int = 30
+    # Prefix that will be prepended to the video filename.
+    # Useful for identifying the camera or project.
+    # Can optionally contain path segments.
+    key_prefix: StrFromYaml = ""
 
 
 class FtpUploadConfig(BaseModel):
