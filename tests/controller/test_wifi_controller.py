@@ -16,10 +16,11 @@ from OTCamera.domain.events import (
 
 
 @pytest.fixture
-def config(default_config: Config) -> Config:
-    default_config.wifi.delay = 10
-    default_config.debug_mode = True
-    return default_config
+def config() -> Config:
+    config = Config()
+    config.wifi.delay = 10
+    config.debug_mode = True
+    return config
 
 
 def test_switch_pressed_turns_wifi_on(config: Config) -> None:

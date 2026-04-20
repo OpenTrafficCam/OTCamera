@@ -113,9 +113,7 @@ class _FakeWrappedCamera:
         raise CameraClosedError
 
 
-def test_provide_creates_picamera2_camera(
-    monkeypatch: pytest.MonkeyPatch, default_config: Config
-) -> None:
+def test_provide_creates_picamera2_camera(monkeypatch: pytest.MonkeyPatch) -> None:
     fake_picamera2_module: Any = ModuleType("picamera2")
     fake_picamera2_module.Picamera2 = _FakePicamera2
     monkeypatch.setitem(sys.modules, "picamera2", fake_picamera2_module)
@@ -131,7 +129,7 @@ def test_provide_creates_picamera2_camera(
         fake_wrapper_module,
     )
 
-    config = default_config
+    config = Config()
 
     camera = CameraProvider.provide(config)
 

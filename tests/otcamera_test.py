@@ -11,9 +11,8 @@ from OTCamera.domain.events import EventBus
 def test_execute_shutdown_stops_recording_without_closing_camera(
     monkeypatch: MonkeyPatch,
     tmp_path: Path,
-    default_config: Config,
 ) -> None:
-    config = default_config
+    config = Config()
     config.video.dir = str(tmp_path)
 
     event_bus = EventBus()

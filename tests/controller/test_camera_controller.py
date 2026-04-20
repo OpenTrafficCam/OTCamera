@@ -32,8 +32,8 @@ def mock_camera() -> MagicMock:
 
 
 @pytest.fixture
-def config(default_config: Config, tmp_path: Path) -> Config:
-    config = default_config
+def config(tmp_path: Path) -> Config:
+    config = Config()
     config.video.dir = str(tmp_path)
     config.video.format = "h264"
     config.video.resolution = (640, 480)

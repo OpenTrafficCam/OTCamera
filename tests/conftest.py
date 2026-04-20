@@ -18,15 +18,8 @@ from typing import Generator, TypeVar
 
 import pytest
 
-from OTCamera.config import Config
-
 T = TypeVar("T")
 YieldFixture = Generator[T, None, None]
-
-
-@pytest.fixture
-def default_config() -> Config:
-    return Config()
 
 
 @pytest.fixture
