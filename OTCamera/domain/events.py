@@ -3,97 +3,106 @@
 import logging
 import queue
 from dataclasses import dataclass
-from typing import Any, Callable
+from typing import Any, Callable, TypeVar, cast
+
+_E = TypeVar("_E", bound="Event")
 
 logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
-class RecordingStarted:
+class Event:
+    """Base class for all events."""
+
+    pass
+
+
+@dataclass(frozen=True)
+class RecordingStarted(Event):
     """A new recording has started."""
 
     filename: str
 
 
 @dataclass(frozen=True)
-class RecordingStopped:
+class RecordingStopped(Event):
     """The current recording has stopped."""
 
 
 @dataclass(frozen=True)
-class RecordingSplit:
+class RecordingSplit(Event):
     """A recording interval has completed."""
 
     filename: str
 
 
 @dataclass(frozen=True)
-class IntervalFinished:
+class IntervalFinished(Event):
     """Reserved for future calendar-based scheduling."""
 
 
 @dataclass(frozen=True)
-class BatteryLow:
+class BatteryLow(Event):
     """The battery dropped below the shutdown threshold."""
 
 
 @dataclass(frozen=True)
-class ExternalPowerConnected:
+class ExternalPowerConnected(Event):
     """External power has been connected."""
 
 
 @dataclass(frozen=True)
-class ExternalPowerDisconnected:
+class ExternalPowerDisconnected(Event):
     """External power has been disconnected."""
 
 
 @dataclass(frozen=True)
-class ButtonPressed:
+class ButtonPressed(Event):
     """A button or switch was pressed."""
 
     name: str
 
 
 @dataclass(frozen=True)
-class ButtonHeld:
+class ButtonHeld(Event):
     """A button was held."""
 
     name: str
 
 
 @dataclass(frozen=True)
-class ButtonReleased:
+class ButtonReleased(Event):
     """A button or switch was released."""
 
     name: str
 
 
 @dataclass(frozen=True)
-class PreviewCaptured:
+class PreviewCaptured(Event):
     """A preview image was captured."""
 
     path: str
 
 
 @dataclass(frozen=True)
-class WifiOn:
+class WifiOn(Event):
     """Wi-Fi access point was enabled."""
 
 
 @dataclass(frozen=True)
-class WifiOff:
+class WifiOff(Event):
     """Wi-Fi access point was disabled."""
 
 
 @dataclass(frozen=True)
-class ShutdownRequested:
+class ShutdownRequested(Event):
     """Shutdown was requested by a subsystem."""
 
     source: str
 
 
 @dataclass(frozen=True)
-class FileUploaded:
+class FileUploaded(Event):
     """A file was successfully uploaded to remote storage."""
 
     filename: str
@@ -103,34 +112,42 @@ class EventBus:
     """Hybrid in-process event bus with synchronous and queued dispatch."""
 
     def __init__(self) -> None:
-        self._subscribers: dict[type[Any], list[Callable[[Any], None]]] = {}
+        self._subscribers: dict[type[Event], list[Callable[[Event], None]]] = {}
         self._queue: "queue.Queue[Any]" = queue.Queue()
 
-    def subscribe(self, event_type: type[Any], callback: Callable[[Any], None]) -> None:
+    def subscribe(self, event_type: type[_E], callback: Callable[[_E], None]) -> None:
         """Register a callback for an event type."""
-        self._subscribers.setdefault(event_type, []).append(callback)
+        self._subscribers.setdefault(event_type, []).append(
+            # Callbacks are stored as Callable[[Event], None] because the dict
+            # is keyed by event type and _dispatch only calls a callback with
+            # the matching event subtype. The cast is safe: contravariance
+            # prevents direct assignment but the runtime contract is upheld.
+            cast(Callable[[Event], None], callback)
+        )
 
     def unsubscribe(
         self,
-        event_type: type[Any],
-        callback: Callable[[Any], None],
+        event_type: type[_E],
+        callback: Callable[[_E], None],
     ) -> None:
         """Remove a callback for an event type if it is registered."""
         callbacks = self._subscribers.get(event_type)
         if callbacks is None:
             return
         try:
-            callbacks.remove(callback)
+            callbacks.remove(
+                cast(Callable[[Event], None], callback)
+            )  # mirrors subscribe cast
         except ValueError:
             return
         if not callbacks:
             del self._subscribers[event_type]
 
-    def publish(self, event: Any) -> None:
+    def publish(self, event: Event) -> None:
         """Dispatch an event synchronously to all subscribers."""
         self._dispatch(event)
 
-    def enqueue(self, event: Any) -> None:
+    def enqueue(self, event: Event) -> None:
         """Enqueue an event for later dispatch on the calling thread."""
         self._queue.put(event)
 
@@ -152,14 +169,17 @@ class EventBus:
             except queue.Empty:
                 return
 
-    def _dispatch(self, event: Any) -> None:
+    def _dispatch(self, event: Event) -> None:
         """Dispatch an event and log callback failures without propagating."""
-        for callback in list(self._subscribers.get(type(event), [])):
-            try:
-                callback(event)
-            except Exception:
-                logger.exception(
-                    "Event callback %s failed for %s",
-                    callback,
-                    type(event).__name__,
-                )
+        for event_type, callbacks in self._subscribers.items():
+            if not isinstance(event, event_type):
+                continue
+            for callback in callbacks:
+                try:
+                    callback(event)
+                except Exception:
+                    logger.exception(
+                        "Event callback %s failed for %s",
+                        callback,
+                        type(event).__name__,
+                    )

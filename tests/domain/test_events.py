@@ -1,8 +1,10 @@
 import threading
+from dataclasses import dataclass
 
 from OTCamera.domain.events import (
     BatteryLow,
     ButtonPressed,
+    Event,
     EventBus,
     RecordingStarted,
     ShutdownRequested,
@@ -112,3 +114,39 @@ class TestSubscriptionManagement:
 
 def test_shutdown_requested_field() -> None:
     assert ShutdownRequested(source="battery").source == "battery"
+
+
+def test_parent_subscribers_receive_child_events() -> None:
+    @dataclass(frozen=True)
+    class ParentEvent(Event):
+        pass
+
+    @dataclass(frozen=True)
+    class ChildEvent(ParentEvent):
+        pass
+
+    bus = EventBus()
+    received: list[ParentEvent] = []
+
+    bus.subscribe(ParentEvent, received.append)
+    bus.publish(ChildEvent())
+
+    assert len(received) == 1
+
+
+def test_child_subscribers_dont_receive_parent_events() -> None:
+    @dataclass(frozen=True)
+    class ParentEvent(Event):
+        pass
+
+    @dataclass(frozen=True)
+    class ChildEvent(ParentEvent):
+        pass
+
+    bus = EventBus()
+    received: list[ChildEvent] = []
+
+    bus.subscribe(ChildEvent, received.append)
+    bus.publish(ParentEvent())
+
+    assert len(received) == 0
