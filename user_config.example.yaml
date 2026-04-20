@@ -28,21 +28,41 @@ preview:
   send_to_external: false
   url: http://your-server:8080/projects/0/sites/1/cameras/2/current_frame
 
-#ftp_upload:
-#  enable: false
-#  host:
-#  port: 21
-#  user:
-#  password:
-#  server_source: /
+# Upload backend selector. Only one backend can be active at a time.
+# Set to "ftp" or "s3" to enable upload, or leave empty to disable.
+upload:
 
-#s3_upload:
-#  enable: false
-#  access_key:
-#  secret_key:
-#  bucket:
-#  region:
-#  endpoint_url:
+# Providing ftp_upload credentials does not enable upload on its own.
+# Set upload: ftp above to activate FTP upload.
+ftp_upload:
+  host:
+  port: 21
+  user:
+  password:
+  server_source: /
+
+# Providing s3_upload credentials does not enable upload on its own.
+# Set upload: s3 above to activate S3 upload.
+s3_upload:
+  access_key:
+  secret_key:
+  bucket:
+  region:
+  endpoint_url:
+  # Number of retry attempts for failed S3 requests.
+  retry_max_attempts: 5
+  # Seconds to wait when establishing a connection to S3.
+  connect_timeout: 10
+  # Seconds to wait for a response from S3 after sending a request.
+  read_timeout: 30
+  # Optional prefix prepended to the S3 object key, e.g. "project/site/camera".
+  key_prefix: ""
+
+# Delete local video files after a successful upload.
+delete_after_upload: false
+
+# Seconds to wait for in-flight uploads to finish when shutting down.
+upload_grace_timeout: 60
 
 video:
   dir: ~/videos/
