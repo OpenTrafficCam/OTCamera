@@ -195,7 +195,7 @@ class CameraController:
         config = self._config
         filename = (
             Path(config.video.dir)
-            / f"{config.camera_name}_FR{config.camera.fps}_{self._current_dt()}."
+            / f"{config.prefix}_FR{config.camera.fps}_{self._current_dt()}."
             f"{config.video.format}"
         )
         return str(filename.expanduser().resolve())
@@ -206,7 +206,7 @@ class CameraController:
 
     def _annotate_text(self) -> str:
         """Return the current annotation text."""
-        return dt.now().strftime(f"{self._config.camera_name} %d.%m.%Y %H:%M:%S")
+        return dt.now().strftime(f"{self._config.prefix} %d.%m.%Y %H:%M:%S")
 
     @staticmethod
     def _current_dt() -> str:

@@ -13,12 +13,12 @@ def test_provide_returns_none_when_no_upload_configured(
 
 def test_ftp_upload_config_required_when_upload_is_ftp() -> None:
     with pytest.raises(ValidationError):
-        Config(site_name="s", project_name="p", upload="ftp")
+        Config(upload="ftp")
 
 
 def test_s3_upload_config_required_when_upload_is_s3() -> None:
     with pytest.raises(ValidationError):
-        Config(site_name="s", project_name="p", upload="s3")
+        Config(upload="s3")
 
 
 def test_provide_ignores_ftp_config_when_upload_not_set(

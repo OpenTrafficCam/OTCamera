@@ -258,7 +258,7 @@ class OTCamera:
                 ConfigHtmlId.MIN_FREE_SPACE,
                 config.recording.min_free_space,
             ),
-            prefix=(ConfigHtmlId.PREFIX, config.camera_name),
+            prefix=(ConfigHtmlId.PREFIX, config.prefix),
             video_dir=(ConfigHtmlId.VIDEO_DIR, config.video.dir),
             preview_path=(ConfigHtmlId.PREVIEW_PATH, config.preview.path),
             template_html_path=(

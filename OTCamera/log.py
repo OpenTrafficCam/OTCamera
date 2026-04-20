@@ -79,6 +79,6 @@ def _log_file_path(config: Config) -> Path:
     timestamp = dt.now().strftime("%Y-%m-%d_%H-%M-%S")
     filename = (
         Path(config.video.dir)
-        / f"{config.camera_name}_FR{config.camera.fps}_{timestamp}.log"
+        / f"{config.prefix}_FR{config.camera.fps}_{timestamp}.log"
     )
     return filename.expanduser().resolve()

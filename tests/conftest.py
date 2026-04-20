@@ -26,7 +26,7 @@ YieldFixture = Generator[T, None, None]
 
 @pytest.fixture
 def default_config() -> Config:
-    return Config(site_name="test-site", project_name="test-project")
+    return Config()
 
 
 @pytest.fixture

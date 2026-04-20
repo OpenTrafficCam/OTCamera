@@ -42,7 +42,7 @@ def config(default_config: Config, tmp_path: Path) -> Config:
     config.video.encoder.level = "4"
     config.video.encoder.quality = 30
     config.camera.fps = 20
-    config.camera_name = "test"
+    config.prefix = "test"
     config.preview.path = str(tmp_path / "preview.jpg")
     config.preview.format = "jpeg"
     config.preview.send_to_external = False
