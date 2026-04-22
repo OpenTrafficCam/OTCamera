@@ -86,10 +86,11 @@ def test_rabbitmq_notification(
     local_rabbitmq_config: RabbitMqConfig,
 ) -> None:
     event_bus = EventBus()
+    notifier = RabbitNotifier(local_rabbitmq_config)
     EventNotificationController(
         event_bus,
         S3FileUploaded,
-        RabbitNotifier(local_rabbitmq_config),
+        notifier,
         RabbitMQS3UploadToOTCloudPayloadFactory(OT_CLOUD),
     )
 
@@ -104,6 +105,8 @@ def test_rabbitmq_notification(
                 original_filename=f["local_path"].split("/")[-1],
             )
         )
+
+    notifier.flush()
 
     received = []
     for _ in FILES:

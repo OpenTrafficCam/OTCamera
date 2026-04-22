@@ -1,6 +1,8 @@
-"""Synchronous RabbitMQ publisher using pika."""
+"""Non-blocking RabbitMQ publisher using a background daemon thread."""
 
 import logging
+import queue
+import threading
 
 import pika
 import pika.exchange_type
@@ -12,13 +14,43 @@ logger = logging.getLogger(__name__)
 
 
 class RabbitNotifier(Notifier):
-    """Publish JSON messages to a RabbitMQ exchange."""
+    """Publish JSON messages to a RabbitMQ exchange via a background thread.
+
+    notify() enqueues the payload and returns immediately; a daemon thread
+    handles the actual TCP connection and publish.  If the broker is
+    unreachable the error is logged and the message is dropped.
+    """
 
     def __init__(self, config: RabbitMqConfig) -> None:
         self._config = config
+        self._queue: queue.Queue[str] = queue.Queue()
+        self._thread = threading.Thread(
+            target=self._worker, daemon=True, name="rabbitmq-publisher"
+        )
+        self._thread.start()
 
     def notify(self, payload: str) -> None:
-        """Open a connection, publish message as JSON, then close."""
+        """Enqueue payload for background publishing; returns immediately."""
+        self._queue.put(payload)
+
+    def flush(self) -> None:
+        """Block until all enqueued messages have been published or dropped."""
+        self._queue.join()
+
+    def _worker(self) -> None:
+        while True:
+            payload = self._queue.get()
+            try:
+                self._publish(payload)
+            except Exception:
+                logger.exception(
+                    "Failed to publish to RabbitMQ exchange='%s'",
+                    self._config.exchange,
+                )
+            finally:
+                self._queue.task_done()
+
+    def _publish(self, payload: str) -> None:
         credentials = pika.PlainCredentials(self._config.user, self._config.password)
         parameters = pika.ConnectionParameters(
             host=self._config.host,
