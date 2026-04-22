@@ -1,4 +1,4 @@
-from OTCamera.controller.upload.controller import (
+from OTCamera.controller.upload_controller import (
     BlockingUploadController,
     ThreadedUploadController,
 )

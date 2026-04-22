@@ -10,8 +10,8 @@ import pika.exchange_type
 import pytest
 
 from OTCamera.config import OTCloudSettings, RabbitMqConfig
-from OTCamera.controller.upload.notification.controller import (
-    UploadNotificationController,
+from OTCamera.controller.notification_controller import (
+    EventNotificationController,
 )
 from OTCamera.domain.events import EventBus, S3FileUploaded
 from OTCamera.plugin.upload_notifier.rabbitmq_s3_upload_to_otcloud import (
@@ -86,7 +86,7 @@ def test_rabbitmq_notification(
     local_rabbitmq_config: RabbitMqConfig,
 ) -> None:
     event_bus = EventBus()
-    UploadNotificationController(
+    EventNotificationController(
         event_bus,
         S3FileUploaded,
         RabbitNotifier(local_rabbitmq_config),

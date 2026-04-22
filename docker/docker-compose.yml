@@ -6,7 +6,7 @@ services:
     container_name: rustfs-server
     restart: unless-stopped
     ports:
-      - "127.0.0.1:9000:9000" # S3 API port
+      - "0.0.0.0:9000:9000" # S3 API port
       - "127.0.0.1:9001:9001" # Console port
     environment:
       - RUSTFS_VOLUMES=/data/rustfs{0...3}
@@ -28,7 +28,7 @@ services:
     hostname: rabbitmq
     restart: unless-stopped
     ports:
-      - "127.0.0.1:5672:5672"   # AMQP port
+      - "0.0.0.0:5672:5672"   # AMQP port
       - "127.0.0.1:15672:15672" # Management UI port
     environment:
       - RABBITMQ_DEFAULT_USER=guest

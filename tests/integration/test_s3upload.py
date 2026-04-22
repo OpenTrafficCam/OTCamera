@@ -7,7 +7,7 @@ from botocore.config import Config as Boto3Config
 from botocore.exceptions import ClientError
 
 from OTCamera.config import S3Config
-from OTCamera.controller.upload.controller import ThreadedUploadController
+from OTCamera.controller.upload_controller import ThreadedUploadController
 from OTCamera.domain.events import EventBus, RecordingSplit
 from OTCamera.plugin.upload.s3_upload import S3Upload
 
