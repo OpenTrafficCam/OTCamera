@@ -25,7 +25,6 @@ class RabbitMQS3UploadToOTCloudPayloadFactory(PayloadFactory):
                 project_id=self.ot_cloud_settings.project_id,
                 site_id=self.ot_cloud_settings.site_id,
             ),
-            # TODO: verify that timestamp includes UTC/TZ info
             timestamp=event.timestamp.isoformat(),
             original_filename=event.filename,
             new_filename=event.filename,
