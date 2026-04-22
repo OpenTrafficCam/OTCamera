@@ -11,11 +11,13 @@ from OTCamera.plugin.upload_notifier.payloads import (
 
 
 class RabbitMQS3UploadToOTCloudPayloadFactory(PayloadFactory):
+    """Builds a JSON-encoded S3FileUploadedPayload from an S3FileUploaded event."""
 
     def __init__(self, ot_cloud_settings: OTCloudSettings):
         self.ot_cloud_settings = ot_cloud_settings
 
     def create(self, event: Event) -> str:
+        """Serialize an S3FileUploaded event to a JSON string for OTCloud."""
         # The EventBus subscription in EventNotificationController already
         # filters to S3FileUploaded events, so this assert should never fire.
         # It is kept as a safety net against accidental misconfiguration at

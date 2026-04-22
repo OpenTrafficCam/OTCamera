@@ -38,6 +38,7 @@ class RabbitNotifier(Notifier):
         self._queue.join()
 
     def _worker(self) -> None:
+        """Consume payloads from the queue and publish each one, logging failures."""
         while True:
             payload = self._queue.get()
             try:
@@ -51,6 +52,7 @@ class RabbitNotifier(Notifier):
                 self._queue.task_done()
 
     def _publish(self, payload: str) -> None:
+        """Open a connection, declare the exchange, publish payload, and close."""
         credentials = pika.PlainCredentials(self._config.user, self._config.password)
         parameters = pika.ConnectionParameters(
             host=self._config.host,

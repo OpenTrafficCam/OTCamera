@@ -5,6 +5,8 @@ from dataclasses import dataclass
 
 @dataclass
 class CameraIdPayload:
+    """Identifies the camera, project, and site for an uploaded file."""
+
     camera_id: int
     project_id: int
     site_id: int

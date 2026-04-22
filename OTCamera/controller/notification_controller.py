@@ -8,12 +8,17 @@ logger = logging.getLogger(__name__)
 
 
 class PayloadFactory[E: Event, T](ABC):
+    """Transforms a domain event into a notification payload."""
+
     @abstractmethod
     def create(self, event: E) -> T:
+        """Build and return a payload from the given event."""
         raise NotImplementedError
 
 
 class EventNotificationController[E: Event, T]:
+    """Subscribes to events and forwards them as payloads to a notifier."""
+
     def __init__(
         self,
         event_bus: EventBus,
