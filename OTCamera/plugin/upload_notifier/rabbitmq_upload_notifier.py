@@ -78,8 +78,9 @@ class RabbitNotifier(Notifier):
                 body=payload,
                 properties=properties,
             )
-            logger.debug(
-                "Published message to exchange='%s', routing_key='%s'",
+            logger.info(
+                "Published '%s' to exchange='%s', routing_key='%s'",
+                payload[:50] + "..." if len(payload) > 50 else payload,
                 self._config.exchange,
                 self._config.routing_key,
             )
