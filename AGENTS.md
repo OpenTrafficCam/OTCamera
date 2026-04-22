@@ -145,4 +145,6 @@ Before considering work complete:
 - keep mypy and flake8 clean in touched code,
 - add regression tests for bug fixes,
 - avoid shell injection and unsafe subprocess use,
-- update docs if public behavior or architecture changes.
+- update docs if public behavior or architecture changes,
+- update `user_config.yaml` and `user_config.example.yaml` whenever fields are
+  added to or removed from the `Config` model in `OTCamera/config.py`.
