@@ -10,13 +10,14 @@ import pika.exchange_type
 import pytest
 
 from OTCamera.config import OTCloudSettings, RabbitMqConfig
-from OTCamera.controller.upload_notification_controller import (
+from OTCamera.controller.upload.notification.controller import (
     UploadNotificationController,
 )
 from OTCamera.domain.events import EventBus, S3FileUploaded
-from OTCamera.plugin.upload_notifier.rabbitmq_upload_notifier import (
-    RabbitMqUploadNotifier,
+from OTCamera.plugin.upload_notifier.rabbitmq_s3_upload_to_otcloud import (
+    RabbitMQS3UploadToOTCloudPayloadFactory,
 )
+from OTCamera.plugin.upload_notifier.rabbitmq_upload_notifier import RabbitNotifier
 
 EXCHANGE = "test_otcamera"
 ROUTING_KEY = "file_uploaded"
@@ -86,7 +87,10 @@ def test_rabbitmq_notification(
 ) -> None:
     event_bus = EventBus()
     UploadNotificationController(
-        event_bus, RabbitMqUploadNotifier(local_rabbitmq_config), OT_CLOUD
+        event_bus,
+        S3FileUploaded,
+        RabbitNotifier(local_rabbitmq_config),
+        RabbitMQS3UploadToOTCloudPayloadFactory(OT_CLOUD),
     )
 
     ts = datetime.now(tz=timezone.utc)
@@ -111,8 +115,7 @@ def test_rabbitmq_notification(
 
     assert {msg["s3_key"] for msg in received} == {f["key"] for f in FILES}
     assert {msg["original_filename"] for msg in received} == {
-        "clip_001.h264",
-        "clip_002.h264",
+        f["local_path"] for f in FILES
     }
     assert {msg["bucket_name"] for msg in received} == {"my-bucket"}
     assert all(

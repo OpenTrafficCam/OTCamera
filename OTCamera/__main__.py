@@ -17,7 +17,7 @@ from OTCamera.config import Config, parse_user_config
 from OTCamera.controller.camera_controller import CameraController
 from OTCamera.controller.power_controller import PowerController
 from OTCamera.controller.schedule_controller import ScheduleController
-from OTCamera.controller.upload_controller import ThreadedUploadController
+from OTCamera.controller.upload.controller import ThreadedUploadController
 from OTCamera.controller.wifi_controller import WifiController
 from OTCamera.domain.events import (
     ButtonHeld,
@@ -370,17 +370,24 @@ def close_resources(*resources: Closable | None) -> None:
 def _wire_notification(config: Config, event_bus: EventBus) -> None:
     """Instantiate and register the configured upload notification backend."""
     if config.notification == "rabbitmq":
-        from OTCamera.controller.upload_notification_controller import (
+        from OTCamera.controller.upload.notification.controller import (
             UploadNotificationController,
         )
+        from OTCamera.domain.events import S3FileUploaded
+        from OTCamera.plugin.upload_notifier.rabbitmq_s3_upload_to_otcloud import (
+            RabbitMQS3UploadToOTCloudPayloadFactory,
+        )
         from OTCamera.plugin.upload_notifier.rabbitmq_upload_notifier import (
-            RabbitMqUploadNotifier,
+            RabbitNotifier,
         )
 
         assert config.rabbitmq is not None  # guaranteed by config validation
         assert config.ot_cloud is not None  # guaranteed by config validation
         UploadNotificationController(
-            event_bus, RabbitMqUploadNotifier(config.rabbitmq), config.ot_cloud
+            event_bus,
+            S3FileUploaded,
+            RabbitNotifier(config.rabbitmq),
+            RabbitMQS3UploadToOTCloudPayloadFactory(config.ot_cloud),
         )
 
 

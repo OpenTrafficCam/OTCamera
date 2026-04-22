@@ -1,26 +1,23 @@
 """Synchronous RabbitMQ publisher using pika."""
 
-import dataclasses
-import json
 import logging
-from typing import Any
 
 import pika
 import pika.exchange_type
 
 from OTCamera.config import RabbitMqConfig
-from OTCamera.domain.upload_notifier import UploadNotifier
+from OTCamera.domain.notifier import Notifier
 
 logger = logging.getLogger(__name__)
 
 
-class RabbitMqUploadNotifier(UploadNotifier):
+class RabbitNotifier(Notifier):
     """Publish JSON messages to a RabbitMQ exchange."""
 
     def __init__(self, config: RabbitMqConfig) -> None:
         self._config = config
 
-    def notify(self, payload: Any) -> None:
+    def notify(self, payload: str) -> None:
         """Open a connection, publish message as JSON, then close."""
         credentials = pika.PlainCredentials(self._config.user, self._config.password)
         parameters = pika.ConnectionParameters(
@@ -39,7 +36,6 @@ class RabbitMqUploadNotifier(UploadNotifier):
                 ),
                 durable=self._config.durable,
             )
-            body = json.dumps(dataclasses.asdict(payload)).encode("utf-8")
             properties = pika.BasicProperties(
                 content_type="application/json",
                 delivery_mode=2 if self._config.durable else 1,
@@ -47,7 +43,7 @@ class RabbitMqUploadNotifier(UploadNotifier):
             channel.basic_publish(
                 exchange=self._config.exchange,
                 routing_key=self._config.routing_key,
-                body=body,
+                body=payload,
                 properties=properties,
             )
             logger.debug(
