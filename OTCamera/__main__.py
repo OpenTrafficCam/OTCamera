@@ -397,7 +397,8 @@ def main(config: Config | None = None, config_file: str = "~/user_config.yaml") 
         )
         wifi_controller = WifiController(config, event_bus, board.leds)
         schedule_controller = ScheduleController(config, event_bus)
-        upload_controller = ThreadedUploadController(event_bus, upload)
+        if upload is not None:
+            upload_controller = ThreadedUploadController(event_bus, upload)
 
         for name, button in board.buttons.items():
             button.on_pressed(
@@ -445,11 +446,7 @@ def main(config: Config | None = None, config_file: str = "~/user_config.yaml") 
         )
         application.record()
     finally:
-        if upload_controller is not None:
-            upload_controller.close(
-                grace_timeout=config.upload_grace_timeout, cancel_pending=True
-            )
-        close_resources(camera, upload, board)
+        close_resources(camera, upload, board, upload_controller)
 
 
 if __name__ == "__main__":

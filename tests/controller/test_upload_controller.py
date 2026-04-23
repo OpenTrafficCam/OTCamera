@@ -55,7 +55,7 @@ def test_threaded_controller_publishes_file_uploaded_on_success() -> None:
     controller = ThreadedUploadController(bus, FakeUpload())
 
     bus.publish(RecordingSplit(filename="/tmp/video.h264"))
-    controller.close()
+    controller.close(wait=True)
     bus.process_pending()
 
     assert received == [FileUploaded(filename="/tmp/video.h264")]
@@ -68,6 +68,6 @@ def test_threaded_controller_does_not_publish_file_uploaded_on_failure() -> None
     controller = ThreadedUploadController(bus, FailingUpload())
 
     bus.publish(RecordingSplit(filename="/tmp/video.h264"))
-    controller.close()
+    controller.close(wait=True)
 
     assert received == []

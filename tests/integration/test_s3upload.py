@@ -81,7 +81,7 @@ def test_s3_upload(
         event_bus.publish(RecordingSplit(str(p)))
 
     # wait until futures have completed
-    upload_controller.close(wait=True, cancel_pending=False)
+    upload_controller.close(wait=True)
 
     response = s3client.list_objects_v2(Bucket=local_s3_config.bucket)
 
