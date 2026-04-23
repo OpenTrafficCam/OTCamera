@@ -53,6 +53,9 @@ rabbitmq:
   exchange_type: direct
   # Routing key used when publishing messages.
   routing_key: ""
+  # Queue to declare and bind to the exchange.
+  # Leave empty to skip queue declaration.
+  queue_name: ""
   # Whether the exchange and messages survive broker restarts.
   durable: true
 

@@ -162,6 +162,7 @@ class RabbitMqConfig(BaseModel):
     exchange: StrFromYaml = ""
     exchange_type: StrFromYaml = "direct"
     routing_key: StrFromYaml = ""
+    queue_name: StrFromYaml = ""
     durable: bool = True
 
 
