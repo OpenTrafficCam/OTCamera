@@ -2,6 +2,7 @@
 
 import logging
 import queue
+import ssl
 import threading
 from typing import NamedTuple
 
@@ -187,11 +188,24 @@ class RabbitNotifier(Notifier):
     def _connect_and_setup(self) -> _Session:
         """Establish a new connection and set up the channel."""
         credentials = pika.PlainCredentials(self._config.user, self._config.password)
+
+        ssl_options = None
+        if self._config.ssl:
+            # TODO: we only support the default SSL context for now
+            # (using CAs trusted by the system).
+            # Extend for custom CAs if required.
+            context = ssl.create_default_context()
+            ssl_options = pika.SSLOptions(
+                context=context, server_hostname=self._config.host
+            )
+
         parameters = pika.ConnectionParameters(
             host=self._config.host,
             port=self._config.port,
             virtual_host=self._config.vhost,
             credentials=credentials,
+            # this is actually correct, mypy is confused
+            ssl_options=ssl_options,  # type: ignore
         )
         connection = pika.BlockingConnection(parameters)
         channel = _setup_channel(connection, self._config)

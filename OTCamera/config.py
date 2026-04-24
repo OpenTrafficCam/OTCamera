@@ -164,6 +164,7 @@ class RabbitMqConfig(BaseModel):
     routing_key: StrFromYaml = ""
     queue_name: StrFromYaml = ""
     durable: bool = True
+    ssl: bool = True
 
 
 class OTCloudSettings(BaseModel):

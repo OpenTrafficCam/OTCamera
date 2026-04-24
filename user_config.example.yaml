@@ -58,6 +58,8 @@ rabbitmq:
   queue_name: ""
   # Whether the exchange and messages survive broker restarts.
   durable: true
+  # Whether ssl encryption should be used (default: true)
+  ssl: true
 
 # OTCloud camera identity used in upload notification payloads.
 # Required when notification: rabbitmq is set.
