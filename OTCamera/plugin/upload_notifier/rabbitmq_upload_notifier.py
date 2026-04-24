@@ -6,6 +6,7 @@ import threading
 from typing import NamedTuple
 
 import pika
+import pika.exchange_type
 from pika.adapters.blocking_connection import BlockingChannel, BlockingConnection
 from pika.exceptions import (
     AuthenticationError,
@@ -18,13 +19,47 @@ from pika.exceptions import (
 
 from OTCamera.config import RabbitMqConfig
 from OTCamera.domain.notifier import Notifier
-from OTCamera.plugin.upload_notifier.rabbitmq_channel_setup import SetupRabbitMqChannel
 
 logger = logging.getLogger(__name__)
 
 # Broker reply codes where reconnecting with the same config will always fail.
 _FATAL_CONNECTION_CODES = frozenset({403, 530})
 _FATAL_CHANNEL_CODES = frozenset({403, 404, 406})
+
+
+def _setup_channel(
+    connection: BlockingConnection,
+    config: RabbitMqConfig,
+) -> BlockingChannel:
+    channel = connection.channel()
+
+    channel.exchange_declare(
+        exchange=config.exchange,
+        exchange_type=pika.exchange_type.ExchangeType(config.exchange_type),
+        durable=config.durable,
+    )
+
+    if config.queue_name:
+        channel.queue_declare(queue=config.queue_name, durable=config.durable)
+        channel.queue_bind(
+            queue=config.queue_name,
+            exchange=config.exchange,
+            routing_key=config.routing_key,
+        )
+
+    # Enable publisher confirms so basic_publish blocks until the broker acks.
+    # Without this, a persistent connection has no synchronization barrier and
+    # messages may not be processed by the broker before the caller returns.
+    channel.confirm_delivery()
+
+    logger.info(
+        "Setup RabbitMQ channel: exchange='%s', routing_key='%s', queue='%s'",
+        config.exchange,
+        config.routing_key,
+        config.queue_name or "(none)",
+    )
+
+    return channel
 
 
 class _Session(NamedTuple):
@@ -46,7 +81,6 @@ class RabbitNotifier(Notifier):
 
     def __init__(self, config: RabbitMqConfig) -> None:
         self._config = config
-        self._channel_setup = SetupRabbitMqChannel()
         self._queue: queue.Queue[str] = queue.Queue()
         self._stopped = threading.Event()
         self._thread = threading.Thread(
@@ -160,7 +194,7 @@ class RabbitNotifier(Notifier):
             credentials=credentials,
         )
         connection = pika.BlockingConnection(parameters)
-        channel = self._channel_setup.setup(connection, self._config)
+        channel = _setup_channel(connection, self._config)
         return _Session(connection, channel)
 
     def _publish(self, channel: BlockingChannel, payload: str) -> None:
