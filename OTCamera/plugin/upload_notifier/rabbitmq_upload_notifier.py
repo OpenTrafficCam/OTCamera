@@ -117,10 +117,11 @@ class RabbitNotifier(Notifier):
 
     def __init__(self, config: RabbitMqConfig) -> None:
         self._publisher = RabbitMqJsonPublisher(config)
+        self._publisher.start()
 
     def notify(self, payload: str) -> None:
         self._publisher.publish(payload)
 
     def close(self) -> None:
-        """ "Close the underlying publisher."""
+        """Close the underlying publisher."""
         self._publisher.stop()
