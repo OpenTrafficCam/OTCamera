@@ -46,6 +46,7 @@ def local_rabbitmq_config() -> RabbitMqConfig:
         exchange=EXCHANGE,
         routing_key=ROUTING_KEY,
         durable=False,
+        ssl=False,
     )
 
 
@@ -106,7 +107,7 @@ def test_rabbitmq_notification(
             )
         )
 
-    notifier.flush()
+    notifier.close()
 
     received = []
     for _ in FILES:
