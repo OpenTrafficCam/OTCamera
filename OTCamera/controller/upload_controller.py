@@ -1,9 +1,9 @@
 """Upload controller that reacts to recording split events."""
 
 import logging
-import queue
-import threading
 from abc import ABC, abstractmethod
+from queue import Queue, ShutDown
+from threading import Thread
 
 from OTCamera.domain.events import EventBus, FileUploaded, RecordingSplit
 from OTCamera.domain.upload import Upload
@@ -48,15 +48,15 @@ class ThreadedUploadController(UploadController):
 
     def __init__(self, event_bus: EventBus, upload: Upload):
         super().__init__(event_bus=event_bus, upload=upload)
-        self._queue: queue.Queue[str] = queue.Queue()
-        self._thread = threading.Thread(target=self._worker, daemon=True)
+        self._queue: Queue[str] = Queue()
+        self._thread = Thread(target=self._worker, daemon=True)
         self._thread.start()
 
     def _worker(self) -> None:
         while True:
             try:
                 filename = self._queue.get()
-            except queue.ShutDown:
+            except ShutDown:
                 break
             try:
                 logger.info("Uploading %s", filename)
@@ -70,7 +70,7 @@ class ThreadedUploadController(UploadController):
     def _on_recording_split(self, event: RecordingSplit) -> None:
         try:
             self._queue.put(event.filename)
-        except queue.ShutDown:
+        except ShutDown:
             logger.warning(
                 "Upload controller is shut down, ignoring %s", event.filename
             )
