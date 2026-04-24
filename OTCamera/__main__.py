@@ -421,7 +421,8 @@ def main(config: Config | None = None, config_file: str = "~/user_config.yaml") 
         )
         wifi_controller = WifiController(config, event_bus, board.leds)
         schedule_controller = ScheduleController(config, event_bus)
-        upload_controller = ThreadedUploadController(event_bus, upload)
+        if upload is not None:
+            upload_controller = ThreadedUploadController(event_bus, upload)
 
         _wire_notification(config, event_bus)
 
@@ -471,11 +472,7 @@ def main(config: Config | None = None, config_file: str = "~/user_config.yaml") 
         )
         application.record()
     finally:
-        if upload_controller is not None:
-            upload_controller.close(
-                grace_timeout=config.upload_grace_timeout, cancel_pending=True
-            )
-        close_resources(camera, upload, board)
+        close_resources(camera, upload, board, upload_controller)
 
 
 if __name__ == "__main__":
