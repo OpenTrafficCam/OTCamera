@@ -24,12 +24,12 @@ QUEUE = "test_otcamera_queue"
 
 FILES = [
     {
-        "local_path": "/videos/clip_001.h264",
+        "filename": "clip_001.h264",
         "key": "camera1/clip_001.h264",
         "bucket": "my-bucket",
     },
     {
-        "local_path": "/videos/clip_002.h264",
+        "filename": "clip_002.h264",
         "key": "camera1/clip_002.h264",
         "bucket": "my-bucket",
     },
@@ -100,11 +100,11 @@ def test_rabbitmq_notification(
     for f in FILES:
         event_bus.publish(
             S3FileUploaded(
-                filename=f["local_path"],
+                filename=f["filename"],
                 timestamp=ts,
                 bucket=f["bucket"],
                 key=f["key"],
-                original_filename=f["local_path"].split("/")[-1],
+                original_filename=f["filename"],
             )
         )
 
@@ -122,7 +122,7 @@ def test_rabbitmq_notification(
 
     assert {msg["s3_key"] for msg in received} == {f["key"] for f in FILES}
     assert {msg["original_filename"] for msg in received} == {
-        f["local_path"].split("/")[-1] for f in FILES
+        f["filename"] for f in FILES
     }
     assert {msg["bucket_name"] for msg in received} == {"my-bucket"}
     assert all(
