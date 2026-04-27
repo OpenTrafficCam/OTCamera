@@ -4,9 +4,15 @@ import logging
 import ssl
 import threading
 
-import pika.exchange_type
-from pika import BasicProperties, ConnectionParameters, PlainCredentials, SSLOptions
+from pika import (
+    BasicProperties,
+    ConnectionParameters,
+    PlainCredentials,
+    SSLOptions,
+    exchange_type,
+)
 from pika.adapters.blocking_connection import BlockingChannel, BlockingConnection
+from pika.exceptions import ConnectionWrongStateError
 
 from OTCamera.config import RabbitMqConfig
 from OTCamera.domain.notifier import Notifier
@@ -15,6 +21,7 @@ logger = logging.getLogger(__name__)
 
 
 def _connect(config: RabbitMqConfig) -> BlockingConnection:
+    """ "Establish a connection based on the user config."""
     credentials = PlainCredentials(config.user, config.password)
 
     ssl_options = None
@@ -40,11 +47,12 @@ def _setup_channel(
     connection: BlockingConnection,
     config: RabbitMqConfig,
 ) -> BlockingChannel:
+    """Setup a channel, declare the exchange and queue."""
     channel = connection.channel()
 
     channel.exchange_declare(
         exchange=config.exchange,
-        exchange_type=pika.exchange_type.ExchangeType(config.exchange_type),
+        exchange_type=exchange_type.ExchangeType(config.exchange_type),
         durable=config.durable,
     )
 
@@ -66,8 +74,13 @@ def _setup_channel(
     return channel
 
 
-# Adapted from https://github.com/pika/pika/blob/main/examples/long_running_publisher.py
+#
 class RabbitMqJsonPublisher(threading.Thread):
+    """A long-running publisher thread that publishes json-encoded payloads to RabbitMQ.
+
+    Adapted from
+    https://github.com/pika/pika/blob/main/examples/long_running_publisher.py
+    """
 
     def __init__(self, config: RabbitMqConfig) -> None:
         super().__init__(name="rabbitmq-publisher", daemon=True)
@@ -80,10 +93,13 @@ class RabbitMqJsonPublisher(threading.Thread):
         self._config = config
 
     def run(self) -> None:
+        # make sure that callbacks (here: publishing messages)
+        # are dispatched and
         while self.is_running:
             self.connection.process_data_events(time_limit=1)
 
     def _publish(self, payload: str) -> None:
+        """Publish the message to RabbitMQ. Should be enqueued as a callback."""
         properties = BasicProperties(
             content_type="application/json",
             delivery_mode=2 if self._config.durable else 1,
@@ -102,14 +118,22 @@ class RabbitMqJsonPublisher(threading.Thread):
         )
 
     def publish(self, payload: str) -> None:
+        """Publish a payload to the configured RabbitMQ exchange.
+
+        This method is threadsafe and can be called from any thread.
+        """
         self.connection.add_callback_threadsafe(lambda: self._publish(payload))
 
     def stop(self) -> None:
+        """Stop the publisher thread."""
+        logger.debug("Received signal to stop publisher thread.")
         self.is_running = False
         # Wait until all the data events have been processed
         self.connection.process_data_events(time_limit=1)
         if self.connection.is_open:
             self.connection.close()
+            logger.debug("Closed connection to RabbitMQ.")
+        logger.debug("Stopped RabbitMQ publisher thread.")
 
 
 class RabbitNotifier(Notifier):
@@ -120,8 +144,14 @@ class RabbitNotifier(Notifier):
         self._publisher.start()
 
     def notify(self, payload: str) -> None:
-        self._publisher.publish(payload)
+        """Publish notification to RabbitMQ."""
+        try:
+            self._publisher.publish(payload)
+        except ConnectionWrongStateError as exc:
+            logger.warning("Connection to RabbitMQ is not open: %s", exc)
+        except Exception as exc:
+            logger.warning("Failed to publish to RabbitMQ: %s", exc)
 
     def close(self) -> None:
-        """Close the underlying publisher."""
+        """Close the underlying publisher thread."""
         self._publisher.stop()
