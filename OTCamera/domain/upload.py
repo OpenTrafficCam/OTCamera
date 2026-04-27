@@ -2,6 +2,10 @@
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from datetime import datetime, timezone
+from pathlib import Path
+
+from OTCamera.domain.events import FileUploaded, S3FileUploaded
 
 
 @dataclass
@@ -10,6 +14,10 @@ class UploadResult:
 
     local_path: str
 
+    def to_upload_event(self) -> FileUploaded:
+        ts = datetime.now(tz=timezone.utc)
+        return FileUploaded(filename=self.local_path, timestamp=ts)
+
 
 @dataclass
 class S3UploadResult(UploadResult):
@@ -17,6 +25,20 @@ class S3UploadResult(UploadResult):
 
     bucket: str
     key: str
+
+    def to_upload_event(self) -> S3FileUploaded:
+        """Convert to an S3FileUploaded event."""
+
+        filename = Path(self.local_path).name
+        ts = datetime.now(tz=timezone.utc)
+
+        return S3FileUploaded(
+            filename=filename,
+            timestamp=ts,
+            bucket=self.bucket,
+            key=self.key,
+            original_filename=filename,
+        )
 
 
 class Upload(ABC):
