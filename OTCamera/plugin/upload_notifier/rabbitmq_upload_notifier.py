@@ -2,7 +2,7 @@
 
 import logging
 import ssl
-import threading
+from threading import Event, Thread
 
 from pika import (
     BasicProperties,
@@ -75,17 +75,19 @@ def _setup_channel(
 
 
 #
-class RabbitMqJsonPublisher(threading.Thread):
+class RabbitMqJsonPublisher(Thread):
     """A long-running publisher thread that publishes json-encoded payloads to RabbitMQ.
 
     Adapted from
     https://github.com/pika/pika/blob/main/examples/long_running_publisher.py
     """
 
-    def __init__(self, config: RabbitMqConfig) -> None:
+    def __init__(self, config: RabbitMqConfig, shutdown_event: Event) -> None:
         super().__init__(name="rabbitmq-publisher", daemon=True)
 
         self.is_running = True
+
+        self.shutdown_event = shutdown_event
 
         self.connection = _connect(config)
         self.channel = _setup_channel(self.connection, config)
@@ -94,9 +96,12 @@ class RabbitMqJsonPublisher(threading.Thread):
 
     def run(self) -> None:
         # make sure that callbacks (here: publishing messages)
-        # are dispatched and
+        # are dispatched.
         while self.is_running:
             self.connection.process_data_events(time_limit=1)
+            if self.shutdown_event.is_set():
+                logger.debug("Received signal to stop publisher thread.")
+                self._stop()
 
     def _publish(self, payload: str) -> None:
         """Publish the message to RabbitMQ. Should be enqueued as a callback."""
@@ -124,9 +129,8 @@ class RabbitMqJsonPublisher(threading.Thread):
         """
         self.connection.add_callback_threadsafe(lambda: self._publish(payload))
 
-    def stop(self) -> None:
+    def _stop(self) -> None:
         """Stop the publisher thread."""
-        logger.debug("Received signal to stop publisher thread.")
         self.is_running = False
         # Wait until all the data events have been processed
         self.connection.process_data_events(time_limit=1)
@@ -139,8 +143,8 @@ class RabbitMqJsonPublisher(threading.Thread):
 class RabbitNotifier(Notifier):
     """Publish JSON messages to a RabbitMQ exchange via a publisher thread."""
 
-    def __init__(self, config: RabbitMqConfig) -> None:
-        self._publisher = RabbitMqJsonPublisher(config)
+    def __init__(self, config: RabbitMqConfig, shutdown_event: Event) -> None:
+        self._publisher = RabbitMqJsonPublisher(config, shutdown_event=shutdown_event)
         self._publisher.start()
 
     def notify(self, payload: str) -> None:
@@ -151,7 +155,3 @@ class RabbitNotifier(Notifier):
             logger.warning("Connection to RabbitMQ is not open: %s", exc)
         except Exception as exc:
             logger.warning("Failed to publish to RabbitMQ: %s", exc)
-
-    def close(self) -> None:
-        """Close the underlying publisher thread."""
-        self._publisher.stop()

@@ -2,6 +2,7 @@
 
 import json
 from datetime import datetime, timezone
+from threading import Event
 from typing import Generator
 
 import pika
@@ -41,6 +42,7 @@ OT_CLOUD = OTCloudSettings(camera_id=2, project_id=0, site_id=1)
 def local_rabbitmq_config() -> RabbitMqConfig:
     return RabbitMqConfig(
         host="127.0.0.1",
+        port=5672,
         exchange=EXCHANGE,
         routing_key=ROUTING_KEY,
         durable=False,
@@ -85,7 +87,8 @@ def test_rabbitmq_notification(
     local_rabbitmq_config: RabbitMqConfig,
 ) -> None:
     event_bus = EventBus()
-    notifier = RabbitNotifier(local_rabbitmq_config)
+    shutdown_event = Event()
+    notifier = RabbitNotifier(local_rabbitmq_config, shutdown_event=shutdown_event)
     EventNotificationController(
         event_bus,
         S3FileUploaded,
@@ -105,7 +108,9 @@ def test_rabbitmq_notification(
             )
         )
 
-    notifier.close()
+    shutdown_event.set()
+    # wait until the publisher thread has finished
+    notifier._publisher.join()
 
     received = []
     for _ in FILES:
@@ -117,7 +122,7 @@ def test_rabbitmq_notification(
 
     assert {msg["s3_key"] for msg in received} == {f["key"] for f in FILES}
     assert {msg["original_filename"] for msg in received} == {
-        f["local_path"] for f in FILES
+        f["local_path"].split("/")[-1] for f in FILES
     }
     assert {msg["bucket_name"] for msg in received} == {"my-bucket"}
     assert all(

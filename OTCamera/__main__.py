@@ -7,6 +7,7 @@ from collections.abc import Callable
 from datetime import datetime as dt
 from datetime import timedelta
 from pathlib import Path
+from threading import Event
 from time import sleep
 from typing import Any, Iterator, Protocol
 
@@ -367,7 +368,9 @@ def close_resources(*resources: Closable | None) -> None:
             logger.warning(f"Error closing resource {resource!r}", exc_info=True)
 
 
-def _wire_notification(config: Config, event_bus: EventBus) -> None:
+def _wire_notification(
+    config: Config, event_bus: EventBus, shutdown_event: Event
+) -> None:
     """Instantiate and register the configured upload notification backend."""
     if config.notification == "rabbitmq":
         from OTCamera.controller.notification_controller import (
@@ -386,7 +389,7 @@ def _wire_notification(config: Config, event_bus: EventBus) -> None:
         EventNotificationController(
             event_bus,
             S3FileUploaded,
-            RabbitNotifier(config.rabbitmq),
+            RabbitNotifier(config.rabbitmq, shutdown_event=shutdown_event),
             RabbitMQS3UploadToOTCloudPayloadFactory(config.ot_cloud),
         )
 
@@ -399,6 +402,10 @@ def main(config: Config | None = None, config_file: str = "~/user_config.yaml") 
     setup_logging(config)
     event_bus = EventBus()
     board = BoardProvider.provide(config)
+
+    # Common shutdown event to signal running threads they should exit
+    # when the camera is shut down.
+    shutdown_event = Event()
 
     camera = None
     upload = None
@@ -424,7 +431,7 @@ def main(config: Config | None = None, config_file: str = "~/user_config.yaml") 
         if upload is not None:
             upload_controller = ThreadedUploadController(event_bus, upload)
 
-        _wire_notification(config, event_bus)
+        _wire_notification(config, event_bus, shutdown_event=shutdown_event)
 
         for name, button in board.buttons.items():
             button.on_pressed(
@@ -472,6 +479,8 @@ def main(config: Config | None = None, config_file: str = "~/user_config.yaml") 
         )
         application.record()
     finally:
+        shutdown_event.set()
+
         close_resources(camera, upload, board, upload_controller)
 
 
