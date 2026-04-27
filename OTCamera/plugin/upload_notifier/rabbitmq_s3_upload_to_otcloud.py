@@ -1,5 +1,6 @@
 import dataclasses
 import json
+from pathlib import Path
 
 from OTCamera.config import OTCloudSettings
 from OTCamera.controller.notification_controller import PayloadFactory
@@ -23,6 +24,9 @@ class RabbitMQS3UploadToOTCloudPayloadFactory(PayloadFactory):
         # It is kept as a safety net against accidental misconfiguration at
         # the wiring site (e.g. wrong event_type passed to the controller).
         assert isinstance(event, S3FileUploaded)
+
+        filename = Path(event.filename).name
+
         payload = S3FileUploadedPayload(
             s3_key=event.key,
             camera_id=CameraIdPayload(
@@ -31,8 +35,8 @@ class RabbitMQS3UploadToOTCloudPayloadFactory(PayloadFactory):
                 site_id=self.ot_cloud_settings.site_id,
             ),
             timestamp=event.timestamp.isoformat(),
-            original_filename=event.filename,
-            new_filename=event.filename,
+            original_filename=filename,
+            new_filename=filename,
             bucket_name=event.bucket,
         )
 
