@@ -7,3 +7,8 @@ class Notifier[T](ABC):
     @abstractmethod
     def notify(self, payload: T) -> None:
         raise NotImplementedError
+
+    @abstractmethod
+    def close(self) -> None:
+        """Release underlying resources."""
+        raise NotImplementedError

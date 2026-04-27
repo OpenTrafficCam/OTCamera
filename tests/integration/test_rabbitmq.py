@@ -2,7 +2,6 @@
 
 import json
 from datetime import datetime, timezone
-from threading import Event
 from typing import Generator
 
 import pika
@@ -13,7 +12,7 @@ import pytest
 from OTCamera.config import OTCloudSettings, RabbitMqConfig
 from OTCamera.controller.notification_controller import EventNotificationController
 from OTCamera.domain.events import EventBus, S3FileUploaded
-from OTCamera.plugin.upload_notifier.rabbitmq_s3_upload_to_otcloud import (
+from OTCamera.plugin.upload_notifier.payload_factories import (
     RabbitMQS3UploadToOTCloudPayloadFactory,
 )
 from OTCamera.plugin.upload_notifier.rabbitmq_upload_notifier import RabbitNotifier
@@ -87,9 +86,8 @@ def test_rabbitmq_notification(
     local_rabbitmq_config: RabbitMqConfig,
 ) -> None:
     event_bus = EventBus()
-    shutdown_event = Event()
-    notifier = RabbitNotifier(local_rabbitmq_config, shutdown_event=shutdown_event)
-    EventNotificationController(
+    notifier = RabbitNotifier(local_rabbitmq_config)
+    controller = EventNotificationController(
         event_bus,
         S3FileUploaded,
         notifier,
@@ -108,9 +106,7 @@ def test_rabbitmq_notification(
             )
         )
 
-    shutdown_event.set()
-    # wait until the publisher thread has finished
-    notifier._publisher.join()
+    controller.close()
 
     received = []
     for _ in FILES:

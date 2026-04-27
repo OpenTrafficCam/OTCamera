@@ -143,8 +143,11 @@ class RabbitMqJsonPublisher(Thread):
 class RabbitNotifier(Notifier):
     """Publish JSON messages to a RabbitMQ exchange via a publisher thread."""
 
-    def __init__(self, config: RabbitMqConfig, shutdown_event: Event) -> None:
-        self._publisher = RabbitMqJsonPublisher(config, shutdown_event=shutdown_event)
+    def __init__(self, config: RabbitMqConfig) -> None:
+        self.shutdown_event = Event()
+        self._publisher = RabbitMqJsonPublisher(
+            config, shutdown_event=self.shutdown_event
+        )
         self._publisher.start()
 
     def notify(self, payload: str) -> None:
@@ -155,3 +158,8 @@ class RabbitNotifier(Notifier):
             logger.warning("Connection to RabbitMQ is not open: %s", exc)
         except Exception as exc:
             logger.warning("Failed to publish to RabbitMQ: %s", exc)
+
+    def close(self) -> None:
+        self.shutdown_event.set()
+        self._publisher.join(timeout=5)
+        logger.info("Closed RabbitMQ notifier.")

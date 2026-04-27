@@ -7,7 +7,6 @@ from collections.abc import Callable
 from datetime import datetime as dt
 from datetime import timedelta
 from pathlib import Path
-from threading import Event
 from time import sleep
 from typing import Any, Iterator, Protocol
 
@@ -16,6 +15,7 @@ import psutil
 from OTCamera.bsl.board_provider import BoardProvider
 from OTCamera.config import Config, parse_user_config
 from OTCamera.controller.camera_controller import CameraController
+from OTCamera.controller.notification_controller import EventNotificationController
 from OTCamera.controller.power_controller import PowerController
 from OTCamera.controller.schedule_controller import ScheduleController
 from OTCamera.controller.upload_controller import ThreadedUploadController
@@ -26,6 +26,7 @@ from OTCamera.domain.events import (
     ButtonReleased,
     EventBus,
     FileUploaded,
+    S3FileUploaded,
     ShutdownRequested,
 )
 from OTCamera.domain.led import LED
@@ -42,6 +43,12 @@ from OTCamera.log import setup_logging
 from OTCamera.module.camera.camera_provider import CameraProvider
 from OTCamera.plugin.upload.helpers import delete_file
 from OTCamera.plugin.upload.upload_provider import UploadProvider
+from OTCamera.plugin.upload_notifier.payload_factories import (
+    RabbitMQS3UploadToOTCloudPayloadFactory,
+)
+from OTCamera.plugin.upload_notifier.upload_notification_provider import (
+    UploadNotificationProvider,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -368,32 +375,6 @@ def close_resources(*resources: Closable | None) -> None:
             logger.warning(f"Error closing resource {resource!r}", exc_info=True)
 
 
-def _wire_notification(
-    config: Config, event_bus: EventBus, shutdown_event: Event
-) -> None:
-    """Instantiate and register the configured upload notification backend."""
-    if config.notification == "rabbitmq":
-        from OTCamera.controller.notification_controller import (
-            EventNotificationController,
-        )
-        from OTCamera.domain.events import S3FileUploaded
-        from OTCamera.plugin.upload_notifier.rabbitmq_s3_upload_to_otcloud import (
-            RabbitMQS3UploadToOTCloudPayloadFactory,
-        )
-        from OTCamera.plugin.upload_notifier.rabbitmq_upload_notifier import (
-            RabbitNotifier,
-        )
-
-        assert config.rabbitmq is not None  # guaranteed by config validation
-        assert config.ot_cloud is not None  # guaranteed by config validation
-        EventNotificationController(
-            event_bus,
-            S3FileUploaded,
-            RabbitNotifier(config.rabbitmq, shutdown_event=shutdown_event),
-            RabbitMQS3UploadToOTCloudPayloadFactory(config.ot_cloud),
-        )
-
-
 def main(config: Config | None = None, config_file: str = "~/user_config.yaml") -> None:
     """Wire all components and start OTCamera."""
     if config is None:
@@ -403,13 +384,10 @@ def main(config: Config | None = None, config_file: str = "~/user_config.yaml") 
     event_bus = EventBus()
     board = BoardProvider.provide(config)
 
-    # Common shutdown event to signal running threads they should exit
-    # when the camera is shut down.
-    shutdown_event = Event()
-
     camera = None
     upload = None
     upload_controller = None
+    upload_notification_controller = None
     try:
         camera = CameraProvider.provide(config)
 
@@ -431,7 +409,21 @@ def main(config: Config | None = None, config_file: str = "~/user_config.yaml") 
         if upload is not None:
             upload_controller = ThreadedUploadController(event_bus, upload)
 
-        _wire_notification(config, event_bus, shutdown_event=shutdown_event)
+        notifier = UploadNotificationProvider.provide(config)
+        if notifier is not None:
+            # Guaranteed by config validation
+            assert config.ot_cloud is not None
+
+            # TODO: make this configurable, not hardcoded.
+            # Currently supports only upload notifications to OTCloud via RabbitMQ.
+            upload_notification_controller = EventNotificationController(
+                event_bus,
+                S3FileUploaded,
+                notifier,
+                payload_factory=RabbitMQS3UploadToOTCloudPayloadFactory(
+                    config.ot_cloud
+                ),
+            )
 
         for name, button in board.buttons.items():
             button.on_pressed(
@@ -479,9 +471,9 @@ def main(config: Config | None = None, config_file: str = "~/user_config.yaml") 
         )
         application.record()
     finally:
-        shutdown_event.set()
-
-        close_resources(camera, upload, board, upload_controller)
+        close_resources(
+            camera, upload, board, upload_controller, upload_notification_controller
+        )
 
 
 if __name__ == "__main__":
