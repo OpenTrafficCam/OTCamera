@@ -120,7 +120,9 @@ class S3FileUploaded(FileUploaded):
     # the key as which the file was stored in S3.
     key: str
 
-    # the basename of the original local file.
+    # This is introduced to maintain compatiblity with the
+    # "simulated camera" currently used by OTCloud.
+    # TODO: remove once this is no longer needed.
     original_filename: str
 
 
