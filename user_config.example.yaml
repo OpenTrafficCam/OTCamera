@@ -40,8 +40,8 @@ notification:
 rabbitmq:
   # Hostname or IP address of the RabbitMQ broker.
   host: 127.0.0.1
-  # AMQP port (default: 5672).
-  port: 5672
+  # AMQP port (default: 5671) - use 5672 for non-SSL connections.
+  port: 5671
   # Broker credentials.
   user: guest
   password: guest

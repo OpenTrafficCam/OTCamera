@@ -155,7 +155,7 @@ class RabbitMqConfig(BaseModel):
     """RabbitMQ connection and exchange settings."""
 
     host: StrFromYaml
-    port: int = 5672
+    port: int = 5671
     user: StrFromYaml = "guest"
     password: StrFromYaml = "guest"
     vhost: StrFromYaml = "/"
