@@ -6,10 +6,7 @@ from pathlib import Path
 from queue import Queue, ShutDown
 from threading import Thread
 
-from OTCamera.domain.events import (
-    EventBus,
-    RecordingSplit,
-)
+from OTCamera.domain.events import EventBus, RecordingSplit
 from OTCamera.domain.upload import Upload
 
 logger = logging.getLogger(__name__)
