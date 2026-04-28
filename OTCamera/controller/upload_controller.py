@@ -2,6 +2,7 @@
 
 import logging
 from abc import ABC, abstractmethod
+from pathlib import Path
 from queue import Queue, ShutDown
 from threading import Thread
 
@@ -40,7 +41,7 @@ class BlockingUploadController(UploadController):
         """Upload the completed recording segment."""
         try:
             logger.info("Uploading %s", event.filename)
-            result = self._upload.upload(event.filename)
+            result = self._upload.upload(Path(event.filename))
             upload_event = result.to_upload_event()
             self._event_bus.publish(upload_event)
         except Exception as exc:
@@ -64,7 +65,7 @@ class ThreadedUploadController(UploadController):
                 break
             try:
                 logger.info("Uploading %s", filename)
-                result = self._upload.upload(filename)
+                result = self._upload.upload(Path(filename))
 
                 event = result.to_upload_event()
 

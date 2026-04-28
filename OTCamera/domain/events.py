@@ -4,6 +4,7 @@ import logging
 import queue
 from dataclasses import dataclass
 from datetime import datetime
+from pathlib import Path
 from typing import Any, Callable, TypeVar, cast
 
 _E = TypeVar("_E", bound="Event")
@@ -106,7 +107,7 @@ class ShutdownRequested(Event):
 class FileUploaded(Event):
     """A file was successfully uploaded to remote storage."""
 
-    filename: str
+    local_path: Path
     timestamp: datetime
 
 
@@ -119,11 +120,6 @@ class S3FileUploaded(FileUploaded):
 
     # the key as which the file was stored in S3.
     key: str
-
-    # This is introduced to maintain compatiblity with the
-    # "simulated camera" currently used by OTCloud.
-    # TODO: remove once this is no longer needed.
-    original_filename: str
 
 
 class EventBus:

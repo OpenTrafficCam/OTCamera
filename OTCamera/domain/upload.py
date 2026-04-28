@@ -12,11 +12,11 @@ from OTCamera.domain.events import FileUploaded, S3FileUploaded
 class UploadResult:
     """Information about a completed upload."""
 
-    local_path: str
+    local_path: Path
 
     def to_upload_event(self) -> FileUploaded:
         ts = datetime.now(tz=timezone.utc)
-        return FileUploaded(filename=self.local_path, timestamp=ts)
+        return FileUploaded(local_path=self.local_path, timestamp=ts)
 
 
 @dataclass
@@ -29,15 +29,13 @@ class S3UploadResult(UploadResult):
     def to_upload_event(self) -> S3FileUploaded:
         """Convert to an S3FileUploaded event."""
 
-        filename = Path(self.local_path).name
         ts = datetime.now(tz=timezone.utc)
 
         return S3FileUploaded(
-            filename=filename,
+            local_path=self.local_path,
             timestamp=ts,
             bucket=self.bucket,
             key=self.key,
-            original_filename=filename,
         )
 
 
@@ -45,7 +43,7 @@ class Upload(ABC):
     """Contract for uploading recorded files to external storage."""
 
     @abstractmethod
-    def upload(self, file_path: str) -> UploadResult:
+    def upload(self, file_path: Path) -> UploadResult:
         """Upload a file.
 
         Implementations must raise FileUploadError on failure and must configure

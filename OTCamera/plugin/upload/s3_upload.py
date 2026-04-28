@@ -50,7 +50,7 @@ class S3Upload(Upload):
         self.bucket_name = bucket_name
         self.key_prefix = key_prefix
 
-    def upload(self, file_path: str) -> S3UploadResult:
+    def upload(self, file_path: Path) -> S3UploadResult:
         """Upload a single file to the configured S3 bucket.
 
         The file is stored under the key ``{key_prefix}/{filename}`` when a

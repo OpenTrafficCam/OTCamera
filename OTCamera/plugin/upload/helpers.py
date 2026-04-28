@@ -1,10 +1,11 @@
 import logging
 import os
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
 
-def delete_file(path: str) -> None:
+def delete_file(path: Path) -> None:
     """Delete a file after successful upload."""
 
     try:

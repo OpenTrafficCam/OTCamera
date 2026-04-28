@@ -27,7 +27,7 @@ class FtpUpload(Upload):
         self._password = password
         self._server_source = server_source
 
-    def upload(self, file_path: str) -> UploadResult:
+    def upload(self, file_path: Path) -> UploadResult:
         """Upload a local file to the configured FTPS target directory."""
         source = Path(file_path)
         destination = Path(self._server_source) / source.name
