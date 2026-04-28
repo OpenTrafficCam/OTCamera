@@ -5,8 +5,6 @@ import queue
 from dataclasses import dataclass
 from typing import Any, Callable, TypeVar, cast
 
-_E = TypeVar("_E", bound="Event")
-
 logger = logging.getLogger(__name__)
 
 
@@ -108,6 +106,9 @@ class FileUploaded(Event):
     filename: str
 
 
+EVENT = TypeVar("EVENT", bound="Event")
+
+
 class EventBus:
     """Hybrid in-process event bus with synchronous and queued dispatch."""
 
@@ -115,7 +116,9 @@ class EventBus:
         self._subscribers: dict[type[Event], list[Callable[[Event], None]]] = {}
         self._queue: "queue.Queue[Any]" = queue.Queue()
 
-    def subscribe(self, event_type: type[_E], callback: Callable[[_E], None]) -> None:
+    def subscribe(
+        self, event_type: type[EVENT], callback: Callable[[EVENT], None]
+    ) -> None:
         """Register a callback for an event type."""
         self._subscribers.setdefault(event_type, []).append(
             # Callbacks are stored as Callable[[Event], None] because the dict
@@ -127,8 +130,8 @@ class EventBus:
 
     def unsubscribe(
         self,
-        event_type: type[_E],
-        callback: Callable[[_E], None],
+        event_type: type[EVENT],
+        callback: Callable[[EVENT], None],
     ) -> None:
         """Remove a callback for an event type if it is registered."""
         callbacks = self._subscribers.get(event_type)
