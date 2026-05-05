@@ -116,6 +116,7 @@ class PiCamera2(Camera):
         drc_strength: str,
         rotation: int,
         meter_mode: str,
+        lens_position: float,
     ) -> None:
         self._picam2 = picam2
         self._frame_rate = frame_rate
@@ -126,6 +127,7 @@ class PiCamera2(Camera):
         self._drc_strength = drc_strength
         self._rotation = rotation
         self._meter_mode = meter_mode
+        self._lens_position = lens_position
         self._annotation_text = ""
         self._is_recording = False
         self._encoder: Optional[H264Encoder] = None
@@ -168,6 +170,10 @@ class PiCamera2(Camera):
     def meter_mode(self) -> str:
         return self._meter_mode
 
+    @property
+    def lens_position(self) -> float:
+        return self._lens_position
+
     def _setup_picamera(self) -> None:
         video_config = self._picam2.create_video_configuration(
             main={"size": self._video_resolution},
@@ -197,7 +203,7 @@ class PiCamera2(Camera):
         return Transform()
 
     def _apply_controls(self) -> None:
-        """Apply exposure, AWB, metering and frame-rate limits."""
+        """Apply exposure, AWB, metering, frame-rate limits, and lens position."""
         ctrl: dict[str, object] = {}
 
         if self._exposure_mode in EXPOSURE_MODE_MAP:
@@ -229,6 +235,9 @@ class PiCamera2(Camera):
 
         frame_duration = int(1_000_000 / self._frame_rate)
         ctrl["FrameDurationLimits"] = (100, frame_duration)
+
+        ctrl["AfMode"] = controls.AfModeEnum.Manual
+        ctrl["LensPosition"] = self._lens_position
 
         self._picam2.set_controls(ctrl)
 
@@ -283,13 +292,9 @@ class PiCamera2(Camera):
 
         profile = H264_PROFILE_MAP.get(h264_profile, "high")
         if bitrate > 0:
-            self._encoder = H264Encoder(
-                bitrate=bitrate, profile=profile
-            )
+            self._encoder = H264Encoder(bitrate=bitrate, profile=profile)
         else:
-            self._encoder = H264Encoder(
-                qp=h264_quality, profile=profile
-            )
+            self._encoder = H264Encoder(qp=h264_quality, profile=profile)
 
         try:
             from picamera2.outputs import SplittableOutput
@@ -415,3 +420,9 @@ class PiCamera2(Camera):
             self._picam2.set_controls({"AeMeteringMode": METER_MODE_MAP[value]})
         else:
             logger.warning("Unknown metering mode '%s'", value)
+
+    def set_lens_position(self, value: float) -> None:
+        self._lens_position = value
+        self._picam2.set_controls(
+            {"AfMode": controls.AfModeEnum.Manual, "LensPosition": value}
+        )

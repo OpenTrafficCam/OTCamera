@@ -83,6 +83,11 @@ class Camera(ABC):
     def meter_mode(self) -> str:
         raise NotImplementedError
 
+    @property
+    @abstractmethod
+    def lens_position(self) -> float:
+        raise NotImplementedError
+
     @abstractmethod
     def start_recording(
         self,
@@ -179,4 +184,8 @@ class Camera(ABC):
 
     @abstractmethod
     def set_meter_mode(self, value: str) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    def set_lens_position(self, value: float) -> None:
         raise NotImplementedError

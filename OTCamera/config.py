@@ -42,6 +42,14 @@ class CameraConfig(BaseModel):
     rotation: int = 180
     awb_mode: StrFromYaml = "greyworld"
     meter_mode: StrFromYaml = "average"
+    lens_position: float = 10.0
+
+    @field_validator("lens_position")
+    @classmethod
+    def _validate_lens_position(cls, v: float) -> float:
+        if v < 0.0:
+            raise ValueError("lens_position must be >= 0.0 (0.0 = infinity)")
+        return v
 
     @field_validator("resolution", mode="before")
     @classmethod
