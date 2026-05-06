@@ -1,10 +1,10 @@
-art==6.5
 beautifulsoup4==4.13.4
+pydantic==2.12.5
 gpiozero==2.0.1
-opencv-python-headless>=4.5.0
+lgpio; platform_system == "Linux"
+opencv-python-headless==4.12.0.88
 picamera2>=0.3.12
-picamerax==24.3.21
 psutil==7.0.0
 PyYAML==6.0.2
 requests==2.32.3
-RPi.GPIO==0.7.1; platform_system != "Windows" and platform_system != "Darwin"
+smbus2

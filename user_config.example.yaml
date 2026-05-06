@@ -1,9 +1,7 @@
 ---
-debug_mode:
-  enable: false
+debug_mode: false
 
-relay_server:
-  enable: false
+relay_server: false
 
 recording:
   start_hour: 6
@@ -22,7 +20,6 @@ camera:
   rotation: 180
   awb_mode: greyworld
   meter_mode: average
-  type: legacy
 
 preview:
   path: ~/OTCamera/webfiles/preview.jpg
@@ -32,7 +29,7 @@ preview:
   url: http://your-server:8080/projects/0/sites/1/cameras/2/current_frame
 
 #server_upload:
-#  upload: false
+#  enable: false
 #  scheme: ftps
 #  host:
 #  port:
@@ -55,19 +52,17 @@ video:
 wifi:
   delay: 900
 
-leds:
-  enable: false
-
-buttons:
-  enable: false
-
 hardware:
-  # PCB hardware version: "v1" for original, "v2" for new revision
-  pcb_version: v1
+  pcb_version: v2
+  use_leds: false
+  use_buttons: false
+  use_adc: false
 
 msteams:
   enable: false
   url: null
+  max_failed_send_attempts: 2
 
 adc:
-  enable: false
+  threshold_external_power: 2.5
+  threshold_low_battery: 3.3
