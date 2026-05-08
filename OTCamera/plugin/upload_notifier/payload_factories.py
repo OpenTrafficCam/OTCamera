@@ -34,6 +34,9 @@ class RabbitMQS3UploadToOTCloudPayloadFactory(PayloadFactory):
                 site_id=self.ot_cloud_settings.site_id,
             ),
             timestamp=event.timestamp.isoformat(),
+            # TODO: original_filename and new_filename are currently the same for
+            # compatibility reasons (OTCloud expects both fields at the moment).
+            # Rename or remove fields once they are no longer needed.
             original_filename=filename,
             new_filename=filename,
             bucket_name=event.bucket,
