@@ -1,15 +1,24 @@
 [build-system]
-requires = ["hatchling", "hatch-requirements-txt"]
+requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
 name = "OTCamera"
-dynamic = ["dependencies", "version"]
+dynamic = ["version"]
 authors = [
     { name="OpenTrafficCam contributors", email="team@opentrafficcam.org" },
     { name="platomo GmbH", email="info@platomo.de" },
 ]
 description = "OTCamera is a core module of the OpenTrafficCam framework to record videos over multiple days with a custom camera system based on the Raspberry Pi Zero W."
+dependencies = [
+    "beautifulsoup4==4.13.4",
+    "pydantic==2.12.5",
+    "opencv-python-headless==4.12.0.88",
+    "psutil==7.0.0",
+    "PyYAML==6.0.2",
+    "requests==2.32.3",
+    "smbus2==0.6.1",
+]
 
 readme = "README.md"
 requires-python = ">=3.12"
@@ -18,10 +27,17 @@ license-files = ["LICENSE"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
     "Operating System :: OS Independent",
 ]
 keywords = ["OpenTrafficCam", "Mobile Camera"]
+
+# pi-specific dependencies.
+# picamera2 deliberately excluded, install via apt
+[project.optional-dependencies]
+pi = [
+    "gpiozero>=2.0.1",
+    "lgpio>=0.2.2.0",
+]
 
 [project.urls]
 Homepage = "https://opentrafficcam.org/"
@@ -29,9 +45,6 @@ Documentation = "https://opentrafficcam.org/overview/"
 Repository = "https://github.com/OpenTrafficCam/OTCamera"
 Issues = "https://github.com/OpenTrafficCam/OTCamera/issues"
 Changelog = "https://github.com/OpenTrafficCam/OTCamera/releases"
-
-[tool.hatch.metadata.hooks.requirements_txt]
-files = ["requirements.txt"]
 
 [tool.hatch.version]
 path = "OTCamera/version.py"
@@ -41,6 +54,15 @@ packages = ["OTCamera"]
 
 [tool.hatch.build]
 directory = "dist"
+
+[dependency-groups]
+dev = [
+    "mypy>=1.15.0",
+    "pre-commit>=4.2.0",
+    "pytest>=8.3.5",
+    "pytest-cov>=6.1.1",
+    "ruff>=0.15.12",
+]
 
 [tool.black]
 line-length = 88
@@ -65,3 +87,7 @@ ignore_errors = true
 [[tool.mypy.overrides]]
 module = "tests.html_updater_test"
 ignore_errors = true
+
+[tool.uv]
+default-groups = []
+exclude-newer = "3 days"
