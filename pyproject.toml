@@ -1,5 +1,5 @@
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling>=1.29,<2"]
 build-backend = "hatchling.build"
 
 [project]
@@ -11,13 +11,19 @@ authors = [
 ]
 description = "OTCamera is a core module of the OpenTrafficCam framework to record videos over multiple days with a custom camera system based on the Raspberry Pi Zero W."
 dependencies = [
-    "beautifulsoup4==4.13.4",
-    "pydantic==2.12.5",
-    "opencv-python-headless==4.12.0.88",
-    "psutil==7.0.0",
-    "PyYAML==6.0.2",
-    "requests==2.32.3",
-    "smbus2==0.6.1",
+    "beautifulsoup4>=4.13.4,<5",
+    "pydantic>=2.12.5,<3",
+    "psutil>=7.0.0,<8",
+    "PyYAML>=6.0.2,<7",
+    "requests>=2.32.3,<3",
+    # pi-specific dependencies, exclude other systems via markers.
+    # Currently pinned to specific versions that exists on piwheels.org
+    # TODO: Check if we have an advantage. If so, add piwheels as an index
+    # and point sources to this file.
+    "gpiozero==2.0.1; sys_platform == 'linux' and platform_machine in 'armv6l armv7l aarch64'",
+    "lgpio==0.2.2.0; sys_platform == 'linux' and platform_machine in 'armv6l armv7l aarch64'",
+    "opencv-python-headless==4.12.0.88; sys_platform == 'linux' and platform_machine in 'armv6l armv7l aarch64'",
+    "smbus2==0.6.1; sys_platform == 'linux' and platform_machine in 'armv6l armv7l aarch64'",
 ]
 
 readme = "README.md"
@@ -30,14 +36,6 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 keywords = ["OpenTrafficCam", "Mobile Camera"]
-
-# pi-specific dependencies.
-# picamera2 deliberately excluded, install via apt
-[project.optional-dependencies]
-pi = [
-    "gpiozero>=2.0.1",
-    "lgpio>=0.2.2.0",
-]
 
 [project.urls]
 Homepage = "https://opentrafficcam.org/"
@@ -57,10 +55,10 @@ directory = "dist"
 
 [dependency-groups]
 dev = [
-    "mypy>=1.15.0",
-    "pre-commit>=4.2.0",
-    "pytest>=8.3.5",
-    "pytest-cov>=6.1.1",
+    "mypy>=2.0,<3",
+    "pre-commit>=4.2.0,<5",
+    "pytest>=9.0,<10",
+    "pytest-cov>=7.1,<8",
     "ruff>=0.15.12",
 ]
 
