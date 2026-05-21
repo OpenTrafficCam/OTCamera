@@ -8,4 +8,7 @@ opencv-python==4.11.0.86
 pre-commit==4.2.0
 pytest==8.3.5
 pytest-cov==6.1.1
-requests== 2.32.3
+types-boto3==1.42.85
+types-psutil==7.0.0.20251116
+types-PyYAML==6.0.2
+types-requests==2.32.4.20250611
