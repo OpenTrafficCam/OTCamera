@@ -20,10 +20,10 @@ dependencies = [
     # Currently pinned to specific versions that exists on piwheels.org
     # TODO: Check if we have an advantage. If so, add piwheels as an index
     # and point sources to this file.
-    "gpiozero==2.0.1; sys_platform == 'linux' and platform_machine in 'armv6l armv7l aarch64'",
-    "lgpio==0.2.2.0; sys_platform == 'linux' and platform_machine in 'armv6l armv7l aarch64'",
-    "opencv-python-headless==4.12.0.88; sys_platform == 'linux' and platform_machine in 'armv6l armv7l aarch64'",
-    "smbus2==0.6.1; sys_platform == 'linux' and platform_machine in 'armv6l armv7l aarch64'",
+    "gpiozero==2.0.1; sys_platform == 'linux' and platform_machine in 'armv6l armv7l'",
+    "lgpio==0.2.2.0; sys_platform == 'linux' and platform_machine in 'armv6l armv7l'",
+    "opencv-python-headless==4.12.0.88; sys_platform == 'linux' and platform_machine in 'armv6l armv7l'",
+    "smbus2==0.6.1; sys_platform == 'linux' and platform_machine in 'armv6l armv7l'",
 ]
 
 readme = "README.md"

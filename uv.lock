@@ -179,7 +179,7 @@ name = "colorzero"
 version = "2.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "setuptools", marker = "platform_machine in 'armv6l armv7l aarch64' and sys_platform == 'linux'" },
+    { name = "setuptools", marker = "platform_machine in 'armv6l armv7l' or platform_machine not in 'armv6l armv7l aarch64' or sys_platform != 'linux'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/b3/ca/688824a06e8c4d04c7d2fd2af2d8da27bed51af20ee5f094154e1d680334/colorzero-2.0.tar.gz", hash = "sha256:e7d5a5c26cd0dc37b164ebefc609f388de24f8593b659191e12d85f8f9d5eb58", size = 25382, upload-time = "2021-03-15T23:42:23.261Z" }
 wheels = [
@@ -293,7 +293,7 @@ name = "gpiozero"
 version = "2.0.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "colorzero", marker = "platform_machine in 'armv6l armv7l aarch64' and sys_platform == 'linux'" },
+    { name = "colorzero", marker = "platform_machine in 'armv6l armv7l' or platform_machine not in 'armv6l armv7l aarch64' or sys_platform != 'linux'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/e4/47/334b8db8a981eca9a0fb1e7e48e1997a5eaa8f40bb31c504299dcca0e6ff/gpiozero-2.0.1.tar.gz", hash = "sha256:d4ea1952689ec7e331f9d4ebc9adb15f1d01c2c9dcfabb72e752c9869ab7e97e", size = 136176, upload-time = "2024-02-15T11:07:02.919Z" }
 wheels = [
@@ -485,7 +485,7 @@ name = "opencv-python-headless"
 version = "4.12.0.88"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "numpy", marker = "platform_machine in 'armv6l armv7l aarch64' and sys_platform == 'linux'" },
+    { name = "numpy", marker = "platform_machine in 'armv6l armv7l' or platform_machine not in 'armv6l armv7l aarch64' or sys_platform != 'linux'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/a4/63/6861102ec149c3cd298f4d1ea7ce9d6adbc7529221606ff1dab991a19adb/opencv-python-headless-4.12.0.88.tar.gz", hash = "sha256:cfdc017ddf2e59b6c2f53bc12d74b6b0be7ded4ec59083ea70763921af2b6c09", size = 95379675, upload-time = "2025-07-07T09:21:06.815Z" }
 wheels = [
@@ -498,14 +498,14 @@ name = "otcamera"
 source = { editable = "." }
 dependencies = [
     { name = "beautifulsoup4" },
-    { name = "gpiozero", marker = "platform_machine in 'armv6l armv7l aarch64' and sys_platform == 'linux'" },
-    { name = "lgpio", marker = "platform_machine in 'armv6l armv7l aarch64' and sys_platform == 'linux'" },
-    { name = "opencv-python-headless", marker = "platform_machine in 'armv6l armv7l aarch64' and sys_platform == 'linux'" },
+    { name = "gpiozero", marker = "platform_machine in 'armv6l armv7l' and sys_platform == 'linux'" },
+    { name = "lgpio", marker = "platform_machine in 'armv6l armv7l' and sys_platform == 'linux'" },
+    { name = "opencv-python-headless", marker = "platform_machine in 'armv6l armv7l' and sys_platform == 'linux'" },
     { name = "psutil" },
     { name = "pydantic" },
     { name = "pyyaml" },
     { name = "requests" },
-    { name = "smbus2", marker = "platform_machine in 'armv6l armv7l aarch64' and sys_platform == 'linux'" },
+    { name = "smbus2", marker = "platform_machine in 'armv6l armv7l' and sys_platform == 'linux'" },
 ]
 
 [package.dev-dependencies]
@@ -520,14 +520,14 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "beautifulsoup4", specifier = ">=4.13.4,<5" },
-    { name = "gpiozero", marker = "platform_machine in 'armv6l armv7l aarch64' and sys_platform == 'linux'", specifier = "==2.0.1" },
-    { name = "lgpio", marker = "platform_machine in 'armv6l armv7l aarch64' and sys_platform == 'linux'", specifier = "==0.2.2.0" },
-    { name = "opencv-python-headless", marker = "platform_machine in 'armv6l armv7l aarch64' and sys_platform == 'linux'", specifier = "==4.12.0.88" },
+    { name = "gpiozero", marker = "platform_machine in 'armv6l armv7l' and sys_platform == 'linux'", specifier = "==2.0.1" },
+    { name = "lgpio", marker = "platform_machine in 'armv6l armv7l' and sys_platform == 'linux'", specifier = "==0.2.2.0" },
+    { name = "opencv-python-headless", marker = "platform_machine in 'armv6l armv7l' and sys_platform == 'linux'", specifier = "==4.12.0.88" },
     { name = "psutil", specifier = ">=7.0.0,<8" },
     { name = "pydantic", specifier = ">=2.12.5,<3" },
     { name = "pyyaml", specifier = ">=6.0.2,<7" },
     { name = "requests", specifier = ">=2.32.3,<3" },
-    { name = "smbus2", marker = "platform_machine in 'armv6l armv7l aarch64' and sys_platform == 'linux'", specifier = "==0.6.1" },
+    { name = "smbus2", marker = "platform_machine in 'armv6l armv7l' and sys_platform == 'linux'", specifier = "==0.6.1" },
 ]
 
 [package.metadata.requires-dev]
