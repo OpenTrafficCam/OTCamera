@@ -60,7 +60,7 @@ dev = [
     "pytest-cov>=7.1,<8",
     "ruff>=0.15.12",
     "types-boto3==1.42.85",
-    "types-psutil==7.0.0",
+    "types-psutil==7.0.0.*",
     "types-PyYAML==6.0.2",
     "types-requests==2.32.3",
 ]
