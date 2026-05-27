@@ -16,7 +16,7 @@ dependencies = [
     "pydantic==2.12.5",
     "psutil==7.0.0",
     "PyYAML==6.0.2",
-    "requests>=2.32.3",
+    "requests>=2.32.4",
 
     # pi-specific dependencies, exclude other systems via markers.
     "gpiozero==2.0.1; sys_platform == 'linux' and platform_machine in 'armv6l armv7l'",
@@ -62,7 +62,7 @@ dev = [
     "types-boto3==1.42.85",
     "types-psutil==7.0.0.*",
     "types-PyYAML==6.0.2",
-    "types-requests==2.32.3",
+    "types-requests==2.32.4.*",
 ]
 
 [tool.black]
