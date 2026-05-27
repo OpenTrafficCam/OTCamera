@@ -79,7 +79,9 @@ module = [
     "jmespath",
     "picamera2",
     "picamera2.encoders",
-    "picamera2.outputs"
+    "picamera2.outputs",
+    "smbus2",
+    "cv2",
 ]  # explicitly empty — populated only via deliberate user decisions
 ignore_missing_imports = true # needs to set to true to take effect on the whitelisted modules
 
