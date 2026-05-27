@@ -15,9 +15,13 @@ class UploadController(ABC):
     """Upload completed recording segments when they are split."""
 
     def __init__(self, event_bus: EventBus, upload: Upload) -> None:
-        """Initialize the a new `UploadController` with the given Upload implementation.
+        """Initialize the a new `UploadController` with the given `Upload` implementation.
         
-        Subscribes to the RecordingSplit event on the EventBus.
+        Subscribes to the `RecordingSplit` event on the `EventBus`.
+
+        Args:
+            event_bus (EventBus): The event bus to subscribe to.
+            upload (Upload): The upload backend implementation.
         """
         self._upload = upload
         self._event_bus = event_bus
