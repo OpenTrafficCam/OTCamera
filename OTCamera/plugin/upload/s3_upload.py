@@ -25,10 +25,10 @@ TRANSFER_CONFIG = TransferConfig(
 class S3Upload(Upload):
     """Upload files to an S3-compatible object storage.
 
-    Thread-safe: each call to ``upload`` is independent and uses no shared
+    Thread-safe: each call to `upload` is independent and uses no shared
     mutable state beyond the boto3 client, which is itself thread-safe for
-    concurrent ``upload_file`` calls.  Internal boto3 multipart splitting and
-    its own threading are disabled via ``TRANSFER_CONFIG`` so that concurrency
+    concurrent `upload_file` calls.  Internal boto3 multipart splitting and
+    its own threading are disabled via `TRANSFER_CONFIG` so that concurrency
     is controlled entirely by the caller.
     """
 
@@ -38,7 +38,8 @@ class S3Upload(Upload):
         bucket_name: str,
         key_prefix: str | None = None,
     ):
-        """
+        """Create a new `S3Upload` instance.
+
         Args:
             s3client: A boto3 S3 client instance.
             bucket_name: Name of the target S3 bucket.
@@ -73,7 +74,6 @@ class S3Upload(Upload):
 
     def is_available(self) -> bool:
         """Perform a quick check to confirm that we are ready to upload files."""
-
         key = ".preflight_check"
 
         try:
