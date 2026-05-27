@@ -12,6 +12,7 @@ authors = [
 description = "OTCamera is a core module of the OpenTrafficCam framework to record videos over multiple days with a custom camera system based on the Raspberry Pi Zero W."
 dependencies = [
     "beautifulsoup4==4.13.4",
+    "boto3==1.42.85",
     "pydantic==2.12.5",
     "psutil==7.0.0",
     "PyYAML==6.0.2",
