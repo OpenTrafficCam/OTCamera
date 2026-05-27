@@ -15,6 +15,10 @@ class UploadController(ABC):
     """Upload completed recording segments when they are split."""
 
     def __init__(self, event_bus: EventBus, upload: Upload) -> None:
+        """Initialize the a new `UploadController` with the given Upload implementation.
+        
+        Subscribes to the RecordingSplit event on the EventBus.
+        """
         self._upload = upload
         self._event_bus = event_bus
         event_bus.subscribe(RecordingSplit, self._on_recording_split)
@@ -24,14 +28,23 @@ class UploadController(ABC):
     def _on_recording_split(self, event: RecordingSplit) -> None:
         """Handle a completed recording segment.
 
-        Implementations must upload the file at ``event.filename`` and publish a
-        ``FileUploaded`` event on success. On failure the error should be logged
+        Implementations must upload the file at `event.filename` and publish a
+        `FileUploaded` event on success. On failure the error should be logged
         without propagating.
+
+        Args:
+            event (RecordingSplit): The event triggering the upload. Contains the
+                path to the file to be uploaded.
         """
         ...
 
 
 class BlockingUploadController(UploadController):
+    """An `UploadController` that blocks the thread it is running in.
+    
+    Only for testing purposes, should not be used in production.
+    """
+
 
     def _on_recording_split(self, event: RecordingSplit) -> None:
         """Upload the completed recording segment."""
@@ -47,6 +60,12 @@ class ThreadedUploadController(UploadController):
     """Upload files sequentially via a single background worker thread."""
 
     def __init__(self, event_bus: EventBus, upload: Upload):
+        """Construct a new ThreadedUploadController instance.
+
+        Args:
+            event_bus (EventBus): The global event bus.
+            upload (Upload): The upload backend to use.
+        """
         super().__init__(event_bus=event_bus, upload=upload)
         self._queue: Queue[str] = Queue()
         self._thread = Thread(target=self._worker, daemon=True)
@@ -78,7 +97,8 @@ class ThreadedUploadController(UploadController):
     def close(self, wait: bool = False) -> None:
         """Stop accepting new uploads and shut down the worker.
 
-        If ``wait`` is True, blocks until all queued uploads finish.
+        Args:
+          wait (bool): If True, blocks until all queued uploads finish.
         """
         # Shutdown prevents any further .put() actions.
         # Draining the queue with .get() is still allowed (immediate=False).
