@@ -33,7 +33,7 @@ repos:
     hooks:
       - id: mypy
         name: Run mypy
-        entry: venv/bin/mypy OTCamera tests
+        entry: mypy OTCamera tests
         language: system
         types: [python]
         always_run: true
