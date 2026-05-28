@@ -15,8 +15,8 @@ class UploadController(ABC):
     """Upload completed recording segments when they are split."""
 
     def __init__(self, event_bus: EventBus, upload: Upload) -> None:
-        """Initialize the a new `UploadController` with the given `Upload` implementation.
-        
+        """Initialize new `UploadController` with the given `Upload` implementation.
+
         Subscribes to the `RecordingSplit` event on the `EventBus`.
 
         Args:
@@ -45,10 +45,9 @@ class UploadController(ABC):
 
 class BlockingUploadController(UploadController):
     """An `UploadController` that blocks the thread it is running in.
-    
+
     Only for testing purposes, should not be used in production.
     """
-
 
     def _on_recording_split(self, event: RecordingSplit) -> None:
         """Upload the completed recording segment."""
@@ -102,7 +101,7 @@ class ThreadedUploadController(UploadController):
         """Stop accepting new uploads and shut down the worker.
 
         Args:
-          wait (bool): If True, blocks until all queued uploads finish.
+            wait (bool): If True, blocks until all queued uploads finish.
         """
         # Shutdown prevents any further .put() actions.
         # Draining the queue with .get() is still allowed (immediate=False).

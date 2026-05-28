@@ -6,7 +6,7 @@ logger = logging.getLogger(__name__)
 
 def delete_file(path: str) -> None:
     """Delete a file after successful upload.
-    
+
     Args:
         path (str): The file to be deleted.
     """

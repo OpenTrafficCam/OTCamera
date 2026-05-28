@@ -27,7 +27,7 @@ class FailingUpload(Upload):
 
 
 class TestBlockingUploadController:
-    def test_blocking_controller_publishes_file_uploaded_on_success() -> None:
+    def test_blocking_controller_publishes_file_uploaded_on_success(self) -> None:
         bus = EventBus()
         received: list[FileUploaded] = []
         bus.subscribe(FileUploaded, received.append)
@@ -37,8 +37,9 @@ class TestBlockingUploadController:
 
         assert received == [FileUploaded(filename="/tmp/video.h264")]
 
-
-    def test_blocking_controller_does_not_publish_file_uploaded_on_failure() -> None:
+    def test_blocking_controller_does_not_publish_file_uploaded_on_failure(
+        self,
+    ) -> None:
         bus = EventBus()
         received: list[FileUploaded] = []
         bus.subscribe(FileUploaded, received.append)
@@ -50,7 +51,7 @@ class TestBlockingUploadController:
 
 
 class TestThreadedUploadController:
-    def test_threaded_controller_publishes_file_uploaded_on_success() -> None:
+    def test_threaded_controller_publishes_file_uploaded_on_success(self) -> None:
         bus = EventBus()
         received: list[FileUploaded] = []
         bus.subscribe(FileUploaded, received.append)
@@ -62,8 +63,9 @@ class TestThreadedUploadController:
 
         assert received == [FileUploaded(filename="/tmp/video.h264")]
 
-
-    def test_threaded_controller_does_not_publish_file_uploaded_on_failure() -> None:
+    def test_threaded_controller_does_not_publish_file_uploaded_on_failure(
+        self,
+    ) -> None:
         bus = EventBus()
         received: list[FileUploaded] = []
         bus.subscribe(FileUploaded, received.append)
