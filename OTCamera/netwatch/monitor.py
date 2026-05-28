@@ -25,7 +25,7 @@ class NetworkProbe(ABC):
     @abstractmethod
     def is_online(self) -> bool:
         """Send a network probe and assess the network status.
-        
+
         Returns:
             a boolean indicating whether our network connection can be considered
             online (True) or offline (False)
@@ -46,11 +46,17 @@ class HttpNetworkProbe(NetworkProbe):
         for url in self.urls:
             logging.debug("Sending network probe to %s", url)
             try:
-                requests.head(url, timeout=5, allow_redirects=False)
+                response = requests.head(url, timeout=5, allow_redirects=False)
             except RequestException:
                 logging.debug("Sending network probe to %s failed!", url)
                 continue
 
+            # Any HTTP response from a known domain confirms IP-level connectivity,
+            # regardless of status code. Log non-2xx for visibility but stay online.
+            if not response.ok:
+                logging.warning(
+                    "Network probe to %s returned status %d", url, response.status_code
+                )
             return True
         return False
 
@@ -69,8 +75,8 @@ class NetworkStatusWriter:
 
     def write(self, update: StatusUpdate) -> None:
         """Persist a network connection StatusUpdate.
-        
-        
+
+
         Args:
             update: The StatusUpdate instance to write to a file.
         """
@@ -78,7 +84,7 @@ class NetworkStatusWriter:
         with open(self.out_file, "w") as f:
             json.dump(payload, f)
 
-        logging.info("Wrote network status to %s" % str(self.out_file))
+        logging.info("Wrote network status to %s", self.out_file)
 
 
 class NetworkMonitor(Thread):
@@ -105,7 +111,7 @@ class NetworkMonitor(Thread):
         self.success_streak = 0
         self.fail_streak = 0
 
-        self.subscribers = set()
+        self.subscribers: set[Callable[[StatusUpdate], None]] = set()
 
     @property
     def status(self) -> NetworkStatus:
@@ -144,17 +150,25 @@ class NetworkMonitor(Thread):
                     logging.info(
                         "Updated network status to %s", self._current_status.name
                     )
-                    update = StatusUpdate(status=self._current_status, last_changed_at=self._last_changed_at)
+                    update = StatusUpdate(
+                        status=self._current_status,
+                        last_changed_at=self._last_changed_at,
+                    )
 
             if update is not None:
-                for subscriber in self.subscribers:
-                    subscriber(update)
+                for subscriber in list(self.subscribers):
+                    try:
+                        subscriber(update)
+                    except Exception:
+                        logging.exception(
+                            "Subscriber %s raised an exception", subscriber
+                        )
 
             sleep(self.wait)
 
     def subscribe(self, subscriber: Callable[[StatusUpdate], None]) -> None:
         """Register a subscriber.
-        
+
         Args:
             subscriber: A callable accepting a StatusUpdate that will be
                 registered as a subscriber.
