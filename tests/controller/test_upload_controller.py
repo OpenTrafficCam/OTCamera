@@ -26,48 +26,50 @@ class FailingUpload(Upload):
         return True
 
 
-def test_blocking_controller_publishes_file_uploaded_on_success() -> None:
-    bus = EventBus()
-    received: list[FileUploaded] = []
-    bus.subscribe(FileUploaded, received.append)
-    BlockingUploadController(bus, FakeUpload())
+class TestBlockingUploadController:
+    def test_blocking_controller_publishes_file_uploaded_on_success() -> None:
+        bus = EventBus()
+        received: list[FileUploaded] = []
+        bus.subscribe(FileUploaded, received.append)
+        BlockingUploadController(bus, FakeUpload())
 
-    bus.publish(RecordingSplit(filename="/tmp/video.h264"))
+        bus.publish(RecordingSplit(filename="/tmp/video.h264"))
 
-    assert received == [FileUploaded(filename="/tmp/video.h264")]
-
-
-def test_blocking_controller_does_not_publish_file_uploaded_on_failure() -> None:
-    bus = EventBus()
-    received: list[FileUploaded] = []
-    bus.subscribe(FileUploaded, received.append)
-    BlockingUploadController(bus, FailingUpload())
-
-    bus.publish(RecordingSplit(filename="/tmp/video.h264"))
-
-    assert received == []
+        assert received == [FileUploaded(filename="/tmp/video.h264")]
 
 
-def test_threaded_controller_publishes_file_uploaded_on_success() -> None:
-    bus = EventBus()
-    received: list[FileUploaded] = []
-    bus.subscribe(FileUploaded, received.append)
-    controller = ThreadedUploadController(bus, FakeUpload())
+    def test_blocking_controller_does_not_publish_file_uploaded_on_failure() -> None:
+        bus = EventBus()
+        received: list[FileUploaded] = []
+        bus.subscribe(FileUploaded, received.append)
+        BlockingUploadController(bus, FailingUpload())
 
-    bus.publish(RecordingSplit(filename="/tmp/video.h264"))
-    controller.close(wait=True)
-    bus.process_pending()
+        bus.publish(RecordingSplit(filename="/tmp/video.h264"))
 
-    assert received == [FileUploaded(filename="/tmp/video.h264")]
+        assert received == []
 
 
-def test_threaded_controller_does_not_publish_file_uploaded_on_failure() -> None:
-    bus = EventBus()
-    received: list[FileUploaded] = []
-    bus.subscribe(FileUploaded, received.append)
-    controller = ThreadedUploadController(bus, FailingUpload())
+class TestThreadedUploadController:
+    def test_threaded_controller_publishes_file_uploaded_on_success() -> None:
+        bus = EventBus()
+        received: list[FileUploaded] = []
+        bus.subscribe(FileUploaded, received.append)
+        controller = ThreadedUploadController(bus, FakeUpload())
 
-    bus.publish(RecordingSplit(filename="/tmp/video.h264"))
-    controller.close(wait=True)
+        bus.publish(RecordingSplit(filename="/tmp/video.h264"))
+        controller.close(wait=True)
+        bus.process_pending()
 
-    assert received == []
+        assert received == [FileUploaded(filename="/tmp/video.h264")]
+
+
+    def test_threaded_controller_does_not_publish_file_uploaded_on_failure() -> None:
+        bus = EventBus()
+        received: list[FileUploaded] = []
+        bus.subscribe(FileUploaded, received.append)
+        controller = ThreadedUploadController(bus, FailingUpload())
+
+        bus.publish(RecordingSplit(filename="/tmp/video.h264"))
+        controller.close(wait=True)
+
+        assert received == []
