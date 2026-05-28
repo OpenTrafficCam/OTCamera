@@ -92,3 +92,7 @@ select = ["D"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
+
+# Exclude tests/ from being docstyle-linted 
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["D"]
