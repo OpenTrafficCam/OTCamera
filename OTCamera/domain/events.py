@@ -92,6 +92,13 @@ class ShutdownRequested:
     source: str
 
 
+@dataclass(frozen=True)
+class FileUploaded:
+    """A file was successfully uploaded to remote storage."""
+
+    filename: str
+
+
 class EventBus:
     """Hybrid in-process event bus with synchronous and queued dispatch."""
 

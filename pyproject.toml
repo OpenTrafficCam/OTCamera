@@ -12,7 +12,7 @@ authors = [
 description = "OTCamera is a core module of the OpenTrafficCam framework to record videos over multiple days with a custom camera system based on the Raspberry Pi Zero W."
 
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.13"
 license = "GPL-3.0-only"
 license-files = ["LICENSE"]
 classifiers = [
@@ -52,11 +52,16 @@ profile = "black"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+markers = [
+    "integration: marks tests that require external services (e.g. a running S3 server)",
+]
 
 [tool.mypy]
-ignore_missing_imports = true
-ignore_missing_imports_per_module = true
+ignore_missing_imports = false
 disallow_untyped_defs = true
+exclude = [
+    "^venv/",
+]
 
 [[tool.mypy.overrides]]
 module = "OTCamera.html_updater"
@@ -65,3 +70,29 @@ ignore_errors = true
 [[tool.mypy.overrides]]
 module = "tests.html_updater_test"
 ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = [
+    "libcamera",
+    "gpiozero",
+    "gpiozero.pins.lgpio",
+    "jmespath",
+    "picamera2",
+    "picamera2.encoders",
+    "picamera2.outputs",
+    "smbus2",
+    "cv2",
+]  # explicitly empty — populated only via deliberate user decisions
+ignore_missing_imports = true # needs to set to true to take effect on the whitelisted modules
+
+[tool.ruff.lint]
+# Enable all `pydocstyle` rules, limiting to those that adhere to the
+# Google convention via `convention = "google"`, below.
+select = ["D"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+# Exclude tests/ from being docstyle-linted 
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["D"]

@@ -4,7 +4,8 @@ import logging
 from ftplib import FTP_TLS
 from pathlib import Path
 
-from OTCamera.domain.upload import Upload, UploadError
+from OTCamera.domain.upload import Upload
+from OTCamera.plugin.upload.exceptions import FileUploadError
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +44,7 @@ class FtpUpload(Upload):
             with open(source, "rb") as file_handle:
                 client.storbinary(f"STOR {destination.name}", file_handle)
         except Exception as exc:
-            raise UploadError(f"Upload failed for {source.name}: {exc}") from exc
+            raise FileUploadError(f"Upload failed for {source.name}: {exc}") from exc
         finally:
             client.close()
 
