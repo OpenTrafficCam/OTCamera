@@ -1,3 +1,4 @@
+import argparse
 import logging
 from pathlib import Path
 
@@ -6,30 +7,70 @@ from OTCamera.netwatch.monitor import (
     NetworkMonitor,
     NetworkStatusWriter,
 )
-from OTCamera.netwatch.reconnect import Escalation, ReconnectionWorker
+
+
+def _parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Monitor network connectivity and write status to a file."
+    )
+    parser.add_argument(
+        "--urls",
+        nargs="+",
+        required=True,
+        metavar="URL",
+        help="One or more URLs to probe.",
+    )
+    parser.add_argument(
+        "--timeout",
+        type=int,
+        default=None,
+        metavar="SECONDS",
+        help="HTTP request timeout in seconds.",
+    )
+    parser.add_argument(
+        "--wait",
+        type=int,
+        required=True,
+        metavar="SECONDS",
+        help="Seconds to wait between probes.",
+    )
+    parser.add_argument(
+        "--success-threshold",
+        type=int,
+        default=3,
+        metavar="N",
+        help="Consecutive successes before ONLINE (default: 3).",
+    )
+    parser.add_argument(
+        "--fail-threshold",
+        type=int,
+        default=5,
+        metavar="N",
+        help="Consecutive failures before OFFLINE (default: 5).",
+    )
+    parser.add_argument(
+        "--out-file",
+        type=Path,
+        required=True,
+        metavar="PATH",
+        help="File path for the JSON status output.",
+    )
+    return parser.parse_args()
 
 
 def main() -> None:
+    args = _parse_args()
     logging.basicConfig(level=logging.DEBUG)
 
-    writer = NetworkStatusWriter(Path("/tmp/network.json"))
-
-    escalations = [
-        Escalation(
-            after=15, action=lambda: print("Boy, that escalated with a bit of a delay!")
-        ),
-        Escalation(after=5, action=lambda: print("Boy, that escalated quickly!")),
-    ]
-    reconnect_worker = ReconnectionWorker(escalations)
+    writer = NetworkStatusWriter(args.out_file)
 
     monitor = NetworkMonitor(
-        probe=HttpNetworkProbe(urls=("https://platomo.de",)), wait=5, fail_threshold=2
+        probe=HttpNetworkProbe(urls=args.urls, timeout=args.timeout),
+        wait=args.wait,
+        success_threshold=args.success_threshold,
+        fail_threshold=args.fail_threshold,
     )
     monitor.subscribe(writer.write)
-    monitor.subscribe(reconnect_worker.process_update)
-
-    reconnect_worker.start()
-
     monitor.start()
     monitor.join()
 
