@@ -14,15 +14,6 @@ repos:
       - id: requirements-txt-fixer
       - id: check-executables-have-shebangs
       - id: detect-private-key
-  - repo: local
-    hooks:
-      - id: update-type-stubs
-        name: Check for Type Stubs and Update Config
-        entry: ./update_precommit.py
-        language: system
-        files: ^requirements.*\.txt$
-        stages:
-          - pre-commit
   - repo: https://github.com/PyCQA/flake8
     rev: 7.2.0
     hooks:
@@ -38,36 +29,16 @@ repos:
     rev: 25.1.0
     hooks:
       - id: black
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.15.0
+  - repo: local
     hooks:
       - id: mypy
-        entry: mypy OTCamera tests --config-file=pyproject.toml
-        additional_dependencies:
-          - black==25.1.0
-          - gpiozero==2.0.1
-          - hatch-requirements-txt==0.4.1
-          - isort==6.0.1
-          - lgpio; platform_system == "Linux"
-          - mypy==1.15.0
-          - opencv-python-headless==4.12.0.88
-          - picamera2==0.3.12; platform_system == "Linux"
-          - pre-commit==4.2.0
-          - pydantic==2.12.5
-          - pytest-cov==6.1.1
-          - pytest==8.3.5
-          - smbus2
-          - types-PyYAML
-          - types-beautifulsoup4
-          - types-boto3
-          - types-flake8
-          - types-opencv-python
-          - types-pika
-          - types-psutil
-          - types-requests
-          - types-requests
+        name: Run mypy
+        entry: mypy OTCamera tests
+        language: system
+        types: [python]
         always_run: true
         pass_filenames: false
+        args: [--config-file, pyproject.toml]
   - repo: https://github.com/adrienverge/yamllint.git
     rev: v1.37.1
     hooks:

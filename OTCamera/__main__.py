@@ -394,7 +394,7 @@ def main(config: Config | None = None, config_file: str = "~/user_config.yaml") 
         upload = UploadProvider.provide(config)
 
         if config.delete_after_upload:
-            event_bus.subscribe(FileUploaded, lambda e: delete_file(e.local_path))
+            event_bus.subscribe(FileUploaded, lambda e: delete_file(str(e.local_path)))
 
         camera_controller = CameraController(camera, config, event_bus, board.leds)
         power_controller = PowerController(

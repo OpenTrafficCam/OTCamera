@@ -50,6 +50,9 @@ class Upload(ABC):
         I/O-level timeouts (e.g. socket or request timeouts) so that this
         method cannot block indefinitely. The caller runs uploads on a thread
         and has no reliable way to interrupt a hung thread from the outside.
+
+        Args:
+            file_path (Path): File path of the file that should be uploaded.
         """
         raise NotImplementedError
 

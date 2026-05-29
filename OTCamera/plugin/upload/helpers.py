@@ -1,15 +1,17 @@
 import logging
-import os
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
 
-def delete_file(path: Path) -> None:
-    """Delete a file after successful upload."""
+def delete_file(path: str) -> None:
+    """Delete a file after successful upload.
 
+    Args:
+        path (str): The file to be deleted.
+    """
     try:
-        os.remove(path)
+        Path(path).unlink()
     except FileNotFoundError as e:
         logger.error("File not found: %s", path)
         raise e

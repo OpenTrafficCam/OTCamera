@@ -31,14 +31,17 @@ class RecordingStopped(Event):
 
 @dataclass(frozen=True)
 class RecordingSplit(Event):
-    """A recording interval has completed."""
+    """The current recording was split and a new segment file was started."""
 
     filename: str
 
 
 @dataclass(frozen=True)
 class IntervalFinished(Event):
-    """Reserved for future calendar-based scheduling."""
+    """A scheduled recording interval has ended.
+
+    Reserved for future calendar-based scheduling; not currently dispatched.
+    """
 
 
 @dataclass(frozen=True)
@@ -127,13 +130,26 @@ class EventBus:
     """Hybrid in-process event bus with synchronous and queued dispatch."""
 
     def __init__(self) -> None:
+        """Create a new EventBus."""
         self._subscribers: dict[type[Event], list[Callable[[Event], None]]] = {}
         self._queue: "queue.Queue[Any]" = queue.Queue()
 
     def subscribe(
         self, event_type: type[EVENT], callback: Callable[[EVENT], None]
     ) -> None:
-        """Register a callback for an event type."""
+        """Register a callback for an event type.
+
+        Subscribing to a parent event type will also receive events of any
+        subclass (but not vice-versa — a subtype subscriber does not fire for
+        the bare parent type).
+
+        The order in which subscribers are called is independent from inheritance.
+        It solely depends on the order of the `subscribe()` method calls.
+
+        Args:
+            event_type: The event type that will be subscribed to.
+            callback: The callback that will be executed when the event fires.
+        """
         self._subscribers.setdefault(event_type, []).append(
             # Callbacks are stored as Callable[[Event], None] because the dict
             # is keyed by event type and _dispatch only calls a callback with
@@ -147,7 +163,12 @@ class EventBus:
         event_type: type[EVENT],
         callback: Callable[[EVENT], None],
     ) -> None:
-        """Remove a callback for an event type if it is registered."""
+        """Remove a callback for an event type if it is registered.
+
+        Args:
+            event_type: The event from which to unsubscribe.
+            callback: The callback to remove.
+        """
         callbacks = self._subscribers.get(event_type)
         if callbacks is None:
             return
@@ -161,15 +182,35 @@ class EventBus:
             del self._subscribers[event_type]
 
     def publish(self, event: Event) -> None:
-        """Dispatch an event synchronously to all subscribers."""
+        """Dispatch an event synchronously to all subscribers.
+
+        Callbacks will be executed on the same thread as the
+        **publisher**.
+
+        Args:
+            event (Event): The event to dispatch to subscribers.
+        """
         self._dispatch(event)
 
     def enqueue(self, event: Event) -> None:
-        """Enqueue an event for later dispatch on the calling thread."""
+        """Enqueue an event for later dispatch on the event-bus thread.
+
+        The event will be put on a queue, which in turn is advanced
+        when the `process_pending()` method is called.
+        This ensures that the subscriber callbacks are called on the
+        same thread that the event bus is running on, not the calling thread.
+
+        Args:
+            event (Event): The event to dispatch to subscribers.
+        """
         self._queue.put(event)
 
     def process_pending(self) -> None:
-        """Dispatch all currently queued events."""
+        """Dispatch all currently queued events.
+
+        Subscriber callback methods will run on the same thread
+        as the event bus.
+        """
         while True:
             try:
                 event = self._queue.get_nowait()
@@ -187,7 +228,11 @@ class EventBus:
                 return
 
     def _dispatch(self, event: Event) -> None:
-        """Dispatch an event and log callback failures without propagating."""
+        """Dispatch an event and log callback failures without propagating.
+
+        Args:
+            event (Event): The event to dispatch.
+        """
         for event_type, callbacks in self._subscribers.items():
             if not isinstance(event, event_type):
                 continue
