@@ -187,7 +187,7 @@ class TestNetworkMonitorStreaks:
 
         _run_monitor(monitor)
 
-        assert monitor.fail_streak == 0
+        assert monitor._fail_streak == 0
 
     def test_resets_success_streak_on_failure(self) -> None:
         probe = MagicMock()
@@ -196,7 +196,7 @@ class TestNetworkMonitorStreaks:
 
         _run_monitor(monitor)
 
-        assert monitor.success_streak == 0
+        assert monitor._success_streak == 0
 
     def test_interrupted_streak_does_not_trigger_transition(self) -> None:
         probe = MagicMock()

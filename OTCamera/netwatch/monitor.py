@@ -12,6 +12,8 @@ from typing import Sequence
 import requests
 from requests.exceptions import RequestException
 
+logger = logging.getLogger(__name__)
+
 
 class NetworkStatus(Enum):
     """Indicates the current status of a network connection"""
@@ -36,17 +38,28 @@ class NetworkProbe(ABC):
 class HttpNetworkProbe(NetworkProbe):
     """Get the current network status based on a HTTP request to one or more URLs."""
 
-    def __init__(self, urls: Sequence[str]):
+    def __init__(self, urls: Sequence[str], timeout: int | None = None):
+        """Create a new HttpNetworkProbe.
+
+        Args:
+            urls (Sequence[str]): The urls that will be probed in sequence to determine
+                the state of the network connection. Cannot be empty.
+            timeout (int | None): Optional timeout for outgoing http requests.
+                If the timeout is exceeded, the probe counts as failed.
+        """
         if len(urls) < 1:
             raise ValueError("HttpNetworkProbe requires at least one URL to check.")
 
         self.urls = urls
+        self.timeout = timeout
 
     def is_online(self) -> bool:
         for url in self.urls:
-            logging.debug("Sending network probe to %s", url)
+            logger.debug("Sending network probe to %s", url)
             try:
-                response = requests.head(url, timeout=5, allow_redirects=False)
+                response = requests.head(
+                    url, timeout=self.timeout, allow_redirects=False
+                )
             except RequestException:
                 logging.debug("Sending network probe to %s failed!", url)
                 continue
@@ -63,6 +76,11 @@ class HttpNetworkProbe(NetworkProbe):
 
 @dataclass
 class StatusUpdate:
+    """An update about a changed network status.
+
+    This is passed to subscriber functions of the NetworkManager.
+    """
+
     # The updated NetworkStatus
     status: NetworkStatus
     # Unix timestamp of the last status change.
@@ -70,12 +88,17 @@ class StatusUpdate:
 
 
 class NetworkStatusWriter:
+    """Writes the network status to a file.
+
+    The `write()` method can be used as a subscriber to
+    NetworkMonitor status updates.
+    """
+
     def __init__(self, out_file: Path):
         self.out_file = out_file
 
     def write(self, update: StatusUpdate) -> None:
         """Persist a network connection StatusUpdate.
-
 
         Args:
             update: The StatusUpdate instance to write to a file.
@@ -84,7 +107,7 @@ class NetworkStatusWriter:
         with open(self.out_file, "w") as f:
             json.dump(payload, f)
 
-        logging.info("Wrote network status to %s", self.out_file)
+        logger.debug("Wrote network status to %s", self.out_file)
 
 
 class NetworkMonitor(Thread):
@@ -95,6 +118,21 @@ class NetworkMonitor(Thread):
         success_threshold: int = 3,
         fail_threshold: int = 5,
     ):
+        """Create a new NetworkMonitor.
+
+        Subclasses threading.Thread and registers itself as a daemon thread.
+        Sets the inital state to UNKNOWN. Actual monitoring activity is started
+        by calling `run()`
+
+        Args:
+            probe (NetworkProbe): The probe that checks the network connection.
+            wait (int): The wait time between individual probes.
+            success_threshold (int): The number of sucessful probes in sequence
+                after which the status changes to ONLINE
+            fail_threshold (int): Analogously, the number of sequential failed probes
+                that result in an OFFLINE status.
+
+        """
         super().__init__(daemon=True, name="network-monitor")
 
         self.probe = probe
@@ -108,8 +146,8 @@ class NetworkMonitor(Thread):
         self.success_threshold = success_threshold
         self.fail_threshold = fail_threshold
 
-        self.success_streak = 0
-        self.fail_streak = 0
+        self._success_streak = 0
+        self._fail_streak = 0
 
         self.subscribers: set[Callable[[StatusUpdate], None]] = set()
 
@@ -119,28 +157,29 @@ class NetworkMonitor(Thread):
             return self._current_status
 
     def run(self) -> None:
+        """Start the monitoring main loop."""
         while True:
             status = self.probe.is_online()
             update = None
 
             with self._status_lock:
                 if status:
-                    self.success_streak += 1
-                    self.fail_streak = 0
+                    self._success_streak += 1
+                    self._fail_streak = 0
                 else:
-                    self.fail_streak += 1
-                    self.success_streak = 0
+                    self._fail_streak += 1
+                    self._success_streak = 0
 
                 changed = False
                 if (
                     self._current_status != NetworkStatus.ONLINE
-                    and self.success_streak >= self.success_threshold
+                    and self._success_streak >= self.success_threshold
                 ):
                     self._current_status = NetworkStatus.ONLINE
                     changed = True
                 elif (
                     self._current_status != NetworkStatus.OFFLINE
-                    and self.fail_streak >= self.fail_threshold
+                    and self._fail_streak >= self.fail_threshold
                 ):
                     self._current_status = NetworkStatus.OFFLINE
                     changed = True
@@ -167,10 +206,14 @@ class NetworkMonitor(Thread):
             sleep(self.wait)
 
     def subscribe(self, subscriber: Callable[[StatusUpdate], None]) -> None:
-        """Register a subscriber.
+        """Register a function as a subscriber.
+
+        **Note**: Subscriber functions will be executed on the
+        same thread as NetworkMonitor and could potentially block
+        the monitoring loop. Avoid long-running or potentially blocking
+        operations.
 
         Args:
-            subscriber: A callable accepting a StatusUpdate that will be
-                registered as a subscriber.
+            subscriber: A callable accepting a StatusUpdate as its only argument.
         """
         self.subscribers.add(subscriber)
