@@ -4,7 +4,7 @@ import logging
 from ftplib import FTP_TLS
 from pathlib import Path
 
-from OTCamera.domain.upload import Upload
+from OTCamera.domain.upload import Upload, UploadResult
 from OTCamera.plugin.upload.exceptions import FileUploadError
 
 logger = logging.getLogger(__name__)
@@ -27,7 +27,7 @@ class FtpUpload(Upload):
         self._password = password
         self._server_source = server_source
 
-    def upload(self, file_path: str) -> None:
+    def upload(self, file_path: Path) -> UploadResult:
         """Upload a local file to the configured FTPS target directory."""
         source = Path(file_path)
         destination = Path(self._server_source) / source.name
@@ -49,6 +49,7 @@ class FtpUpload(Upload):
             client.close()
 
         logger.info("Uploaded %s", source.name)
+        return UploadResult(local_path=file_path)
 
     def is_available(self) -> bool:
         """Return whether the FTPS endpoint is reachable."""

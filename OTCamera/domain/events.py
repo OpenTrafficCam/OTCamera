@@ -3,6 +3,8 @@
 import logging
 import queue
 from dataclasses import dataclass
+from datetime import datetime
+from pathlib import Path
 from typing import Any, Callable, TypeVar, cast
 
 logger = logging.getLogger(__name__)
@@ -106,7 +108,19 @@ class ShutdownRequested(Event):
 class FileUploaded(Event):
     """A file was successfully uploaded to remote storage."""
 
-    filename: str
+    local_path: Path
+    timestamp: datetime
+
+
+@dataclass(frozen=True)
+class S3FileUploaded(FileUploaded):
+    """A file was successfully uploaded to S3."""
+
+    # the bucket to which the file was uploaded.
+    bucket: str
+
+    # the key as which the file was stored in S3.
+    key: str
 
 
 EVENT = TypeVar("EVENT", bound="Event")

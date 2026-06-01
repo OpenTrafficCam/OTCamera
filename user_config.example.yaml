@@ -32,6 +32,42 @@ preview:
 # Set to "ftp" or "s3" to enable upload, or leave empty to disable.
 upload:
 
+# Notification backend selector. Set to "rabbitmq" to enable, or leave empty.
+notification:
+
+# RabbitMQ connection and exchange settings.
+# Required when notification: rabbitmq is set.
+rabbitmq:
+  # Hostname or IP address of the RabbitMQ broker.
+  host: 127.0.0.1
+  # AMQP port (default: 5671) - use 5672 for non-SSL connections.
+  port: 5671
+  # Broker credentials.
+  user: guest
+  password: guest
+  # Virtual host to connect to.
+  vhost: /
+  # Exchange to publish messages to. Use "" for the default exchange.
+  exchange: ""
+  # Exchange type: direct, fanout, topic, or headers.
+  exchange_type: direct
+  # Routing key used when publishing messages.
+  routing_key: ""
+  # Queue to declare and bind to the exchange.
+  # Leave empty to skip queue declaration.
+  queue_name: ""
+  # Whether the exchange and messages survive broker restarts.
+  durable: true
+  # Whether ssl encryption should be used (default: true)
+  ssl: true
+
+# OTCloud camera identity used in upload notification payloads.
+# Required when notification: rabbitmq is set.
+ot_cloud:
+  camera_id: 0
+  project_id: 0
+  site_id: 0
+
 # Providing ftp_upload credentials does not enable upload on its own.
 # Set upload: ftp above to activate FTP upload.
 ftp_upload:
