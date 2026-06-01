@@ -68,13 +68,8 @@ dev = [
     "types-requests==2.32.4.*",
 ]
 
-[tool.black]
+[tool.ruff]
 line-length = 88
-target-version = ["py312"]
-
-[tool.isort]
-line_length = 88
-profile = "black"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
