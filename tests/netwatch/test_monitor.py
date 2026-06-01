@@ -6,12 +6,12 @@ import pytest
 from requests.exceptions import RequestException
 
 from OTCamera.netwatch.monitor import (
-    HttpNetworkProbe,
     NetworkMonitor,
     NetworkStatus,
-    NetworkStatusWriter,
     StatusUpdate,
 )
+from OTCamera.netwatch.probe import HttpNetworkProbe
+from OTCamera.netwatch.writer import NetworkStatusWriter
 
 
 class _Break(Exception):
@@ -46,19 +46,19 @@ class TestHttpNetworkProbe:
 
     def test_returns_true_on_successful_request(self) -> None:
         probe = HttpNetworkProbe(urls=["http://example.com"])
-        with patch("OTCamera.netwatch.monitor.requests.head") as mock_head:
+        with patch("OTCamera.netwatch.probe.requests.head") as mock_head:
             mock_head.return_value = MagicMock(status_code=200)
             assert probe.is_online() is True
 
     def test_returns_false_when_all_urls_fail(self) -> None:
         probe = HttpNetworkProbe(urls=["http://a.com", "http://b.com"])
-        with patch("OTCamera.netwatch.monitor.requests.head") as mock_head:
+        with patch("OTCamera.netwatch.probe.requests.head") as mock_head:
             mock_head.side_effect = RequestException("network error")
             assert probe.is_online() is False
 
     def test_falls_back_to_next_url_on_failure(self) -> None:
         probe = HttpNetworkProbe(urls=["http://fail.com", "http://ok.com"])
-        with patch("OTCamera.netwatch.monitor.requests.head") as mock_head:
+        with patch("OTCamera.netwatch.probe.requests.head") as mock_head:
             mock_head.side_effect = [
                 RequestException("fail"),
                 MagicMock(status_code=200),
@@ -68,7 +68,7 @@ class TestHttpNetworkProbe:
 
     def test_does_not_try_further_urls_after_first_success(self) -> None:
         probe = HttpNetworkProbe(urls=["http://first.com", "http://second.com"])
-        with patch("OTCamera.netwatch.monitor.requests.head") as mock_head:
+        with patch("OTCamera.netwatch.probe.requests.head") as mock_head:
             mock_head.return_value = MagicMock(status_code=200)
             probe.is_online()
             assert mock_head.call_count == 1

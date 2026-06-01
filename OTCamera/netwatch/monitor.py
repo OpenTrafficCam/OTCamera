@@ -1,84 +1,38 @@
-import json
+"""Provides code for continuous monitoring of a network connection.
+
+This module provides:
+- NetworkStatus: Enum that indicates the status of a network connection.
+- StatusUpdate: Dataclass for holding a new status and timestamp of the change.
+- NetworkMonitor: Continuously send network probes and inform subscribers about changes.
+"""
+
 import logging
-from abc import ABC, abstractmethod
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import Enum
-from pathlib import Path
 from threading import Lock, Thread
 from time import sleep, time
-from typing import Sequence
 
-import requests
-from requests.exceptions import RequestException
+from OTCamera.netwatch.probe import NetworkProbe
 
 logger = logging.getLogger(__name__)
 
 
 class NetworkStatus(Enum):
-    """Indicates the current status of a network connection"""
+    """Indicates the current status of a network connection."""
 
     ONLINE = 1
     OFFLINE = 2
     UNKNOWN = 3
 
 
-class NetworkProbe(ABC):
-    @abstractmethod
-    def is_online(self) -> bool:
-        """Send a network probe and assess the network status.
-
-        Returns:
-            a boolean indicating whether our network connection can be considered
-            online (True) or offline (False)
-        """
-        ...
-
-
-class HttpNetworkProbe(NetworkProbe):
-    """Get the current network status based on a HTTP request to one or more URLs."""
-
-    def __init__(self, urls: Sequence[str], timeout: int | None = None):
-        """Create a new HttpNetworkProbe.
-
-        Args:
-            urls (Sequence[str]): The urls that will be probed in sequence to determine
-                the state of the network connection. Cannot be empty.
-            timeout (int | None): Optional timeout for outgoing http requests.
-                If the timeout is exceeded, the probe counts as failed.
-        """
-        if len(urls) < 1:
-            raise ValueError("HttpNetworkProbe requires at least one URL to check.")
-
-        self.urls = urls
-        self.timeout = timeout
-
-    def is_online(self) -> bool:
-        for url in self.urls:
-            logger.debug("Sending network probe to %s", url)
-            try:
-                response = requests.head(
-                    url, timeout=self.timeout, allow_redirects=False
-                )
-            except RequestException:
-                logging.debug("Sending network probe to %s failed!", url)
-                continue
-
-            # Any HTTP response from a known domain confirms IP-level connectivity,
-            # regardless of status code. Log non-2xx for visibility but stay online.
-            if not response.ok:
-                logging.warning(
-                    "Network probe to %s returned status %d", url, response.status_code
-                )
-            return True
-        return False
-
-
 @dataclass
 class StatusUpdate:
     """An update about a changed network status.
 
-    This is passed to subscriber functions of the NetworkManager.
+    Carries the new status and timestamp of the status change.
+
+    This is passed to subscriber functions of the NetworkMonitor.
     """
 
     # The updated NetworkStatus
@@ -87,30 +41,9 @@ class StatusUpdate:
     last_changed_at: float
 
 
-class NetworkStatusWriter:
-    """Writes the network status to a file.
-
-    The `write()` method can be used as a subscriber to
-    NetworkMonitor status updates.
-    """
-
-    def __init__(self, out_file: Path):
-        self.out_file = out_file
-
-    def write(self, update: StatusUpdate) -> None:
-        """Persist a network connection StatusUpdate.
-
-        Args:
-            update: The StatusUpdate instance to write to a file.
-        """
-        payload = {"status": update.status.name, "changed": update.last_changed_at}
-        with open(self.out_file, "w") as f:
-            json.dump(payload, f)
-
-        logger.debug("Wrote network status to %s", self.out_file)
-
-
 class NetworkMonitor(Thread):
+    """Monitors the current network status."""
+
     def __init__(
         self,
         probe: NetworkProbe,
@@ -153,6 +86,7 @@ class NetworkMonitor(Thread):
 
     @property
     def status(self) -> NetworkStatus:
+        """Return the current network status."""
         with self._status_lock:
             return self._current_status
 
