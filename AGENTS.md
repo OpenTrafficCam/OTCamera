@@ -18,6 +18,8 @@ non-Pi systems.
 
 Primary working branch for this refactor: `v2-refactor`.
 
+See [`docs/dev.md`](docs/dev.md) for the human-facing developer setup and testing guide.
+
 ## Commands
 
 ### Setup

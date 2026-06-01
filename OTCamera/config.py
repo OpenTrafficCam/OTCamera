@@ -10,9 +10,9 @@ try:
 except ImportError:
     from yaml import SafeLoader  # type: ignore[assignment]
 
-import yaml
-from typing import Annotated
+from typing import Annotated, Literal
 
+import yaml
 from pydantic import BaseModel, BeforeValidator, Field, field_validator, model_validator
 
 # YAML interprets values like `off`, `on`, `yes`, `no` as booleans.
@@ -58,29 +58,36 @@ class PreviewConfig(BaseModel):
     format: StrFromYaml = "jpeg"
     interval: int = 5
     send_to_external: bool = False
-    url: StrFromYaml = "http://localhost:5000/projects/0/sites/1/cameras/2/current_frame"
+    url: StrFromYaml = (
+        "http://localhost:5000/projects/0/sites/1/cameras/2/current_frame"
+    )
 
 
-class ServerUploadConfig(BaseModel):
-    """Remote upload settings."""
+class S3Config(BaseModel):
+    """Config for S3-compatible object storage."""
 
-    enable: bool = False
-    scheme: StrFromYaml = "ftp"
-    host: StrFromYaml | None = None
+    access_key: StrFromYaml
+    secret_key: StrFromYaml
+    bucket: StrFromYaml
+    endpoint_url: StrFromYaml | None = None
+    region: StrFromYaml | None = None
+    retry_max_attempts: int = 5
+    connect_timeout: int = 10
+    read_timeout: int = 30
+    # Prefix that will be prepended to the video filename.
+    # Useful for identifying the camera or project.
+    # Can optionally contain path segments.
+    key_prefix: StrFromYaml = ""
+
+
+class FtpUploadConfig(BaseModel):
+    """FTP upload settings."""
+
+    host: StrFromYaml
     port: int = 21
-    user: StrFromYaml | None = None
-    password: StrFromYaml | None = None
+    user: StrFromYaml
+    password: StrFromYaml
     server_source: StrFromYaml = "/"
-
-    @model_validator(mode="after")
-    def _require_credentials_when_enabled(self) -> "ServerUploadConfig":
-        if self.enable:
-            missing = [f for f in ("host", "user", "password") if getattr(self, f) is None]
-            if missing:
-                raise ValueError(
-                    f"Fields required when server_upload.enable is true: {missing}"
-                )
-        return self
 
 
 class EncoderConfig(BaseModel):
@@ -153,7 +160,10 @@ class Config(BaseModel):
     recording: RecordingConfig = Field(default_factory=RecordingConfig)
     camera: CameraConfig = Field(default_factory=CameraConfig)
     preview: PreviewConfig = Field(default_factory=PreviewConfig)
-    server_upload: ServerUploadConfig = Field(default_factory=ServerUploadConfig)
+    upload: Literal["ftp", "s3"] | None = None
+    ftp_upload: FtpUploadConfig | None = None
+    s3_upload: S3Config | None = None
+    delete_after_upload: bool = False
     video: VideoConfig = Field(default_factory=VideoConfig)
     wifi: WifiConfig = Field(default_factory=WifiConfig)
     hardware: HardwareConfig = Field(default_factory=HardwareConfig)
@@ -165,6 +175,14 @@ class Config(BaseModel):
     num_log_files_html: int = 2
     usb_mount_point: StrFromYaml = "~/mnt/usb"
     usb_device: StrFromYaml = "/dev/sda1"
+
+    @model_validator(mode="after")
+    def _validate_upload_config(self) -> "Config":
+        if self.upload == "ftp" and self.ftp_upload is None:
+            raise ValueError("ftp_upload config is required when upload is 'ftp'")
+        if self.upload == "s3" and self.s3_upload is None:
+            raise ValueError("s3_upload config is required when upload is 's3'")
+        return self
 
     def resolve_paths(self) -> None:
         """Resolve path-valued settings to absolute paths."""

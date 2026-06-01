@@ -8,6 +8,10 @@ Check out the [documentation](https://opentrafficcam.org/OTCamera) for detailed 
 We appreciate your support in the form of both code and comments.
 First, please have a look at the [contribute](https://opentrafficcam.org/contribute) section of the OpenTrafficCam documentation.
 
+## Development
+
+See [`docs/dev.md`](docs/dev.md) for instructions on setting up a local development environment and running the tests.
+
 ## License
 
 This software is licensed under the [GPL-3.0 License](LICENSE).

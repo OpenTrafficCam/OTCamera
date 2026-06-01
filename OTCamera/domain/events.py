@@ -3,132 +3,200 @@
 import logging
 import queue
 from dataclasses import dataclass
-from typing import Any, Callable
+from typing import Any, Callable, TypeVar, cast
 
 logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
-class RecordingStarted:
+class Event:
+    """Base class for all events."""
+
+    pass
+
+
+@dataclass(frozen=True)
+class RecordingStarted(Event):
     """A new recording has started."""
 
     filename: str
 
 
 @dataclass(frozen=True)
-class RecordingStopped:
+class RecordingStopped(Event):
     """The current recording has stopped."""
 
 
 @dataclass(frozen=True)
-class RecordingSplit:
-    """A recording interval has completed."""
+class RecordingSplit(Event):
+    """The current recording was split and a new segment file was started."""
 
     filename: str
 
 
 @dataclass(frozen=True)
-class IntervalFinished:
-    """Reserved for future calendar-based scheduling."""
+class IntervalFinished(Event):
+    """A scheduled recording interval has ended.
+
+    Reserved for future calendar-based scheduling; not currently dispatched.
+    """
 
 
 @dataclass(frozen=True)
-class BatteryLow:
+class BatteryLow(Event):
     """The battery dropped below the shutdown threshold."""
 
 
 @dataclass(frozen=True)
-class ExternalPowerConnected:
+class ExternalPowerConnected(Event):
     """External power has been connected."""
 
 
 @dataclass(frozen=True)
-class ExternalPowerDisconnected:
+class ExternalPowerDisconnected(Event):
     """External power has been disconnected."""
 
 
 @dataclass(frozen=True)
-class ButtonPressed:
+class ButtonPressed(Event):
     """A button or switch was pressed."""
 
     name: str
 
 
 @dataclass(frozen=True)
-class ButtonHeld:
+class ButtonHeld(Event):
     """A button was held."""
 
     name: str
 
 
 @dataclass(frozen=True)
-class ButtonReleased:
+class ButtonReleased(Event):
     """A button or switch was released."""
 
     name: str
 
 
 @dataclass(frozen=True)
-class PreviewCaptured:
+class PreviewCaptured(Event):
     """A preview image was captured."""
 
     path: str
 
 
 @dataclass(frozen=True)
-class WifiOn:
+class WifiOn(Event):
     """Wi-Fi access point was enabled."""
 
 
 @dataclass(frozen=True)
-class WifiOff:
+class WifiOff(Event):
     """Wi-Fi access point was disabled."""
 
 
 @dataclass(frozen=True)
-class ShutdownRequested:
+class ShutdownRequested(Event):
     """Shutdown was requested by a subsystem."""
 
     source: str
+
+
+@dataclass(frozen=True)
+class FileUploaded(Event):
+    """A file was successfully uploaded to remote storage."""
+
+    filename: str
+
+
+EVENT = TypeVar("EVENT", bound="Event")
 
 
 class EventBus:
     """Hybrid in-process event bus with synchronous and queued dispatch."""
 
     def __init__(self) -> None:
-        self._subscribers: dict[type[Any], list[Callable[[Any], None]]] = {}
+        """Create a new EventBus."""
+        self._subscribers: dict[type[Event], list[Callable[[Event], None]]] = {}
         self._queue: "queue.Queue[Any]" = queue.Queue()
 
-    def subscribe(self, event_type: type[Any], callback: Callable[[Any], None]) -> None:
-        """Register a callback for an event type."""
-        self._subscribers.setdefault(event_type, []).append(callback)
+    def subscribe(
+        self, event_type: type[EVENT], callback: Callable[[EVENT], None]
+    ) -> None:
+        """Register a callback for an event type.
+
+        Subscribing to a parent event type will also receive events of any
+        subclass (but not vice-versa — a subtype subscriber does not fire for
+        the bare parent type).
+
+        The order in which subscribers are called is independent from inheritance.
+        It solely depends on the order of the `subscribe()` method calls.
+
+        Args:
+            event_type: The event type that will be subscribed to.
+            callback: The callback that will be executed when the event fires.
+        """
+        self._subscribers.setdefault(event_type, []).append(
+            # Callbacks are stored as Callable[[Event], None] because the dict
+            # is keyed by event type and _dispatch only calls a callback with
+            # the matching event subtype. The cast is safe: contravariance
+            # prevents direct assignment but the runtime contract is upheld.
+            cast(Callable[[Event], None], callback)
+        )
 
     def unsubscribe(
         self,
-        event_type: type[Any],
-        callback: Callable[[Any], None],
+        event_type: type[EVENT],
+        callback: Callable[[EVENT], None],
     ) -> None:
-        """Remove a callback for an event type if it is registered."""
+        """Remove a callback for an event type if it is registered.
+
+        Args:
+            event_type: The event from which to unsubscribe.
+            callback: The callback to remove.
+        """
         callbacks = self._subscribers.get(event_type)
         if callbacks is None:
             return
         try:
-            callbacks.remove(callback)
+            callbacks.remove(
+                cast(Callable[[Event], None], callback)
+            )  # mirrors subscribe cast
         except ValueError:
             return
         if not callbacks:
             del self._subscribers[event_type]
 
-    def publish(self, event: Any) -> None:
-        """Dispatch an event synchronously to all subscribers."""
+    def publish(self, event: Event) -> None:
+        """Dispatch an event synchronously to all subscribers.
+
+        Callbacks will be executed on the same thread as the
+        **publisher**.
+
+        Args:
+            event (Event): The event to dispatch to subscribers.
+        """
         self._dispatch(event)
 
-    def enqueue(self, event: Any) -> None:
-        """Enqueue an event for later dispatch on the calling thread."""
+    def enqueue(self, event: Event) -> None:
+        """Enqueue an event for later dispatch on the event-bus thread.
+
+        The event will be put on a queue, which in turn is advanced
+        when the `process_pending()` method is called.
+        This ensures that the subscriber callbacks are called on the
+        same thread that the event bus is running on, not the calling thread.
+
+        Args:
+            event (Event): The event to dispatch to subscribers.
+        """
         self._queue.put(event)
 
     def process_pending(self) -> None:
-        """Dispatch all currently queued events."""
+        """Dispatch all currently queued events.
+
+        Subscriber callback methods will run on the same thread
+        as the event bus.
+        """
         while True:
             try:
                 event = self._queue.get_nowait()
@@ -145,14 +213,21 @@ class EventBus:
             except queue.Empty:
                 return
 
-    def _dispatch(self, event: Any) -> None:
-        """Dispatch an event and log callback failures without propagating."""
-        for callback in list(self._subscribers.get(type(event), [])):
-            try:
-                callback(event)
-            except Exception:
-                logger.exception(
-                    "Event callback %s failed for %s",
-                    callback,
-                    type(event).__name__,
-                )
+    def _dispatch(self, event: Event) -> None:
+        """Dispatch an event and log callback failures without propagating.
+
+        Args:
+            event (Event): The event to dispatch.
+        """
+        for event_type, callbacks in self._subscribers.items():
+            if not isinstance(event, event_type):
+                continue
+            for callback in callbacks:
+                try:
+                    callback(event)
+                except Exception:
+                    logger.exception(
+                        "Event callback %s failed for %s",
+                        callback,
+                        type(event).__name__,
+                    )

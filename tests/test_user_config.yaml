@@ -30,9 +30,8 @@ preview:
   send_to_external: send_to_external
   url: url
 
-server_upload:
+ftp_upload:
   enable: enable
-  scheme: scheme
   host: host
   port: port
   user: user

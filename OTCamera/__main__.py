@@ -8,7 +8,7 @@ from datetime import datetime as dt
 from datetime import timedelta
 from pathlib import Path
 from time import sleep
-from typing import Any, Iterator
+from typing import Any, Iterator, Protocol
 
 import psutil
 
@@ -17,13 +17,14 @@ from OTCamera.config import Config, parse_user_config
 from OTCamera.controller.camera_controller import CameraController
 from OTCamera.controller.power_controller import PowerController
 from OTCamera.controller.schedule_controller import ScheduleController
-from OTCamera.controller.upload_controller import UploadController
+from OTCamera.controller.upload_controller import ThreadedUploadController
 from OTCamera.controller.wifi_controller import WifiController
 from OTCamera.domain.events import (
     ButtonHeld,
     ButtonPressed,
     ButtonReleased,
     EventBus,
+    FileUploaded,
     ShutdownRequested,
 )
 from OTCamera.domain.led import LED
@@ -38,6 +39,7 @@ from OTCamera.html_updater import (
 )
 from OTCamera.log import setup_logging
 from OTCamera.module.camera.camera_provider import CameraProvider
+from OTCamera.plugin.upload.helpers import delete_file
 from OTCamera.plugin.upload.upload_provider import UploadProvider
 
 logger = logging.getLogger(__name__)
@@ -350,6 +352,21 @@ def _get_log_files_sorted(log_files: Iterator[Path]) -> list[Path]:
     return [log_file for _, log_file in with_timestamp] + without_timestamp
 
 
+class Closable(Protocol):
+    def close(self) -> None: ...
+
+
+def close_resources(*resources: Closable | None) -> None:
+    """ "Try to close all resources, ignoring errors."""
+    for resource in resources:
+        if resource is None:
+            continue
+        try:
+            resource.close()
+        except Exception:
+            logger.warning(f"Error closing resource {resource!r}", exc_info=True)
+
+
 def main(config: Config | None = None, config_file: str = "~/user_config.yaml") -> None:
     """Wire all components and start OTCamera."""
     if config is None:
@@ -361,9 +378,14 @@ def main(config: Config | None = None, config_file: str = "~/user_config.yaml") 
 
     camera = None
     upload = None
+    upload_controller = None
     try:
         camera = CameraProvider.provide(config)
+
         upload = UploadProvider.provide(config)
+
+        if config.delete_after_upload:
+            event_bus.subscribe(FileUploaded, lambda e: delete_file(e.filename))
 
         camera_controller = CameraController(camera, config, event_bus, board.leds)
         power_controller = PowerController(
@@ -375,7 +397,8 @@ def main(config: Config | None = None, config_file: str = "~/user_config.yaml") 
         )
         wifi_controller = WifiController(config, event_bus, board.leds)
         schedule_controller = ScheduleController(config, event_bus)
-        _ = UploadController(event_bus, upload)
+        if upload is not None:
+            upload_controller = ThreadedUploadController(event_bus, upload)
 
         for name, button in board.buttons.items():
             button.on_pressed(
@@ -423,14 +446,7 @@ def main(config: Config | None = None, config_file: str = "~/user_config.yaml") 
         )
         application.record()
     finally:
-        for resource in [camera, upload]:
-            if resource is None:
-                continue
-            try:
-                resource.close()
-            except Exception:
-                logger.debug("Error closing resource", exc_info=True)
-        board.close()
+        close_resources(camera, upload, board, upload_controller)
 
 
 if __name__ == "__main__":
