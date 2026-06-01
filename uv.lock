@@ -500,6 +500,7 @@ source = { editable = "." }
 dependencies = [
     { name = "beautifulsoup4" },
     { name = "boto3" },
+    { name = "pika" },
     { name = "psutil" },
     { name = "pydantic" },
     { name = "pyyaml" },
@@ -522,6 +523,7 @@ dev = [
     { name = "pytest-cov" },
     { name = "ruff" },
     { name = "types-boto3" },
+    { name = "types-pika-ts" },
     { name = "types-psutil" },
     { name = "types-pyyaml" },
     { name = "types-requests" },
@@ -534,6 +536,7 @@ requires-dist = [
     { name = "gpiozero", marker = "extra == 'pi'", specifier = "==2.0.1" },
     { name = "lgpio", marker = "extra == 'pi'", specifier = "==0.2.2.0" },
     { name = "opencv-python-headless", marker = "extra == 'pi'", specifier = "==4.12.0.88" },
+    { name = "pika", specifier = "==1.3.2" },
     { name = "psutil", specifier = "==7.0.0" },
     { name = "pydantic", specifier = "==2.12.5" },
     { name = "pyyaml", specifier = "==6.0.2" },
@@ -550,6 +553,7 @@ dev = [
     { name = "pytest-cov", specifier = ">=7.1,<8" },
     { name = "ruff", specifier = ">=0.15.12" },
     { name = "types-boto3", specifier = "==1.42.85" },
+    { name = "types-pika-ts", specifier = "==1.3.0.*" },
     { name = "types-psutil", specifier = "==7.0.0.*" },
     { name = "types-pyyaml", specifier = "==6.0.2" },
     { name = "types-requests", specifier = "==2.32.4.*" },
@@ -571,6 +575,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/5a/82/42f767fc1c1143d6fd36efb827202a2d997a375e160a71eb2888a925aac1/pathspec-1.1.1.tar.gz", hash = "sha256:17db5ecd524104a120e173814c90367a96a98d07c45b2e10c2f3919fff91bf5a", size = 135180, upload-time = "2026-04-27T01:46:08.907Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/f1/d9/7fb5aa316bc299258e68c73ba3bddbc499654a07f151cba08f6153988714/pathspec-1.1.1-py3-none-any.whl", hash = "sha256:a00ce642f577bf7f473932318056212bc4f8bfdf53128c78bbd5af0b9b20b189", size = 57328, upload-time = "2026-04-27T01:46:07.06Z" },
+]
+
+[[package]]
+name = "pika"
+version = "1.3.2"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/db/db/d4102f356af18f316c67f2cead8ece307f731dd63140e2c71f170ddacf9b/pika-1.3.2.tar.gz", hash = "sha256:b2a327ddddf8570b4965b3576ac77091b850262d34ce8c1d8cb4e4146aa4145f", size = 145029, upload-time = "2023-05-05T14:25:43.368Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/f9/f3/f412836ec714d36f0f4ab581b84c491e3f42c6b5b97a6c6ed1817f3c16d0/pika-1.3.2-py3-none-any.whl", hash = "sha256:0779a7c1fafd805672796085560d290213a465e4f6f76a6fb19e378d8041a14f", size = 155415, upload-time = "2023-05-05T14:25:41.484Z" },
 ]
 
 [[package]]
@@ -879,6 +892,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/ba/0d/25b00e1650044a494870311e9e47191309ac0fbf15822a2e48b495a2408d/types_boto3-1.42.85.tar.gz", hash = "sha256:d39a1e20fb7149ec208da4405ad6c80b3ec6446bee4adcdc2c1e284bdd283ea0", size = 102714, upload-time = "2026-04-07T19:51:07.469Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/e1/01/baefef081f60eeaaa2c16c0796aee0cd9219b7677cd53cc0ff0b46e80538/types_boto3-1.42.85-py3-none-any.whl", hash = "sha256:8da025a2a9285688769e6c7b96680e80e76c75e034048e776441097fb5d8d7fb", size = 70420, upload-time = "2026-04-07T19:51:03.386Z" },
+]
+
+[[package]]
+name = "types-pika-ts"
+version = "1.3.0.20260508"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/fd/14/74e0e206604b3fcfbde1dc162ab18ad2eb15c1aef44d2f265300b96850dc/types_pika_ts-1.3.0.20260508.tar.gz", hash = "sha256:3f2a9c3916a9fd06bbd9470316d3ef0eccc548ced5b1d4a2d3aaa590c635b2d6", size = 24145, upload-time = "2026-05-08T04:47:28.797Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/18/40/a23a517a8b64473baf15556bb68b0c5d3734a29cad8b66ec428a4e37e63e/types_pika_ts-1.3.0.20260508-py3-none-any.whl", hash = "sha256:a4513530f127effa7d638b36af8e9b960e6e1795cca5d7c86cf95d1dedc5f171", size = 31496, upload-time = "2026-05-08T04:47:27.895Z" },
 ]
 
 [[package]]
