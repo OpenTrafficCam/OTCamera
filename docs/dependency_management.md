@@ -29,7 +29,7 @@ apt list --installed | grep picamera2
 Create a new venv with access to system-site Python packages (including picamera2):
 
 ```sh
-python3 -m venv --system-site-packages .venv 
+python3 -m venv --system-site-packages .venv
 ```
 
 Then install the remaining requirements with pip:
@@ -46,6 +46,8 @@ Follow the usual process of adding or updating dependencies with uv, e.g.:
 uv add <mypackage>
 ```
 
+For updating packages:
+
 ```sh
 # update all packages
 uv lock --upgrade
@@ -54,8 +56,10 @@ uv lock --upgrade
 uv lock --upgrade-package <mypackage>
 ```
 
-After any update to `uv.lock`, the `requirements.txt` file should also be udpated. This needs to be done manually via:
+After any update to `uv.lock`, the `requirements.txt` will be updated automatically by a pre-commit hook.
+
+If pre-commit is not used, this can be done manually via:
 
 ```sh
-uv export --no-hashes --extra pi --format requirements-txt
+uv export --no-hashes --extra pi --format requirements-txt > requirements.txt
 ```
