@@ -5,11 +5,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from requests.exceptions import RequestException
 
-from OTCamera.netwatch.monitor import (
-    NetworkMonitor,
-    NetworkStatus,
-    StatusUpdate,
-)
+from OTCamera.netwatch.monitor import NetworkMonitor, NetworkStatus, StatusUpdate
 from OTCamera.netwatch.probe import HttpNetworkProbe
 from OTCamera.netwatch.writer import NetworkStatusWriter
 

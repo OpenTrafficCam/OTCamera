@@ -4,9 +4,7 @@ import argparse
 import logging
 from pathlib import Path
 
-from OTCamera.netwatch.monitor import (
-    NetworkMonitor,
-)
+from OTCamera.netwatch.monitor import NetworkMonitor
 from OTCamera.netwatch.probe import HttpNetworkProbe
 from OTCamera.netwatch.writer import NetworkStatusWriter
 
