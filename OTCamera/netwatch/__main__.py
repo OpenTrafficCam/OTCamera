@@ -1,4 +1,4 @@
-"""Hello."""
+"""Script for starting a continuously running network monitoring service."""
 
 import argparse
 import logging
@@ -61,6 +61,7 @@ def _parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+    """Pass command line arguments and start the monitoring thread."""
     args = _parse_args()
     logging.basicConfig(level=logging.DEBUG)
 
