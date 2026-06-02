@@ -55,13 +55,14 @@ repos:
     rev: 0.11.17
     hooks:
       - id: uv-export
-        args: [
-          "--no-hashes",
-          "--extra=pi",
-          "--output-file=requirements.txt",
-          "--format=requirements-txt",
-          "--quiet"
-        ]
+        args:
+          [
+            "--no-hashes",
+            "--extra=pi",
+            "--output-file=requirements.txt",
+            "--format=requirements-txt",
+            "--quiet",
+          ]
   - repo: https://github.com/editorconfig-checker/editorconfig-checker.python
     rev: 3.6.1
     hooks:
