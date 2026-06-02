@@ -123,3 +123,7 @@ convention = "google"
 # Exclude tests/ from being docstyle-linted
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["D"]
+
+[tool.isort]
+line_length = 88
+profile = "black"
