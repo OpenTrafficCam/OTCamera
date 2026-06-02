@@ -1,7 +1,7 @@
 ## Dependency Management
 
 OTCamera's dependencies are managed via `uv`.
-The handling is different for the development environment and target environment (Raspberry Pi Zero W).
+The handling is different for the development environment and target environment (Raspberry Pi Zero 2 W).
 
 - Top-level dependencies are managed in `pyproject.toml`. Raspberry Pi-specific dependencies are managed in the `pi` dependency group (`[project.optional-dependencies]`) as they do not need to be installed in the dev environment.
 - The locked versions are kept both
@@ -18,7 +18,7 @@ uv sync --dev
 
 This will install the base and development requirements into a new virtual environment.
 
-## Target Environment (on Raspberry Pi Zero W)
+## Target Environment (on Raspberry Pi Zero 2 W)
 
 Make sure that the `picamera2` package is installed as a system package (the recommended approach via [the official repo](https://github.com/raspberrypi/picamera2)).
 
