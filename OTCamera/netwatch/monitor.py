@@ -93,11 +93,11 @@ class NetworkMonitor(Thread):
     def run(self) -> None:
         """Start the monitoring main loop."""
         while True:
-            status = self.probe.is_online()
+            is_online = self.probe.is_online()
             update = None
 
             with self._status_lock:
-                if status:
+                if is_online:
                     self._success_streak += 1
                     self._fail_streak = 0
                 else:
