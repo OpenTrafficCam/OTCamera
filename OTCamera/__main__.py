@@ -15,6 +15,7 @@ import psutil
 from OTCamera.bsl.board_provider import BoardProvider
 from OTCamera.config import Config, parse_user_config
 from OTCamera.controller.camera_controller import CameraController
+from OTCamera.controller.notification_controller import EventNotificationController
 from OTCamera.controller.power_controller import PowerController
 from OTCamera.controller.schedule_controller import ScheduleController
 from OTCamera.controller.upload_controller import ThreadedUploadController
@@ -25,6 +26,7 @@ from OTCamera.domain.events import (
     ButtonReleased,
     EventBus,
     FileUploaded,
+    S3FileUploaded,
     ShutdownRequested,
 )
 from OTCamera.domain.led import LED
@@ -41,6 +43,12 @@ from OTCamera.log import setup_logging
 from OTCamera.module.camera.camera_provider import CameraProvider
 from OTCamera.plugin.upload.helpers import delete_file
 from OTCamera.plugin.upload.upload_provider import UploadProvider
+from OTCamera.plugin.upload_notifier.payload_factories import (
+    RabbitMQS3UploadToOTCloudPayloadFactory,
+)
+from OTCamera.plugin.upload_notifier.upload_notification_provider import (
+    UploadNotificationProvider,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -379,13 +387,14 @@ def main(config: Config | None = None, config_file: str = "~/user_config.yaml") 
     camera = None
     upload = None
     upload_controller = None
+    upload_notification_controller = None
     try:
         camera = CameraProvider.provide(config)
 
         upload = UploadProvider.provide(config)
 
         if config.delete_after_upload:
-            event_bus.subscribe(FileUploaded, lambda e: delete_file(e.filename))
+            event_bus.subscribe(FileUploaded, lambda e: delete_file(str(e.local_path)))
 
         camera_controller = CameraController(camera, config, event_bus, board.leds)
         power_controller = PowerController(
@@ -399,6 +408,22 @@ def main(config: Config | None = None, config_file: str = "~/user_config.yaml") 
         schedule_controller = ScheduleController(config, event_bus)
         if upload is not None:
             upload_controller = ThreadedUploadController(event_bus, upload)
+
+        notifier = UploadNotificationProvider.provide(config)
+        if notifier is not None:
+            # Guaranteed by config validation
+            assert config.ot_cloud is not None
+
+            # TODO: make this configurable, not hardcoded.
+            # Currently supports only upload notifications to OTCloud via RabbitMQ.
+            upload_notification_controller = EventNotificationController(
+                event_bus,
+                S3FileUploaded,
+                notifier,
+                payload_factory=RabbitMQS3UploadToOTCloudPayloadFactory(
+                    config.ot_cloud
+                ),
+            )
 
         for name, button in board.buttons.items():
             button.on_pressed(
@@ -446,7 +471,9 @@ def main(config: Config | None = None, config_file: str = "~/user_config.yaml") 
         )
         application.record()
     finally:
-        close_resources(camera, upload, board, upload_controller)
+        close_resources(
+            camera, upload, board, upload_controller, upload_notification_controller
+        )
 
 
 if __name__ == "__main__":

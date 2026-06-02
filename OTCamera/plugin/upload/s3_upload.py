@@ -5,7 +5,7 @@ from typing import Any
 from boto3.s3.transfer import TransferConfig
 from botocore.exceptions import ClientError
 
-from OTCamera.domain.upload import Upload
+from OTCamera.domain.upload import S3UploadResult, Upload
 from OTCamera.plugin.upload.exceptions import FileUploadError
 
 logger = logging.getLogger(__name__)
@@ -51,7 +51,7 @@ class S3Upload(Upload):
         self.bucket_name = bucket_name
         self.key_prefix = key_prefix
 
-    def upload(self, file_path: str) -> None:
+    def upload(self, file_path: Path) -> S3UploadResult:
         """Upload a single file to the configured S3 bucket.
 
         The file is stored under the key ``{key_prefix}/{filename}`` when a
@@ -68,6 +68,9 @@ class S3Upload(Upload):
                 file_path, self.bucket_name, key, Config=TRANSFER_CONFIG
             )
             logger.info("Uploaded %s", name)
+            return S3UploadResult(
+                local_path=file_path, bucket=self.bucket_name, key=key
+            )
         except Exception as e:
             logger.error("Unexpected error during S3 upload: %s", e)
             raise FileUploadError(f"Could not upload to S3 bucket. Error: {e}") from e

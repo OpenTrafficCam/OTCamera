@@ -57,6 +57,9 @@ def setup_logging(config: Config) -> None:
     root_logger.setLevel(level)
     root_logger.handlers.clear()
 
+    # reduce pika noise - only report warnings or higher
+    logging.getLogger("pika").setLevel(logging.WARNING)
+
     file_handler = logging.FileHandler(str(log_path), mode="a")
     file_handler.setFormatter(formatter)
     root_logger.addHandler(file_handler)

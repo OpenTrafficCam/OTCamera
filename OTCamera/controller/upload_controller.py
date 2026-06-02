@@ -2,10 +2,11 @@
 
 import logging
 from abc import ABC, abstractmethod
+from pathlib import Path
 from queue import Queue, ShutDown
 from threading import Thread
 
-from OTCamera.domain.events import EventBus, FileUploaded, RecordingSplit
+from OTCamera.domain.events import EventBus, RecordingSplit
 from OTCamera.domain.upload import Upload
 
 logger = logging.getLogger(__name__)
@@ -53,8 +54,9 @@ class BlockingUploadController(UploadController):
         """Upload the completed recording segment."""
         try:
             logger.info("Uploading %s", event.filename)
-            self._upload.upload(event.filename)
-            self._event_bus.publish(FileUploaded(filename=event.filename))
+            result = self._upload.upload(Path(event.filename))
+            upload_event = result.to_upload_event()
+            self._event_bus.publish(upload_event)
         except Exception as exc:
             logger.warning("Upload failed: %s", exc)
 
@@ -82,8 +84,11 @@ class ThreadedUploadController(UploadController):
                 break
             try:
                 logger.info("Uploading %s", filename)
-                self._upload.upload(filename)
-                self._event_bus.enqueue(FileUploaded(filename=filename))
+                result = self._upload.upload(Path(filename))
+
+                event = result.to_upload_event()
+
+                self._event_bus.enqueue(event)
             except Exception as exc:
                 logger.warning("Upload failed: %s", exc)
             finally:
