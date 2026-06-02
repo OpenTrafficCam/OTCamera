@@ -30,7 +30,7 @@ class NetworkStatusWriter:
         Args:
             update: The StatusUpdate instance to write to a file.
         """
-        payload = {"status": update.status.name, "changed": update.last_changed_at}
+        payload = {"status": update.status, "changed": update.last_changed_at}
         with open(self.out_file, "w") as f:
             json.dump(payload, f)
 

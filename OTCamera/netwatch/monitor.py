@@ -9,7 +9,7 @@ This module provides:
 import logging
 from collections.abc import Callable
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 from threading import Lock, Thread
 from time import sleep, time
 
@@ -18,12 +18,12 @@ from OTCamera.netwatch.probe import NetworkProbe
 logger = logging.getLogger(__name__)
 
 
-class NetworkStatus(Enum):
+class NetworkStatus(StrEnum):
     """Indicates the current status of a network connection."""
 
-    ONLINE = 1
-    OFFLINE = 2
-    UNKNOWN = 3
+    ONLINE = "ONLINE"
+    OFFLINE = "OFFLINE"
+    UNKNOWN = "UNKNOWN"
 
 
 @dataclass
@@ -48,8 +48,8 @@ class NetworkMonitor(Thread):
         self,
         probe: NetworkProbe,
         wait: int,
-        success_threshold: int = 3,
-        fail_threshold: int = 5,
+        success_threshold: int,
+        fail_threshold: int,
     ):
         """Create a new NetworkMonitor.
 
@@ -120,7 +120,7 @@ class NetworkMonitor(Thread):
 
                 if changed:
                     self._last_changed_at = time()
-                    logging.info(
+                    logger.info(
                         "Updated network status to %s", self._current_status.name
                     )
                     update = StatusUpdate(
@@ -133,7 +133,7 @@ class NetworkMonitor(Thread):
                     try:
                         subscriber(update)
                     except Exception:
-                        logging.exception(
+                        logger.exception(
                             "Subscriber %s raised an exception", subscriber
                         )
 

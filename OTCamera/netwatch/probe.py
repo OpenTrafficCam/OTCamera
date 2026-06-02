@@ -32,7 +32,7 @@ class NetworkProbe(ABC):
 class HttpNetworkProbe(NetworkProbe):
     """Get the current network status based on a HTTP request to one or more URLs."""
 
-    def __init__(self, urls: Sequence[str], timeout: int | None = None):
+    def __init__(self, urls: Sequence[str], timeout: int | None):
         """Create a new HttpNetworkProbe.
 
         Args:
@@ -66,13 +66,14 @@ class HttpNetworkProbe(NetworkProbe):
                     url, timeout=self.timeout, allow_redirects=False
                 )
             except RequestException:
-                logging.debug("Sending network probe to %s failed!", url)
+                logger.debug("Sending network probe to %s failed!", url)
                 continue
 
             # Any HTTP response from a known domain confirms IP-level connectivity,
-            # regardless of status code. Log non-2xx for visibility but stay online.
+            # regardless of status code. Log >=400 status codes for visibility,
+            # but stay online.
             if not response.ok:
-                logging.warning(
+                logger.warning(
                     "Network probe to %s returned status %d", url, response.status_code
                 )
             return True
