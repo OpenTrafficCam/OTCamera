@@ -18,7 +18,7 @@ def _parse_args() -> argparse.Namespace:
         nargs="+",
         required=True,
         metavar="URL",
-        help="One or more URLs to probe.",
+        help="One or more URLs to probe sequentially in the provided order.",
     )
     parser.add_argument(
         "--timeout",
