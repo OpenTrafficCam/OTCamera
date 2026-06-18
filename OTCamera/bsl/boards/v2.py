@@ -18,6 +18,7 @@ class BoardV2:
     button_hour_pull_up: bool = True
     button_wifi_pull_up: bool = True
     button_hold_time: float = 2.0
+    button_bounce_time: float = 0.05
 
     adc_i2c_address: int = 0x48
     adc_fsr: float = 4.096
