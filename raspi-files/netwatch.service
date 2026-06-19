@@ -1,0 +1,19 @@
+[Unit]
+Description=This service starts OTCamera Network Monitor and keeps it running
+After=network.target
+
+[Service]
+User=username
+WorkingDirectory=/path/to/otcamera
+Restart=always
+RestartSec=3
+RuntimeDirectory=otcamera
+ExecStart=path/to/otc-netwatch \
+    --urls https://1.1.1.1 \
+    --wait 30 \
+    --out-file /run/otcamera/network_status.json
+Type=simple
+
+
+[Install]
+WantedBy=multi-user.target
