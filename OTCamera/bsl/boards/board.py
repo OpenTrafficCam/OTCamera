@@ -21,6 +21,7 @@ class Board(Protocol):
     button_hour_pull_up: bool
     button_wifi_pull_up: bool
     button_hold_time: float
+    button_bounce_time: float
 
     adc_i2c_address: int
     adc_fsr: float

@@ -11,6 +11,7 @@ class GpioButton(Button):
     def __init__(
         self,
         pin: int,
+        bounce_time: float,
         pull_up: bool = True,
         hold_time: float = 2.0,
     ) -> None:
@@ -21,6 +22,7 @@ class GpioButton(Button):
             pull_up=pull_up,
             hold_time=hold_time,
             hold_repeat=False,
+            bounce_time=bounce_time,
         )
 
     def on_pressed(self, callback: Callable[[], None]) -> None:
