@@ -13,7 +13,7 @@ The handling is different for the development environment and target environment
 To set up the development environment, simply run
 
 ```sh
-uv sync --dev
+uv sync
 ```
 
 This will install the base and development requirements into a new virtual environment.
@@ -61,5 +61,5 @@ After any update to `uv.lock`, the `requirements.txt` will be updated automatica
 If pre-commit is not used, this can be done manually via:
 
 ```sh
-uv export --no-hashes --extra pi --format requirements-txt > requirements.txt
+uv export --no-hashes --no-dev --extra pi --format requirements-txt > requirements.txt
 ```
