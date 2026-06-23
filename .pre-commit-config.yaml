@@ -58,6 +58,7 @@ repos:
         args:
           [
             "--no-hashes",
+            "--no-dev",
             "--extra=pi",
             "--output-file=requirements.txt",
             "--format=requirements-txt",

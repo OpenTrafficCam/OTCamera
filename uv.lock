@@ -547,11 +547,11 @@ provides-extras = ["pi"]
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "mypy", specifier = ">=2.0,<3" },
-    { name = "pre-commit", specifier = ">=4.2.0,<5" },
-    { name = "pytest", specifier = ">=9.0,<10" },
-    { name = "pytest-cov", specifier = ">=7.1,<8" },
-    { name = "ruff", specifier = ">=0.15.12" },
+    { name = "mypy", specifier = "==2.1.0" },
+    { name = "pre-commit", specifier = "==4.6.0" },
+    { name = "pytest", specifier = "==9.0.3" },
+    { name = "pytest-cov", specifier = ">=7.1.0" },
+    { name = "ruff", specifier = "==0.15.12" },
     { name = "types-boto3", specifier = "==1.42.85" },
     { name = "types-pika-ts", specifier = "==1.3.0.*" },
     { name = "types-psutil", specifier = "==7.0.0.*" },
