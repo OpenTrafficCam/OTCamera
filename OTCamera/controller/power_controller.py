@@ -65,14 +65,21 @@ class PowerController:
         if self._adc is None or self._adc_config is None:
             return False
         try:
-            voltage = self._adc.get_voltage(self._adc_config.channel_battery)
+            voltage = (
+                self._adc.get_voltage(self._adc_config.channel_battery)
+                * self._adc_config.divider_ratio_battery
+            )
+            logger.debug(f"Battery check read {voltage}V")
         except ADCTimeoutError:
             logger.warning("ADC timeout reading battery; assuming battery OK")
             return False
-        return (
-            voltage * self._adc_config.divider_ratio_battery
-            < self._config.adc.threshold_low_battery
-        )
+        if voltage < self._config.adc.threshold_low_battery:
+            logger.warning(
+                f"Read voltage {voltage}V below threshold "
+                f"({self._config.adc.threshold_low_battery}V)"
+            )
+            return True
+        return False
 
     @property
     def battery_is_low(self) -> bool:
