@@ -76,6 +76,9 @@ dev = [
 [tool.ruff]
 line-length = 88
 
+[tool.ruff.lint]
+extend-select = ["I"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 markers = [
@@ -98,7 +101,6 @@ module = "tests.html_updater_test"
 ignore_errors = true
 
 [tool.uv]
-default-groups = []
 exclude-newer = "3 days"
 
 [[tool.mypy.overrides]]
@@ -121,7 +123,3 @@ convention = "google"
 # Exclude tests/ from being docstyle-linted
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["D"]
-
-[tool.isort]
-line_length = 88
-profile = "black"
