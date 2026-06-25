@@ -38,11 +38,13 @@ class FakeGpioZeroButton:
         pull_up: bool = True,
         hold_time: float = 2.0,
         hold_repeat: bool = False,
+        bounce_time: float | None = None,
     ) -> None:
         self.pin = pin
         self.pull_up = pull_up
         self.hold_time = hold_time
         self.hold_repeat = hold_repeat
+        self.bounce_time = bounce_time
         self.when_pressed = None
         self.when_held = None
         self.when_released = None
@@ -126,7 +128,7 @@ class TestGpioButton:
     ) -> None:
         _install_fake_gpiozero(monkeypatch)
 
-        button = GpioButton(19, pull_up=False, hold_time=1.5)
+        button = GpioButton(19, bounce_time=0.05, pull_up=False, hold_time=1.5)
         pressed: list[str] = []
         held: list[str] = []
         released: list[str] = []
@@ -143,6 +145,7 @@ class TestGpioButton:
         assert button._button.pin == 19
         assert button._button.pull_up is False
         assert button._button.hold_time == 1.5
+        assert button._button.bounce_time == 0.05
         assert pressed == ["pressed"]
         assert held == ["held"]
         assert released == ["released"]

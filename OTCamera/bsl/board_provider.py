@@ -99,16 +99,19 @@ class BoardProvider:
                 buttons = {
                     "power": GpioButton(
                         board.button_power_pin,
+                        bounce_time=board.button_bounce_time,
                         pull_up=board.button_power_pull_up,
                         hold_time=board.button_hold_time,
                     ),
                     "hour": GpioButton(
                         board.button_hour_pin,
+                        bounce_time=board.button_bounce_time,
                         pull_up=board.button_hour_pull_up,
                         hold_time=board.button_hold_time,
                     ),
                     "wifi": GpioButton(
                         board.button_wifi_pin,
+                        bounce_time=board.button_bounce_time,
                         pull_up=board.button_wifi_pull_up,
                         hold_time=board.button_hold_time,
                     ),
