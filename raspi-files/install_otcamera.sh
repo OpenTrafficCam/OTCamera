@@ -13,7 +13,6 @@ read -r -e -p "Use DS3231 RTC? [y/n]: " -i "y" USE_RTC
 read -r -e -p "Use Buttons? [y/n]: " -i "y" USE_BUTTONS
 read -r -e -p "Use LEDs? [y/n]: " -i "y" USE_LEDS
 read -r -e -p "Activate DEBUG mode? [y/n]: " -i "n" USE_DEBUG
-read -r -e -p "Use relay server? [y/n]: " -i "n" USE_RELAY
 
 echo "#### Configure Rasperry Pi"
 echo "Configure legacy camera mode using raspi-config"
@@ -215,18 +214,6 @@ case $USE_DEBUG in
 [nN] | [nN][oO])
   echo "Disableing debug mode"
   sed "$OTCONFIG" -i -e "s?^DEBUG_MODE_ON.*?DEBUG_MODE_ON = False?g"
-  ;;
-esac
-
-case $USE_RELAY in
-[yY] | [yY][eE][sS])
-  echo "Enableing relay mode"
-  sed "$OTCONFIG" -i -e "s?^USE_RELAY.*?USE_RELAY = True?g"
-  bash ./raspi-files/install_sshrelay.sh
-  ;;
-[nN] | [nN][oO])
-  echo "Disableing debug mode"
-  sed "$OTCONFIG" -i -e "s?^USE_RELAY.*?USE_RELAY = False?g"
   ;;
 esac
 
