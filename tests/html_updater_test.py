@@ -82,7 +82,6 @@ def status_data() -> StatusDataObject:
             StatusHtmlId.EXT_POWER_SUPPLY_CONNECTED,
             True,
         ),
-        ms_teams_webhook_enabled=(StatusHtmlId.MS_TEAMS_WEBHOOK_ENABLED, False),
         time_until_wifi_off=(StatusHtmlId.TIME_UNTIL_WIFI_OFF, "300s"),
     )
 

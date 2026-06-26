@@ -65,7 +65,6 @@ class StatusHtmlId(Enum):
     HOUR_BUTTON_ACTIVE = "24-7-recording"
     WIFI_AP_ON = "wifi-ap-on"
     EXT_POWER_SUPPLY_CONNECTED = "ext-power-supply-connected"
-    MS_TEAMS_WEBHOOK_ENABLED = "ms-teams-webhook-enabled"
     TIME_UNTIL_WIFI_OFF = "time-until-wifi-off"
 
 
@@ -145,7 +144,6 @@ class StatusDataObject(OTCameraDataObject):
     low_battery: Tuple[Enum, bool]
     hour_button_active: Tuple[Enum, bool]
     external_power_supply_connected: Tuple[Enum, bool]
-    ms_teams_webhook_enabled: Tuple[Enum, bool]
     time_until_wifi_off: Tuple[Enum, str]
 
 
@@ -196,7 +194,6 @@ STATUS_DESC = {
     StatusHtmlId.LOW_BATTERY: "Battery Low",
     StatusHtmlId.HOUR_BUTTON_ACTIVE: "24/7 Recording",
     StatusHtmlId.EXT_POWER_SUPPLY_CONNECTED: "External Power Supply Connected",
-    StatusHtmlId.MS_TEAMS_WEBHOOK_ENABLED: "MS Teams Webhook Enabled",
     StatusHtmlId.TIME_UNTIL_WIFI_OFF: "Turn Wi-Fi Off In",
 }
 """Dictionary that maps a StatusHtmlId to its description to be displayed on the status

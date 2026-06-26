@@ -1,9 +1,6 @@
 import textwrap
 from pathlib import Path
 
-import pytest
-from pydantic import ValidationError
-
 from OTCamera.config import Config, parse_user_config
 
 
@@ -55,9 +52,6 @@ def test_parse_user_config_minimal(tmp_path: Path) -> None:
               use_leds: true
               use_buttons: true
               use_adc: true
-            msteams:
-              enable: false
-              url: ""
             adc:
               threshold_external_power: 2.5
               threshold_low_battery: 3.3
@@ -107,8 +101,3 @@ def test_default_config_has_sensible_values() -> None:
     assert config.hardware.use_leds is False
     assert config.hardware.use_buttons is False
     assert config.hardware.use_adc is False
-
-
-def test_msteams_requires_url_when_enabled() -> None:
-    with pytest.raises(ValidationError, match="url"):
-        Config.model_validate({"msteams": {"enable": True}})

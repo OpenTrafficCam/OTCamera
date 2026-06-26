@@ -59,11 +59,6 @@ hardware:
   use_buttons: buttons
   use_adc: adc
 
-msteams:
-  enable: msteams
-  url: url
-  max_failed_send_attempts: max_failed_send_attempts
-
 adc:
   threshold_external_power: threshold_external_power
   threshold_low_battery: threshold_low_battery

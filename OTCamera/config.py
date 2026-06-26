@@ -130,20 +130,6 @@ class HardwareConfig(BaseModel):
     use_adc: bool = False
 
 
-class MsTeamsConfig(BaseModel):
-    """MS Teams logging webhook settings."""
-
-    enable: bool = False
-    url: StrFromYaml | None = None
-    max_failed_send_attempts: int = 2
-
-    @model_validator(mode="after")
-    def _require_url_when_enabled(self) -> "MsTeamsConfig":
-        if self.enable and self.url is None:
-            raise ValueError("msteams.url is required when msteams.enable is true")
-        return self
-
-
 class AdcConfig(BaseModel):
     """Voltage thresholds used by power monitoring."""
 
@@ -192,7 +178,6 @@ class Config(BaseModel):
     video: VideoConfig = Field(default_factory=VideoConfig)
     wifi: WifiConfig = Field(default_factory=WifiConfig)
     hardware: HardwareConfig = Field(default_factory=HardwareConfig)
-    msteams: MsTeamsConfig = Field(default_factory=MsTeamsConfig)
     adc: AdcConfig = Field(default_factory=AdcConfig)
     ot_cloud: OTCloudSettings | None = None
     rabbitmq: RabbitMqConfig | None = None
