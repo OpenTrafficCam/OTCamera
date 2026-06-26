@@ -39,12 +39,14 @@ class FakeButton(FakeCloseable):
     def __init__(
         self,
         pin: int,
+        bounce_time: float = 0.05,
         pull_up: bool = True,
         hold_time: float = 2.0,
         hold_repeat: bool = False,
     ) -> None:
         super().__init__()
         self.pin = pin
+        self.bounce_time = bounce_time
         self.pull_up = pull_up
         self.hold_time = hold_time
         self.hold_repeat = hold_repeat
