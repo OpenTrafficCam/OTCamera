@@ -14,21 +14,15 @@ repos:
       - id: requirements-txt-fixer
       - id: check-executables-have-shebangs
       - id: detect-private-key
-  - repo: https://github.com/PyCQA/flake8
-    rev: 7.2.0
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    # Ruff version.
+    rev: v0.15.15
     hooks:
-      - id: flake8
-  - repo: https://github.com/pycqa/isort
-    rev: 6.0.1
-    hooks:
-      - id: isort
-        args:
-          - --profile
-          - black
-  - repo: https://github.com/psf/black
-    rev: 25.1.0
-    hooks:
-      - id: black
+      # Run the linter.
+      - id: ruff-check
+        args: [--fix]
+      # Run the formatter.
+      - id: ruff-format
   - repo: local
     hooks:
       - id: mypy
@@ -56,6 +50,20 @@ repos:
         args:
           - -i
           - "2"
+  - repo: https://github.com/astral-sh/uv-pre-commit
+    # uv version.
+    rev: 0.11.17
+    hooks:
+      - id: uv-export
+        args:
+          [
+            "--no-hashes",
+            "--no-dev",
+            "--extra=pi",
+            "--output-file=requirements.txt",
+            "--format=requirements-txt",
+            "--quiet",
+          ]
   - repo: https://github.com/editorconfig-checker/editorconfig-checker.python
     rev: 3.6.1
     hooks:

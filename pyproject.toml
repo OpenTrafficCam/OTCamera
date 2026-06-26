@@ -1,15 +1,24 @@
 [build-system]
-requires = ["hatchling", "hatch-requirements-txt"]
+requires = ["hatchling>=1.29,<2"]
 build-backend = "hatchling.build"
 
 [project]
 name = "OTCamera"
-dynamic = ["dependencies", "version"]
+dynamic = ["version"]
 authors = [
     { name="OpenTrafficCam contributors", email="team@opentrafficcam.org" },
     { name="platomo GmbH", email="info@platomo.de" },
 ]
 description = "OTCamera is a core module of the OpenTrafficCam framework to record videos over multiple days with a custom camera system based on the Raspberry Pi Zero W."
+dependencies = [
+    "beautifulsoup4==4.13.4",
+    "boto3==1.42.85",
+    "pika==1.3.2",
+    "pydantic==2.12.5",
+    "psutil==7.0.0",
+    "PyYAML==6.0.2",
+    "requests==2.32.4",
+]
 
 readme = "README.md"
 requires-python = ">=3.13"
@@ -18,10 +27,18 @@ license-files = ["LICENSE"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
     "Operating System :: OS Independent",
 ]
 keywords = ["OpenTrafficCam", "Mobile Camera"]
+
+[project.optional-dependencies]
+# pi-specific dependencies
+pi = [
+    "gpiozero==2.0.1",
+    "lgpio==0.2.2.0",
+    "opencv-python-headless==4.12.0.88",
+    "smbus2==0.6.1",
+]
 
 [project.urls]
 Homepage = "https://opentrafficcam.org/"
@@ -33,9 +50,6 @@ Changelog = "https://github.com/OpenTrafficCam/OTCamera/releases"
 [project.scripts]
 otc-netwatch = "OTCamera.netwatch.__main__:main"
 
-[tool.hatch.metadata.hooks.requirements_txt]
-files = ["requirements.txt"]
-
 [tool.hatch.version]
 path = "OTCamera/version.py"
 
@@ -45,13 +59,25 @@ packages = ["OTCamera"]
 [tool.hatch.build]
 directory = "dist"
 
-[tool.black]
-line-length = 88
-target-version = ["py312"]
+[dependency-groups]
+dev = [
+    "mypy==2.1.0",
+    "pre-commit==4.6.0",
+    "pytest==9.0.3",
+    "pytest-cov>=7.1.0",
+    "ruff==0.15.12",
+    "types-boto3==1.42.85",
+    "types-pika-ts==1.3.0.*",
+    "types-psutil==7.0.0.*",
+    "types-PyYAML==6.0.2",
+    "types-requests==2.32.4.*",
+]
 
-[tool.isort]
-line_length = 88
-profile = "black"
+[tool.ruff]
+line-length = 88
+
+[tool.ruff.lint]
+extend-select = ["I"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -74,6 +100,9 @@ ignore_errors = true
 module = "tests.html_updater_test"
 ignore_errors = true
 
+[tool.uv]
+exclude-newer = "3 days"
+
 [[tool.mypy.overrides]]
 module = [
     "libcamera",
@@ -88,14 +117,9 @@ module = [
 ]  # explicitly empty — populated only via deliberate user decisions
 ignore_missing_imports = true # needs to set to true to take effect on the whitelisted modules
 
-[tool.ruff.lint]
-# Enable all `pydocstyle` rules, limiting to those that adhere to the
-# Google convention via `convention = "google"`, below.
-select = ["D"]
-
 [tool.ruff.lint.pydocstyle]
 convention = "google"
 
-# Exclude tests/ from being docstyle-linted 
+# Exclude tests/ from being docstyle-linted
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["D"]
