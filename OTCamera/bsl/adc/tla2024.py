@@ -1,13 +1,32 @@
 """TLA2024 4-channel ADC implementation using I2C/smbus2."""
 
+import contextlib
+import fcntl
 import logging
 import time
+from typing import Iterator
 
 from OTCamera.domain.adc import ADC, ADCTimeoutError
 
 logger = logging.getLogger(__name__)
 
 _MAX_POLL_ITERATIONS = 100
+
+OTC_I2C_LOCKFILE = "/tmp/otc_i2c.lock"
+
+
+# TODO: remove this once no longer needed
+# Used to avoid timing-collisions when otc-metrics polls i2c
+# at the same time.
+@contextlib.contextmanager
+def i2c_lock() -> Iterator[None]:
+    """Lock access to i2c bus."""
+    with open(OTC_I2C_LOCKFILE, "w") as f:
+        fcntl.flock(f, fcntl.LOCK_EX)
+        try:
+            yield
+        finally:
+            fcntl.flock(f, fcntl.LOCK_UN)
 
 
 class TLA2024(ADC):
@@ -58,21 +77,27 @@ class TLA2024(ADC):
 
         try:
             config_bytes = [(config >> 8) & 0xFF, config & 0xFF]
-            self._bus.write_i2c_block_data(
-                self._address, self._REG_CONFIG, config_bytes
-            )
 
-            for _ in range(_MAX_POLL_ITERATIONS):
-                time.sleep(0.001)
-                result = self._bus.read_i2c_block_data(
-                    self._address, self._REG_CONFIG, 2
+            with i2c_lock():
+                self._bus.write_i2c_block_data(
+                    self._address, self._REG_CONFIG, config_bytes
                 )
-                if result[0] & 0x80:
-                    break
-            else:
-                raise ADCTimeoutError("ADC conversion timeout on channel %s" % channel)
 
-            data = self._bus.read_i2c_block_data(self._address, self._REG_CONVERSION, 2)
+                for _ in range(_MAX_POLL_ITERATIONS):
+                    time.sleep(0.001)
+                    result = self._bus.read_i2c_block_data(
+                        self._address, self._REG_CONFIG, 2
+                    )
+                    if result[0] & 0x80:
+                        break
+                else:
+                    raise ADCTimeoutError(
+                        "ADC conversion timeout on channel %s" % channel
+                    )
+
+                data = self._bus.read_i2c_block_data(
+                    self._address, self._REG_CONVERSION, 2
+                )
         except OSError as exc:
             raise ADCTimeoutError(
                 "I2C error on channel %s: %s" % (channel, exc)
