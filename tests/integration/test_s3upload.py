@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import Any
 
 import boto3
+import os
 import pytest
 from botocore.config import Config as Boto3Config
 from botocore.exceptions import ClientError
@@ -20,8 +21,10 @@ EXAMPLE_VIDEOS_PATHS = set(EXAMPLE_VIDEOS_FOLDER.glob("*.h264"))
 
 @pytest.fixture
 def local_s3_config() -> S3Config:
+    HOST = os.getenv("OTC_TEST_S3_HOST", "127.0.0.1")
+    PORT = os.getenv("OTC_TEST_S3_PORT", 9000)
     return S3Config(
-        endpoint_url="http://127.0.0.1:9000",
+        endpoint_url=f"http://{HOST}:{PORT}",
         access_key="rustfsadmin",
         secret_key="rustfsadmin",
         bucket="test",

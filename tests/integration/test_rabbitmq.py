@@ -1,6 +1,7 @@
 """Integration test for RabbitMQ notification after file upload."""
 
 import json
+import os
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Generator
@@ -42,8 +43,8 @@ OT_CLOUD = OTCloudSettings(camera_id=2, project_id=0, site_id=1)
 @pytest.fixture
 def local_rabbitmq_config() -> RabbitMqConfig:
     return RabbitMqConfig(
-        host="127.0.0.1",
-        port=5672,
+        host=os.getenv("OTC_TEST_RABBITMQ_HOST", "127.0.0.1"),
+        port=os.getenv("OTC_TEST_RABBITMQ_PORT", 5672),
         exchange=EXCHANGE,
         routing_key=ROUTING_KEY,
         durable=False,
