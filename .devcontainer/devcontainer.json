@@ -29,6 +29,12 @@
 	"features": {
 	  "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {
 		"moby": false
-	  }
-	}
+	  },
+      "ghcr.io/anthropics/devcontainer-features/claude-code:1.0": {},
+      "ghcr.io/devcontainers/features/node:1": {}
+	},
+
+	"mounts": [
+	  "source=claude-code-config,target=/home/vscode/.claude,type=volume"
+	]
 }
