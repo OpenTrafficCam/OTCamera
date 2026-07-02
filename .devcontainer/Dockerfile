@@ -8,3 +8,5 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
 RUN pipx install uv==${UV_VERSION}
 
 RUN mkdir -p /opt/venv && chown vscode:vscode /opt/venv
+
+RUN curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/nektos/act/master/install.sh | sudo bash
