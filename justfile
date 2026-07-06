@@ -32,10 +32,10 @@ wait-rustfs:
 
 
 start-containers:
-    docker compose -f docker/docker-compose.yml up -d
+    docker compose -f container/compose.yml up -d
 
 stop-containers:
-    docker compose -f docker/docker-compose.yml stop
+    docker compose -f container/compose.yml stop
 
 test: start-containers wait-rabbitmq wait-rustfs
     uv run pytest
