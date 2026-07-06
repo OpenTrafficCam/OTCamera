@@ -2,27 +2,23 @@
 
 ## Setup
 
-Although the software is designed to run on a Raspberry Pi, no Pi-specific (or for that matter, Linux-specific) dependencies
-need to be installed. Architecture-specific dependencies are guarded by tags.
+This project manages its dependencies with `uv`.
 
-To set up the development environment, run:
+To setup a dev environment, make sure you have `uv` installed. Then simply run
 
-```bash
-python3 -m venv venv
-source venv/bin/activate
-# installs both dev and regular requirements.
-pip install -r requirements-dev.txt
-# optional, but recommended
-pre-commit install
+```
+uv sync
 ```
 
-## Docker (Optional)
+Check [dependency_management.md](./dependency_management.md) for more information.
 
-The test suite includes integration tests that require third-party services running on localhost. Easiest is to run them with Docker using the
-provided docker-compose.yml file:
+## Container (Optional)
+
+The test suite includes integration tests that require third-party services running on localhost. Easiest is to run them with a container engine
+of your choice that supports the compose specification, e.g. Docker:
 
 ```bash
-docker compose -f docker/docker-compose.yml up -d
+docker compose -f container/compose.yml up -d
 ```
 
 ## Tests
@@ -30,11 +26,17 @@ docker compose -f docker/docker-compose.yml up -d
 Run tests with:
 
 ```bash
-pytest
+uv run pytest
 ```
 
 If you want to skip the integration tests that require external services, run:
 
 ```bash
-pytest -m "not integration"
+uv run pytest -m "not integration"
 ```
+
+## just
+
+The repository provides a `justfile` with various recipes. It assumes `docker` CLI for managing containers, if you use a compatible
+runtime like `podman` make sure you have an alias or symlink in place.
+Some recipes use [act](https://github.com/nektos/act) for running Github Actions locally.
