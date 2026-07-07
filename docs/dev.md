@@ -6,8 +6,10 @@ This project manages its dependencies with `uv`.
 
 To setup a dev environment, make sure you have `uv` installed. Then simply run
 
-```
+```bash
 uv sync
+# optional, but recommended
+pre-commit install
 ```
 
 Check [dependency_management.md](./dependency_management.md) for more information.
