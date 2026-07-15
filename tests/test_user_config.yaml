@@ -2,9 +2,6 @@
 debug_mode:
   enable: debug_mode
 
-relay_server:
-  enable: relay_server
-
 recording:
   start_hour: start_hour
   end_hour: end_hour
