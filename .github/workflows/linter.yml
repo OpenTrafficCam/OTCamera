@@ -24,7 +24,7 @@ jobs:
         uses: github/super-linter/slim@v7
         env:
           VALIDATE_ALL_CODEBASE: false
-          DEFAULT_BRANCH: master
+          DEFAULT_BRANCH: main
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VALIDATE_GO_RELEASER: false
           VALIDATE_MARKDOWN_PRETTIER: false
