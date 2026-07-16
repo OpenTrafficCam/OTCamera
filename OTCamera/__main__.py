@@ -242,10 +242,6 @@ class OTCamera:
                 StatusHtmlId.EXT_POWER_SUPPLY_CONNECTED,
                 self._power.external_power_connected,
             ),
-            ms_teams_webhook_enabled=(
-                StatusHtmlId.MS_TEAMS_WEBHOOK_ENABLED,
-                self._config.msteams.enable,
-            ),
             time_until_wifi_off=(StatusHtmlId.TIME_UNTIL_WIFI_OFF, time_until_wifi_off),
         )
 

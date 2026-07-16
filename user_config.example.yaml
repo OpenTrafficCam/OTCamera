@@ -119,11 +119,6 @@ hardware:
   use_buttons: false
   use_adc: false
 
-msteams:
-  enable: false
-  url: null
-  max_failed_send_attempts: 2
-
 adc:
   threshold_external_power: 2.5
   threshold_low_battery: 3.3
