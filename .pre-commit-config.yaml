@@ -14,47 +14,47 @@ repos:
       - id: requirements-txt-fixer
       - id: check-executables-have-shebangs
       - id: detect-private-key
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    # Ruff version.
-    rev: v0.15.15
+  - repo: local
     hooks:
-      # Run the linter.
       - id: ruff-check
+        name: Run the ruff linter
+        entry: ruff check
+        types: [python]
         args: [--fix]
-      # Run the formatter.
+        language: unsupported
       - id: ruff-format
+        name: Run the ruff formatter
+        entry: ruff format
+        types: [python]
+        language: unsupported
+  - repo: local
+    hooks:
+      - id: super-linter
+        name: Super-linter
+        # Docker hook mounts the workspace at /src, so we point super-linter there.
+        # Note: when super-linter version is bumped here, make sure to upgrade in CI as well.
+        entry: --rm --platform linux/amd64 -e RUN_LOCAL=true -e DEFAULT_WORKSPACE=/src --env-file .github/super-linter.env ghcr.io/super-linter/super-linter:v8.7.0
+        language: docker_image
+        pass_filenames: false
+        stages: [pre-push]
   - repo: local
     hooks:
       - id: mypy
         name: Run mypy
         entry: mypy OTCamera tests
-        language: system
+        language: unsupported
         types: [python]
         always_run: true
         pass_filenames: false
         args: [--config-file, pyproject.toml]
-  - repo: https://github.com/adrienverge/yamllint.git
-    rev: v1.37.1
-    hooks:
-      - id: yamllint
-        args:
-          - -c=./.yamllint.yaml
-  - repo: https://github.com/koalaman/shellcheck-precommit
-    rev: v0.10.0
-    hooks:
-      - id: shellcheck
-  - repo: https://github.com/pecigonzalo/pre-commit-shfmt
-    rev: v2.2.0
-    hooks:
-      - id: shell-fmt-docker
-        args:
-          - -i
-          - "2"
-  - repo: https://github.com/astral-sh/uv-pre-commit
-    # uv version.
-    rev: 0.11.17
+  - repo: local
     hooks:
       - id: uv-export
+        name: Export requirements.txt
+        files: '^uv\.lock$'
+        language: unsupported
+        pass_filenames: false
+        entry: uv export
         args:
           [
             "--no-hashes",
@@ -64,8 +64,3 @@ repos:
             "--format=requirements-txt",
             "--quiet",
           ]
-  - repo: https://github.com/editorconfig-checker/editorconfig-checker.python
-    rev: 3.6.1
-    hooks:
-      - id: editorconfig-checker
-        alias: ec
