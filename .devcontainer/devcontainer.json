@@ -2,26 +2,19 @@
 // README at: https://github.com/devcontainers/templates/tree/main/src/python
 {
 	"name": "Python 3",
-	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
 	"build": {"dockerfile": "Dockerfile"},
 
-	// Features to add to the dev container. More info: https://containers.dev/features.
-	// "features": {},
+	"containerEnv": {
+		// use a different venv location to avoid conflicts if there already exists one
+		// in the workspace.
+		"UV_PROJECT_ENVIRONMENT": "/opt/venv",
+		// set test hosts
+		"OTC_TEST_S3_HOST": "rustfs",
+		"OTC_TEST_RABBITMQ_HOST": "rabbitmq"
+	},
 
-	// Use 'forwardPorts' to make a list of ports inside the container available locally.
-	// "forwardPorts": [],
-
-	// Configure tool-specific properties.
-	// "customizations": {},
-
-	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
-	// "remoteUser": "root"
-
-	// Use a different 
-	"containerEnv": {"UV_PROJECT_ENVIRONMENT": "/opt/venv", "OTC_TEST_S3_HOST": "rustfs", "OTC_TEST_RABBITMQ_HOST": "rabbitmq"},
-
-	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "uv sync",
+	// set permissiosn on the claude directory and install uv dependencies
+	"postCreateCommand": "sudo chown -R vscode:vscode /home/vscode/.claude && uv sync",
 
 	"initializeCommand": "docker compose -f docker/docker-compose.yml up -d",
   	"runArgs": ["--network=ot-camera"],
@@ -33,7 +26,6 @@
       "ghcr.io/anthropics/devcontainer-features/claude-code:1.0": {},
       "ghcr.io/devcontainers/features/node:1": {}
 	},
-
 	"mounts": [
 	  "source=claude-code-config,target=/home/vscode/.claude,type=volume"
 	]
