@@ -2,10 +2,12 @@
 
 import logging
 from dataclasses import dataclass
+from datetime import datetime as dt
 from time import sleep
 from typing import Optional, Union
 
 import cv2
+import numpy as np
 from libcamera import controls
 from picamera2 import MappedArray, Picamera2
 from picamera2.encoders import H264Encoder
@@ -56,6 +58,8 @@ H264_PROFILE_MAP = {
     "high": "high",
     "constrained": "constrained",
 }
+
+_ANNOTATION_TIMESTAMP_FORMAT = "%d.%m.%Y %H:%M:%S"
 
 
 @dataclass(frozen=True)
@@ -126,11 +130,13 @@ class PiCamera2(Camera):
         self._drc_strength = drc_strength
         self._rotation = rotation
         self._meter_mode = meter_mode
-        self._annotation_text = ""
+        self._annotation_text: Optional[str] = None
         self._is_recording = False
         self._encoder: Optional[H264Encoder] = None
         self._splittable_output: Optional[object] = None
         self._recording_params: _RecordingParams | None = None
+        self._annotation_overlay: Optional[np.ndarray] = None
+        self._annotation_rendered_text = ""
 
         logger.debug("Initializing PiCamera2")
         self._setup_picamera()
@@ -170,7 +176,7 @@ class PiCamera2(Camera):
 
     def _setup_picamera(self) -> None:
         video_config = self._picam2.create_video_configuration(
-            main={"size": self._video_resolution},
+            main={"size": self._video_resolution, "format": "YUV420"},
             sensor={"output_size": self._resolution},
             transform=self._build_transform(),
         )
@@ -228,38 +234,54 @@ class PiCamera2(Camera):
             ctrl["AeMeteringMode"] = controls.AeMeteringModeEnum.CentreWeighted
 
         frame_duration = int(1_000_000 / self._frame_rate)
-        ctrl["FrameDurationLimits"] = (100, frame_duration)
+        ctrl["FrameDurationLimits"] = (frame_duration, frame_duration)
 
         self._picam2.set_controls(ctrl)
 
     def _apply_annotation(self, request: object) -> None:
-        """Apply the current annotation text to the preview frame."""
-        if not self._annotation_text:
+        """Burn the label plus a live timestamp into the frame, per frame."""
+        text = self._annotation_text
+        if text is None:
             return
+
+        timestamp = dt.now().strftime(_ANNOTATION_TIMESTAMP_FORMAT)
+        full = f"{text} {timestamp}" if text else timestamp
+        if full != self._annotation_rendered_text:
+            self._annotation_overlay = self._render_annotation_overlay(full)
+            self._annotation_rendered_text = full
+
+        overlay = self._annotation_overlay
+        if overlay is None:
+            return
+
         with MappedArray(request, "main") as mapped_array:
-            text = self._annotation_text
-            font = cv2.FONT_HERSHEY_SIMPLEX
-            font_scale = 0.7
-            thickness = 2
-            text_size, _ = cv2.getTextSize(text, font, font_scale, thickness)
-            text_x, text_y = 10, 30
-            padding = 5
-            cv2.rectangle(
-                mapped_array.array,
-                (text_x - padding, text_y - text_size[1] - padding),
-                (text_x + text_size[0] + padding, text_y + padding),
-                (0, 0, 0),
-                -1,
-            )
-            cv2.putText(
-                mapped_array.array,
-                text,
-                (text_x, text_y),
-                font,
-                font_scale,
-                (255, 255, 255),
-                thickness,
-            )
+            frame_h, frame_w = mapped_array.array.shape[:2]
+            h = min(overlay.shape[0], frame_h - 5)
+            w = min(overlay.shape[1], frame_w - 5)
+            if h > 0 and w > 0:
+                mapped_array.array[5 : 5 + h, 5 : 5 + w] = overlay[:h, :w]
+
+    def _render_annotation_overlay(self, text: str) -> np.ndarray:
+        """Render text into a small RAM buffer (cheap; the DMA buffer is not)."""
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        font_scale = 0.5
+        thickness = 1
+        padding = 5
+        text_size, baseline = cv2.getTextSize(text, font, font_scale, thickness)
+        width = text_size[0] + 2 * padding
+        height = text_size[1] + baseline + 2 * padding
+        # Single-channel luma overlay, written directly into the YUV420 Y plane.
+        overlay = np.zeros((height, width), dtype=np.uint8)
+        cv2.putText(
+            overlay,
+            text,
+            (padding, padding + text_size[1]),
+            font,
+            font_scale,
+            255,
+            thickness,
+        )
+        return overlay
 
     def start_recording(
         self,
@@ -374,8 +396,9 @@ class PiCamera2(Camera):
 
     def set_frame_rate(self, value: int) -> None:
         self._frame_rate = value
+        frame_duration = int(1_000_000 / value)
         self._picam2.set_controls(
-            {"FrameDurationLimits": (100, int(1_000_000 / value))}
+            {"FrameDurationLimits": (frame_duration, frame_duration)}
         )
 
     def set_resolution(self, value: tuple[int, int]) -> None:

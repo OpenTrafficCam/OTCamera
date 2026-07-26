@@ -13,13 +13,14 @@ recording:
 camera:
   fps: 20
   resolution:
-    width: 1640
-    height: 1232
-  exposure_mode: nightpreview
+    width: 2304
+    height: 1296
+  exposure_mode: short
   drc_strength: high
   rotation: 180
-  awb_mode: greyworld
+  awb_mode: auto
   meter_mode: average
+  lens_position: 6.0
 
 preview:
   path: ~/OTCamera/webfiles/preview.jpg
@@ -104,8 +105,8 @@ video:
   dir: ~/videos/
   format: h264
   resolution:
-    width: 800
-    height: 600
+    width: 1024
+    height: 576
   encoder:
     profile: high
     level: 4
@@ -117,9 +118,9 @@ wifi:
 
 hardware:
   pcb_version: v2
-  use_leds: false
-  use_buttons: false
-  use_adc: false
+  use_leds: true
+  use_buttons: true
+  use_adc: true
 
 msteams:
   enable: false
@@ -128,4 +129,4 @@ msteams:
 
 adc:
   threshold_external_power: 2.5
-  threshold_low_battery: 3.3
+  threshold_low_battery: 6.4
