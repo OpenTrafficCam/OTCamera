@@ -20,7 +20,6 @@ camera:
   rotation: 180
   awb_mode: auto
   meter_mode: average
-  lens_position: 6.0
 
 preview:
   path: ~/OTCamera/webfiles/preview.jpg
