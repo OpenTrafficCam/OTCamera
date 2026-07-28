@@ -37,10 +37,10 @@ class CameraConfig(BaseModel):
 
     fps: int = 20
     resolution: tuple[int, int] = (2304, 1296)
-    exposure_mode: StrFromYaml = "nightpreview"
+    exposure_mode: StrFromYaml = "short"
     drc_strength: StrFromYaml = "high"
     rotation: int = 180
-    awb_mode: StrFromYaml = "greyworld"
+    awb_mode: StrFromYaml = "auto"
     meter_mode: StrFromYaml = "average"
 
     @field_validator("resolution", mode="before")
@@ -104,7 +104,7 @@ class VideoConfig(BaseModel):
 
     dir: StrFromYaml = "~/videos/"
     format: StrFromYaml = "h264"
-    resolution: tuple[int, int] = (800, 600)
+    resolution: tuple[int, int] = (1024, 576)
     encoder: EncoderConfig = Field(default_factory=EncoderConfig)
 
     @field_validator("resolution", mode="before")
@@ -125,9 +125,9 @@ class HardwareConfig(BaseModel):
     """Hardware feature toggles and board selection."""
 
     pcb_version: StrFromYaml = "v2"
-    use_leds: bool = False
-    use_buttons: bool = False
-    use_adc: bool = False
+    use_leds: bool = True
+    use_buttons: bool = True
+    use_adc: bool = True
 
 
 class MsTeamsConfig(BaseModel):
@@ -148,7 +148,7 @@ class AdcConfig(BaseModel):
     """Voltage thresholds used by power monitoring."""
 
     threshold_external_power: float = 2.5
-    threshold_low_battery: float = 3.3
+    threshold_low_battery: float = 6.4
 
 
 class RabbitMqConfig(BaseModel):
