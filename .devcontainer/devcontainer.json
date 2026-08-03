@@ -10,11 +10,12 @@
 		"UV_PROJECT_ENVIRONMENT": "/opt/venv",
 		// set test hosts
 		"OTC_TEST_S3_HOST": "rustfs",
-		"OTC_TEST_RABBITMQ_HOST": "rabbitmq"
+		"OTC_TEST_RABBITMQ_HOST": "rabbitmq",
+		"CLAUDE_CONFIG_DIR": "/claude"
 	},
 
 	// set permissiosn on the claude directory and install uv dependencies
-	"postCreateCommand": "sudo chown -R vscode:vscode /home/vscode/.claude && uv sync",
+	"postCreateCommand": "uv sync",
 
 	"initializeCommand": "docker compose -f docker/docker-compose.yml up -d",
   	"runArgs": ["--network=ot-camera"],
@@ -27,6 +28,6 @@
       "ghcr.io/devcontainers/features/node:1": {}
 	},
 	"mounts": [
-	  "source=claude-code-config,target=/home/vscode/.claude,type=volume"
+	  "source=claude-code-config,target=/claude,type=volume"
 	]
 }
