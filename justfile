@@ -44,7 +44,7 @@ test-unit:
     uv run pytest -m 'not integration'
 
 super-lint:
-    docker run --rm --platform linux/amd64 -e RUN_LOCAL=true --env-file .github/super-linter.env -v "$(pwd)":/tmp/lint ghcr.io/super-linter/super-linter:v8.7.0
+    docker run --rm --platform linux/amd64 -e RUN_LOCAL=true --env-file .github/super-linter.env -v "$(pwd)":/tmp/lint ghcr.io/super-linter/super-linter:slim-v8.7.0
 
 lint:
     uv run ruff check
