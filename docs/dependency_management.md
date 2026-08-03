@@ -5,7 +5,7 @@ The handling is different for the development environment and target environment
 
 - Top-level dependencies are managed in `pyproject.toml`. Raspberry Pi-specific dependencies are managed in the `pi` dependency group (`[project.optional-dependencies]`) as they do not need to be installed in the dev environment.
 - The locked versions are kept both
-    - in `uv.lock` for repoducible dev environments
+    - in `uv.lock` for reproducible dev environments
     - in `requirements.txt` for reproducible target environments, i. e. on the Raspberry Pi.
 
 ## Development Environment

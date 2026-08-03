@@ -1,6 +1,6 @@
 """Provides a class for persisting the network status to a a file.
 
-This is inteded to be a form of very basic IPC. Status can be read
+This is intended to be a form of very basic IPC. Status can be read
 by other processed to make decisions based on the current network status.
 """
 

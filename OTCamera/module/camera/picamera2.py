@@ -305,13 +305,9 @@ class PiCamera2(Camera):
 
         profile = H264_PROFILE_MAP.get(h264_profile, "high")
         if bitrate > 0:
-            self._encoder = H264Encoder(
-                bitrate=bitrate, profile=profile
-            )
+            self._encoder = H264Encoder(bitrate=bitrate, profile=profile)
         else:
-            self._encoder = H264Encoder(
-                qp=h264_quality, profile=profile
-            )
+            self._encoder = H264Encoder(qp=h264_quality, profile=profile)
 
         try:
             from picamera2.outputs import SplittableOutput

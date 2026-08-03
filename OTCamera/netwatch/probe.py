@@ -50,7 +50,7 @@ class HttpNetworkProbe(NetworkProbe):
     def is_online(self) -> bool:
         """Make a http request and asses the network status.
 
-        Sends http requests to the urls defined in `HttpNetworkProbe.urls` in sequnce.
+        Sends http requests to the urls defined in `HttpNetworkProbe.urls` in sequence.
 
         If all requests result in a `RequestException`, the network status is
         considered OFFLINE.

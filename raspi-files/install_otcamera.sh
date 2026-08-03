@@ -97,7 +97,7 @@ systemctl restart nginx.service
 
 echo "     Configure wifi access-point"
 
-echo "     Installing servies"
+echo "     Installing services"
 apt install hostapd dnsmasq dhcpcd -y
 
 echo "Configure hostapd"
@@ -186,33 +186,33 @@ OTCONFIG="$PWD/OTCamera/config.py"
 
 case $USE_BUTTONS in
 [yY] | [yY][eE][sS])
-  echo "Enableing buttons"
+  echo "Enabling buttons"
   sed "$OTCONFIG" -i -e "s?^USE_BUTTONS.*?USE_BUTTONS = True?g"
   ;;
 [nN] | [nN][oO])
-  echo "Disableing buttons"
+  echo "Disabling buttons"
   sed "$OTCONFIG" -i -e "s?^USE_BUTTONS.*?USE_BUTTONS = False?g"
   ;;
 esac
 
 case $USE_LEDS in
 [yY] | [yY][eE][sS])
-  echo "Enableing LEDs"
+  echo "Enabling LEDs"
   sed "$OTCONFIG" -i -e "s?^USE_LED.*?USE_LED = True?g"
   ;;
 [nN] | [nN][oO])
-  echo "Disableing LEDs"
+  echo "Disabling LEDs"
   sed "$OTCONFIG" -i -e "s?^USE_LED.*?USE_LED = False?g"
   ;;
 esac
 
 case $USE_DEBUG in
 [yY] | [yY][eE][sS])
-  echo "Enableing debug mode"
+  echo "Enabling debug mode"
   sed "$OTCONFIG" -i -e "s?^DEBUG_MODE_ON.*?DEBUG_MODE_ON = True?g"
   ;;
 [nN] | [nN][oO])
-  echo "Disableing debug mode"
+  echo "Disabling debug mode"
   sed "$OTCONFIG" -i -e "s?^DEBUG_MODE_ON.*?DEBUG_MODE_ON = False?g"
   ;;
 esac

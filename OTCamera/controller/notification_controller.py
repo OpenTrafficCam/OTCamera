@@ -47,4 +47,4 @@ class EventNotificationController[EVENT: Event, PAYLOAD]:
     def close(self) -> None:
         """Close the underlying notification backend."""
         self._notifier.close()
-        logger.info("Notifcation controller closed.")
+        logger.info("Notification controller closed.")
