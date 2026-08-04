@@ -1,8 +1,8 @@
+import os
 from pathlib import Path
 from typing import Any
 
 import boto3
-import os
 import pytest
 from botocore.config import Config as Boto3Config
 from botocore.exceptions import ClientError

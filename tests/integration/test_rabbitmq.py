@@ -44,7 +44,7 @@ OT_CLOUD = OTCloudSettings(camera_id=2, project_id=0, site_id=1)
 def local_rabbitmq_config() -> RabbitMqConfig:
     return RabbitMqConfig(
         host=os.getenv("OTC_TEST_RABBITMQ_HOST", "127.0.0.1"),
-        port=os.getenv("OTC_TEST_RABBITMQ_PORT", 5672),
+        port=int(os.getenv("OTC_TEST_RABBITMQ_PORT", 5672)),
         exchange=EXCHANGE,
         routing_key=ROUTING_KEY,
         durable=False,
@@ -113,9 +113,9 @@ def test_rabbitmq_notification(
     received = []
     for _ in FILES:
         method, _, body = rabbitmq_channel.basic_get(queue=QUEUE, auto_ack=True)
-        assert (
-            method is not None and body is not None
-        ), "Expected a message but queue was empty"
+        assert method is not None and body is not None, (
+            "Expected a message but queue was empty"
+        )
         received.append(json.loads(body))
 
     assert {msg["s3_key"] for msg in received} == {f["key"] for f in FILES}
