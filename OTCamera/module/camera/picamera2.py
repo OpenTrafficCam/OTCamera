@@ -120,6 +120,7 @@ class PiCamera2(Camera):
         drc_strength: str,
         rotation: int,
         meter_mode: str,
+        lens_position: float,
     ) -> None:
         self._picam2 = picam2
         self._frame_rate = frame_rate
@@ -130,7 +131,8 @@ class PiCamera2(Camera):
         self._drc_strength = drc_strength
         self._rotation = rotation
         self._meter_mode = meter_mode
-        self._annotation_text: Optional[str] = None
+        self._lens_position = lens_position
+        self._annotation_text = ""
         self._is_recording = False
         self._encoder: Optional[H264Encoder] = None
         self._splittable_output: Optional[object] = None
@@ -203,7 +205,7 @@ class PiCamera2(Camera):
         return Transform()
 
     def _apply_controls(self) -> None:
-        """Apply exposure, AWB, metering and frame-rate limits."""
+        """Apply exposure, AWB, metering, frame-rate and lens focus controls."""
         ctrl: dict[str, object] = {}
 
         if self._exposure_mode in EXPOSURE_MODE_MAP:
@@ -235,6 +237,13 @@ class PiCamera2(Camera):
 
         frame_duration = int(1_000_000 / self._frame_rate)
         ctrl["FrameDurationLimits"] = (frame_duration, frame_duration)
+
+        ctrl["AfMode"] = controls.AfModeEnum.Manual
+        ctrl["LensPosition"] = self._lens_position
+        logger.info(
+            "Autofocus disabled; lens parked at %.1f dioptres",
+            self._lens_position,
+        )
 
         self._picam2.set_controls(ctrl)
 

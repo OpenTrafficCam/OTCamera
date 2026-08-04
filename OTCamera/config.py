@@ -33,7 +33,15 @@ class RecordingConfig(BaseModel):
 
 
 class CameraConfig(BaseModel):
-    """Camera hardware and ISP settings."""
+    """Camera hardware and ISP settings.
+
+    Attributes:
+        lens_position: Fixed lens position in dioptres (1/metres). Autofocus
+            is disabled and the lens is parked here at startup. Higher values
+            focus nearer; 6.0 dioptres is approximately 17 cm, 0.0 is infinity
+            (sharp). The 10.0 upper bound is the Camera Module 3's
+            close-focus limit.
+    """
 
     fps: int = 20
     resolution: tuple[int, int] = (2304, 1296)
@@ -42,6 +50,7 @@ class CameraConfig(BaseModel):
     rotation: int = 180
     awb_mode: StrFromYaml = "auto"
     meter_mode: StrFromYaml = "average"
+    lens_position: float = Field(default=6.0, ge=0.0, le=10.0)
 
     @field_validator("resolution", mode="before")
     @classmethod
