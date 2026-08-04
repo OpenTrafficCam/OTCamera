@@ -138,3 +138,4 @@ def test_provide_creates_picamera2_camera(monkeypatch: pytest.MonkeyPatch) -> No
     assert camera.kwargs["frame_rate"] == config.camera.fps
     assert camera.kwargs["resolution"] == config.camera.resolution
     assert camera.kwargs["video_resolution"] == config.video.resolution
+    assert camera.kwargs["lens_position"] == config.camera.lens_position

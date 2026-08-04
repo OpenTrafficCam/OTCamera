@@ -18,6 +18,11 @@ camera:
   rotation: 180
   awb_mode: auto
   meter_mode: average
+  # Fixed lens position in dioptres (1/metres).
+  # Autofocus is disabled; the lens is parked here at startup so recordings are
+  # defocussed by default. 6.0 dioptres ~= 17 cm focus distance -> traffic
+  # is blurred. 0.0 = focus at infinity (sharp). Range 0.0-10.0.
+  lens_position: 6.0
 
 preview:
   path: ~/OTCamera/webfiles/preview.jpg
