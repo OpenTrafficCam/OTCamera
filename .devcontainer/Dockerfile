@@ -15,3 +15,5 @@ RUN pipx install uv==${UV_VERSION}
 
 RUN mkdir -p /opt/venv && chown vscode:vscode /opt/venv
 RUN mkdir -p /claude && chown vscode:vscode /claude
+
+USER vscode
