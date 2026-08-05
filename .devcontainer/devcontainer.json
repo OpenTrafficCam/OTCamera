@@ -19,5 +19,13 @@
         "ghcr.io/anthropics/devcontainer-features/claude-code:1.0": {},
         "ghcr.io/devcontainers/features/node:1": {}
     },
-    "mounts": ["source=claude-code-config,target=/claude,type=volume"]
+    "mounts": ["source=claude-code-config,target=/claude,type=volume"],
+    "customizations": {
+        "vscode": {
+            "settings": {
+                "python.defaultInterpreterPath": "/opt/venv/bin/python",
+                "python.terminal.activateEnvInCurrentTerminal": true
+            }
+        }
+    }
 }
