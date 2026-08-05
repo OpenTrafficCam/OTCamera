@@ -10,7 +10,7 @@
         "CLAUDE_CONFIG_DIR": "/claude"
     },
     "postCreateCommand": "uv sync",
-    "initializeCommand": "docker compose -f docker/docker-compose.yml up -d",
+    "initializeCommand": "docker compose -f container/compose.yml up -d",
     "runArgs": ["--network=ot-camera"],
     "features": {
         "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {
