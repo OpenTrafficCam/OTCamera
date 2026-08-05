@@ -1,0 +1,23 @@
+{
+    "name": "Python 3",
+    "build": {
+        "dockerfile": "Dockerfile"
+    },
+    "containerEnv": {
+        "UV_PROJECT_ENVIRONMENT": "/opt/venv",
+        "OTC_TEST_S3_HOST": "rustfs",
+        "OTC_TEST_RABBITMQ_HOST": "rabbitmq",
+        "CLAUDE_CONFIG_DIR": "/claude"
+    },
+    "postCreateCommand": "uv sync",
+    "initializeCommand": "docker compose -f container/compose.yml up -d",
+    "runArgs": ["--network=ot-camera"],
+    "features": {
+        "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {
+            "moby": false
+        },
+        "ghcr.io/anthropics/devcontainer-features/claude-code:1.0": {},
+        "ghcr.io/devcontainers/features/node:1": {}
+    },
+    "mounts": ["source=claude-code-config,target=/claude,type=volume"]
+}

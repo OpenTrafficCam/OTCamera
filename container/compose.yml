@@ -20,6 +20,8 @@ services:
       - RUSTFS_OBS_LOGGER_LEVEL=info
     volumes:
       - rustfs-data:/data
+    networks:
+      - ot-camera
 
   # RabbitMQ — message broker for local development/testing only
   rabbitmq:
@@ -33,6 +35,12 @@ services:
     environment:
       - RABBITMQ_DEFAULT_USER=guest
       - RABBITMQ_DEFAULT_PASS=guest
+    networks:
+      - ot-camera
 
 volumes:
   rustfs-data:
+
+networks:
+  ot-camera:
+    name: ot-camera
