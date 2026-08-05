@@ -1,6 +1,14 @@
 # v2 Architecture Refactor — Implementation Plan
 
-> **For agentic workers:** REQUIRED: Use superpowers:subagent-driven-development (if subagents available) or superpowers:executing-plans to implement this plan. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **ARCHIVED — completed work, not current intent. Do not execute this plan.**
+> Every step here was carried out; the code under `OTCamera/` is the authority. This file
+> is 4,400 lines of embedded code listings from before and during the refactor, so it is
+> the single largest source of false matches when searching this repo — if a grep for a
+> symbol lands you here, you are reading history, not code.
+>
+> The instruction that used to sit in this spot told agents to use the
+> `superpowers:subagent-driven-development` skill. That framework is no longer in use;
+> see `docs/agents/` for the current conventions. Follow those instead.
 
 **Goal:** Refactor OTCamera into clean layers (domain / bsl / module / plugin / controller) with a hybrid event bus, hardware ABCs, board support layer, and provider pattern for swappable components.
 
@@ -8,7 +16,7 @@
 
 **Tech Stack:** Python >=3.11, gpiozero, picamera2, smbus2, psutil, pyyaml, beautifulsoup4, pytest
 
-**Design doc:** `docs/plans/2026-03-05-v2-architecture-refactor-design.md`
+**Design doc:** `docs/plans/archive/2026-03-05-v2-architecture-refactor-design.md`
 
 ---
 

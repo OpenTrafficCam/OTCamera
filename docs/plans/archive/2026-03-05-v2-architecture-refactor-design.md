@@ -1,9 +1,16 @@
 # OTCamera v2 Architecture Refactor — Design
 
+> **ARCHIVED — historical record, not current intent.**
+> This design was implemented. The code under `OTCamera/` is now the authority on the v2
+> architecture, and this document is kept only for the reasoning behind the layering.
+> Its code listings are stale in places; do not copy from them and do not treat them as
+> the current shape of any module. Specifically, the battery handling it describes was
+> superseded by [ADR-0001](../../adr/0001-spread-battery-voltage-sampling.md).
+
 **Date:** 2026-03-05
 **Updated:** 2026-03-27 (consolidated with hardware layer separation amendment, applied learnings from first implementation attempt, design review refinements)
 **Branch:** `v2-refactor` (from `v2`)
-**Status:** Approved
+**Status:** Implemented — superseded by the code
 
 ## Context
 
