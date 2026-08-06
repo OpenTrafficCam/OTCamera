@@ -61,7 +61,7 @@ def config() -> Config:
 
 def test_power_controller_without_adc() -> None:
     bus = EventBus()
-    controller = PowerController(Config(), bus, {})
+    controller = PowerController(config=Config(), event_bus=bus, leds={})
 
     assert controller.has_adc is False
     assert controller.battery_is_low is False
@@ -72,7 +72,14 @@ def test_external_power_detected(config: Config, adc_config: ADCConfig) -> None:
     adc = FakeADC()
     adc.voltages[0] = 2.0
     bus = EventBus()
-    controller = PowerController(config, bus, {}, adc, adc_config, clock=FakeClock())
+    controller = PowerController(
+        config=config,
+        event_bus=bus,
+        leds={},
+        adc=adc,
+        adc_config=adc_config,
+        clock=FakeClock(),
+    )
 
     assert controller.is_external_power is True
 
@@ -82,7 +89,14 @@ def test_battery_ok(config: Config, adc_config: ADCConfig) -> None:
     adc.voltages[2] = 4.0
     bus = EventBus()
     clock = FakeClock()
-    controller = PowerController(config, bus, {}, adc, adc_config, clock=clock)
+    controller = PowerController(
+        config=config,
+        event_bus=bus,
+        leds={},
+        adc=adc,
+        adc_config=adc_config,
+        clock=clock,
+    )
 
     for _ in range(_BATTERY_WINDOW_SIZE):
         controller.check_power_status()
@@ -96,7 +110,14 @@ def test_low_battery_detected(config: Config, adc_config: ADCConfig) -> None:
     adc.voltages[2] = 1.0
     bus = EventBus()
     clock = FakeClock()
-    controller = PowerController(config, bus, {}, adc, adc_config, clock=clock)
+    controller = PowerController(
+        config=config,
+        event_bus=bus,
+        leds={},
+        adc=adc,
+        adc_config=adc_config,
+        clock=clock,
+    )
 
     for _ in range(_BATTERY_WINDOW_SIZE):
         controller.check_power_status()
@@ -113,7 +134,14 @@ def test_single_low_sample_does_not_trigger_low_battery(
     adc = FakeADC()
     bus = EventBus()
     clock = FakeClock()
-    controller = PowerController(config, bus, {}, adc, adc_config, clock=clock)
+    controller = PowerController(
+        config=config,
+        event_bus=bus,
+        leds={},
+        adc=adc,
+        adc_config=adc_config,
+        clock=clock,
+    )
     received: list[ShutdownRequested] = []
     bus.subscribe(ShutdownRequested, received.append)
 
@@ -133,7 +161,14 @@ def test_three_low_samples_trigger_low_battery(
     adc = FakeADC()
     bus = EventBus()
     clock = FakeClock()
-    controller = PowerController(config, bus, {}, adc, adc_config, clock=clock)
+    controller = PowerController(
+        config=config,
+        event_bus=bus,
+        leds={},
+        adc=adc,
+        adc_config=adc_config,
+        clock=clock,
+    )
     received: list[ShutdownRequested] = []
     bus.subscribe(ShutdownRequested, received.append)
 
@@ -156,7 +191,14 @@ def test_partly_filled_window_gives_no_verdict(
     adc.voltages[2] = 1.0
     bus = EventBus()
     clock = FakeClock()
-    controller = PowerController(config, bus, {}, adc, adc_config, clock=clock)
+    controller = PowerController(
+        config=config,
+        event_bus=bus,
+        leds={},
+        adc=adc,
+        adc_config=adc_config,
+        clock=clock,
+    )
     received: list[ShutdownRequested] = []
     bus.subscribe(ShutdownRequested, received.append)
 
@@ -175,7 +217,14 @@ def test_battery_reads_gated_by_configured_interval(
     adc = FakeADC()
     bus = EventBus()
     clock = FakeClock()
-    controller = PowerController(config, bus, {}, adc, adc_config, clock=clock)
+    controller = PowerController(
+        config=config,
+        event_bus=bus,
+        leds={},
+        adc=adc,
+        adc_config=adc_config,
+        clock=clock,
+    )
 
     for _ in range(20):
         controller.check_power_status()
@@ -191,7 +240,14 @@ def test_external_power_event_emitted(
     adc = FakeADC()
     bus = EventBus()
     clock = FakeClock()
-    controller = PowerController(config, bus, {}, adc, adc_config, clock=clock)
+    controller = PowerController(
+        config=config,
+        event_bus=bus,
+        leds={},
+        adc=adc,
+        adc_config=adc_config,
+        clock=clock,
+    )
     received: list[ExternalPowerConnected] = []
     bus.subscribe(ExternalPowerConnected, received.append)
 
@@ -216,7 +272,14 @@ def test_adc_timeout_does_not_raise_and_does_not_shut_down(
     adc.get_voltage.side_effect = ADCTimeoutError("timeout")
     bus = EventBus()
     clock = FakeClock()
-    controller = PowerController(config, bus, {}, adc, adc_config, clock=clock)
+    controller = PowerController(
+        config=config,
+        event_bus=bus,
+        leds={},
+        adc=adc,
+        adc_config=adc_config,
+        clock=clock,
+    )
     received: list[ShutdownRequested] = []
     bus.subscribe(ShutdownRequested, received.append)
 
@@ -230,7 +293,7 @@ def test_adc_timeout_does_not_raise_and_does_not_shut_down(
 
 def test_power_button_countdown() -> None:
     bus = EventBus()
-    controller = PowerController(Config(debug_mode=True), bus, {})
+    controller = PowerController(config=Config(debug_mode=True), event_bus=bus, leds={})
     bus.enqueue(ButtonReleased(name="power"))
     bus.process_pending()
 
@@ -246,7 +309,7 @@ def test_countdown_expires_triggers_shutdown() -> None:
     bus = EventBus()
     received: list[ShutdownRequested] = []
     bus.subscribe(ShutdownRequested, received.append)
-    controller = PowerController(Config(debug_mode=True), bus, {})
+    controller = PowerController(config=Config(debug_mode=True), event_bus=bus, leds={})
     bus.enqueue(ButtonReleased(name="power"))
     bus.process_pending()
     controller._power_off_time = dt.now() - timedelta(
@@ -263,7 +326,9 @@ def test_shutdown_closes_logging_before_os_shutdown(
     monkeypatch: MonkeyPatch,
 ) -> None:
     bus = EventBus()
-    controller = PowerController(Config(debug_mode=False), bus, {})
+    controller = PowerController(
+        config=Config(debug_mode=False), event_bus=bus, leds={}
+    )
     actions: list[object] = []
 
     def fake_call(command: list[str]) -> int:
@@ -291,7 +356,9 @@ def test_reboot_closes_logging_before_os_reboot(
     monkeypatch: MonkeyPatch,
 ) -> None:
     bus = EventBus()
-    controller = PowerController(Config(debug_mode=False), bus, {})
+    controller = PowerController(
+        config=Config(debug_mode=False), event_bus=bus, leds={}
+    )
     actions: list[object] = []
 
     def fake_call(command: list[str]) -> int:

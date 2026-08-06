@@ -392,11 +392,11 @@ def main(config: Config | None = None, config_file: str = "~/user_config.yaml") 
 
         camera_controller = CameraController(camera, config, event_bus, board.leds)
         power_controller = PowerController(
-            config,
-            event_bus,
-            board.leds,
-            board.adc,
-            board.adc_config,
+            config=config,
+            event_bus=event_bus,
+            leds=board.leds,
+            adc=board.adc,
+            adc_config=board.adc_config,
         )
         wifi_controller = WifiController(config, event_bus, board.leds)
         schedule_controller = ScheduleController(config, event_bus)

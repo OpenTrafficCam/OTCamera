@@ -44,12 +44,12 @@ class PowerController:
 
     def __init__(
         self,
+        *,
         config: Config,
         event_bus: EventBus,
         leds: dict[str, LED],
         adc: ADC | None = None,
         adc_config: ADCConfig | None = None,
-        *,
         clock: Callable[[], float] = time.monotonic,
     ) -> None:
         self._config = config
