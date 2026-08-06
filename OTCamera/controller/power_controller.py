@@ -26,12 +26,15 @@ logger = logging.getLogger(__name__)
 
 _POWER_SHUTDOWN_DELAY = 5
 _BATTERY_WINDOW_SIZE = 5
-_MIN_SAMPLES_FOR_BATTERY_VERDICT = 3
 
 
 def _battery_estimate(samples: tuple[float, ...]) -> float | None:
-    """Return the Voltage Estimate for the held Samples, or None if too few."""
-    if len(samples) < _MIN_SAMPLES_FOR_BATTERY_VERDICT:
+    """Return the Voltage Estimate for a full window of Samples, else None.
+
+    The median of a full window of five cannot be moved by fewer than three low
+    Samples. A partly filled window has no such guarantee, so it yields no verdict.
+    """
+    if len(samples) < _BATTERY_WINDOW_SIZE:
         return None
     return statistics.median(samples)
 
@@ -46,6 +49,7 @@ class PowerController:
         leds: dict[str, LED],
         adc: ADC | None = None,
         adc_config: ADCConfig | None = None,
+        *,
         clock: Callable[[], float] = time.monotonic,
     ) -> None:
         self._config = config
@@ -81,16 +85,6 @@ class PowerController:
     def has_adc(self) -> bool:
         """Return whether ADC support is active."""
         return self._adc is not None and self._adc_config is not None
-
-    @property
-    def is_low_battery(self) -> bool:
-        """Return whether the battery Voltage Estimate is below the threshold."""
-        if self._battery_channel is None:
-            return False
-        estimate = _battery_estimate(self._battery_channel.samples)
-        return (
-            estimate is not None and estimate < self._config.adc.threshold_low_battery
-        )
 
     @property
     def battery_is_low(self) -> bool:

@@ -7,11 +7,13 @@ from OTCamera.domain.adc import ADC, ADCTimeoutError
 
 logger = logging.getLogger(__name__)
 
-_CONSECUTIVE_FAILURES_WARNING = 5
-
 
 class SampledChannel:
-    """Reads one ADC channel at most once per interval, keeping a window of Samples."""
+    """Reads one ADC channel at most once per interval, keeping a window of Samples.
+
+    Use this from the main loop only. There is no locking, so reading and writing
+    the samples from two threads at the same time can crash.
+    """
 
     def __init__(
         self,
@@ -27,7 +29,6 @@ class SampledChannel:
         self._read_interval = read_interval
         self._samples: deque[float] = deque(maxlen=window_size)
         self._last_attempt: float | None = None
-        self._consecutive_failures = 0
 
     @property
     def samples(self) -> tuple[float, ...]:
@@ -44,15 +45,8 @@ class SampledChannel:
         self._last_attempt = now
         try:
             voltage = self._adc.get_voltage(self._channel) * self._divider_ratio
-        except ADCTimeoutError:
-            self._consecutive_failures += 1
-            if self._consecutive_failures == _CONSECUTIVE_FAILURES_WARNING:
-                logger.warning(
-                    "ADC channel %d: %d consecutive read failures",
-                    self._channel,
-                    self._consecutive_failures,
-                )
+        except ADCTimeoutError as error:
+            logger.warning("ADC channel %d read failed: %s", self._channel, error)
             return
-        self._consecutive_failures = 0
         self._samples.append(voltage)
         logger.debug("ADC channel %d sample: %.3f V", self._channel, voltage)

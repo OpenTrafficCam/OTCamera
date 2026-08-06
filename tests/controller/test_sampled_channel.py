@@ -159,7 +159,7 @@ def test_timeout_does_not_propagate(adc: FakeADC, clock: FakeClock) -> None:
     assert channel.samples == ()
 
 
-def test_five_consecutive_failures_log_exactly_one_warning(
+def test_every_failed_read_logs_one_warning(
     adc: FakeADC,
     clock: FakeClock,
     caplog: pytest.LogCaptureFixture,
@@ -174,19 +174,20 @@ def test_five_consecutive_failures_log_exactly_one_warning(
     adc.raise_timeout = True
 
     with caplog.at_level("WARNING"):
-        for i in range(5):
+        for i in range(3):
             channel.sample_if_due(clock())
             clock.advance(10.0 * (i + 1))
 
     warnings = [r for r in caplog.records if r.levelname == "WARNING"]
-    assert len(warnings) == 1
+    assert len(warnings) == 3
 
 
-def test_success_resets_consecutive_failure_counter(
+def test_successful_read_logs_no_warning(
     adc: FakeADC,
     clock: FakeClock,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
+    adc.voltage = 1.1
     channel = SampledChannel(
         adc=adc,
         channel=2,
@@ -194,21 +195,9 @@ def test_success_resets_consecutive_failure_counter(
         read_interval=10.0,
         window_size=5,
     )
-    adc.raise_timeout = True
 
-    for i in range(4):
-        channel.sample_if_due(clock())
-        clock.advance(10.0 * (i + 1))
-
-    adc.raise_timeout = False
-    channel.sample_if_due(clock())
-    clock.advance(10.0)
-
-    adc.raise_timeout = True
     with caplog.at_level("WARNING"):
-        for i in range(4):
-            channel.sample_if_due(clock())
-            clock.advance(10.0 * (i + 1))
+        channel.sample_if_due(clock())
 
     warnings = [r for r in caplog.records if r.levelname == "WARNING"]
     assert len(warnings) == 0

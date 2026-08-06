@@ -6,7 +6,12 @@ import pytest
 from pytest import MonkeyPatch
 
 from OTCamera.config import Config
-from OTCamera.controller.power_controller import _POWER_SHUTDOWN_DELAY, PowerController
+from OTCamera.controller.power_controller import (
+    _BATTERY_WINDOW_SIZE,
+    _POWER_SHUTDOWN_DELAY,
+    PowerController,
+    _battery_estimate,
+)
 from OTCamera.domain.adc import ADC, ADCConfig, ADCTimeoutError
 from OTCamera.domain.events import (
     ButtonPressed,
@@ -59,7 +64,7 @@ def test_power_controller_without_adc() -> None:
     controller = PowerController(Config(), bus, {})
 
     assert controller.has_adc is False
-    assert controller.is_low_battery is False
+    assert controller.battery_is_low is False
     assert controller.is_external_power is False
 
 
@@ -67,7 +72,7 @@ def test_external_power_detected(config: Config, adc_config: ADCConfig) -> None:
     adc = FakeADC()
     adc.voltages[0] = 2.0
     bus = EventBus()
-    controller = PowerController(config, bus, {}, adc, adc_config, FakeClock())
+    controller = PowerController(config, bus, {}, adc, adc_config, clock=FakeClock())
 
     assert controller.is_external_power is True
 
@@ -77,13 +82,13 @@ def test_battery_ok(config: Config, adc_config: ADCConfig) -> None:
     adc.voltages[2] = 4.0
     bus = EventBus()
     clock = FakeClock()
-    controller = PowerController(config, bus, {}, adc, adc_config, clock)
+    controller = PowerController(config, bus, {}, adc, adc_config, clock=clock)
 
-    for _ in range(5):
+    for _ in range(_BATTERY_WINDOW_SIZE):
         controller.check_power_status()
         clock.advance(config.adc.battery_read_interval)
 
-    assert controller.is_low_battery is False
+    assert controller.battery_is_low is False
 
 
 def test_low_battery_detected(config: Config, adc_config: ADCConfig) -> None:
@@ -91,13 +96,13 @@ def test_low_battery_detected(config: Config, adc_config: ADCConfig) -> None:
     adc.voltages[2] = 1.0
     bus = EventBus()
     clock = FakeClock()
-    controller = PowerController(config, bus, {}, adc, adc_config, clock)
+    controller = PowerController(config, bus, {}, adc, adc_config, clock=clock)
 
-    for _ in range(5):
+    for _ in range(_BATTERY_WINDOW_SIZE):
         controller.check_power_status()
         clock.advance(config.adc.battery_read_interval)
 
-    assert controller.is_low_battery is True
+    assert controller.battery_is_low is True
 
 
 def test_single_low_sample_does_not_trigger_low_battery(
@@ -108,7 +113,7 @@ def test_single_low_sample_does_not_trigger_low_battery(
     adc = FakeADC()
     bus = EventBus()
     clock = FakeClock()
-    controller = PowerController(config, bus, {}, adc, adc_config, clock)
+    controller = PowerController(config, bus, {}, adc, adc_config, clock=clock)
     received: list[ShutdownRequested] = []
     bus.subscribe(ShutdownRequested, received.append)
 
@@ -117,7 +122,7 @@ def test_single_low_sample_does_not_trigger_low_battery(
         controller.check_power_status()
         clock.advance(config.adc.battery_read_interval)
 
-    assert controller.is_low_battery is False
+    assert controller.battery_is_low is False
     assert received == []
 
 
@@ -128,7 +133,7 @@ def test_three_low_samples_trigger_low_battery(
     adc = FakeADC()
     bus = EventBus()
     clock = FakeClock()
-    controller = PowerController(config, bus, {}, adc, adc_config, clock)
+    controller = PowerController(config, bus, {}, adc, adc_config, clock=clock)
     received: list[ShutdownRequested] = []
     bus.subscribe(ShutdownRequested, received.append)
 
@@ -137,43 +142,30 @@ def test_three_low_samples_trigger_low_battery(
         controller.check_power_status()
         clock.advance(config.adc.battery_read_interval)
 
-    assert controller.is_low_battery is True
+    assert controller.battery_is_low is True
     assert len(received) == 1
     assert received[0].source == "battery"
 
 
-def test_fewer_than_three_samples_no_verdict(
+def test_partly_filled_window_gives_no_verdict(
     config: Config,
     adc_config: ADCConfig,
 ) -> None:
+    """Four low Samples are not enough; the window must be full."""
     adc = FakeADC()
     adc.voltages[2] = 1.0
     bus = EventBus()
     clock = FakeClock()
-    controller = PowerController(config, bus, {}, adc, adc_config, clock)
+    controller = PowerController(config, bus, {}, adc, adc_config, clock=clock)
+    received: list[ShutdownRequested] = []
+    bus.subscribe(ShutdownRequested, received.append)
 
-    controller.check_power_status()
-    clock.advance(config.adc.battery_read_interval)
-    controller.check_power_status()
-
-    assert controller.is_low_battery is False
-
-
-def test_is_low_battery_performs_no_io(config: Config, adc_config: ADCConfig) -> None:
-    adc = FakeADC()
-    adc.voltages[2] = 1.0
-    bus = EventBus()
-    clock = FakeClock()
-    controller = PowerController(config, bus, {}, adc, adc_config, clock)
-    for _ in range(5):
+    for _ in range(_BATTERY_WINDOW_SIZE - 1):
         controller.check_power_status()
         clock.advance(config.adc.battery_read_interval)
 
-    reads_before = adc.read_counts[2]
-    for _ in range(10):
-        controller.is_low_battery
-
-    assert adc.read_counts[2] == reads_before
+    assert controller.battery_is_low is False
+    assert received == []
 
 
 def test_battery_reads_gated_by_configured_interval(
@@ -183,7 +175,7 @@ def test_battery_reads_gated_by_configured_interval(
     adc = FakeADC()
     bus = EventBus()
     clock = FakeClock()
-    controller = PowerController(config, bus, {}, adc, adc_config, clock)
+    controller = PowerController(config, bus, {}, adc, adc_config, clock=clock)
 
     for _ in range(20):
         controller.check_power_status()
@@ -199,7 +191,7 @@ def test_external_power_event_emitted(
     adc = FakeADC()
     bus = EventBus()
     clock = FakeClock()
-    controller = PowerController(config, bus, {}, adc, adc_config, clock)
+    controller = PowerController(config, bus, {}, adc, adc_config, clock=clock)
     received: list[ExternalPowerConnected] = []
     bus.subscribe(ExternalPowerConnected, received.append)
 
@@ -209,7 +201,14 @@ def test_external_power_event_emitted(
     assert len(received) == 1
 
 
-def test_battery_timeout_does_not_raise_and_keeps_ok(
+def test_battery_estimate_needs_a_full_window() -> None:
+    assert _battery_estimate(()) is None
+    assert _battery_estimate((1.0, 1.0, 1.0, 1.0)) is None
+    assert _battery_estimate((1.0, 4.0, 1.0, 1.0, 4.0)) == 1.0
+    assert _battery_estimate((4.0, 4.0, 1.0, 4.0, 4.0)) == 4.0
+
+
+def test_adc_timeout_does_not_raise_and_does_not_shut_down(
     config: Config,
     adc_config: ADCConfig,
 ) -> None:
@@ -217,11 +216,16 @@ def test_battery_timeout_does_not_raise_and_keeps_ok(
     adc.get_voltage.side_effect = ADCTimeoutError("timeout")
     bus = EventBus()
     clock = FakeClock()
-    controller = PowerController(config, bus, {}, adc, adc_config, clock)
+    controller = PowerController(config, bus, {}, adc, adc_config, clock=clock)
+    received: list[ShutdownRequested] = []
+    bus.subscribe(ShutdownRequested, received.append)
 
-    controller.check_power_status()
+    for _ in range(_BATTERY_WINDOW_SIZE * 2):
+        controller.check_power_status()
+        clock.advance(config.adc.battery_read_interval)
 
-    assert controller.is_low_battery is False
+    assert controller.battery_is_low is False
+    assert received == []
 
 
 def test_power_button_countdown() -> None:
