@@ -36,21 +36,41 @@ python -m OTCamera
 python hardware_check.py
 ```
 
+All standardized tasks run through [`just`](https://github.com/casey/just).
+Use the recipes below instead of invoking `pytest`, `ruff`, `mypy`, or
+`super-linter` directly, so agents and CI use identical commands and options.
+Run `just` (the default recipe) to list the available recipes.
+
 ### Tests
 ```bash
-pytest
-pytest tests/test_config.py
-pytest tests/controller/test_power_controller.py
-pytest -k "test_function_name"
+just test-unit   # unit tests only (pytest -m 'not integration')
+just test        # full suite; starts and awaits the container dependencies
+```
+
+Container lifecycle for the integration tests is handled by the recipes
+`start-containers`, `stop-containers`, `wait-rabbitmq`, and `wait-rustfs`;
+`just test` already depends on them.
+
+To narrow a run, append pytest arguments to the underlying recipe command
+rather than switching to a bare `pytest` call:
+```bash
+uv run pytest -m 'not integration' tests/test_config.py
+uv run pytest -m 'not integration' -k "test_function_name"
 ```
 
 ### Linting and Type Checking
 ```bash
+just lint        # ruff check
+just fix         # ruff check --fix
+just format      # ruff format
+just typecheck   # mypy OTCamera tests
+just super-lint  # super-linter in Docker, mirrors the CI stage
+```
+
+Never call `ruff`, `black`, `isort`, `flake8`, or `mypy` by hand — always go
+through the recipes above. The same checks also run as pre-commit hooks:
+```bash
 pre-commit run --all-files
-black .
-isort .
-flake8
-mypy OTCamera tests --config-file=pyproject.toml
 ```
 
 ## Architecture
@@ -141,8 +161,8 @@ Pytest test discovery is configured in `pyproject.toml` via `testpaths =
 
 ### Review Expectations
 Before considering work complete:
-- run relevant tests,
-- keep mypy and flake8 clean in touched code,
+- run the relevant tests via `just test-unit` (or `just test`),
+- keep `just lint` and `just typecheck` clean in touched code,
 - add regression tests for bug fixes,
 - avoid shell injection and unsafe subprocess use,
 - update docs if public behavior or architecture changes,

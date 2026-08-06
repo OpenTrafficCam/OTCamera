@@ -1,5 +1,9 @@
 host_workspace := env("LOCAL_WORKSPACE_FOLDER", justfile_directory())
 
+# List the available recipes
+default:
+    @just --list
+
 wait-rabbitmq:
     #!/usr/bin/env python3
     import subprocess
@@ -53,3 +57,9 @@ lint:
 
 fix:
     uv run ruff check --fix
+
+format:
+    uv run ruff format
+
+typecheck:
+    uv run mypy OTCamera tests --config-file pyproject.toml
