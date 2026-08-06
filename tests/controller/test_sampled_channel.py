@@ -1,7 +1,8 @@
 import pytest
 
+from OTCamera.controller.sampled_channel import SampledChannel
 from OTCamera.domain.adc import ADC, ADCTimeoutError
-from OTCamera.domain.sampled_channel import SampledChannel
+from tests.conftest import FakeClock
 
 
 class FakeADC(ADC):
@@ -24,29 +25,19 @@ class FakeADC(ADC):
         return
 
 
-class FakeClock:
-    def __init__(self, start: float = 0.0) -> None:
-        self._now = start
-
-    def __call__(self) -> float:
-        return self._now
-
-    def advance(self, seconds: float) -> None:
-        self._now += seconds
-
-
 @pytest.fixture
 def adc() -> FakeADC:
     return FakeADC()
 
 
-@pytest.fixture
-def clock() -> FakeClock:
-    return FakeClock()
-
-
 def test_empty_channel_has_no_samples(adc: FakeADC, clock: FakeClock) -> None:
-    channel = SampledChannel(adc, 2, 3.0, 10.0, 5, clock)
+    channel = SampledChannel(
+        adc=adc,
+        channel=2,
+        divider_ratio=3.0,
+        read_interval=10.0,
+        window_size=5,
+    )
 
     assert channel.samples == ()
 
@@ -56,7 +47,13 @@ def test_first_call_is_always_due_and_scales_by_divider_ratio(
     clock: FakeClock,
 ) -> None:
     adc.voltage = 1.1
-    channel = SampledChannel(adc, 2, 3.0, 10.0, 5, clock)
+    channel = SampledChannel(
+        adc=adc,
+        channel=2,
+        divider_ratio=3.0,
+        read_interval=10.0,
+        window_size=5,
+    )
 
     channel.sample_if_due(clock())
 
@@ -68,7 +65,13 @@ def test_second_call_before_interval_elapses_does_not_read_again(
     clock: FakeClock,
 ) -> None:
     adc.voltage = 1.1
-    channel = SampledChannel(adc, 2, 3.0, 10.0, 5, clock)
+    channel = SampledChannel(
+        adc=adc,
+        channel=2,
+        divider_ratio=3.0,
+        read_interval=10.0,
+        window_size=5,
+    )
     channel.sample_if_due(clock())
 
     clock.advance(5.0)
@@ -83,7 +86,13 @@ def test_call_after_interval_elapses_reads_again(
     clock: FakeClock,
 ) -> None:
     adc.voltage = 1.1
-    channel = SampledChannel(adc, 2, 3.0, 10.0, 5, clock)
+    channel = SampledChannel(
+        adc=adc,
+        channel=2,
+        divider_ratio=3.0,
+        read_interval=10.0,
+        window_size=5,
+    )
     channel.sample_if_due(clock())
 
     clock.advance(10.0)
@@ -98,7 +107,13 @@ def test_window_evicts_oldest_sample_beyond_window_size(
     adc: FakeADC,
     clock: FakeClock,
 ) -> None:
-    channel = SampledChannel(adc, 2, 1.0, 10.0, 3, clock)
+    channel = SampledChannel(
+        adc=adc,
+        channel=2,
+        divider_ratio=1.0,
+        read_interval=10.0,
+        window_size=3,
+    )
 
     for i, voltage in enumerate([1.0, 2.0, 3.0, 4.0]):
         adc.voltage = voltage
@@ -113,7 +128,13 @@ def test_timeout_appends_nothing_and_preserves_held_samples(
     clock: FakeClock,
 ) -> None:
     adc.voltage = 1.1
-    channel = SampledChannel(adc, 2, 3.0, 10.0, 5, clock)
+    channel = SampledChannel(
+        adc=adc,
+        channel=2,
+        divider_ratio=3.0,
+        read_interval=10.0,
+        window_size=5,
+    )
     channel.sample_if_due(clock())
 
     clock.advance(10.0)
@@ -124,7 +145,13 @@ def test_timeout_appends_nothing_and_preserves_held_samples(
 
 
 def test_timeout_does_not_propagate(adc: FakeADC, clock: FakeClock) -> None:
-    channel = SampledChannel(adc, 2, 3.0, 10.0, 5, clock)
+    channel = SampledChannel(
+        adc=adc,
+        channel=2,
+        divider_ratio=3.0,
+        read_interval=10.0,
+        window_size=5,
+    )
     adc.raise_timeout = True
 
     channel.sample_if_due(clock())
@@ -137,7 +164,13 @@ def test_five_consecutive_failures_log_exactly_one_warning(
     clock: FakeClock,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    channel = SampledChannel(adc, 2, 3.0, 10.0, 5, clock)
+    channel = SampledChannel(
+        adc=adc,
+        channel=2,
+        divider_ratio=3.0,
+        read_interval=10.0,
+        window_size=5,
+    )
     adc.raise_timeout = True
 
     with caplog.at_level("WARNING"):
@@ -154,7 +187,13 @@ def test_success_resets_consecutive_failure_counter(
     clock: FakeClock,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    channel = SampledChannel(adc, 2, 3.0, 10.0, 5, clock)
+    channel = SampledChannel(
+        adc=adc,
+        channel=2,
+        divider_ratio=3.0,
+        read_interval=10.0,
+        window_size=5,
+    )
     adc.raise_timeout = True
 
     for i in range(4):

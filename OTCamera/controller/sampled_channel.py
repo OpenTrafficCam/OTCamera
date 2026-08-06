@@ -2,7 +2,6 @@
 
 import logging
 from collections import deque
-from collections.abc import Callable
 
 from OTCamera.domain.adc import ADC, ADCTimeoutError
 
@@ -21,13 +20,11 @@ class SampledChannel:
         divider_ratio: float,
         read_interval: float,
         window_size: int,
-        clock: Callable[[], float],
     ) -> None:
         self._adc = adc
         self._channel = channel
         self._divider_ratio = divider_ratio
         self._read_interval = read_interval
-        self._clock = clock
         self._samples: deque[float] = deque(maxlen=window_size)
         self._last_attempt: float | None = None
         self._consecutive_failures = 0

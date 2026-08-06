@@ -9,6 +9,7 @@ from datetime import timedelta
 from subprocess import call
 
 from OTCamera.config import Config
+from OTCamera.controller.sampled_channel import SampledChannel
 from OTCamera.domain.adc import ADC, ADCConfig, ADCTimeoutError
 from OTCamera.domain.events import (
     BatteryLow,
@@ -20,7 +21,6 @@ from OTCamera.domain.events import (
     ShutdownRequested,
 )
 from OTCamera.domain.led import LED
-from OTCamera.domain.sampled_channel import SampledChannel
 
 logger = logging.getLogger(__name__)
 
@@ -29,11 +29,11 @@ _BATTERY_WINDOW_SIZE = 5
 _MIN_SAMPLES_FOR_BATTERY_VERDICT = 3
 
 
-def _is_low_battery(samples: tuple[float, ...], threshold: float) -> bool:
-    """Return whether the median of the held Samples is below the threshold."""
+def _battery_estimate(samples: tuple[float, ...]) -> float | None:
+    """Return the Voltage Estimate for the held Samples, or None if too few."""
     if len(samples) < _MIN_SAMPLES_FOR_BATTERY_VERDICT:
-        return False
-    return statistics.median(samples) < threshold
+        return None
+    return statistics.median(samples)
 
 
 class PowerController:
@@ -64,12 +64,11 @@ class PowerController:
 
         if adc is not None and adc_config is not None:
             self._battery_channel = SampledChannel(
-                adc,
-                adc_config.channel_battery,
-                adc_config.divider_ratio_battery,
-                config.adc.battery_read_interval,
-                _BATTERY_WINDOW_SIZE,
-                clock,
+                adc=adc,
+                channel=adc_config.channel_battery,
+                divider_ratio=adc_config.divider_ratio_battery,
+                read_interval=config.adc.battery_read_interval,
+                window_size=_BATTERY_WINDOW_SIZE,
             )
             try:
                 self._external_power_connected = self.is_external_power
@@ -88,9 +87,9 @@ class PowerController:
         """Return whether the battery Voltage Estimate is below the threshold."""
         if self._battery_channel is None:
             return False
-        return _is_low_battery(
-            self._battery_channel.samples,
-            self._config.adc.threshold_low_battery,
+        estimate = _battery_estimate(self._battery_channel.samples)
+        return (
+            estimate is not None and estimate < self._config.adc.threshold_low_battery
         )
 
     @property
@@ -130,8 +129,14 @@ class PowerController:
 
         self._battery_channel.sample_if_due(self._clock())
 
-        if self.is_low_battery and not self._battery_is_low:
-            self._on_low_battery(self._battery_channel.samples)
+        samples = self._battery_channel.samples
+        estimate = _battery_estimate(samples)
+        if (
+            estimate is not None
+            and estimate < self._config.adc.threshold_low_battery
+            and not self._battery_is_low
+        ):
+            self._on_low_battery(estimate, len(samples))
 
         was_connected = self._external_power_connected
         try:
@@ -208,14 +213,14 @@ class PowerController:
         if power_led is not None:
             power_led.blink(on_time=0.1, off_time=0.4, n=None, background=True)
 
-    def _on_low_battery(self, samples: tuple[float, ...]) -> None:
+    def _on_low_battery(self, estimate: float, sample_count: int) -> None:
         """Latch low-battery state and request shutdown."""
         self._battery_is_low = True
         logger.warning(
             "Battery low: estimate %.2f V < threshold %.2f V (%d samples)",
-            statistics.median(samples),
+            estimate,
             self._config.adc.threshold_low_battery,
-            len(samples),
+            sample_count,
         )
         self._event_bus.publish(BatteryLow())
         self.shutdown(source="battery")
