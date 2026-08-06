@@ -92,3 +92,4 @@ wifi:
 adc:
   threshold_external_power: 2.5
   threshold_low_battery: 3.3
+  battery_read_interval: 10

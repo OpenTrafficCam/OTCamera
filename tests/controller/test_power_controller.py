@@ -20,16 +20,29 @@ from OTCamera.domain.events import (
 class FakeADC(ADC):
     def __init__(self) -> None:
         self.voltages = {0: 0.0, 2: 0.0}
+        self.read_counts: dict[int, int] = {0: 0, 2: 0}
 
     @property
     def channels(self) -> int:
         return 4
 
     def get_voltage(self, channel: int) -> float:
+        self.read_counts[channel] = self.read_counts.get(channel, 0) + 1
         return self.voltages.get(channel, 0.0)
 
     def close(self) -> None:
         return
+
+
+class FakeClock:
+    def __init__(self, start: float = 0.0) -> None:
+        self._now = start
+
+    def __call__(self) -> float:
+        return self._now
+
+    def advance(self, seconds: float) -> None:
+        self._now += seconds
 
 
 @pytest.fixture
@@ -64,18 +77,129 @@ def test_external_power_detected(config: Config, adc_config: ADCConfig) -> None:
     adc = FakeADC()
     adc.voltages[0] = 2.0
     bus = EventBus()
-    controller = PowerController(config, bus, {}, adc, adc_config)
+    controller = PowerController(config, bus, {}, adc, adc_config, FakeClock())
 
     assert controller.is_external_power is True
+
+
+def test_battery_ok(config: Config, adc_config: ADCConfig) -> None:
+    adc = FakeADC()
+    adc.voltages[2] = 4.0
+    bus = EventBus()
+    clock = FakeClock()
+    controller = PowerController(config, bus, {}, adc, adc_config, clock)
+
+    for _ in range(5):
+        controller.check_power_status()
+        clock.advance(config.adc.battery_read_interval)
+
+    assert controller.is_low_battery is False
 
 
 def test_low_battery_detected(config: Config, adc_config: ADCConfig) -> None:
     adc = FakeADC()
     adc.voltages[2] = 1.0
     bus = EventBus()
-    controller = PowerController(config, bus, {}, adc, adc_config)
+    clock = FakeClock()
+    controller = PowerController(config, bus, {}, adc, adc_config, clock)
+
+    for _ in range(5):
+        controller.check_power_status()
+        clock.advance(config.adc.battery_read_interval)
 
     assert controller.is_low_battery is True
+
+
+def test_single_low_sample_does_not_trigger_low_battery(
+    config: Config,
+    adc_config: ADCConfig,
+) -> None:
+    """Regression test for bug 9930: one low Sample among high ones is not low."""
+    adc = FakeADC()
+    bus = EventBus()
+    clock = FakeClock()
+    controller = PowerController(config, bus, {}, adc, adc_config, clock)
+    received: list[ShutdownRequested] = []
+    bus.subscribe(ShutdownRequested, received.append)
+
+    for voltage in [4.0, 4.0, 1.0, 4.0, 4.0]:
+        adc.voltages[2] = voltage
+        controller.check_power_status()
+        clock.advance(config.adc.battery_read_interval)
+
+    assert controller.is_low_battery is False
+    assert received == []
+
+
+def test_three_low_samples_trigger_low_battery(
+    config: Config,
+    adc_config: ADCConfig,
+) -> None:
+    adc = FakeADC()
+    bus = EventBus()
+    clock = FakeClock()
+    controller = PowerController(config, bus, {}, adc, adc_config, clock)
+    received: list[ShutdownRequested] = []
+    bus.subscribe(ShutdownRequested, received.append)
+
+    for voltage in [1.0, 4.0, 1.0, 1.0, 4.0]:
+        adc.voltages[2] = voltage
+        controller.check_power_status()
+        clock.advance(config.adc.battery_read_interval)
+
+    assert controller.is_low_battery is True
+    assert len(received) == 1
+    assert received[0].source == "battery"
+
+
+def test_fewer_than_three_samples_no_verdict(
+    config: Config,
+    adc_config: ADCConfig,
+) -> None:
+    adc = FakeADC()
+    adc.voltages[2] = 1.0
+    bus = EventBus()
+    clock = FakeClock()
+    controller = PowerController(config, bus, {}, adc, adc_config, clock)
+
+    controller.check_power_status()
+    clock.advance(config.adc.battery_read_interval)
+    controller.check_power_status()
+
+    assert controller.is_low_battery is False
+
+
+def test_is_low_battery_performs_no_io(config: Config, adc_config: ADCConfig) -> None:
+    adc = FakeADC()
+    adc.voltages[2] = 1.0
+    bus = EventBus()
+    clock = FakeClock()
+    controller = PowerController(config, bus, {}, adc, adc_config, clock)
+    for _ in range(5):
+        controller.check_power_status()
+        clock.advance(config.adc.battery_read_interval)
+
+    reads_before = adc.read_counts[2]
+    for _ in range(10):
+        controller.is_low_battery
+
+    assert adc.read_counts[2] == reads_before
+
+
+def test_battery_reads_gated_by_configured_interval(
+    config: Config,
+    adc_config: ADCConfig,
+) -> None:
+    adc = FakeADC()
+    bus = EventBus()
+    clock = FakeClock()
+    controller = PowerController(config, bus, {}, adc, adc_config, clock)
+
+    for _ in range(20):
+        controller.check_power_status()
+        clock.advance(1.0)
+
+    assert adc.read_counts[2] == 2
 
 
 def test_external_power_event_emitted(
@@ -84,7 +208,8 @@ def test_external_power_event_emitted(
 ) -> None:
     adc = FakeADC()
     bus = EventBus()
-    controller = PowerController(config, bus, {}, adc, adc_config)
+    clock = FakeClock()
+    controller = PowerController(config, bus, {}, adc, adc_config, clock)
     received: list[ExternalPowerConnected] = []
     bus.subscribe(ExternalPowerConnected, received.append)
 
@@ -94,14 +219,17 @@ def test_external_power_event_emitted(
     assert len(received) == 1
 
 
-def test_adc_timeout_battery_assumes_ok(
+def test_battery_timeout_does_not_raise_and_keeps_ok(
     config: Config,
     adc_config: ADCConfig,
 ) -> None:
     adc = MagicMock(spec=ADC)
     adc.get_voltage.side_effect = ADCTimeoutError("timeout")
     bus = EventBus()
-    controller = PowerController(config, bus, {}, adc, adc_config)
+    clock = FakeClock()
+    controller = PowerController(config, bus, {}, adc, adc_config, clock)
+
+    controller.check_power_status()
 
     assert controller.is_low_battery is False
 

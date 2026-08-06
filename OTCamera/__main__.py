@@ -433,11 +433,6 @@ def main(config: Config | None = None, config_file: str = "~/user_config.yaml") 
             power_controller.shutdown(source="boot")
             return
 
-        if power_controller.has_adc and power_controller.is_low_battery:
-            logger.warning("Battery low at startup")
-            power_controller.shutdown(source="battery")
-            return
-
         if "wifi" in board.buttons:
             wifi_controller.init_from_switch(board.buttons["wifi"].is_pressed)
         if "hour" in board.buttons:
