@@ -180,10 +180,6 @@ class Config(BaseModel):
     adc: AdcConfig = Field(default_factory=AdcConfig)
     ot_cloud: OTCloudSettings | None = None
     rabbitmq: RabbitMqConfig | None = None
-    template_html_path: StrFromYaml = "~/OTCamera/webfiles/template.html"
-    index_html_path: StrFromYaml = "~/OTCamera/webfiles/index.html"
-    offline_html_path: StrFromYaml = "~/OTCamera/webfiles/offline.html"
-    num_log_files_html: int = 2
     usb_mount_point: StrFromYaml = "~/mnt/usb"
     usb_device: StrFromYaml = "/dev/sda1"
 
@@ -208,9 +204,6 @@ class Config(BaseModel):
         """Resolve path-valued settings to absolute paths."""
         self.video.dir = _resolve_path(self.video.dir)
         self.preview.path = _resolve_path(self.preview.path)
-        self.template_html_path = _resolve_path(self.template_html_path)
-        self.index_html_path = _resolve_path(self.index_html_path)
-        self.offline_html_path = _resolve_path(self.offline_html_path)
         self.usb_mount_point = _resolve_path(self.usb_mount_point)
 
 
