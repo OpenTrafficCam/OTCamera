@@ -92,6 +92,9 @@ apt install nginx -y
 PWD=$(pwd)
 NGINXDEFAULT="/etc/nginx/sites-available/default"
 sed $NGINXDEFAULT -i -e "s?root /var/www/html?root $PWD/webfiles?g"
+# Serve the preview image with no-cache so browsers revalidate it (conditional
+# GET -> 304 when unchanged) instead of showing a stale cached frame.
+sed $NGINXDEFAULT -i -e "/^[^#]*location \/ {/i location = /preview.jpg { add_header Cache-Control \"no-cache\"; }"
 systemctl enable nginx.service
 systemctl restart nginx.service
 

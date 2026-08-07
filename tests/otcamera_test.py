@@ -20,7 +20,6 @@ def test_execute_shutdown_stops_recording_without_closing_camera(
     power_controller = MagicMock()
     wifi_controller = MagicMock()
     schedule_controller = MagicMock()
-    html_updater = MagicMock()
 
     monkeypatch.setattr("OTCamera.__main__.signal.signal", lambda *_args: None)
 
@@ -31,7 +30,6 @@ def test_execute_shutdown_stops_recording_without_closing_camera(
         power_controller=power_controller,
         wifi_controller=wifi_controller,
         schedule_controller=schedule_controller,
-        html_updater=html_updater,
         leds={},
     )
 
@@ -40,4 +38,3 @@ def test_execute_shutdown_stops_recording_without_closing_camera(
     schedule_controller.set_shutdown_active.assert_called_once_with(True)
     camera_controller.stop_recording.assert_called_once_with()
     camera_controller.close.assert_not_called()
-    html_updater.display_offline_info.assert_called_once()
