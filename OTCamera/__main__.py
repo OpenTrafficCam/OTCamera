@@ -1,6 +1,7 @@
 """OTCamera application entry point and main loop."""
 
 import logging
+import os
 import re
 import signal
 from collections.abc import Callable
@@ -200,17 +201,14 @@ class OTCamera:
         video_dir = Path(self._config.video.dir).expanduser().resolve()
         free_bytes = psutil.disk_usage(str(video_dir)).free
         free_gb = free_bytes / (1024 * 1024 * 1024)
-        num_videos = (
-            len(
-                [
-                    path
-                    for path in video_dir.iterdir()
-                    if path.suffix == f".{self._config.video.format}"
-                ]
-            )
-            if video_dir.is_dir()
-            else 0
-        )
+        video_suffix = f".{self._config.video.format}"
+        if video_dir.is_dir():
+            with os.scandir(video_dir) as entries:
+                num_videos = sum(
+                    entry.name.endswith(video_suffix) for entry in entries
+                )
+        else:
+            num_videos = 0
 
         time_until_wifi_off = "--:--:--"
         if self._wifi.switch_off_time is not None:

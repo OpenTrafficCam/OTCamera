@@ -3,6 +3,7 @@
 import base64
 import errno
 import logging
+import os
 from datetime import datetime as dt
 from pathlib import Path
 from time import sleep
@@ -120,7 +121,6 @@ class CameraController:
                 logger.debug("Last interval reached")
 
         self._wait_recording(0.5)
-        self._set_annotation_text()
 
     def capture(self) -> None:
         """Capture and optionally forward a preview image."""
@@ -128,7 +128,6 @@ class CameraController:
             logger.warning("Cannot capture preview, camera not recording")
             return
 
-        self._set_annotation_text()
         preview_path = self._preview_path()
         self._camera.capture(
             save_file=preview_path,
@@ -160,18 +159,20 @@ class CameraController:
 
         current = Path(self._current_video_file) if self._camera.is_recording else None
         while psutil.disk_usage(str(video_dir)).free <= min_free_bytes:
-            video_paths = [
-                path
-                for path in video_dir.iterdir()
-                if path.suffix != ".log" and (current is None or path != current)
-            ]
-            if len(video_paths) <= 1:
+            with os.scandir(video_dir) as scanned:
+                entries = [
+                    entry
+                    for entry in scanned
+                    if not entry.name.endswith(".log")
+                    and (current is None or Path(entry.path) != current)
+                ]
+            if len(entries) <= 1:
                 message = f"No space and no files to delete in {video_dir}"
                 logger.error(message)
                 raise OSError(errno.ENOSPC, message)
-            oldest = min(video_paths, key=lambda path: path.stat().st_ctime)
-            oldest.unlink()
-            logger.info("Deleted %s", oldest)
+            oldest = min(entries, key=lambda entry: entry.stat().st_ctime)
+            os.unlink(oldest.path)
+            logger.info("Deleted %s", oldest.path)
 
     def _split(self) -> None:
         """Split recording to a new file and publish the completed segment."""
@@ -205,8 +206,8 @@ class CameraController:
         return str(Path(self._config.preview.path).expanduser().resolve())
 
     def _annotate_text(self) -> str:
-        """Return the current annotation text."""
-        return dt.now().strftime(f"{self._config.prefix} %d.%m.%Y %H:%M:%S")
+        """Return the overlay label (backend appends the timestamp)."""
+        return self._config.prefix
 
     @staticmethod
     def _current_dt() -> str:
