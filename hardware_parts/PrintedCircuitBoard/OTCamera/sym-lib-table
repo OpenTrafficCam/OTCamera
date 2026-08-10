@@ -1,3 +1,0 @@
-(sym_lib_table
-  (lib (name OTCamera_KiCad)(type Legacy)(uri ${KIPRJMOD}/OTCamera_KiCad.lib)(options "")(descr ""))
-)
