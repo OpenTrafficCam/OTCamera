@@ -2,7 +2,6 @@ import logging
 from pathlib import Path
 from typing import Any
 
-from boto3.s3.transfer import TransferConfig
 from botocore.exceptions import ClientError
 
 from OTCamera.domain.upload import S3UploadResult, Upload
@@ -11,25 +10,33 @@ from OTCamera.plugin.upload.exceptions import FileUploadError
 logger = logging.getLogger(__name__)
 
 
-# Disable boto3-internal split and threading, let us handle concurrency
-TRANSFER_CONFIG = TransferConfig(
-    multipart_threshold=100
-    * 1024
-    * 1024
-    * 1024,  # effectively disable multipart (100GB)
-    max_concurrency=1,  # no internal threads
-    use_threads=False,
-)
+def _read_client_error_details(error: ClientError) -> tuple[str | None, int | None]:
+    """Read the error code and HTTP status out of a boto3 `ClientError`.
+
+    Both parts can be absent, for example when the request never reached the
+    server, so neither is assumed to be present.
+
+    Args:
+        error (ClientError): The exception raised by boto3.
+
+    Returns:
+        tuple[str | None, int | None]: The error code and HTTP status, each None
+            when the response did not carry it.
+    """
+    response = error.response or {}
+    error_code = response.get("Error", {}).get("Code")
+    status_code = response.get("ResponseMetadata", {}).get("HTTPStatusCode")
+    return error_code, status_code
 
 
 class S3Upload(Upload):
     """Upload files to an S3-compatible object storage.
 
     Thread-safe: each call to `upload` is independent and uses no shared
-    mutable state beyond the boto3 client, which is itself thread-safe for
-    concurrent `upload_file` calls.  Internal boto3 multipart splitting and
-    its own threading are disabled via `TRANSFER_CONFIG` so that concurrency
-    is controlled entirely by the caller.
+    mutable state beyond the boto3 client, which is itself thread-safe.
+    Each file is sent as one single PUT request, so there is no internal
+    splitting or threading and concurrency is controlled entirely by the
+    caller.
     """
 
     def __init__(
@@ -55,25 +62,44 @@ class S3Upload(Upload):
         """Upload a single file to the configured S3 bucket.
 
         The file is stored under the key ``{key_prefix}/{filename}`` when a
-        prefix is set, or just ``{filename}`` otherwise.
+        prefix is set, or just ``{filename}`` otherwise. It is sent as one
+        single PUT request, so a refusal from the server surfaces directly
+        with its error code and HTTP status.
+
+        The failure is described in the raised error rather than logged here:
+        the caller retries and is the one place that knows how often it has
+        already tried.
 
         Args:
             file_path: Path to the local file to upload.
-        """
-        try:
-            name = Path(file_path).name
-            key = f"{self.key_prefix}/{name}" if self.key_prefix else name
 
-            self.client.upload_file(
-                file_path, self.bucket_name, key, Config=TRANSFER_CONFIG
-            )
-            logger.info("Uploaded %s", name)
-            return S3UploadResult(
-                local_path=file_path, bucket=self.bucket_name, key=key
-            )
+        Returns:
+            S3UploadResult: Where the file was stored.
+
+        Raises:
+            FileUploadError: If the upload did not complete, carrying the
+                backend's error code and HTTP status when it reported them.
+        """
+        name = Path(file_path).name
+        key = f"{self.key_prefix}/{name}" if self.key_prefix else name
+
+        try:
+            with open(file_path, "rb") as body:
+                self.client.put_object(Bucket=self.bucket_name, Key=key, Body=body)
+        except ClientError as e:
+            error_code, status_code = _read_client_error_details(e)
+            raise FileUploadError(
+                f"S3 refused: {error_code} ({status_code})",
+                error_code=error_code,
+                status_code=status_code,
+            ) from e
+        except OSError as e:
+            raise FileUploadError(f"Could not read {name}: {e}") from e
         except Exception as e:
-            logger.error("Unexpected error during S3 upload: %s", e)
             raise FileUploadError(f"Could not upload to S3 bucket. Error: {e}") from e
+
+        logger.info("Uploaded %s", name)
+        return S3UploadResult(local_path=file_path, bucket=self.bucket_name, key=key)
 
     def is_available(self) -> bool:
         """Perform a quick check to confirm that we are ready to upload files."""
