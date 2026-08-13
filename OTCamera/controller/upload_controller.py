@@ -1,117 +1,194 @@
-"""Upload controller that reacts to recording split events."""
+"""Upload controller that drains the backlog of recorded segments."""
 
 import logging
-from abc import ABC, abstractmethod
 from pathlib import Path
-from queue import Queue, ShutDown
-from threading import Thread
+from threading import Event, Thread
 
+from OTCamera.controller.backlog import Backlog
 from OTCamera.domain.events import EventBus, RecordingSplit
 from OTCamera.domain.upload import Upload
 
 logger = logging.getLogger(__name__)
 
-
-class UploadController(ABC):
-    """Upload completed recording segments when they are split."""
-
-    def __init__(self, event_bus: EventBus, upload: Upload) -> None:
-        """Initialize new `UploadController` with the given `Upload` implementation.
-
-        Subscribes to the `RecordingSplit` event on the `EventBus`.
-
-        Args:
-            event_bus (EventBus): The event bus to subscribe to.
-            upload (Upload): The upload backend implementation.
-        """
-        self._upload = upload
-        self._event_bus = event_bus
-        event_bus.subscribe(RecordingSplit, self._on_recording_split)
-        logger.debug("Upload controller active")
-
-    @abstractmethod
-    def _on_recording_split(self, event: RecordingSplit) -> None:
-        """Handle a completed recording segment.
-
-        Implementations must upload the file at `event.filename` and publish a
-        `FileUploaded` event on success. On failure the error should be logged
-        without propagating.
-
-        Args:
-            event (RecordingSplit): The event triggering the upload. Contains the
-                path to the file to be uploaded.
-        """
-        ...
+_INITIAL_WAIT_SECONDS = 5.0
+_MAX_WAIT_SECONDS = 300.0
+_IDLE_WAIT_SECONDS = 5.0
+_CLOSE_TIMEOUT_SECONDS = 10.0
 
 
-class BlockingUploadController(UploadController):
-    """An `UploadController` that blocks the thread it is running in.
+class ThreadedUploadController:
+    """Get finished recording segments to the server without losing any.
 
-    Only for testing purposes, should not be used in production.
+    The work is split across two threads. The camera thread hands a finished
+    segment over by accepting it into the backlog. A background worker thread
+    does everything else: it picks the oldest segment, uploads it, deletes it
+    once the server has it, and reclaims space when the card fills up.
+
+    Uploading and deleting belong to the same controller because both take
+    segments out of the backlog, so keeping them together means they never
+    compete over the same segment.
+
+    Every failure is treated the same way: back off and retry the same segment,
+    for as long as it takes. Nothing is skipped and nothing is set aside. A
+    segment the server will never accept therefore blocks the segments behind
+    it, until reclaiming space deletes it and the backlog drains again.
+
+    An upload backend is optional. Without one, segments are still taken out of
+    the recording directory and space is still reclaimed; only the upload step
+    is skipped, which does not count as a failure.
     """
 
-    def _on_recording_split(self, event: RecordingSplit) -> None:
-        """Upload the completed recording segment."""
-        try:
-            logger.info("Uploading %s", event.filename)
-            result = self._upload.upload(Path(event.filename))
-            upload_event = result.to_upload_event()
-            self._event_bus.publish(upload_event)
-        except Exception as exc:
-            logger.warning("Upload failed: %s", exc)
-
-
-class ThreadedUploadController(UploadController):
-    """Upload files sequentially via a single background worker thread."""
-
-    def __init__(self, event_bus: EventBus, upload: Upload):
+    def __init__(self, event_bus: EventBus, upload: Upload | None, backlog: Backlog):
         """Construct a new ThreadedUploadController instance.
+
+        Subscribes to the `RecordingSplit` event on the `EventBus`. The worker
+        thread is not started here; call `start` for that.
 
         Args:
             event_bus (EventBus): The global event bus.
-            upload (Upload): The upload backend to use.
+            upload (Upload | None): The upload backend to use, or None when none
+                is configured. Without one the worker only reclaims space.
+            backlog (Backlog): The store of segments waiting to be uploaded.
         """
-        super().__init__(event_bus=event_bus, upload=upload)
-        self._queue: Queue[str] = Queue()
+        self._upload = upload
+        self._event_bus = event_bus
+        self._backlog = backlog
+        self._wait_seconds = _IDLE_WAIT_SECONDS
+        self._head: Path | None = None
+        self._head_attempts = 0
+        self._stop = Event()
+        self._thread: Thread | None = None
+        event_bus.subscribe(RecordingSplit, self._on_recording_split)
+        logger.debug("Upload controller active")
+
+    @property
+    def wait_seconds(self) -> float:
+        """Return how long the worker waits before its next pass."""
+        return self._wait_seconds
+
+    @property
+    def is_running(self) -> bool:
+        """Return whether the worker thread is alive."""
+        return self._thread is not None and self._thread.is_alive()
+
+    def start(self) -> None:
+        """Start the worker thread that drains the backlog."""
+        if self.is_running:
+            return
+        self._stop.clear()
         self._thread = Thread(target=self._worker, daemon=True)
         self._thread.start()
+        logger.info(
+            "Upload worker started with %d segments pending", self._backlog.size()
+        )
 
-    def _worker(self) -> None:
-        while True:
-            try:
-                filename = self._queue.get()
-            except ShutDown:
-                break
-            try:
-                logger.info("Uploading %s", filename)
-                result = self._upload.upload(Path(filename))
+    def run_once(self) -> None:
+        """Perform exactly one pass over the backlog.
 
-                event = result.to_upload_event()
+        Reclaims space first, so that a pass which cannot upload anything still
+        keeps the card usable, then uploads the oldest segment.
+        """
+        self._reclaim_space()
 
-                self._event_bus.enqueue(event)
-            except Exception as exc:
-                logger.warning("Upload failed: %s", exc)
-            finally:
-                self._queue.task_done()
+        if self._upload is None:
+            self._wait_seconds = _IDLE_WAIT_SECONDS
+            return
+
+        segment = self._backlog.oldest()
+        if segment is None:
+            self._reset_head()
+            self._wait_seconds = _IDLE_WAIT_SECONDS
+            return
+
+        if segment != self._head:
+            self._reset_head(segment)
+
+        try:
+            result = self._upload.upload(segment)
+        except Exception as exc:
+            self._on_upload_failed(segment, exc)
+            return
+
+        self._backlog.remove(segment)
+        self._event_bus.enqueue(result.to_upload_event())
+        self._backlog.count_uploaded()
+        self._reset_head()
+        self._wait_seconds = _INITIAL_WAIT_SECONDS
+
+    def close(self) -> None:
+        """Stop the worker thread, giving the current upload time to finish."""
+        self._stop.set()
+        if self._thread is not None:
+            self._thread.join(timeout=_CLOSE_TIMEOUT_SECONDS)
 
     def _on_recording_split(self, event: RecordingSplit) -> None:
-        try:
-            self._queue.put(event.filename)
-        except ShutDown:
-            logger.warning(
-                "Upload controller is shut down, ignoring %s", event.filename
-            )
+        """Accept the finished segment into the backlog.
 
-    def close(self, wait: bool = False) -> None:
-        """Stop accepting new uploads and shut down the worker.
+        This runs on the camera thread and must never raise: nothing upstream
+        retries the handover, and the recording has to go on undisturbed. A
+        failure is therefore logged and costs that one segment its upload.
 
         Args:
-            wait (bool): If True, blocks until all queued uploads finish.
+            event (RecordingSplit): The event announcing the finished segment.
         """
-        # Shutdown prevents any further .put() actions.
-        # Draining the queue with .get() is still allowed (immediate=False).
-        self._queue.shutdown(immediate=False)
+        try:
+            self._backlog.add(Path(event.filename))
+        except Exception:
+            logger.exception("Could not accept %s for upload", event.filename)
 
-        # optional wait for all uploads to complete before returning.
-        if wait:
-            self._queue.join()
+    def _reset_head(self, segment: Path | None = None) -> None:
+        """Track `segment` as the one being retried and clear its attempt count.
+
+        Args:
+            segment (Path | None): The segment the next passes will retry, or
+                None when there is nothing to retry.
+        """
+        self._head = segment
+        self._head_attempts = 0
+
+    def _reclaim_space(self) -> None:
+        """Delete the oldest segments until there is room to keep recording.
+
+        This runs on every pass, including a pass whose upload failed, so a
+        segment the server will never accept is eventually cleared too.
+        """
+        while self._backlog.is_below_floor() and self._backlog.size() > 0:
+            oldest = self._backlog.oldest()
+            if oldest is None:
+                return
+            self._backlog.remove(oldest)
+            self._backlog.count_dropped()
+            logger.warning(
+                "Dropped %s to keep recording; it was never uploaded", oldest.name
+            )
+
+    def _on_upload_failed(self, segment: Path, exc: Exception) -> None:
+        """Back off and keep the segment for the next pass.
+
+        A segment's first failure sets the wait back to its starting value and
+        each further failure doubles it, up to a cap, so a long outage is
+        retried at a slow steady pace instead of at full speed.
+
+        Args:
+            segment (Path): The segment that will be retried unchanged.
+            exc (Exception): The failure the backend reported.
+        """
+        self._head_attempts += 1
+        logger.warning(
+            "Upload of %s failed (attempt %d): %s",
+            segment.name,
+            self._head_attempts,
+            exc,
+        )
+        if self._head_attempts == 1:
+            self._wait_seconds = _INITIAL_WAIT_SECONDS
+        else:
+            self._wait_seconds = min(self._wait_seconds * 2, _MAX_WAIT_SECONDS)
+
+    def _worker(self) -> None:
+        """Run one pass per wait interval until the controller is closed."""
+        while not self._stop.wait(self._wait_seconds):
+            try:
+                self.run_once()
+            except Exception:
+                logger.exception("Upload pass failed unexpectedly")

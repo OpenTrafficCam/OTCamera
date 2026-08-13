@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from shutil import copyfile
 from typing import Any
 
 import boto3
@@ -8,6 +9,7 @@ from botocore.config import Config as Boto3Config
 from botocore.exceptions import ClientError
 
 from OTCamera.config import S3Config
+from OTCamera.controller.backlog import Backlog
 from OTCamera.controller.upload_controller import ThreadedUploadController
 from OTCamera.domain.events import EventBus, RecordingSplit
 from OTCamera.plugin.upload.s3_upload import S3Upload
@@ -71,20 +73,35 @@ KEY_PREFIX = "project/site/camera"
 
 @pytest.mark.integration
 def test_s3_upload(
-    reset_s3_bucket: Any, s3client: Any, local_s3_config: S3Config
+    reset_s3_bucket: Any, s3client: Any, local_s3_config: S3Config, tmp_path: Path
 ) -> None:
     upload = S3Upload(
         s3client, bucket_name=local_s3_config.bucket, key_prefix=KEY_PREFIX
     )
 
+    video_dir = tmp_path / "videos"
+    video_dir.mkdir()
+    backlog = Backlog(video_dir=video_dir, video_format="h264", min_free_bytes=0)
+
     event_bus = EventBus()
-    upload_controller = ThreadedUploadController(event_bus=event_bus, upload=upload)
+    upload_controller = ThreadedUploadController(
+        event_bus=event_bus, upload=upload, backlog=backlog
+    )
 
-    for p in EXAMPLE_VIDEOS_PATHS:
-        event_bus.publish(RecordingSplit(str(p)))
+    for example_video in EXAMPLE_VIDEOS_PATHS:
+        recorded = video_dir / example_video.name
+        copyfile(example_video, recorded)
+        event_bus.publish(RecordingSplit(str(recorded)))
 
-    # wait until futures have completed
-    upload_controller.close(wait=True)
+    assert backlog.size() == len(EXAMPLE_VIDEOS_PATHS)
+
+    # Drain the backlog on this thread so that the assertions below cannot race
+    # the worker.
+    for _ in EXAMPLE_VIDEOS_PATHS:
+        upload_controller.run_once()
+
+    assert backlog.size() == 0
+    assert backlog.uploaded_total == len(EXAMPLE_VIDEOS_PATHS)
 
     response = s3client.list_objects_v2(Bucket=local_s3_config.bucket)
 

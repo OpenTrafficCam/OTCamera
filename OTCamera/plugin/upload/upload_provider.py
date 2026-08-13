@@ -1,6 +1,7 @@
 """Upload backend provider."""
 
 import logging
+from pathlib import Path
 
 import boto3
 from botocore.config import Config as Boto3Config
@@ -39,7 +40,10 @@ class UploadProvider:
             aws_secret_access_key=s3config.secret_key,
             region_name=s3config.region,
             config=Boto3Config(
-                retries={"total_max_attempts": s3config.retry_max_attempts},
+                # One attempt only: retrying is the backlog controller's job, and
+                # a second layer of retries here would only add its waits to the
+                # controller's before the failure is reported.
+                retries={"total_max_attempts": 1},
                 connect_timeout=s3config.connect_timeout,
                 read_timeout=s3config.read_timeout,
             ),
@@ -52,7 +56,18 @@ class UploadProvider:
 
     @staticmethod
     def provide(config: Config) -> Upload | None:
-        """Return the configured upload backend, or None when none is enabled."""
+        """Return the configured upload backend, if there is one.
+
+        Configuring no backend is valid: the camera records and keeps its
+        footage on the card.
+
+        Args:
+            config (Config): The parsed user configuration.
+
+        Returns:
+            Upload | None: The configured backend, or None when none is
+                configured.
+        """
         if config.upload == "ftp":
             assert config.ftp_upload is not None
             return UploadProvider._create_ftp_upload(config.ftp_upload)
@@ -63,5 +78,9 @@ class UploadProvider:
                 config.s3_upload,
             )
 
-        logger.info("No upload backend configured")
+        logger.info(
+            "No upload backend configured; recordings are kept in %s until "
+            "space is needed",
+            Path(config.video.dir) / "pending",
+        )
         return None

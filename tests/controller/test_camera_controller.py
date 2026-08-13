@@ -1,5 +1,4 @@
 from pathlib import Path
-from types import SimpleNamespace
 from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
@@ -135,24 +134,6 @@ def test_split_emits_previous_filename(
         controller.split_if_interval_ends()
 
     assert received[0].filename == previous
-
-
-def test_delete_old_files_raises_when_no_space(
-    mock_camera: MagicMock,
-    config: Config,
-    bus: EventBus,
-    tmp_path: Path,
-) -> None:
-    config.recording.min_free_space = 1
-    (tmp_path / "old.h264").write_bytes(b"x")
-    controller = CameraController(mock_camera, config, bus, {})
-
-    with patch(
-        "OTCamera.controller.camera_controller.psutil.disk_usage",
-        return_value=SimpleNamespace(free=0),
-    ):
-        with pytest.raises(OSError):
-            controller.delete_old_files()
 
 
 def test_recording_led_blinks_on_start(

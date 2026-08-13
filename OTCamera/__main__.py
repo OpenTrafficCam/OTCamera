@@ -1,7 +1,6 @@
 """OTCamera application entry point and main loop."""
 
 import logging
-import os
 import re
 import signal
 from collections.abc import Callable
@@ -11,10 +10,9 @@ from pathlib import Path
 from time import sleep
 from typing import Any, Iterator, Protocol
 
-import psutil
-
 from OTCamera.bsl.board_provider import BoardProvider
 from OTCamera.config import Config, parse_user_config
+from OTCamera.controller.backlog import Backlog
 from OTCamera.controller.camera_controller import CameraController
 from OTCamera.controller.notification_controller import EventNotificationController
 from OTCamera.controller.power_controller import PowerController
@@ -26,7 +24,6 @@ from OTCamera.domain.events import (
     ButtonPressed,
     ButtonReleased,
     EventBus,
-    FileUploaded,
     S3FileUploaded,
     ShutdownRequested,
 )
@@ -42,7 +39,6 @@ from OTCamera.html_updater import (
 )
 from OTCamera.log import setup_logging
 from OTCamera.module.camera.camera_provider import CameraProvider
-from OTCamera.plugin.upload.helpers import delete_file
 from OTCamera.plugin.upload.upload_provider import UploadProvider
 from OTCamera.plugin.upload_notifier.payload_factories import (
     RabbitMQS3UploadToOTCloudPayloadFactory,
@@ -52,6 +48,8 @@ from OTCamera.plugin.upload_notifier.upload_notification_provider import (
 )
 
 logger = logging.getLogger(__name__)
+
+_BYTES_PER_GIB = 1024 * 1024 * 1024
 
 
 def _make_button_event_callback(
@@ -80,6 +78,7 @@ class OTCamera:
         schedule_controller: ScheduleController,
         html_updater: StatusWebsiteUpdater,
         leds: dict[str, LED],
+        backlog: Backlog,
     ) -> None:
         self._config = config
         self._event_bus = event_bus
@@ -89,6 +88,7 @@ class OTCamera:
         self._schedule = schedule_controller
         self._html_updater = html_updater
         self._leds = leds
+        self._backlog = backlog
         self._shutdown = False
         self._preview_taken = False
         self._power_led_blinked = False
@@ -96,7 +96,6 @@ class OTCamera:
         signal.signal(signal.SIGTERM, self._execute_shutdown)
         signal.signal(signal.SIGINT, self._execute_shutdown)
         event_bus.subscribe(ShutdownRequested, self._on_shutdown_requested)
-        Path(config.video.dir).mkdir(parents=True, exist_ok=True)
 
     def record(self) -> None:
         """Run the main recording loop until all intervals are done or shutdown."""
@@ -109,8 +108,12 @@ class OTCamera:
                     self._loop()
                 except OSError as error:
                     if error.errno == 28:
-                        logger.exception("No space left on device")
-                        self._camera.delete_old_files()
+                        logger.error(
+                            "No space left on device. Reclaiming space is the "
+                            "upload worker's job; recording continues until the "
+                            "operating system refuses the write.",
+                            exc_info=True,
+                        )
                     else:
                         raise
             if not self._shutdown:
@@ -198,17 +201,8 @@ class OTCamera:
 
     def _get_status_data(self) -> StatusDataObject:
         """Build the status DTO for the HTML updater."""
-        video_dir = Path(self._config.video.dir).expanduser().resolve()
-        free_bytes = psutil.disk_usage(str(video_dir)).free
-        free_gb = free_bytes / (1024 * 1024 * 1024)
-        video_suffix = f".{self._config.video.format}"
-        if video_dir.is_dir():
-            with os.scandir(video_dir) as entries:
-                num_videos = sum(
-                    entry.name.endswith(video_suffix) for entry in entries
-                )
-        else:
-            num_videos = 0
+        free_gb = self._backlog.free_bytes() / _BYTES_PER_GIB
+        num_videos = self._backlog.size()
 
         time_until_wifi_off = "--:--:--"
         if self._wifi.switch_off_time is not None:
@@ -354,6 +348,31 @@ def _get_log_files_sorted(log_files: Iterator[Path]) -> list[Path]:
     return [log_file for _, log_file in with_timestamp] + without_timestamp
 
 
+def _create_backlog(config: Config) -> Backlog:
+    """Create the backlog and take in what an interrupted recording left behind.
+
+    Nothing is recording yet, so any video file lying directly in the video
+    directory belongs to a recording that was cut short. This has to happen
+    before recording starts, because afterwards the live segment is
+    indistinguishable from those leftovers.
+
+    Args:
+        config (Config): The parsed user configuration.
+
+    Returns:
+        Backlog: The store the upload worker and the status page read.
+    """
+    backlog = Backlog(
+        video_dir=Path(config.video.dir),
+        video_format=config.video.format,
+        min_free_bytes=config.recording.min_free_space * _BYTES_PER_GIB,
+    )
+    recovered = backlog.recover_unfinished_segments()
+    logger.info("Recovered %d unfinished segment(s) at startup", recovered)
+    logger.info("Backlog holds %d segment(s) awaiting upload", backlog.size())
+    return backlog
+
+
 class Closable(Protocol):
     def close(self) -> None: ...
 
@@ -383,12 +402,10 @@ def main(config: Config | None = None, config_file: str = "~/user_config.yaml") 
     upload_controller = None
     upload_notification_controller = None
     try:
+        backlog = _create_backlog(config)
         camera = CameraProvider.provide(config)
 
         upload = UploadProvider.provide(config)
-
-        if config.delete_after_upload:
-            event_bus.subscribe(FileUploaded, lambda e: delete_file(str(e.local_path)))
 
         camera_controller = CameraController(camera, config, event_bus, board.leds)
         power_controller = PowerController(
@@ -400,8 +417,7 @@ def main(config: Config | None = None, config_file: str = "~/user_config.yaml") 
         )
         wifi_controller = WifiController(config, event_bus, board.leds)
         schedule_controller = ScheduleController(config, event_bus)
-        if upload is not None:
-            upload_controller = ThreadedUploadController(event_bus, upload)
+        upload_controller = ThreadedUploadController(event_bus, upload, backlog)
 
         notifier = UploadNotificationProvider.provide(config)
         if notifier is not None:
@@ -451,7 +467,7 @@ def main(config: Config | None = None, config_file: str = "~/user_config.yaml") 
         )
 
         event_bus.process_pending()
-        Path(config.video.dir).mkdir(parents=True, exist_ok=True)
+        upload_controller.start()
 
         application = OTCamera(
             config=config,
@@ -462,6 +478,7 @@ def main(config: Config | None = None, config_file: str = "~/user_config.yaml") 
             schedule_controller=schedule_controller,
             html_updater=html_updater,
             leds=board.leds,
+            backlog=backlog,
         )
         application.record()
     finally:
