@@ -1,6 +1,7 @@
 """The on-disk store of recorded segments that are waiting to be uploaded."""
 
 import logging
+import os
 import re
 from datetime import datetime as dt
 from pathlib import Path
@@ -104,10 +105,10 @@ class Backlog:
         timestamp sorts behind every name that has one, so a stray file is
         uploaded last and never blocks the segments behind it.
         """
-        segments = self._segments()
-        if not segments:
+        names = self._segment_names()
+        if not names:
             return None
-        return min(segments, key=_sort_key)
+        return self._pending / min(names, key=_sort_key)
 
     def remove(self, segment: Path) -> None:
         """Delete a segment from the backlog.
@@ -122,7 +123,7 @@ class Backlog:
 
     def size(self) -> int:
         """Return how many segments are waiting to be uploaded."""
-        return len(self._segments())
+        return len(self._segment_names())
 
     def free_bytes(self) -> int:
         """Return the free space on the filesystem holding the segments."""
@@ -141,7 +142,7 @@ class Backlog:
         oldest = self.oldest()
         if oldest is None:
             return None
-        timestamp = _timestamp_of(oldest)
+        timestamp = _timestamp_of(oldest.name)
         if timestamp is None:
             return None
         return (dt.now() - timestamp).total_seconds()
@@ -168,9 +169,14 @@ class Backlog:
             recovered += 1
         return recovered
 
-    def _segments(self) -> list[Path]:
-        """Return the files currently in the backlog, in no particular order."""
-        return [path for path in self._pending.iterdir() if path.is_file()]
+    def _segment_names(self) -> list[str]:
+        """Return the names of the segments in the backlog, in no order.
+
+        Only the directory listing is read, never the files themselves, so
+        counting the backlog stays cheap as it grows.
+        """
+        with os.scandir(self._pending) as entries:
+            return [entry.name for entry in entries if entry.is_file()]
 
     def count_uploaded(self) -> None:
         """Record that a segment reached the server."""
@@ -181,16 +187,16 @@ class Backlog:
         self._dropped_total += 1
 
 
-def _timestamp_of(segment: Path) -> dt | None:
+def _timestamp_of(name: str) -> dt | None:
     """Return the timestamp encoded in a segment's filename, if it has one.
 
     Args:
-        segment (Path): The segment whose name should be parsed.
+        name (str): The filename to parse, without its directory.
 
     Returns:
         dt | None: The timestamp, or None when the name does not carry one.
     """
-    match = _TIMESTAMP_PATTERN.search(segment.stem)
+    match = _TIMESTAMP_PATTERN.search(name)
     if match is None:
         return None
     try:
@@ -199,17 +205,17 @@ def _timestamp_of(segment: Path) -> dt | None:
         return None
 
 
-def _sort_key(segment: Path) -> tuple[int, dt | str]:
+def _sort_key(name: str) -> tuple[int, dt | str]:
     """Return an oldest-first sort key that tolerates unparseable names.
 
     Args:
-        segment (Path): The segment to build a key for.
+        name (str): The filename to build a key for.
 
     Returns:
         tuple[int, dt | str]: A key that sorts every timestamped name before
             every name without a timestamp.
     """
-    timestamp = _timestamp_of(segment)
+    timestamp = _timestamp_of(name)
     if timestamp is None:
-        return (1, segment.name)
+        return (1, name)
     return (0, timestamp)
