@@ -101,6 +101,14 @@ class TestOldest:
 
         assert backlog.oldest() == timestamped
 
+    def test_a_date_that_cannot_exist_sorts_last(self, tmp_path: Path) -> None:
+        backlog = _backlog(tmp_path)
+        impossible = backlog.add(_segment(tmp_path, "2026-13-45_10-00-00"))
+        timestamped = backlog.add(_segment(tmp_path, "2026-08-12_10-00-00"))
+
+        assert backlog.oldest() == timestamped
+        assert backlog.oldest() != impossible
+
     def test_returns_a_stray_file_once_it_is_the_only_one(self, tmp_path: Path) -> None:
         backlog = _backlog(tmp_path)
         stray = tmp_path / "stray.h264"

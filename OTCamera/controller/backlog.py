@@ -12,7 +12,6 @@ logger = logging.getLogger(__name__)
 
 _PENDING_DIR_NAME = "pending"
 _TIMESTAMP_PATTERN = re.compile(r"_(\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2})")
-_TIMESTAMP_FORMAT = "%Y-%m-%d_%H-%M-%S"
 
 
 class Backlog:
@@ -190,6 +189,9 @@ class Backlog:
 def _timestamp_of(name: str) -> dt | None:
     """Return the timestamp encoded in a segment's filename, if it has one.
 
+    The fields are read from their fixed places in the name. A date that cannot
+    exist counts as no timestamp at all.
+
     Args:
         name (str): The filename to parse, without its directory.
 
@@ -199,8 +201,16 @@ def _timestamp_of(name: str) -> dt | None:
     match = _TIMESTAMP_PATTERN.search(name)
     if match is None:
         return None
+    stamp = match.group(1)
     try:
-        return dt.strptime(match.group(1), _TIMESTAMP_FORMAT)
+        return dt(
+            year=int(stamp[0:4]),
+            month=int(stamp[5:7]),
+            day=int(stamp[8:10]),
+            hour=int(stamp[11:13]),
+            minute=int(stamp[14:16]),
+            second=int(stamp[17:19]),
+        )
     except ValueError:
         return None
 
