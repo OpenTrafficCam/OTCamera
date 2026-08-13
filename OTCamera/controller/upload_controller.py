@@ -151,8 +151,10 @@ class ThreadedUploadController:
 
         This runs on every pass, including a pass whose upload failed, so a
         segment the server will never accept is eventually cleared too.
+
+        The loop also stops when the backlog runs empty.
         """
-        while self._backlog.is_below_floor() and self._backlog.size() > 0:
+        while self._backlog.is_below_floor():
             oldest = self._backlog.oldest()
             if oldest is None:
                 return
