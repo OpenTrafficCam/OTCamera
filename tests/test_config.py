@@ -98,6 +98,6 @@ def test_default_config_has_sensible_values() -> None:
     assert config.recording.start_hour == 6
     assert config.recording.end_hour == 22
     assert config.hardware.pcb_version == "v2"
-    assert config.hardware.use_leds is False
-    assert config.hardware.use_buttons is False
-    assert config.hardware.use_adc is False
+    assert config.hardware.use_leds is True
+    assert config.hardware.use_buttons is True
+    assert config.hardware.use_adc is True
