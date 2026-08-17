@@ -1,7 +1,6 @@
 """Power monitoring and system control."""
 
 import logging
-import statistics
 import time
 from collections.abc import Callable
 from datetime import datetime as dt
@@ -29,14 +28,15 @@ _BATTERY_WINDOW_SIZE = 5
 
 
 def _battery_estimate(samples: tuple[float, ...]) -> float | None:
-    """Return the Voltage Estimate for a full window of Samples, else None.
+    """Return the highest Voltage in a full window of Samples, else None.
 
-    The median of a full window of five cannot be moved by fewer than three low
-    Samples. A partly filled window has no such guarantee, so it yields no verdict.
+    The battery counts as low only when every Sample in the window is below the
+    threshold, which the highest Sample decides on its own. A partly filled
+    window yields no verdict.
     """
     if len(samples) < _BATTERY_WINDOW_SIZE:
         return None
-    return statistics.median(samples)
+    return max(samples)
 
 
 class PowerController:
@@ -211,7 +211,7 @@ class PowerController:
         """Latch low-battery state and request shutdown."""
         self._battery_is_low = True
         logger.warning(
-            "Battery low: estimate %.2f V < threshold %.2f V (%d samples)",
+            "Battery low: highest sample %.2f V < threshold %.2f V (%d samples)",
             estimate,
             self._config.adc.threshold_low_battery,
             sample_count,

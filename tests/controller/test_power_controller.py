@@ -118,12 +118,16 @@ def test_low_battery_detected(config: Config, adc_config: ADCConfig) -> None:
         adc_config=adc_config,
         clock=clock,
     )
+    received: list[ShutdownRequested] = []
+    bus.subscribe(ShutdownRequested, received.append)
 
     for _ in range(_BATTERY_WINDOW_SIZE):
         controller.check_power_status()
         clock.advance(config.adc.battery_read_interval)
 
     assert controller.battery_is_low is True
+    assert len(received) == 1
+    assert received[0].source == "battery"
 
 
 def test_single_low_sample_does_not_trigger_low_battery(
@@ -154,10 +158,11 @@ def test_single_low_sample_does_not_trigger_low_battery(
     assert received == []
 
 
-def test_three_low_samples_trigger_low_battery(
+def test_three_low_samples_do_not_trigger_low_battery(
     config: Config,
     adc_config: ADCConfig,
 ) -> None:
+    """A single healthy Sample in the window vetoes the low-battery verdict."""
     adc = FakeADC()
     bus = EventBus()
     clock = FakeClock()
@@ -177,9 +182,8 @@ def test_three_low_samples_trigger_low_battery(
         controller.check_power_status()
         clock.advance(config.adc.battery_read_interval)
 
-    assert controller.battery_is_low is True
-    assert len(received) == 1
-    assert received[0].source == "battery"
+    assert controller.battery_is_low is False
+    assert received == []
 
 
 def test_partly_filled_window_gives_no_verdict(
@@ -260,8 +264,8 @@ def test_external_power_event_emitted(
 def test_battery_estimate_needs_a_full_window() -> None:
     assert _battery_estimate(()) is None
     assert _battery_estimate((1.0, 1.0, 1.0, 1.0)) is None
-    assert _battery_estimate((1.0, 4.0, 1.0, 1.0, 4.0)) == 1.0
-    assert _battery_estimate((4.0, 4.0, 1.0, 4.0, 4.0)) == 4.0
+    assert _battery_estimate((1.0, 4.0, 1.0, 1.0, 4.0)) == 4.0
+    assert _battery_estimate((1.0, 1.0, 1.0, 1.0, 1.0)) == 1.0
 
 
 def test_adc_timeout_does_not_raise_and_does_not_shut_down(
