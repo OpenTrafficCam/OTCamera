@@ -401,6 +401,9 @@ def main(config: Config | None = None, config_file: str = "~/user_config.yaml") 
     upload = None
     backlog_controller = None
     upload_notification_controller = None
+    # the notifier is already running when we get it, so keep hold of it in
+    # case wiring the controller around it fails.
+    notifier = None
     try:
         backlog = _create_backlog(config)
         camera = CameraProvider.provide(config)
@@ -483,7 +486,12 @@ def main(config: Config | None = None, config_file: str = "~/user_config.yaml") 
         application.record()
     finally:
         close_resources(
-            camera, upload, board, backlog_controller, upload_notification_controller
+            camera,
+            upload,
+            board,
+            backlog_controller,
+            upload_notification_controller,
+            notifier,
         )
 
 

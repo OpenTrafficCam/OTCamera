@@ -137,17 +137,22 @@ class AdcConfig(BaseModel):
 
 
 class RabbitMqConfig(BaseModel):
-    """RabbitMQ connection and exchange settings."""
+    """RabbitMQ connection and exchange settings.
+
+    Where a message goes has no sensible default: the camera must be told
+    the exchange, the routing key and the queue, so a missing one is
+    reported instead of silently publishing nowhere.
+    """
 
     host: StrFromYaml
+    exchange: StrFromYaml
+    routing_key: StrFromYaml
+    queue_name: StrFromYaml
     port: int = 5671
     user: StrFromYaml = "guest"
     password: StrFromYaml = "guest"
     vhost: StrFromYaml = "/"
-    exchange: StrFromYaml = ""
     exchange_type: StrFromYaml = "direct"
-    routing_key: StrFromYaml = ""
-    queue_name: StrFromYaml = ""
     durable: bool = True
     ssl: bool = True
 
