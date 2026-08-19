@@ -13,11 +13,11 @@ from typing import Any, Iterator, Protocol
 from OTCamera.bsl.board_provider import BoardProvider
 from OTCamera.config import Config, parse_user_config
 from OTCamera.controller.backlog import Backlog
+from OTCamera.controller.backlog_controller import BacklogController
 from OTCamera.controller.camera_controller import CameraController
 from OTCamera.controller.notification_controller import EventNotificationController
 from OTCamera.controller.power_controller import PowerController
 from OTCamera.controller.schedule_controller import ScheduleController
-from OTCamera.controller.upload_controller import ThreadedUploadController
 from OTCamera.controller.wifi_controller import WifiController
 from OTCamera.domain.events import (
     ButtonHeld,
@@ -399,7 +399,7 @@ def main(config: Config | None = None, config_file: str = "~/user_config.yaml") 
 
     camera = None
     upload = None
-    upload_controller = None
+    backlog_controller = None
     upload_notification_controller = None
     try:
         backlog = _create_backlog(config)
@@ -417,7 +417,7 @@ def main(config: Config | None = None, config_file: str = "~/user_config.yaml") 
         )
         wifi_controller = WifiController(config, event_bus, board.leds)
         schedule_controller = ScheduleController(config, event_bus)
-        upload_controller = ThreadedUploadController(event_bus, upload, backlog)
+        backlog_controller = BacklogController(event_bus, upload, backlog)
 
         notifier = UploadNotificationProvider.provide(config)
         if notifier is not None:
@@ -467,7 +467,7 @@ def main(config: Config | None = None, config_file: str = "~/user_config.yaml") 
         )
 
         event_bus.process_pending()
-        upload_controller.start()
+        backlog_controller.start()
 
         application = OTCamera(
             config=config,
@@ -483,7 +483,7 @@ def main(config: Config | None = None, config_file: str = "~/user_config.yaml") 
         application.record()
     finally:
         close_resources(
-            camera, upload, board, upload_controller, upload_notification_controller
+            camera, upload, board, backlog_controller, upload_notification_controller
         )
 
 

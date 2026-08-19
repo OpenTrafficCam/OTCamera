@@ -10,7 +10,7 @@ from botocore.exceptions import ClientError
 
 from OTCamera.config import S3Config
 from OTCamera.controller.backlog import Backlog
-from OTCamera.controller.upload_controller import ThreadedUploadController
+from OTCamera.controller.backlog_controller import BacklogController
 from OTCamera.domain.events import EventBus, RecordingSplit
 from OTCamera.plugin.upload.s3_upload import S3Upload
 
@@ -84,7 +84,7 @@ def test_s3_upload(
     backlog = Backlog(video_dir=video_dir, video_format="h264", min_free_bytes=0)
 
     event_bus = EventBus()
-    upload_controller = ThreadedUploadController(
+    backlog_controller = BacklogController(
         event_bus=event_bus, upload=upload, backlog=backlog
     )
 
@@ -98,7 +98,7 @@ def test_s3_upload(
     # Drain the backlog on this thread so that the assertions below cannot race
     # the worker.
     for _ in EXAMPLE_VIDEOS_PATHS:
-        upload_controller.run_once()
+        backlog_controller.run_once()
 
     assert backlog.size() == 0
     assert backlog.uploaded_total == len(EXAMPLE_VIDEOS_PATHS)

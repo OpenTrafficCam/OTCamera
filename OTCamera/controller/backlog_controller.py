@@ -1,4 +1,4 @@
-"""Upload controller that drains the backlog of recorded segments."""
+"""Backlog controller that drains the backlog of recorded segments."""
 
 import logging
 from pathlib import Path
@@ -16,7 +16,7 @@ _IDLE_WAIT_SECONDS = 5.0
 _CLOSE_TIMEOUT_SECONDS = 10.0
 
 
-class ThreadedUploadController:
+class BacklogController:
     """Get finished recording segments to the server without losing any.
 
     The work is split across two threads. The camera thread hands a finished
@@ -39,7 +39,7 @@ class ThreadedUploadController:
     """
 
     def __init__(self, event_bus: EventBus, upload: Upload | None, backlog: Backlog):
-        """Construct a new ThreadedUploadController instance.
+        """Construct a new BacklogController instance.
 
         Subscribes to the `RecordingSplit` event on the `EventBus`. The worker
         thread is not started here; call `start` for that.
@@ -59,7 +59,7 @@ class ThreadedUploadController:
         self._stop = Event()
         self._thread: Thread | None = None
         event_bus.subscribe(RecordingSplit, self._on_recording_split)
-        logger.debug("Upload controller active")
+        logger.debug("Backlog controller active")
 
     @property
     def wait_seconds(self) -> float:
@@ -79,7 +79,7 @@ class ThreadedUploadController:
         self._thread = Thread(target=self._worker, daemon=True)
         self._thread.start()
         logger.info(
-            "Upload worker started with %d segments pending", self._backlog.size()
+            "Backlog worker started with %d segments pending", self._backlog.size()
         )
 
     def run_once(self) -> None:
