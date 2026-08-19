@@ -3,7 +3,7 @@
 import logging
 import queue
 from dataclasses import dataclass
-from datetime import datetime as dt
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Callable, TypeVar, cast
 
@@ -109,7 +109,7 @@ class FileUploaded(Event):
     """A file was successfully uploaded to remote storage."""
 
     local_path: Path
-    timestamp: dt
+    timestamp: datetime
 
 
 @dataclass(frozen=True)

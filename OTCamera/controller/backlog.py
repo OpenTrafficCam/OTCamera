@@ -3,7 +3,7 @@
 import logging
 import os
 import re
-from datetime import datetime as dt
+from datetime import datetime
 from pathlib import Path
 
 import psutil
@@ -144,7 +144,7 @@ class Backlog:
         timestamp = _timestamp_of(oldest.name)
         if timestamp is None:
             return None
-        return (dt.now() - timestamp).total_seconds()
+        return (datetime.now() - timestamp).total_seconds()
 
     def recover_unfinished_segments(self) -> int:
         """Accept every video file left directly in the video directory.
@@ -186,7 +186,7 @@ class Backlog:
         self._dropped_total += 1
 
 
-def _timestamp_of(name: str) -> dt | None:
+def _timestamp_of(name: str) -> datetime | None:
     """Return the timestamp encoded in a segment's filename, if it has one.
 
     The fields are read from their fixed places in the name. A date that cannot
@@ -196,14 +196,14 @@ def _timestamp_of(name: str) -> dt | None:
         name (str): The filename to parse, without its directory.
 
     Returns:
-        dt | None: The timestamp, or None when the name does not carry one.
+        datetime | None: The timestamp, or None when the name does not carry one.
     """
     match = _TIMESTAMP_PATTERN.search(name)
     if match is None:
         return None
     stamp = match.group(1)
     try:
-        return dt(
+        return datetime(
             year=int(stamp[0:4]),
             month=int(stamp[5:7]),
             day=int(stamp[8:10]),
@@ -215,14 +215,14 @@ def _timestamp_of(name: str) -> dt | None:
         return None
 
 
-def _sort_key(name: str) -> tuple[int, dt | str]:
+def _sort_key(name: str) -> tuple[int, datetime | str]:
     """Return an oldest-first sort key that tolerates unparseable names.
 
     Args:
         name (str): The filename to build a key for.
 
     Returns:
-        tuple[int, dt | str]: A key that sorts every timestamped name before
+        tuple[int, datetime | str]: A key that sorts every timestamped name before
             every name without a timestamp.
     """
     timestamp = _timestamp_of(name)
