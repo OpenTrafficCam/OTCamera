@@ -51,6 +51,19 @@ class S3Upload(Upload):
         self.bucket_name = bucket_name
         self.key_prefix = key_prefix
 
+    def describe(self, file_path: Path) -> S3UploadResult:
+        """Return the bucket and key this backend stores the given file under.
+
+        The key is ``{key_prefix}/{filename}`` when a prefix is set, or just
+        ``{filename}`` otherwise.
+
+        Args:
+            file_path: Path to the local file.
+        """
+        name = Path(file_path).name
+        key = f"{self.key_prefix}/{name}" if self.key_prefix else name
+        return S3UploadResult(local_path=file_path, bucket=self.bucket_name, key=key)
+
     def upload(self, file_path: Path) -> S3UploadResult:
         """Upload a single file to the configured S3 bucket.
 
@@ -61,16 +74,13 @@ class S3Upload(Upload):
             file_path: Path to the local file to upload.
         """
         try:
-            name = Path(file_path).name
-            key = f"{self.key_prefix}/{name}" if self.key_prefix else name
+            result = self.describe(file_path)
 
             self.client.upload_file(
-                file_path, self.bucket_name, key, Config=TRANSFER_CONFIG
+                file_path, result.bucket, result.key, Config=TRANSFER_CONFIG
             )
-            logger.info("Uploaded %s", name)
-            return S3UploadResult(
-                local_path=file_path, bucket=self.bucket_name, key=key
-            )
+            logger.info("Uploaded %s", Path(file_path).name)
+            return result
         except Exception as e:
             logger.error("Unexpected error during S3 upload: %s", e)
             raise FileUploadError(f"Could not upload to S3 bucket. Error: {e}") from e

@@ -4,7 +4,7 @@ import logging
 from pathlib import Path
 from threading import Event, Thread
 
-from OTCamera.controller.backlog import UploadBacklog
+from OTCamera.controller.backlog import NotificationBacklog, UploadBacklog
 from OTCamera.domain.events import EventBus, RecordingSplit
 from OTCamera.domain.upload import Upload
 
@@ -22,12 +22,18 @@ class BacklogController:
 
     The work is split across two threads. The camera thread hands a finished
     segment over by accepting it into the backlog. A background worker thread
-    does everything else: it picks the oldest segment, uploads it, deletes it
-    once the server has it, and reclaims space when the card fills up.
+    does everything else: it picks the oldest segment, uploads it, takes it out
+    of the backlog once the server has it, and reclaims space when the card
+    fills up.
 
-    Uploading and deleting belong to the same controller because both take
-    segments out of the backlog, so keeping them together means they never
-    compete over the same segment.
+    Uploading and taking a segment out belong to the same controller because
+    both take segments out of the backlog, so keeping them together means they
+    never compete over the same segment.
+
+    Where an uploaded segment goes depends on whether anyone has to be told
+    about it. With a notification backlog, the segment moves there and waits
+    for its notification; without one, it is deleted, because nothing would
+    ever come to collect it.
 
     A pass that uploaded a segment is followed by the next one right away, so
     a backlog that has built up drains as fast as the server accepts it.
@@ -43,7 +49,11 @@ class BacklogController:
     """
 
     def __init__(
-        self, event_bus: EventBus, upload: Upload | None, backlog: UploadBacklog
+        self,
+        event_bus: EventBus,
+        upload: Upload | None,
+        backlog: UploadBacklog,
+        notification_backlog: NotificationBacklog | None,
     ):
         """Construct a new BacklogController instance.
 
@@ -55,10 +65,15 @@ class BacklogController:
             upload (Upload | None): The upload backend to use, or None when none
                 is configured. Without one the worker only reclaims space.
             backlog (UploadBacklog): The store of segments waiting to be uploaded.
+            notification_backlog (NotificationBacklog | None): The store an
+                uploaded segment waits in until it has been announced, or None
+                when no notification is configured and uploaded segments are
+                deleted right away.
         """
         self._upload = upload
         self._event_bus = event_bus
         self._backlog = backlog
+        self._notification_backlog = notification_backlog
         self._wait_seconds = _IDLE_WAIT_SECONDS
         self._head: Path | None = None
         self._head_attempts = 0
@@ -115,7 +130,7 @@ class BacklogController:
             self._on_upload_failed(segment, exc)
             return
 
-        self._backlog.remove(segment)
+        self._hand_over(segment)
         self._event_bus.enqueue(result.to_upload_event())
         self._backlog.count_uploaded()
         self._reset_head()
@@ -141,6 +156,29 @@ class BacklogController:
             self._backlog.add(Path(event.filename))
         except Exception:
             logger.exception("Could not accept %s for upload", event.filename)
+
+    def _hand_over(self, segment: Path) -> None:
+        """Take a segment the server has out of the upload backlog.
+
+        The segment moves on to wait for its notification, or is deleted when
+        there is nothing waiting to announce it. A move that fails leaves the
+        segment in the upload backlog, where the next pass uploads it again:
+        the server takes the same file twice rather than the camera losing
+        track of it.
+
+        Args:
+            segment (Path): The segment that reached the server.
+        """
+        if self._notification_backlog is None:
+            self._backlog.remove(segment)
+            return
+        try:
+            self._notification_backlog.add(segment)
+        except OSError:
+            logger.exception(
+                "Could not hand %s over to be announced; it stays up for upload",
+                segment.name,
+            )
 
     def _reset_head(self, segment: Path | None = None) -> None:
         """Track `segment` as the one being retried and clear its attempt count.

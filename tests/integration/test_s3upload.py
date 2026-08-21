@@ -41,7 +41,7 @@ def test_s3_upload(
 
     event_bus = EventBus()
     backlog_controller = BacklogController(
-        event_bus=event_bus, upload=upload, backlog=backlog
+        event_bus=event_bus, upload=upload, backlog=backlog, notification_backlog=None
     )
 
     for example_video in EXAMPLE_VIDEOS_PATHS:

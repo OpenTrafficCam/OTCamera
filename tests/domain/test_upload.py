@@ -46,3 +46,12 @@ def test_upload_error_is_exception() -> None:
 def test_upload_cannot_be_instantiated() -> None:
     with pytest.raises(TypeError):
         Upload()  # type: ignore[abstract]
+
+
+def test_describe_names_the_file_without_contacting_the_server() -> None:
+    upload = FakeUpload()
+
+    result = upload.describe(Path("/tmp/video.h264"))
+
+    assert result == UploadResult(local_path=Path("/tmp/video.h264"))
+    assert upload.uploaded_files == []
