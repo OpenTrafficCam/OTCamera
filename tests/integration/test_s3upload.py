@@ -7,7 +7,7 @@ from typing import Any
 import pytest
 
 from OTCamera.config import S3Config
-from OTCamera.controller.backlog import Backlog
+from OTCamera.controller.backlog import UploadBacklog
 from OTCamera.controller.backlog_controller import BacklogController
 from OTCamera.domain.events import EventBus, RecordingSplit
 from OTCamera.plugin.upload.exceptions import FileUploadError
@@ -37,7 +37,7 @@ def test_s3_upload(
 
     video_dir = tmp_path / "videos"
     video_dir.mkdir()
-    backlog = Backlog(video_dir=video_dir, video_format="h264", min_free_bytes=0)
+    backlog = UploadBacklog(video_dir=video_dir, video_format="h264", min_free_bytes=0)
 
     event_bus = EventBus()
     backlog_controller = BacklogController(

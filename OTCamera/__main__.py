@@ -12,7 +12,7 @@ from typing import Any, Iterator, Protocol
 
 from OTCamera.bsl.board_provider import BoardProvider
 from OTCamera.config import Config, parse_user_config
-from OTCamera.controller.backlog import Backlog
+from OTCamera.controller.backlog import UploadBacklog
 from OTCamera.controller.backlog_controller import BacklogController
 from OTCamera.controller.camera_controller import CameraController
 from OTCamera.controller.notification_controller import EventNotificationController
@@ -78,7 +78,7 @@ class OTCamera:
         schedule_controller: ScheduleController,
         html_updater: StatusWebsiteUpdater,
         leds: dict[str, LED],
-        backlog: Backlog,
+        backlog: UploadBacklog,
     ) -> None:
         self._config = config
         self._event_bus = event_bus
@@ -348,7 +348,7 @@ def _get_log_files_sorted(log_files: Iterator[Path]) -> list[Path]:
     return [log_file for _, log_file in with_timestamp] + without_timestamp
 
 
-def _create_backlog(config: Config) -> Backlog:
+def _create_backlog(config: Config) -> UploadBacklog:
     """Create the backlog and take in what an interrupted recording left behind.
 
     Nothing is recording yet, so any video file lying directly in the video
@@ -360,9 +360,9 @@ def _create_backlog(config: Config) -> Backlog:
         config (Config): The parsed user configuration.
 
     Returns:
-        Backlog: The store the upload worker and the status page read.
+        UploadBacklog: The store the upload worker and the status page read.
     """
-    backlog = Backlog(
+    backlog = UploadBacklog(
         video_dir=Path(config.video.dir),
         video_format=config.video.format,
         min_free_bytes=config.recording.min_free_space * _BYTES_PER_GIB,

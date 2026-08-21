@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
-from OTCamera.controller.backlog import Backlog
+from OTCamera.controller.backlog import UploadBacklog
 from OTCamera.controller.backlog_controller import BacklogController
 from OTCamera.domain.events import EventBus, FileUploaded, RecordingSplit
 from OTCamera.domain.upload import Upload, UploadResult
@@ -57,8 +57,8 @@ def bus() -> EventBus:
 
 
 @pytest.fixture
-def backlog(tmp_path: Path) -> Backlog:
-    return Backlog(video_dir=tmp_path, video_format="h264", min_free_bytes=0)
+def backlog(tmp_path: Path) -> UploadBacklog:
+    return UploadBacklog(video_dir=tmp_path, video_format="h264", min_free_bytes=0)
 
 
 def _record_segment(
@@ -79,7 +79,7 @@ def _uploaded_events(bus: EventBus) -> list[FileUploaded]:
 
 class TestAcceptingSegments:
     def test_recording_split_moves_the_segment_into_the_backlog(
-        self, bus: EventBus, backlog: Backlog, tmp_path: Path
+        self, bus: EventBus, backlog: UploadBacklog, tmp_path: Path
     ) -> None:
         received = _uploaded_events(bus)
         BacklogController(bus, FakeUpload(), backlog)
@@ -92,7 +92,7 @@ class TestAcceptingSegments:
         assert received == []
 
     def test_recording_split_does_not_raise_when_the_backlog_fails(
-        self, bus: EventBus, backlog: Backlog, tmp_path: Path
+        self, bus: EventBus, backlog: UploadBacklog, tmp_path: Path
     ) -> None:
         BacklogController(bus, FakeUpload(), backlog)
         segment = _record_segment(tmp_path)
@@ -101,7 +101,7 @@ class TestAcceptingSegments:
             bus.publish(RecordingSplit(filename=str(segment)))
 
     def test_does_not_start_a_thread_on_construction(
-        self, bus: EventBus, backlog: Backlog
+        self, bus: EventBus, backlog: UploadBacklog
     ) -> None:
         controller = BacklogController(bus, FakeUpload(), backlog)
 
@@ -110,7 +110,7 @@ class TestAcceptingSegments:
 
 class TestSuccessfulPass:
     def test_removes_the_segment_and_enqueues_the_upload(
-        self, bus: EventBus, backlog: Backlog, tmp_path: Path
+        self, bus: EventBus, backlog: UploadBacklog, tmp_path: Path
     ) -> None:
         received = _uploaded_events(bus)
         upload = FakeUpload()
@@ -129,7 +129,7 @@ class TestSuccessfulPass:
         assert received[0].local_path == segment
 
     def test_counts_the_upload(
-        self, bus: EventBus, backlog: Backlog, tmp_path: Path
+        self, bus: EventBus, backlog: UploadBacklog, tmp_path: Path
     ) -> None:
         controller = BacklogController(bus, FakeUpload(), backlog)
         backlog.add(_record_segment(tmp_path))
@@ -139,7 +139,7 @@ class TestSuccessfulPass:
         assert backlog.uploaded_total == 1
 
     def test_drains_oldest_first(
-        self, bus: EventBus, backlog: Backlog, tmp_path: Path
+        self, bus: EventBus, backlog: UploadBacklog, tmp_path: Path
     ) -> None:
         upload = FakeUpload()
         controller = BacklogController(bus, upload, backlog)
@@ -152,7 +152,7 @@ class TestSuccessfulPass:
         assert upload.uploaded_files == [oldest, newest]
 
     def test_the_next_pass_follows_without_waiting(
-        self, bus: EventBus, backlog: Backlog, tmp_path: Path
+        self, bus: EventBus, backlog: UploadBacklog, tmp_path: Path
     ) -> None:
         controller = BacklogController(bus, FakeUpload(), backlog)
         backlog.add(_record_segment(tmp_path, "2026-08-12_10-00-00"))
@@ -163,7 +163,7 @@ class TestSuccessfulPass:
         assert controller.wait_seconds == 0
 
     def test_an_empty_backlog_uploads_nothing(
-        self, bus: EventBus, backlog: Backlog
+        self, bus: EventBus, backlog: UploadBacklog
     ) -> None:
         upload = FakeUpload()
         controller = BacklogController(bus, upload, backlog)
@@ -175,7 +175,7 @@ class TestSuccessfulPass:
 
 class TestFailingPass:
     def test_keeps_the_segment_and_publishes_nothing(
-        self, bus: EventBus, backlog: Backlog, tmp_path: Path
+        self, bus: EventBus, backlog: UploadBacklog, tmp_path: Path
     ) -> None:
         received = _uploaded_events(bus)
         controller = BacklogController(bus, FailingUpload(), backlog)
@@ -189,7 +189,7 @@ class TestFailingPass:
         assert received == []
 
     def test_backs_off_from_five_seconds_by_doubling(
-        self, bus: EventBus, backlog: Backlog, tmp_path: Path
+        self, bus: EventBus, backlog: UploadBacklog, tmp_path: Path
     ) -> None:
         controller = BacklogController(bus, FailingUpload(), backlog)
         backlog.add(_record_segment(tmp_path))
@@ -202,7 +202,7 @@ class TestFailingPass:
         assert waits == [5, 10, 20, 40]
 
     def test_caps_the_wait(
-        self, bus: EventBus, backlog: Backlog, tmp_path: Path
+        self, bus: EventBus, backlog: UploadBacklog, tmp_path: Path
     ) -> None:
         controller = BacklogController(bus, FailingUpload(), backlog)
         backlog.add(_record_segment(tmp_path))
@@ -213,7 +213,7 @@ class TestFailingPass:
         assert controller.wait_seconds == 300
 
     def test_retries_the_same_segment(
-        self, bus: EventBus, backlog: Backlog, tmp_path: Path
+        self, bus: EventBus, backlog: UploadBacklog, tmp_path: Path
     ) -> None:
         upload = FailingUpload()
         controller = BacklogController(bus, upload, backlog)
@@ -227,7 +227,7 @@ class TestFailingPass:
         assert backlog.size() == 2
 
     def test_the_backoff_restarts_for_a_new_head(
-        self, bus: EventBus, backlog: Backlog, tmp_path: Path
+        self, bus: EventBus, backlog: UploadBacklog, tmp_path: Path
     ) -> None:
         controller = BacklogController(bus, FailingUpload(), backlog)
         backlog.add(_record_segment(tmp_path, "2026-08-12_10-00-00"))
@@ -243,8 +243,8 @@ class TestFailingPass:
 
         assert controller.wait_seconds == 5
 
-    def test_a_success_clears_the_wait(
-        self, bus: EventBus, backlog: Backlog, tmp_path: Path
+    def test_a_success_resets_the_wait(
+        self, bus: EventBus, backlog: UploadBacklog, tmp_path: Path
     ) -> None:
         controller = BacklogController(bus, FlakyUpload(failures=2), backlog)
         backlog.add(_record_segment(tmp_path, "2026-08-12_10-00-00"))
@@ -259,7 +259,7 @@ class TestFailingPass:
 
 class TestReclaimingSpace:
     def test_the_drop_runs_on_a_failing_pass(
-        self, bus: EventBus, backlog: Backlog, tmp_path: Path
+        self, bus: EventBus, backlog: UploadBacklog, tmp_path: Path
     ) -> None:
         controller = BacklogController(bus, FailingUpload(), backlog)
         oldest = backlog.add(_record_segment(tmp_path, "2026-08-12_10-00-00"))
@@ -273,13 +273,13 @@ class TestReclaimingSpace:
         assert backlog.dropped_total == 1
 
     def test_the_drop_stops_when_the_backlog_is_empty(
-        self, bus: EventBus, backlog: Backlog, tmp_path: Path
+        self, bus: EventBus, backlog: UploadBacklog, tmp_path: Path
     ) -> None:
         controller = BacklogController(bus, FailingUpload(), backlog)
         backlog.add(_record_segment(tmp_path, "2026-08-12_10-00-00"))
 
         with patch.object(
-            Backlog,
+            UploadBacklog,
             "free_bytes",
             return_value=0,
         ):
@@ -289,12 +289,12 @@ class TestReclaimingSpace:
         assert backlog.dropped_total == 1
 
     def test_nothing_is_dropped_with_room_to_spare(
-        self, bus: EventBus, backlog: Backlog, tmp_path: Path
+        self, bus: EventBus, backlog: UploadBacklog, tmp_path: Path
     ) -> None:
         controller = BacklogController(bus, FailingUpload(), backlog)
         segment = backlog.add(_record_segment(tmp_path))
 
-        with patch.object(Backlog, "free_bytes", return_value=10 * _GIB):
+        with patch.object(UploadBacklog, "free_bytes", return_value=10 * _GIB):
             controller.run_once()
 
         assert segment.is_file()
@@ -303,7 +303,7 @@ class TestReclaimingSpace:
 
 class TestWithoutAnUploadBackend:
     def test_a_pass_keeps_the_segment_and_publishes_nothing(
-        self, bus: EventBus, backlog: Backlog, tmp_path: Path
+        self, bus: EventBus, backlog: UploadBacklog, tmp_path: Path
     ) -> None:
         received = _uploaded_events(bus)
         controller = BacklogController(bus, None, backlog)
@@ -318,7 +318,7 @@ class TestWithoutAnUploadBackend:
         assert controller.wait_seconds == 5
 
     def test_the_drop_still_runs(
-        self, bus: EventBus, backlog: Backlog, tmp_path: Path
+        self, bus: EventBus, backlog: UploadBacklog, tmp_path: Path
     ) -> None:
         controller = BacklogController(bus, None, backlog)
         oldest = backlog.add(_record_segment(tmp_path, "2026-08-12_10-00-00"))
@@ -334,7 +334,7 @@ class TestWithoutAnUploadBackend:
 
 class TestWorkerThread:
     def test_start_runs_passes_and_close_stops_the_thread(
-        self, bus: EventBus, backlog: Backlog, tmp_path: Path
+        self, bus: EventBus, backlog: UploadBacklog, tmp_path: Path
     ) -> None:
         upload = FakeUpload()
         controller = BacklogController(bus, upload, backlog)
@@ -353,6 +353,6 @@ class TestWorkerThread:
         assert not controller.is_running
 
     def test_close_without_start_does_not_raise(
-        self, bus: EventBus, backlog: Backlog
+        self, bus: EventBus, backlog: UploadBacklog
     ) -> None:
         BacklogController(bus, FakeUpload(), backlog).close()

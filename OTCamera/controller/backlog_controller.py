@@ -4,7 +4,7 @@ import logging
 from pathlib import Path
 from threading import Event, Thread
 
-from OTCamera.controller.backlog import Backlog
+from OTCamera.controller.backlog import UploadBacklog
 from OTCamera.domain.events import EventBus, RecordingSplit
 from OTCamera.domain.upload import Upload
 
@@ -42,7 +42,9 @@ class BacklogController:
     is skipped, which does not count as a failure.
     """
 
-    def __init__(self, event_bus: EventBus, upload: Upload | None, backlog: Backlog):
+    def __init__(
+        self, event_bus: EventBus, upload: Upload | None, backlog: UploadBacklog
+    ):
         """Construct a new BacklogController instance.
 
         Subscribes to the `RecordingSplit` event on the `EventBus`. The worker
@@ -52,7 +54,7 @@ class BacklogController:
             event_bus (EventBus): The global event bus.
             upload (Upload | None): The upload backend to use, or None when none
                 is configured. Without one the worker only reclaims space.
-            backlog (Backlog): The store of segments waiting to be uploaded.
+            backlog (UploadBacklog): The store of segments waiting to be uploaded.
         """
         self._upload = upload
         self._event_bus = event_bus

@@ -4,13 +4,13 @@ from unittest.mock import patch
 
 import pytest
 
-from OTCamera.controller.backlog import Backlog
+from OTCamera.controller.backlog import UploadBacklog
 
 _GIB = 1024 * 1024 * 1024
 
 
-def _backlog(video_dir: Path, min_free_bytes: int = 0) -> Backlog:
-    return Backlog(
+def _backlog(video_dir: Path, min_free_bytes: int = 0) -> UploadBacklog:
+    return UploadBacklog(
         video_dir=video_dir,
         video_format="h264",
         min_free_bytes=min_free_bytes,
