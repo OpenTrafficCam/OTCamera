@@ -47,6 +47,7 @@ def local_rabbitmq_config() -> RabbitMqConfig:
         port=int(os.getenv("OTC_TEST_RABBITMQ_PORT", 5672)),
         exchange=EXCHANGE,
         routing_key=ROUTING_KEY,
+        queue_name=QUEUE,
         durable=False,
         ssl=False,
     )

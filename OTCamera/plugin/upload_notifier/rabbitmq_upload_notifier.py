@@ -1,8 +1,7 @@
-"""Non-blocking RabbitMQ publisher using a background daemon thread."""
+"""RabbitMQ publisher that waits for the broker to confirm each message."""
 
 import logging
 import ssl
-from threading import Event, Thread
 
 from pika import (
     BasicProperties,
@@ -12,16 +11,21 @@ from pika import (
     exchange_type,
 )
 from pika.adapters.blocking_connection import BlockingChannel, BlockingConnection
-from pika.exceptions import ConnectionWrongStateError
+from pika.exceptions import AMQPConnectionError
 
 from OTCamera.config import RabbitMqConfig
 from OTCamera.domain.notifier import Notifier
 
 logger = logging.getLogger(__name__)
 
+# how long one socket operation may take, and how long opening a usable
+# connection may take in total.
+_SOCKET_TIMEOUT_SECONDS = 3.0
+_STACK_TIMEOUT_SECONDS = 6.0
+
 
 def _connect(config: RabbitMqConfig) -> BlockingConnection:
-    """ "Establish a connection based on the user config."""
+    """Establish a connection based on the user config."""
     credentials = PlainCredentials(config.user, config.password)
 
     ssl_options = None
@@ -37,6 +41,11 @@ def _connect(config: RabbitMqConfig) -> BlockingConnection:
         port=config.port,
         virtual_host=config.vhost,
         credentials=credentials,
+        # keep a failing attempt short enough to finish within the time a
+        # shutdown waits for it. Giving up early costs nothing: the message
+        # stays in the store and goes out on a later attempt.
+        socket_timeout=_SOCKET_TIMEOUT_SECONDS,
+        stack_timeout=_STACK_TIMEOUT_SECONDS,
         # this is actually correct, mypy is confused
         ssl_options=ssl_options,  # type: ignore
     )
@@ -56,64 +65,93 @@ def _setup_channel(
         durable=config.durable,
     )
 
-    if config.queue_name:
-        channel.queue_declare(queue=config.queue_name, durable=config.durable)
-        channel.queue_bind(
-            queue=config.queue_name,
-            exchange=config.exchange,
-            routing_key=config.routing_key,
-        )
+    channel.queue_declare(queue=config.queue_name, durable=config.durable)
+    channel.queue_bind(
+        queue=config.queue_name,
+        exchange=config.exchange,
+        routing_key=config.routing_key,
+    )
 
     logger.info(
         "Setup RabbitMQ channel: exchange='%s', routing_key='%s', queue='%s'",
         config.exchange,
         config.routing_key,
-        config.queue_name or "(none)",
+        config.queue_name,
     )
 
     return channel
 
 
-#
-class RabbitMqJsonPublisher(Thread):
-    """A long-running publisher thread that publishes json-encoded payloads to RabbitMQ.
+class RabbitNotifier(Notifier[str]):
+    """Publish JSON messages to a RabbitMQ exchange.
 
-    Adapted from
-    https://github.com/pika/pika/blob/main/examples/long_running_publisher.py
+    A call to `notify` returns only once the broker has confirmed the
+    message and raises when it has not, so the caller knows whether the
+    message may be discarded or must be kept for another attempt.
+
+    The connection is opened on first use and kept for later messages.
+    A connection found dead is replaced with a fresh one.
+
+    Not threadsafe: all calls must come from the same thread.
     """
 
-    def __init__(self, config: RabbitMqConfig, shutdown_event: Event) -> None:
-        super().__init__(name="rabbitmq-publisher", daemon=True)
+    def __init__(self, config: RabbitMqConfig) -> None:
+        """Construct a new RabbitNotifier instance.
 
-        self.is_running = True
+        No connection is opened here; that happens on the first `notify`.
 
-        self.shutdown_event = shutdown_event
-
-        self.connection = _connect(config)
-        self.channel = _setup_channel(self.connection, config)
-
+        Args:
+            config (RabbitMqConfig): The connection and exchange settings.
+        """
         self._config = config
+        self._connection: BlockingConnection | None = None
+        self._channel: BlockingChannel | None = None
 
-    def run(self) -> None:
-        # make sure that callbacks (here: publishing messages)
-        # are dispatched.
-        while self.is_running:
-            self.connection.process_data_events(time_limit=1)
-            if self.shutdown_event.is_set():
-                logger.debug("Received signal to stop publisher thread.")
-                self._stop()
+    def notify(self, payload: str) -> None:
+        """Publish the payload and wait for the broker to confirm it.
+
+        Args:
+            payload (str): The JSON-encoded message to publish.
+
+        Raises:
+            AMQPError: When the message could not be published or the
+                broker did not confirm it.
+        """
+        had_connection = self._connection is not None
+        try:
+            self._publish(payload)
+        except AMQPConnectionError:
+            if not had_connection:
+                # there was no connection to go stale, so opening one just
+                # failed. A second attempt would wait for the same timeout
+                # again before it fails the same way.
+                raise
+            # A held connection can die unnoticed while idle. Try once
+            # more on a fresh one before reporting failure.
+            self._reset()
+            self._publish(payload)
+
+    def close(self) -> None:
+        """Close the connection to RabbitMQ, if one is open."""
+        self._reset()
+        logger.info("Closed RabbitMQ notifier.")
 
     def _publish(self, payload: str) -> None:
-        """Publish the message to RabbitMQ. Should be enqueued as a callback."""
+        """Publish one message and wait until the broker confirms it."""
+        channel = self._ensure_channel()
         properties = BasicProperties(
             content_type="application/json",
             delivery_mode=2 if self._config.durable else 1,
         )
-        self.channel.basic_publish(
+        channel.basic_publish(
             exchange=self._config.exchange,
             routing_key=self._config.routing_key,
             body=payload,
             properties=properties,
+            # have the broker hand the message back when it would reach no
+            # queue, so a message is never counted as delivered on its way
+            # to nowhere.
+            mandatory=True,
         )
         logger.info(
             "Published '%s' to exchange='%s', routing_key='%s'",
@@ -122,44 +160,27 @@ class RabbitMqJsonPublisher(Thread):
             self._config.routing_key,
         )
 
-    def publish(self, payload: str) -> None:
-        """Publish a payload to the configured RabbitMQ exchange.
+    def _ensure_channel(self) -> BlockingChannel:
+        """Return a usable channel, connecting or reconnecting if needed."""
+        if (
+            self._connection is None
+            or self._connection.is_closed
+            or self._channel is None
+            or self._channel.is_closed
+        ):
+            self._reset()
+            self._connection = _connect(self._config)
+            self._channel = _setup_channel(self._connection, self._config)
+            self._channel.confirm_delivery()
+        return self._channel
 
-        This method is threadsafe and can be called from any thread.
-        """
-        self.connection.add_callback_threadsafe(lambda: self._publish(payload))
-
-    def _stop(self) -> None:
-        """Stop the publisher thread."""
-        self.is_running = False
-        # Wait until all the data events have been processed
-        self.connection.process_data_events(time_limit=1)
-        if self.connection.is_open:
-            self.connection.close()
-            logger.debug("Closed connection to RabbitMQ.")
-        logger.debug("Stopped RabbitMQ publisher thread.")
-
-
-class RabbitNotifier(Notifier):
-    """Publish JSON messages to a RabbitMQ exchange via a publisher thread."""
-
-    def __init__(self, config: RabbitMqConfig) -> None:
-        self.shutdown_event = Event()
-        self._publisher = RabbitMqJsonPublisher(
-            config, shutdown_event=self.shutdown_event
-        )
-        self._publisher.start()
-
-    def notify(self, payload: str) -> None:
-        """Publish notification to RabbitMQ."""
-        try:
-            self._publisher.publish(payload)
-        except ConnectionWrongStateError as exc:
-            logger.warning("Connection to RabbitMQ is not open: %s", exc)
-        except Exception as exc:
-            logger.warning("Failed to publish to RabbitMQ: %s", exc)
-
-    def close(self) -> None:
-        self.shutdown_event.set()
-        self._publisher.join(timeout=5)
-        logger.info("Closed RabbitMQ notifier.")
+    def _reset(self) -> None:
+        """Drop the current connection so the next publish starts fresh."""
+        connection = self._connection
+        self._connection = None
+        self._channel = None
+        if connection is not None and connection.is_open:
+            try:
+                connection.close()
+            except Exception:
+                logger.debug("Discarded a connection that failed to close cleanly.")

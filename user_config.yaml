@@ -37,9 +37,10 @@ rabbitmq:
   user: guest
   password: guest
   vhost: /
-  exchange: ""
+  exchange: otcamera
   exchange_type: direct
-  routing_key: ""
+  routing_key: file_uploaded
+  queue_name: otcamera_uploads
   durable: true
 
 ot_cloud:
