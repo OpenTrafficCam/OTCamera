@@ -5,15 +5,13 @@ import pytest
 from pika.exceptions import ChannelWrongStateError, StreamLostError
 
 from OTCamera.config import RabbitMqConfig
+from OTCamera.controller.backlog_worker import CLOSE_TIMEOUT_SECONDS
 from OTCamera.plugin.upload_notifier.rabbitmq_upload_notifier import (
     RabbitNotifier,
     _connect,
 )
 
 _MODULE = "OTCamera.plugin.upload_notifier.rabbitmq_upload_notifier"
-
-# how long a shutdown waits for the worker that publishes.
-_SHUTDOWN_TIMEOUT_SECONDS = 10.0
 
 
 class FakeChannel:
@@ -94,7 +92,7 @@ class TestConnecting:
 
         parameters = connection.call_args.args[0]
         assert parameters.socket_timeout < parameters.stack_timeout
-        assert parameters.stack_timeout < _SHUTDOWN_TIMEOUT_SECONDS
+        assert parameters.stack_timeout < CLOSE_TIMEOUT_SECONDS
 
 
 class TestPublishing:

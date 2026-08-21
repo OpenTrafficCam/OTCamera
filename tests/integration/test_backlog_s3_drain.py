@@ -7,7 +7,7 @@ from typing import Any
 import pytest
 
 from OTCamera.config import S3Config
-from OTCamera.controller import backlog_controller as backlog_controller_module
+from OTCamera.controller import backlog_worker as backlog_worker_module
 from OTCamera.controller.backlog import UploadBacklog
 from OTCamera.controller.backlog_controller import BacklogController
 from OTCamera.domain.events import EventBus, RecordingSplit, S3FileUploaded
@@ -190,11 +190,10 @@ def test_the_worker_thread_drains_the_backlog_on_its_own(
     upload: S3Upload,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    # Shorten the wait before the first pass; the interval itself is
-    # unit-tested, and the point here is that the worker really moves the files
-    # to the server.
-    monkeypatch.setattr(backlog_controller_module, "_IDLE_WAIT_SECONDS", 0.05)
-    monkeypatch.setattr(backlog_controller_module, "_INITIAL_WAIT_SECONDS", 0.05)
+    # Shorten the waits between passes; the interval itself is unit-tested, and
+    # the point here is that the worker really moves the files to the server.
+    monkeypatch.setattr(backlog_worker_module, "_IDLE_WAIT_SECONDS", 0.05)
+    monkeypatch.setattr(backlog_worker_module, "_INITIAL_WAIT_SECONDS", 0.05)
     controller = BacklogController(event_bus, upload, backlog, None)
     names = [
         _record(event_bus, video_dir, timestamp) for timestamp in _SEGMENT_TIMESTAMPS

@@ -172,27 +172,20 @@ class TestFailingPass:
 
         assert notifier.attempted == [f"notification for {oldest.name}"] * 2
 
-    def test_backs_off_from_five_seconds_by_doubling(
+    def test_a_failure_makes_the_worker_back_off(
         self, backlog: NotificationBacklog
     ) -> None:
+        # how the wait grows is the worker's own business, see
+        # tests/controller/test_backlog_worker.py.
         controller = _controller(backlog, FailingNotifier())
         _uploaded_segment(backlog)
 
-        waits = []
-        for _ in range(4):
-            controller.run_once()
-            waits.append(controller.wait_seconds)
+        controller.run_once()
+        after_one_failure = controller.wait_seconds
+        controller.run_once()
 
-        assert waits == [5, 10, 20, 40]
-
-    def test_caps_the_wait(self, backlog: NotificationBacklog) -> None:
-        controller = _controller(backlog, FailingNotifier())
-        _uploaded_segment(backlog)
-
-        for _ in range(20):
-            controller.run_once()
-
-        assert controller.wait_seconds == 300
+        assert after_one_failure == 5
+        assert controller.wait_seconds > after_one_failure
 
     def test_an_outage_that_ends_delivers_everything_that_waited(
         self, backlog: NotificationBacklog
@@ -250,7 +243,7 @@ class TestWorkerThread:
         notifier = FakeNotifier()
         controller = _controller(backlog, notifier)
         segment = _uploaded_segment(backlog)
-        controller._wait_seconds = 0.01
+        controller._worker._wait_seconds = 0.01
 
         controller.start()
         assert controller.is_running
