@@ -422,7 +422,16 @@ class Closable(Protocol):
 
 
 def close_resources(*resources: Closable | None) -> None:
-    """ "Try to close all resources, ignoring errors."""
+    """Try to close all resources in the given order, ignoring errors.
+
+    Anything running a thread of its own comes first, so that what it uses is
+    only released once it has stopped using it.
+
+    Args:
+        *resources (Closable | None): What to close, in the order to close it
+            in. A None is skipped, so an object that was never created does
+            not have to be special-cased at the call site.
+    """
     for resource in resources:
         if resource is None:
             continue
@@ -514,7 +523,7 @@ def main(config: Config | None = None, config_file: str = "~/user_config.yaml") 
         application.record()
     finally:
         close_resources(
-            camera, upload, board, backlog_controller, notification_controller
+            backlog_controller, notification_controller, camera, upload, board
         )
 
 
