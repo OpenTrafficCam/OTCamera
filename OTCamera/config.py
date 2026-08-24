@@ -176,8 +176,8 @@ class Config(BaseModel):
     preview: PreviewConfig = Field(default_factory=PreviewConfig)
     upload: Literal["ftp", "s3"] | None = None
     notification: Literal["rabbitmq"] | None = None
-    ftp_upload: FtpUploadConfig | None = None
-    s3_upload: S3Config | None = None
+    ftp: FtpUploadConfig | None = None
+    s3: S3Config | None = None
     video: VideoConfig = Field(default_factory=VideoConfig)
     wifi: WifiConfig = Field(default_factory=WifiConfig)
     hardware: HardwareConfig = Field(default_factory=HardwareConfig)
@@ -193,9 +193,9 @@ class Config(BaseModel):
 
     @model_validator(mode="after")
     def _validate_upload_config(self) -> "Config":
-        if self.upload == "ftp" and self.ftp_upload is None:
+        if self.upload == "ftp" and self.ftp is None:
             raise ValueError("ftp_upload config is required when upload is 'ftp'")
-        if self.upload == "s3" and self.s3_upload is None:
+        if self.upload == "s3" and self.s3 is None:
             raise ValueError("s3_upload config is required when upload is 's3'")
         if self.notification == "rabbitmq":
             if self.rabbitmq is None:
