@@ -7,6 +7,7 @@ recording:
   interval_length: 15
   num_intervals: 0
   min_free_space: 1
+  min_free_space_margin: 1
 
 camera:
   fps: 20

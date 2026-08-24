@@ -8,6 +8,7 @@ recording:
   interval_length: interval_length
   num_intervals: num_intervals
   min_free_space: min_free_space
+  min_free_space_margin: min_free_space_margin
 
 camera:
   fps: fps

@@ -6,7 +6,14 @@ recording:
   end_hour: 22
   interval_length: 15
   num_intervals: 0
+  # Free space in GiB the camera keeps for recording. Once less is left,
+  # recorded segments that were never uploaded are deleted, oldest first.
   min_free_space: 1
+  # Free space in GiB on top of min_free_space that is protected by giving up
+  # notifications first: while less than the sum is left, segments that are
+  # uploaded but not announced yet are deleted instead of footage. Their files
+  # are already on the server, so only the message about them is lost.
+  min_free_space_margin: 1
 
 camera:
   fps: 20

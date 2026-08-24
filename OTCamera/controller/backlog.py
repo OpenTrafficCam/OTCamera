@@ -26,14 +26,26 @@ class Backlog:
     Two threads use a backlog without a lock. The producer only adds, and
     always the newest file; the worker only removes, and always the oldest. The
     two therefore never touch the same file.
+
+    A backlog has a floor: free space it gives up its oldest files for rather
+    than let the card fill. Stores with different floors give up their files in
+    order, the highest floor first, without either of them knowing about the
+    other.
     """
 
-    def __init__(self, source_dir: Path, target_dir: Path) -> None:
+    # what is lost when a file is dropped to reclaim space, for the log.
+    _DROP_COST = "it had not finished its work"
+
+    def __init__(
+        self, source_dir: Path, target_dir: Path, min_free_bytes: int = 0
+    ) -> None:
         """Create both directories if they do not exist yet.
 
         Args:
             source_dir (Path): Directory the files arrive in.
             target_dir (Path): Directory the backlog keeps the files in.
+            min_free_bytes (int): Free space below which the oldest files are
+                dropped. Zero never drops anything.
 
         Raises:
             ValueError: If the source and target directory are identical or are
@@ -57,6 +69,9 @@ class Backlog:
                 f"filesystem as {self._source} so that moving a file "
                 f"stays atomic"
             )
+
+        self._min_free_bytes = min_free_bytes
+        self._dropped_total = 0
 
     @property
     def source(self) -> Path:
@@ -118,6 +133,44 @@ class Backlog:
         """Return the free space on the filesystem holding the files."""
         return int(psutil.disk_usage(str(self._source)).free)
 
+    @property
+    def dropped_total(self) -> int:
+        """Return how many files have been dropped to reclaim space."""
+        return self._dropped_total
+
+    def is_below_floor(self) -> bool:
+        """Return whether space has to be reclaimed.
+
+        A store without a floor is never below it, so it keeps its files even
+        on a card with nothing left.
+        """
+        if self._min_free_bytes <= 0:
+            return False
+        return self.free_bytes() <= self._min_free_bytes
+
+    def reclaim_to_floor(self) -> int:
+        """Delete the oldest files until there is room again.
+
+        Only the worker draining the backlog may call this, for the same
+        reason as `remove`. The deleting stops when the backlog runs empty,
+        which is why a store can only give up the space its own files hold.
+
+        Returns:
+            int: How many files were dropped.
+        """
+        dropped = 0
+        while self.is_below_floor():
+            oldest = self.oldest()
+            if oldest is None:
+                break
+            self.remove(oldest)
+            self._dropped_total += 1
+            dropped += 1
+            logger.warning(
+                "Dropped %s to keep recording; %s", oldest.name, self._DROP_COST
+            )
+        return dropped
+
     def oldest_age_seconds(self) -> float | None:
         """Return how long the oldest file has waited, in seconds.
 
@@ -147,7 +200,12 @@ class UploadBacklog(Backlog):
 
     Segments arrive in the video directory the camera records into and wait in
     `<video_dir>/pending` until the upload worker has them on the server.
+
+    Dropping a segment from here loses its footage, so this store has the
+    lowest floor of all: everything else gives up its files first.
     """
+
+    _DROP_COST = "it was never uploaded"
 
     def __init__(self, video_dir: Path, video_format: str, min_free_bytes: int) -> None:
         """Create the backlog directory below `video_dir`.
@@ -165,12 +223,11 @@ class UploadBacklog(Backlog):
         super().__init__(
             source_dir=video_dir,
             target_dir=video_dir.expanduser() / _PENDING_DIR_NAME,
+            min_free_bytes=min_free_bytes,
         )
         self._video_format = video_format
-        self._min_free_bytes = min_free_bytes
 
         self._uploaded_total = 0
-        self._dropped_total = 0
 
     @property
     def video_dir(self) -> Path:
@@ -186,15 +243,6 @@ class UploadBacklog(Backlog):
     def uploaded_total(self) -> int:
         """Return how many segments have been uploaded since startup."""
         return self._uploaded_total
-
-    @property
-    def dropped_total(self) -> int:
-        """Return how many segments have been dropped to reclaim space."""
-        return self._dropped_total
-
-    def is_below_floor(self) -> bool:
-        """Return whether space has to be reclaimed to keep recording."""
-        return self.free_bytes() <= self._min_free_bytes
 
     def recover_unfinished_segments(self) -> int:
         """Accept every video file left directly in the video directory.
@@ -222,10 +270,6 @@ class UploadBacklog(Backlog):
         """Record that a segment reached the server."""
         self._uploaded_total += 1
 
-    def count_dropped(self) -> None:
-        """Record that a segment was deleted to reclaim space."""
-        self._dropped_total += 1
-
 
 class NotificationBacklog(Backlog):
     """The segments that are on the server but not announced yet.
@@ -235,13 +279,22 @@ class NotificationBacklog(Backlog):
     been sent. Keeping the file until then means a notification that fails can
     be sent again later, and a segment is only deleted once both steps are
     done.
+
+    Dropping a segment from here loses only the notification, because the
+    footage is already on the server. This store therefore has a higher floor
+    than the segments still waiting to be uploaded, so that it runs out of
+    files to give up before any footage is dropped.
     """
 
-    def __init__(self, video_dir: Path) -> None:
+    _DROP_COST = "it was uploaded but never announced"
+
+    def __init__(self, video_dir: Path, min_free_bytes: int) -> None:
         """Create the backlog directory below `video_dir`.
 
         Args:
             video_dir (Path): Directory the camera records into.
+            min_free_bytes (int): Free space below which segments are dropped,
+                giving up their notification to keep recording.
 
         Raises:
             ValueError: If the two directories turn out to be the same one, or
@@ -251,6 +304,7 @@ class NotificationBacklog(Backlog):
         super().__init__(
             source_dir=video_dir / _PENDING_DIR_NAME,
             target_dir=video_dir / _UPLOADED_DIR_NAME,
+            min_free_bytes=min_free_bytes,
         )
 
         self._notified_total = 0

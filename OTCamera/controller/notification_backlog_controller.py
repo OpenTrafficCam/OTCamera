@@ -27,7 +27,13 @@ class NotificationBacklogController:
     Every failure is treated the same way: the worker backs off and the next
     pass retries the same segment, for as long as it takes. Nothing is skipped
     and nothing is set aside, so a segment the broker will never accept blocks
-    the segments behind it and the backlog keeps growing.
+    the segments behind it.
+
+    A backlog that grows because the broker stays away would fill the card and
+    stop the recording, so every pass first gives up the oldest segments if
+    space is short. That costs their notifications, which the server can be
+    told about again by other means, and it clears a segment the broker will
+    never accept along with them.
     """
 
     def __init__(
@@ -85,10 +91,15 @@ class NotificationBacklogController:
     def run_once(self) -> None:
         """Announce the waiting segments, oldest first, until none are left.
 
+        Reclaims space first, so that a pass which cannot reach the broker
+        still keeps the card usable.
+
         Stops at the first failure and keeps the segment it failed on, along
         with the ones behind it, for the next pass. A pass also stops when the
         controller is closing.
         """
+        self._backlog.reclaim_to_floor()
+
         segment = self._backlog.oldest()
         while segment is not None:
             # every segment costs one round-trip to the broker, so a long

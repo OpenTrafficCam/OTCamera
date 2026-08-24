@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
-from OTCamera.controller.backlog import UploadBacklog
+from OTCamera.controller.backlog import NotificationBacklog, UploadBacklog
 
 _GIB = 1024 * 1024 * 1024
 
@@ -182,6 +182,86 @@ class TestFreeSpace:
             assert backlog.free_bytes() == 42
 
 
+class TestReclaimToFloor:
+    def test_drops_the_oldest_until_there_is_room(self, tmp_path: Path) -> None:
+        backlog = _backlog(tmp_path, min_free_bytes=_GIB)
+        oldest = backlog.add(_segment(tmp_path, "2026-08-12_10-00-00"))
+        newest = backlog.add(_segment(tmp_path, "2026-08-12_12-00-00"))
+
+        with patch.object(UploadBacklog, "is_below_floor", side_effect=[True, False]):
+            dropped = backlog.reclaim_to_floor()
+
+        assert dropped == 1
+        assert not oldest.exists()
+        assert newest.is_file()
+        assert backlog.dropped_total == 1
+
+    def test_stops_when_the_backlog_runs_empty(self, tmp_path: Path) -> None:
+        backlog = _backlog(tmp_path, min_free_bytes=_GIB)
+        backlog.add(_segment(tmp_path, "2026-08-12_10-00-00"))
+        backlog.add(_segment(tmp_path, "2026-08-12_12-00-00"))
+
+        with patch(
+            "OTCamera.controller.backlog.psutil.disk_usage",
+            return_value=SimpleNamespace(free=0),
+        ):
+            dropped = backlog.reclaim_to_floor()
+
+        assert dropped == 2
+        assert backlog.size() == 0
+
+    def test_drops_nothing_with_room_to_spare(self, tmp_path: Path) -> None:
+        backlog = _backlog(tmp_path, min_free_bytes=_GIB)
+        segment = backlog.add(_segment(tmp_path, "2026-08-12_10-00-00"))
+
+        with patch(
+            "OTCamera.controller.backlog.psutil.disk_usage",
+            return_value=SimpleNamespace(free=10 * _GIB),
+        ):
+            dropped = backlog.reclaim_to_floor()
+
+        assert dropped == 0
+        assert segment.is_file()
+        assert backlog.dropped_total == 0
+
+    def test_a_store_without_a_floor_never_drops(self, tmp_path: Path) -> None:
+        backlog = _backlog(tmp_path, min_free_bytes=0)
+        segment = backlog.add(_segment(tmp_path, "2026-08-12_10-00-00"))
+
+        with patch(
+            "OTCamera.controller.backlog.psutil.disk_usage",
+            return_value=SimpleNamespace(free=1),
+        ):
+            assert backlog.reclaim_to_floor() == 0
+
+        assert segment.is_file()
+
+
+class TestNotificationBacklogFloor:
+    def test_gives_up_its_segments_before_the_uploads_do(self, tmp_path: Path) -> None:
+        """The store holding uploaded segments runs dry first, by construction."""
+        uploads = UploadBacklog(
+            video_dir=tmp_path, video_format="h264", min_free_bytes=_GIB
+        )
+        notifications = NotificationBacklog(video_dir=tmp_path, min_free_bytes=2 * _GIB)
+        pending = uploads.add(_segment(tmp_path, "2026-08-12_10-00-00"))
+        announced = notifications.add(
+            uploads.add(_segment(tmp_path, "2026-08-12_11-00-00"))
+        )
+
+        with patch(
+            "OTCamera.controller.backlog.psutil.disk_usage",
+            return_value=SimpleNamespace(free=int(1.5 * _GIB)),
+        ):
+            assert notifications.is_below_floor()
+            assert not uploads.is_below_floor()
+            notifications.reclaim_to_floor()
+            uploads.reclaim_to_floor()
+
+        assert not announced.exists(), "the uploaded segment gives up its notification"
+        assert pending.is_file(), "footage is kept while the other store has files"
+
+
 class TestOldestAgeSeconds:
     def test_is_none_on_an_empty_backlog(self, tmp_path: Path) -> None:
         assert _backlog(tmp_path).oldest_age_seconds() is None
@@ -255,12 +335,9 @@ class TestCounters:
         assert backlog.uploaded_total == 0
         assert backlog.dropped_total == 0
 
-    def test_count_uploads_and_drops(self, tmp_path: Path) -> None:
+    def test_count_uploads(self, tmp_path: Path) -> None:
         backlog = _backlog(tmp_path)
 
         backlog.count_uploaded()
-        backlog.count_dropped()
-        backlog.count_dropped()
 
         assert backlog.uploaded_total == 1
-        assert backlog.dropped_total == 2

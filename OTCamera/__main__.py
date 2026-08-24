@@ -401,7 +401,10 @@ def _create_notification_controller(
     # Guaranteed by config validation
     assert config.ot_cloud is not None
 
-    backlog = NotificationBacklog(video_dir=Path(config.video.dir))
+    backlog = NotificationBacklog(
+        video_dir=Path(config.video.dir),
+        min_free_bytes=(config.recording.min_free_space_notifications * _BYTES_PER_GIB),
+    )
     logger.info("Backlog holds %d segment(s) awaiting notification", backlog.size())
 
     # TODO: make this configurable, not hardcoded.

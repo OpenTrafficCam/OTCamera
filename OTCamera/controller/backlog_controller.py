@@ -95,7 +95,7 @@ class BacklogController:
         Reclaims space first, so that a pass which cannot upload anything still
         keeps the card usable, then uploads the oldest segment.
         """
-        self._reclaim_space()
+        self._backlog.reclaim_to_floor()
 
         if self._upload is None:
             self._worker.note_empty()
@@ -159,22 +159,4 @@ class BacklogController:
             logger.exception(
                 "Could not hand %s over to be announced; it stays up for upload",
                 segment.name,
-            )
-
-    def _reclaim_space(self) -> None:
-        """Delete the oldest segments until there is room to keep recording.
-
-        This runs on every pass, including a pass whose upload failed, so a
-        segment the server will never accept is eventually cleared too.
-
-        The loop also stops when the backlog runs empty.
-        """
-        while self._backlog.is_below_floor():
-            oldest = self._backlog.oldest()
-            if oldest is None:
-                return
-            self._backlog.remove(oldest)
-            self._backlog.count_dropped()
-            logger.warning(
-                "Dropped %s to keep recording; it was never uploaded", oldest.name
             )

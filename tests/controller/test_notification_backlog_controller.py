@@ -1,5 +1,6 @@
 from pathlib import Path
 from time import sleep
+from types import SimpleNamespace
 from unittest.mock import patch
 
 import pytest
@@ -54,10 +55,19 @@ class NamePayloadFactory(UploadPayloadFactory[str]):
         return f"notification for {upload.local_path.name}"
 
 
+_GIB = 1024 * 1024 * 1024
+
+
 @pytest.fixture
 def backlog(tmp_path: Path) -> NotificationBacklog:
     UploadBacklog(video_dir=tmp_path, video_format="h264", min_free_bytes=0)
-    return NotificationBacklog(video_dir=tmp_path)
+    return NotificationBacklog(video_dir=tmp_path, min_free_bytes=0)
+
+
+@pytest.fixture
+def backlog_with_a_floor(tmp_path: Path) -> NotificationBacklog:
+    UploadBacklog(video_dir=tmp_path, video_format="h264", min_free_bytes=0)
+    return NotificationBacklog(video_dir=tmp_path, min_free_bytes=_GIB)
 
 
 def _controller(
@@ -220,6 +230,93 @@ class TestFailingPass:
 
         assert segment.is_file()
         assert notifier.attempted == []
+
+
+class TestReclaimingSpace:
+    def test_gives_up_the_oldest_notification_when_space_runs_short(
+        self, backlog_with_a_floor: NotificationBacklog
+    ) -> None:
+        notifier = FailingNotifier()
+        controller = _controller(backlog_with_a_floor, notifier)
+        oldest = _uploaded_segment(backlog_with_a_floor, "2026-08-12_10-00-00")
+        newest = _uploaded_segment(backlog_with_a_floor, "2026-08-12_12-00-00")
+
+        with patch.object(
+            NotificationBacklog, "is_below_floor", side_effect=[True, False]
+        ):
+            controller.run_once()
+
+        assert not oldest.exists()
+        assert newest.is_file()
+        assert backlog_with_a_floor.dropped_total == 1
+
+    def test_the_drop_runs_on_a_pass_that_cannot_reach_the_broker(
+        self, backlog_with_a_floor: NotificationBacklog
+    ) -> None:
+        controller = _controller(backlog_with_a_floor, FailingNotifier())
+        _uploaded_segment(backlog_with_a_floor, "2026-08-12_10-00-00")
+        _uploaded_segment(backlog_with_a_floor, "2026-08-12_12-00-00")
+
+        with patch(
+            "OTCamera.controller.backlog.psutil.disk_usage",
+            return_value=SimpleNamespace(free=0),
+        ):
+            controller.run_once()
+
+        assert backlog_with_a_floor.size() == 0, (
+            "the card has to be kept usable even when nothing can be announced"
+        )
+        assert backlog_with_a_floor.dropped_total == 2
+
+    def test_a_segment_the_broker_refuses_for_good_is_cleared_eventually(
+        self, backlog_with_a_floor: NotificationBacklog
+    ) -> None:
+        """Dropping the head is what lets the segments behind it through."""
+        notifier = FakeNotifier(failures=1)
+        controller = _controller(backlog_with_a_floor, notifier)
+        poison = _uploaded_segment(backlog_with_a_floor, "2026-08-12_10-00-00")
+        behind = _uploaded_segment(backlog_with_a_floor, "2026-08-12_12-00-00")
+
+        controller.run_once()
+        assert notifier.delivered == [], "the head blocks the one behind it"
+
+        with patch.object(
+            NotificationBacklog, "is_below_floor", side_effect=[True, False]
+        ):
+            controller.run_once()
+
+        assert not poison.exists()
+        assert notifier.delivered == [f"notification for {behind.name}"]
+
+    def test_nothing_is_dropped_with_room_to_spare(
+        self, backlog_with_a_floor: NotificationBacklog
+    ) -> None:
+        controller = _controller(backlog_with_a_floor, FailingNotifier())
+        segment = _uploaded_segment(backlog_with_a_floor)
+
+        with patch(
+            "OTCamera.controller.backlog.psutil.disk_usage",
+            return_value=SimpleNamespace(free=10 * _GIB),
+        ):
+            controller.run_once()
+
+        assert segment.is_file()
+        assert backlog_with_a_floor.dropped_total == 0
+
+    def test_a_store_without_a_floor_keeps_everything(
+        self, backlog: NotificationBacklog
+    ) -> None:
+        controller = _controller(backlog, FailingNotifier())
+        segment = _uploaded_segment(backlog)
+
+        with patch(
+            "OTCamera.controller.backlog.psutil.disk_usage",
+            return_value=SimpleNamespace(free=0),
+        ):
+            controller.run_once()
+
+        assert segment.is_file()
+        assert backlog.dropped_total == 0
 
 
 class TestClose:

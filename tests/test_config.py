@@ -9,6 +9,7 @@ from OTCamera.config import (
     Config,
     OTCloudSettings,
     RabbitMqConfig,
+    RecordingConfig,
     parse_user_config,
 )
 
@@ -148,6 +149,30 @@ def test_a_complete_rabbitmq_notification_config_is_accepted() -> None:
 
     assert config.rabbitmq is not None
     assert config.rabbitmq.queue_name == "otcamera_uploads"
+
+
+@pytest.mark.parametrize(("min_free_space", "margin"), [(1, 1), (0, 1), (5, 2), (2, 0)])
+def test_notifications_are_never_given_up_after_footage(
+    min_free_space: int, margin: int
+) -> None:
+    """Footage is the last thing to go, whatever the two settings are."""
+    recording = RecordingConfig(
+        min_free_space=min_free_space, min_free_space_margin=margin
+    )
+
+    assert recording.min_free_space_notifications >= recording.min_free_space
+
+
+def test_the_notification_floor_is_the_margin_above_the_footage_floor() -> None:
+    recording = RecordingConfig(min_free_space=3, min_free_space_margin=2)
+
+    assert recording.min_free_space_notifications == 5
+
+
+def test_notifications_are_given_up_first_by_default() -> None:
+    recording = Config().recording
+
+    assert recording.min_free_space_notifications > recording.min_free_space
 
 
 def test_default_config_has_sensible_values() -> None:

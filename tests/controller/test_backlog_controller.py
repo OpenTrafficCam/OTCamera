@@ -63,7 +63,7 @@ def backlog(tmp_path: Path) -> UploadBacklog:
 
 @pytest.fixture
 def notification_backlog(backlog: UploadBacklog, tmp_path: Path) -> NotificationBacklog:
-    return NotificationBacklog(video_dir=tmp_path)
+    return NotificationBacklog(video_dir=tmp_path, min_free_bytes=0)
 
 
 def _record_segment(
@@ -332,8 +332,11 @@ class TestReclaimingSpace:
         assert backlog.dropped_total == 1
 
     def test_the_drop_stops_when_the_backlog_is_empty(
-        self, bus: EventBus, backlog: UploadBacklog, tmp_path: Path
+        self, bus: EventBus, tmp_path: Path
     ) -> None:
+        backlog = UploadBacklog(
+            video_dir=tmp_path, video_format="h264", min_free_bytes=_GIB
+        )
         controller = BacklogController(bus, FailingUpload(), backlog, None)
         backlog.add(_record_segment(tmp_path, "2026-08-12_10-00-00"))
 

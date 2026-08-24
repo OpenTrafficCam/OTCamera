@@ -23,13 +23,32 @@ logger = logging.getLogger(__name__)
 
 
 class RecordingConfig(BaseModel):
-    """Recording schedule and disk-space settings."""
+    """Recording schedule and disk-space settings.
+
+    Free space is given up in a fixed order. Segments that are uploaded but
+    not announced yet go first, from `min_free_space` plus
+    `min_free_space_margin` downwards, and only once none of those are left
+    does recorded footage go, from `min_free_space` downwards. Expressing the
+    first as a margin on top of the second keeps that order whatever the two
+    are set to.
+    """
 
     start_hour: int = 6
     end_hour: int = 22
     interval_length: int = 15
     num_intervals: int = 0
     min_free_space: int = 1
+    min_free_space_margin: int = 1
+
+    @property
+    def min_free_space_notifications(self) -> int:
+        """Return the free space in GiB below which notifications are given up.
+
+        Never below `min_free_space`, so footage is never dropped while there
+        are still notifications to give up instead. A margin of zero puts both
+        at the same level, and then either may go first.
+        """
+        return self.min_free_space + self.min_free_space_margin
 
 
 class CameraConfig(BaseModel):

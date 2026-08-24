@@ -1,7 +1,9 @@
 """Integration tests for the chain from a finished segment to its notification."""
 
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any
+from unittest.mock import patch
 
 import pika
 import pika.adapters.blocking_connection
@@ -28,6 +30,8 @@ from tests.integration.conftest import (
 
 _SEGMENT_TIMESTAMPS = ("2026-08-12_10-00-00", "2026-08-12_10-01-00")
 
+_GIB = 1024 * 1024 * 1024
+
 OT_CLOUD = OTCloudSettings(camera_id=2, project_id=0, site_id=1)
 
 
@@ -47,7 +51,7 @@ def upload_backlog(video_dir: Path) -> UploadBacklog:
 def notification_backlog(
     upload_backlog: UploadBacklog, video_dir: Path
 ) -> NotificationBacklog:
-    return NotificationBacklog(video_dir=video_dir)
+    return NotificationBacklog(video_dir=video_dir, min_free_bytes=0)
 
 
 @pytest.fixture
@@ -154,7 +158,7 @@ def test_an_unreachable_broker_keeps_every_segment_for_a_later_run(
     waiting = rabbitmq_channel.basic_get(queue=local_rabbitmq_config.queue_name)
     assert waiting[0] is None, "Nothing may reach the broker while it is unreachable"
 
-    recovered = NotificationBacklog(video_dir=video_dir)
+    recovered = NotificationBacklog(video_dir=video_dir, min_free_bytes=0)
     announcer = _notification_controller(recovered, upload, local_rabbitmq_config)
     announcer.run_once()
     announcer.close()
@@ -162,3 +166,60 @@ def test_an_unreachable_broker_keeps_every_segment_for_a_later_run(
     received = messages_in_queue(rabbitmq_channel, len(names))
     assert [message["original_filename"] for message in received] == names
     assert recovered.size() == 0
+
+
+@pytest.mark.integration
+def test_a_full_card_costs_notifications_before_it_costs_footage(
+    reset_s3_bucket: Any,
+    s3client: Any,
+    local_s3_config: S3Config,
+    local_rabbitmq_config: RabbitMqConfig,
+    rabbitmq_channel: pika.adapters.blocking_connection.BlockingChannel,
+    video_dir: Path,
+    upload: S3Upload,
+) -> None:
+    """The store holding uploaded segments gives up its files first."""
+    upload_backlog = UploadBacklog(
+        video_dir=video_dir, video_format="h264", min_free_bytes=_GIB
+    )
+    notification_backlog = NotificationBacklog(
+        video_dir=video_dir, min_free_bytes=2 * _GIB
+    )
+    event_bus = EventBus()
+    uploader = BacklogController(
+        event_bus, upload, upload_backlog, notification_backlog
+    )
+    announcer = _notification_controller(
+        notification_backlog, upload, local_rabbitmq_config
+    )
+
+    announced_never = _record(event_bus, video_dir, "2026-08-12_10-00-00")
+    uploader.run_once()
+    assert notification_backlog.size() == 1
+    recorded_later = _record(event_bus, video_dir, "2026-08-12_10-01-00")
+
+    # free space between the two floors: the notifications are in reach of
+    # being given up, the footage is not.
+    with patch(
+        "OTCamera.controller.backlog.psutil.disk_usage",
+        return_value=SimpleNamespace(free=int(1.5 * _GIB)),
+    ):
+        announcer.run_once()
+        uploader.run_once()
+    announcer.close()
+
+    assert notification_backlog.dropped_total == 1, (
+        "the segment waiting to be announced pays for the space"
+    )
+    assert upload_backlog.dropped_total == 0, "no footage is dropped while it can"
+    assert rabbitmq_channel.basic_get(queue=local_rabbitmq_config.queue_name)[0] is None
+
+    # both segments still reached the server; only the message about the first
+    # one was given up.
+    assert keys_in_bucket(s3client, local_s3_config.bucket) == {
+        f"{KEY_PREFIX}/{announced_never}",
+        f"{KEY_PREFIX}/{recorded_later}",
+    }
+    assert notification_backlog.size() == 1, (
+        "the segment recorded later was handed over, not dropped"
+    )
