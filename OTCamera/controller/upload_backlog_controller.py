@@ -1,4 +1,4 @@
-"""Backlog controller that drains the backlog of recorded segments."""
+"""Upload controller that drains the backlog of recorded segments."""
 
 import logging
 from pathlib import Path
@@ -11,7 +11,7 @@ from OTCamera.domain.upload import Upload
 logger = logging.getLogger(__name__)
 
 
-class BacklogController:
+class UploadBacklogController:
     """Get finished recording segments to the server without losing any.
 
     The work is split across two threads. The camera thread hands a finished
@@ -47,7 +47,7 @@ class BacklogController:
         backlog: UploadBacklog,
         notification_backlog: NotificationBacklog | None,
     ):
-        """Construct a new BacklogController instance.
+        """Construct a new UploadBacklogController instance.
 
         Subscribes to the `RecordingSplit` event on the `EventBus`. The worker
         thread is not started here; call `start` for that.
@@ -68,7 +68,7 @@ class BacklogController:
         self._notification_backlog = notification_backlog
         self._worker = BacklogWorker("Upload", self.run_once)
         event_bus.subscribe(RecordingSplit, self._on_recording_split)
-        logger.debug("Backlog controller active")
+        logger.debug("Upload backlog controller active")
 
     @property
     def wait_seconds(self) -> float:
@@ -86,7 +86,7 @@ class BacklogController:
             return
         self._worker.start()
         logger.info(
-            "Backlog worker started with %d segments pending", self._backlog.size()
+            "Upload worker started with %d segments pending", self._backlog.size()
         )
 
     def run_once(self) -> None:

@@ -13,13 +13,13 @@ from typing import Any, Iterator, Protocol
 from OTCamera.bsl.board_provider import BoardProvider
 from OTCamera.config import Config, parse_user_config
 from OTCamera.controller.backlog import NotificationBacklog, UploadBacklog
-from OTCamera.controller.backlog_controller import BacklogController
 from OTCamera.controller.camera_controller import CameraController
 from OTCamera.controller.notification_backlog_controller import (
     NotificationBacklogController,
 )
 from OTCamera.controller.power_controller import PowerController
 from OTCamera.controller.schedule_controller import ScheduleController
+from OTCamera.controller.upload_backlog_controller import UploadBacklogController
 from OTCamera.controller.wifi_controller import WifiController
 from OTCamera.domain.events import (
     ButtonHeld,
@@ -462,7 +462,7 @@ def main(config: Config | None = None, config_file: str = "~/user_config.yaml") 
         wifi_controller = WifiController(config, event_bus, board.leds)
         schedule_controller = ScheduleController(config, event_bus)
         notification_controller = _create_notification_controller(config, upload)
-        backlog_controller = BacklogController(
+        backlog_controller = UploadBacklogController(
             event_bus,
             upload,
             backlog,

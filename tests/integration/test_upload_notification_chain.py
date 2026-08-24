@@ -11,10 +11,10 @@ import pytest
 
 from OTCamera.config import OTCloudSettings, RabbitMqConfig, S3Config
 from OTCamera.controller.backlog import NotificationBacklog, UploadBacklog
-from OTCamera.controller.backlog_controller import BacklogController
 from OTCamera.controller.notification_backlog_controller import (
     NotificationBacklogController,
 )
+from OTCamera.controller.upload_backlog_controller import UploadBacklogController
 from OTCamera.domain.events import EventBus, RecordingSplit
 from OTCamera.plugin.upload.s3_upload import S3Upload
 from OTCamera.plugin.upload_notifier.payload_factories import (
@@ -92,7 +92,7 @@ def test_a_segment_leaves_the_card_only_once_it_is_uploaded_and_announced(
     upload: S3Upload,
 ) -> None:
     event_bus = EventBus()
-    uploader = BacklogController(
+    uploader = UploadBacklogController(
         event_bus, upload, upload_backlog, notification_backlog
     )
     announcer = _notification_controller(
@@ -140,7 +140,7 @@ def test_an_unreachable_broker_keeps_every_segment_for_a_later_run(
     camera picks up what an earlier run left behind after a restart.
     """
     event_bus = EventBus()
-    uploader = BacklogController(
+    uploader = UploadBacklogController(
         event_bus, upload, upload_backlog, notification_backlog
     )
     names = [
@@ -186,7 +186,7 @@ def test_a_full_card_costs_notifications_before_it_costs_footage(
         video_dir=video_dir, min_free_bytes=2 * _GIB
     )
     event_bus = EventBus()
-    uploader = BacklogController(
+    uploader = UploadBacklogController(
         event_bus, upload, upload_backlog, notification_backlog
     )
     announcer = _notification_controller(
