@@ -275,7 +275,7 @@ class NotificationBacklog(Backlog):
         self._notified_total += 1
 
 
-def _timestamp_of(name: str) -> dt| None:
+def _timestamp_of(name: str) -> dt | None:
     """Return the timestamp encoded in a segment's filename, if it has one.
 
     The fields are read from their fixed places in the name. A date that cannot
