@@ -1,4 +1,5 @@
 import json
+from datetime import datetime, timezone
 from pathlib import Path
 
 from OTCamera.config import OTCloudSettings
@@ -34,7 +35,10 @@ def test_carries_key_bucket_filename_and_camera() -> None:
     assert payload["camera_id"] == {"camera_id": 2, "project_id": 0, "site_id": 1}
 
 
-def test_reports_no_time_yet() -> None:
+def test_reports_a_placeholder_time_that_still_parses() -> None:
     payload = _payload(_upload("otcamera_FR20_2026-08-12_10-00-00.h264"))
 
-    assert payload["timestamp"] == ""
+    assert payload["timestamp"] == "1970-01-01T00:00:00+00:00"
+    assert datetime.fromisoformat(payload["timestamp"]) == datetime.fromtimestamp(
+        0, tz=timezone.utc
+    )

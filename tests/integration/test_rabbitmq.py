@@ -62,4 +62,4 @@ def test_rabbitmq_notification(
         msg["camera_id"] == {"camera_id": 2, "project_id": 0, "site_id": 1}
         for msg in received
     )
-    assert {msg["timestamp"] for msg in received} == {""}
+    assert {msg["timestamp"] for msg in received} == {"1970-01-01T00:00:00+00:00"}

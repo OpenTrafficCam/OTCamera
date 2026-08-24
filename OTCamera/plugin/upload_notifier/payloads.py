@@ -19,8 +19,8 @@ class S3FileUploadedPayload:
     Attributes:
         s3_key (str): The S3 object key (path) where the file is stored.
         camera_id (CameraIdPayload): Identifier of the camera that captured the file.
-        timestamp (str): Currently always empty. Reserved for a time that
-            OTCloud can rely on, which is still to be settled.
+        timestamp (str): A time in ISO format, always the Unix epoch. On its
+            way out, and only sent because OTCloud still expects the field.
         original_filename (str): The original name of the file before processing.
         new_filename (str): The new name assigned to the file after upload.
         bucket_name (str | None): Optional S3 bucket name if different from default.

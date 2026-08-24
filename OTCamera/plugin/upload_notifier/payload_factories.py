@@ -1,5 +1,6 @@
 import dataclasses
 import json
+from datetime import datetime, timezone
 
 from OTCamera.config import OTCloudSettings
 from OTCamera.domain.notifier import UploadPayloadFactory
@@ -8,6 +9,11 @@ from OTCamera.plugin.upload_notifier.payloads import (
     CameraIdPayload,
     S3FileUploadedPayload,
 )
+
+# fills the timestamp field on its way out. OTCloud still expects one and
+# validates it, so it gets the epoch: parseable, and far enough off to be
+# recognised as a placeholder rather than read as a real time.
+_PLACEHOLDER_TIME = datetime.fromtimestamp(0, tz=timezone.utc)
 
 
 class RabbitMQS3UploadToOTCloudPayloadFactory(UploadPayloadFactory[str]):
@@ -36,10 +42,11 @@ class RabbitMQS3UploadToOTCloudPayloadFactory(UploadPayloadFactory[str]):
                 project_id=self.ot_cloud_settings.project_id,
                 site_id=self.ot_cloud_settings.site_id,
             ),
-            # TODO: report a time once it is settled which one OTCloud needs.
-            # A message can go out long after its upload, so the moment it is
-            # built is not the moment the file was uploaded.
-            timestamp="",
+            # TODO: drop the field once OTCloud no longer expects it. It
+            # cannot hold anything meaningful in the meantime: a message can go
+            # out long after its upload, so the moment it is built is not the
+            # moment the file was uploaded.
+            timestamp=_PLACEHOLDER_TIME.isoformat(),
             # TODO: original_filename and new_filename are currently the same for
             # compatibility reasons (OTCloud expects both fields at the moment).
             # Rename or remove fields once they are no longer needed.
