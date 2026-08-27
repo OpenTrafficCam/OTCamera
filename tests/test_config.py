@@ -1,7 +1,10 @@
 import textwrap
 from pathlib import Path
 
-from OTCamera.config import Config, parse_user_config
+import pytest
+from pydantic import ValidationError
+
+from OTCamera.config import CameraConfig, Config, parse_user_config
 
 
 def test_parse_user_config_minimal(tmp_path: Path) -> None:
@@ -101,3 +104,13 @@ def test_default_config_has_sensible_values() -> None:
     assert config.hardware.use_leds is True
     assert config.hardware.use_buttons is True
     assert config.hardware.use_adc is True
+
+
+def test_default_lens_position() -> None:
+    assert Config().camera.lens_position == 6.0
+
+
+@pytest.mark.parametrize("lens_position", [-0.1, 10.1])
+def test_lens_position_rejects_out_of_range(lens_position: float) -> None:
+    with pytest.raises(ValidationError):
+        CameraConfig(lens_position=lens_position)
