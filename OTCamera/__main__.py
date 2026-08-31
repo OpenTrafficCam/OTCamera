@@ -409,11 +409,11 @@ def main(config: Config | None = None, config_file: str = "~/user_config.yaml") 
 
         camera_controller = CameraController(camera, config, event_bus, board.leds)
         power_controller = PowerController(
-            config,
-            event_bus,
-            board.leds,
-            board.adc,
-            board.adc_config,
+            config=config,
+            event_bus=event_bus,
+            leds=board.leds,
+            adc=board.adc,
+            adc_config=board.adc_config,
         )
         wifi_controller = WifiController(config, event_bus, board.leds)
         schedule_controller = ScheduleController(config, event_bus)
@@ -447,11 +447,6 @@ def main(config: Config | None = None, config_file: str = "~/user_config.yaml") 
         if "power" in board.buttons and not board.buttons["power"].is_pressed:
             logger.info("Power switch OFF at boot; immediate shutdown")
             power_controller.shutdown(source="boot")
-            return
-
-        if power_controller.has_adc and power_controller.is_low_battery:
-            logger.warning("Battery low at startup")
-            power_controller.shutdown(source="battery")
             return
 
         if "wifi" in board.buttons:

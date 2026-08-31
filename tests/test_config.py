@@ -1,7 +1,10 @@
 import textwrap
 from pathlib import Path
 
-from OTCamera.config import Config, parse_user_config
+import pytest
+from pydantic import ValidationError
+
+from OTCamera.config import AdcConfig, Config, parse_user_config
 
 
 def test_parse_user_config_minimal(tmp_path: Path) -> None:
@@ -55,6 +58,7 @@ def test_parse_user_config_minimal(tmp_path: Path) -> None:
             adc:
               threshold_external_power: 2.5
               threshold_low_battery: 3.3
+              battery_read_interval: 15
             ftp_upload:
               host: example.com
               port: 21
@@ -82,6 +86,7 @@ def test_parse_user_config_minimal(tmp_path: Path) -> None:
     assert config.hardware.use_buttons is True
     assert config.hardware.use_adc is True
     assert config.adc.threshold_low_battery == 3.3
+    assert config.adc.battery_read_interval == 15
 
 
 def test_missing_file_returns_defaults(tmp_path: Path) -> None:
@@ -101,3 +106,10 @@ def test_default_config_has_sensible_values() -> None:
     assert config.hardware.use_leds is True
     assert config.hardware.use_buttons is True
     assert config.hardware.use_adc is True
+    assert config.adc.battery_read_interval == 10
+
+
+@pytest.mark.parametrize("interval", [0, -1, -0.5])
+def test_battery_read_interval_rejects_non_positive(interval: float) -> None:
+    with pytest.raises(ValidationError):
+        AdcConfig(battery_read_interval=interval)

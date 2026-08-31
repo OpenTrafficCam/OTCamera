@@ -1,11 +1,14 @@
 """Power monitoring and system control."""
 
 import logging
+import time
+from collections.abc import Callable
 from datetime import datetime as dt
 from datetime import timedelta
 from subprocess import call
 
 from OTCamera.config import Config
+from OTCamera.controller.sampled_channel import SampledAdcChannel
 from OTCamera.domain.adc import ADC, ADCConfig, ADCTimeoutError
 from OTCamera.domain.events import (
     BatteryLow,
@@ -21,6 +24,19 @@ from OTCamera.domain.led import LED
 logger = logging.getLogger(__name__)
 
 _POWER_SHUTDOWN_DELAY = 5
+_BATTERY_WINDOW_SIZE = 5
+
+
+def _battery_estimate(samples: tuple[float, ...]) -> float | None:
+    """Return the highest Voltage in a full window of Samples, else None.
+
+    The battery counts as low only when every Sample in the window is below the
+    threshold, which the highest Sample decides on its own. A partly filled
+    window yields no verdict.
+    """
+    if len(samples) < _BATTERY_WINDOW_SIZE:
+        return None
+    return max(samples)
 
 
 class PowerController:
@@ -28,25 +44,36 @@ class PowerController:
 
     def __init__(
         self,
+        *,
         config: Config,
         event_bus: EventBus,
         leds: dict[str, LED],
         adc: ADC | None = None,
         adc_config: ADCConfig | None = None,
+        clock: Callable[[], float] = time.monotonic,
     ) -> None:
         self._config = config
         self._event_bus = event_bus
         self._leds = leds
         self._adc = adc
         self._adc_config = adc_config
+        self._clock = clock
         self._external_power_connected = False
         self._battery_is_low = False
         self._power_off_time: dt | None = None
+        self._battery_channel: SampledAdcChannel | None = None
 
         event_bus.subscribe(ButtonPressed, self._on_button_pressed)
         event_bus.subscribe(ButtonReleased, self._on_button_released)
 
         if adc is not None and adc_config is not None:
+            self._battery_channel = SampledAdcChannel(
+                adc=adc,
+                channel=adc_config.channel_battery,
+                divider_ratio=adc_config.divider_ratio_battery,
+                read_interval=config.adc.battery_read_interval,
+                window_size=_BATTERY_WINDOW_SIZE,
+            )
             try:
                 self._external_power_connected = self.is_external_power
             except ADCTimeoutError:
@@ -58,21 +85,6 @@ class PowerController:
     def has_adc(self) -> bool:
         """Return whether ADC support is active."""
         return self._adc is not None and self._adc_config is not None
-
-    @property
-    def is_low_battery(self) -> bool:
-        """Return whether the battery is below the configured threshold."""
-        if self._adc is None or self._adc_config is None:
-            return False
-        try:
-            voltage = self._adc.get_voltage(self._adc_config.channel_battery)
-        except ADCTimeoutError:
-            logger.warning("ADC timeout reading battery; assuming battery OK")
-            return False
-        return (
-            voltage * self._adc_config.divider_ratio_battery
-            < self._config.adc.threshold_low_battery
-        )
 
     @property
     def battery_is_low(self) -> bool:
@@ -102,11 +114,23 @@ class PowerController:
 
     def check_power_status(self) -> None:
         """Check power state and publish power-related events."""
-        if self._adc is None or self._adc_config is None:
+        if (
+            self._adc is None
+            or self._adc_config is None
+            or self._battery_channel is None
+        ):
             return
 
-        if self.is_low_battery and not self._battery_is_low:
-            self._on_low_battery()
+        self._battery_channel.sample_if_due(self._clock())
+
+        samples = self._battery_channel.samples
+        estimate = _battery_estimate(samples)
+        if (
+            estimate is not None
+            and estimate < self._config.adc.threshold_low_battery
+            and not self._battery_is_low
+        ):
+            self._on_low_battery(estimate, len(samples))
 
         was_connected = self._external_power_connected
         try:
@@ -183,9 +207,14 @@ class PowerController:
         if power_led is not None:
             power_led.blink(on_time=0.1, off_time=0.4, n=None, background=True)
 
-    def _on_low_battery(self) -> None:
+    def _on_low_battery(self, estimate: float, sample_count: int) -> None:
         """Latch low-battery state and request shutdown."""
         self._battery_is_low = True
-        logger.warning("Battery level is low")
+        logger.warning(
+            "Battery low: highest sample %.2f V < threshold %.2f V (%d samples)",
+            estimate,
+            self._config.adc.threshold_low_battery,
+            sample_count,
+        )
         self._event_bus.publish(BatteryLow())
         self.shutdown(source="battery")

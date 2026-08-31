@@ -134,6 +134,7 @@ class AdcConfig(BaseModel):
 
     threshold_external_power: float = 2.5
     threshold_low_battery: float = 6.4
+    battery_read_interval: float = Field(default=10, gt=0)
 
 
 class RabbitMqConfig(BaseModel):

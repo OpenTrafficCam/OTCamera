@@ -22,6 +22,24 @@ T = TypeVar("T")
 YieldFixture = Generator[T, None, None]
 
 
+class FakeClock:
+    """A monotonic clock advanced by hand, for testing time-gated code."""
+
+    def __init__(self, start: float = 0.0) -> None:
+        self._now = start
+
+    def __call__(self) -> float:
+        return self._now
+
+    def advance(self, seconds: float) -> None:
+        self._now += seconds
+
+
+@pytest.fixture
+def clock() -> FakeClock:
+    return FakeClock()
+
+
 @pytest.fixture
 def test_dir(tmp_path: Path) -> YieldFixture[Path]:
     test_dir = tmp_path / "data"
