@@ -60,15 +60,15 @@ s3_upload:
   bucket:
   region:
   endpoint_url:
-  retry_max_attempts: 5
   connect_timeout: 10
   read_timeout: 30
   key_prefix: ""
 
-delete_after_upload: false
 upload_grace_timeout: 60
 
 video:
+  # Finished videos are moved into <dir>/pending and stay there until they
+  # have been uploaded. A camera with no upload backend keeps them there.
   dir: ~/videos/
   format: h264
   resolution:

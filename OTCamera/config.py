@@ -71,7 +71,6 @@ class S3Config(BaseModel):
     bucket: StrFromYaml
     endpoint_url: StrFromYaml | None = None
     region: StrFromYaml | None = None
-    retry_max_attempts: int = 5
     connect_timeout: int = 10
     read_timeout: int = 30
     # Prefix that will be prepended to the video filename.
@@ -173,7 +172,6 @@ class Config(BaseModel):
     notification: Literal["rabbitmq"] | None = None
     ftp_upload: FtpUploadConfig | None = None
     s3_upload: S3Config | None = None
-    delete_after_upload: bool = False
     video: VideoConfig = Field(default_factory=VideoConfig)
     wifi: WifiConfig = Field(default_factory=WifiConfig)
     hardware: HardwareConfig = Field(default_factory=HardwareConfig)

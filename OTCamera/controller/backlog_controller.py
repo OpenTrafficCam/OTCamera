@@ -1,0 +1,200 @@
+"""Backlog controller that drains the backlog of recorded segments."""
+
+import logging
+from pathlib import Path
+from threading import Event, Thread
+
+from OTCamera.controller.backlog import Backlog
+from OTCamera.domain.events import EventBus, RecordingSplit
+from OTCamera.domain.upload import Upload
+
+logger = logging.getLogger(__name__)
+
+_INITIAL_WAIT_SECONDS = 0.0
+_INITIAL_WAIT_SECONDS_FOR_RETRY = 5.0
+_MAX_WAIT_SECONDS = 300.0
+_IDLE_WAIT_SECONDS = 5.0
+_CLOSE_TIMEOUT_SECONDS = 10.0
+
+
+class BacklogController:
+    """Get finished recording segments to the server without losing any.
+
+    The work is split across two threads. The camera thread hands a finished
+    segment over by accepting it into the backlog. A background worker thread
+    does everything else: it picks the oldest segment, uploads it, deletes it
+    once the server has it, and reclaims space when the card fills up.
+
+    Uploading and deleting belong to the same controller because both take
+    segments out of the backlog, so keeping them together means they never
+    compete over the same segment.
+
+    A pass that uploaded a segment is followed by the next one right away, so
+    a backlog that has built up drains as fast as the server accepts it.
+
+    Every failure is treated the same way: back off and retry the same segment,
+    for as long as it takes. Nothing is skipped and nothing is set aside. A
+    segment the server will never accept therefore blocks the segments behind
+    it, until reclaiming space deletes it and the backlog drains again.
+
+    An upload backend is optional. Without one, segments are still taken out of
+    the recording directory and space is still reclaimed; only the upload step
+    is skipped, which does not count as a failure.
+    """
+
+    def __init__(self, event_bus: EventBus, upload: Upload | None, backlog: Backlog):
+        """Construct a new BacklogController instance.
+
+        Subscribes to the `RecordingSplit` event on the `EventBus`. The worker
+        thread is not started here; call `start` for that.
+
+        Args:
+            event_bus (EventBus): The global event bus.
+            upload (Upload | None): The upload backend to use, or None when none
+                is configured. Without one the worker only reclaims space.
+            backlog (Backlog): The store of segments waiting to be uploaded.
+        """
+        self._upload = upload
+        self._event_bus = event_bus
+        self._backlog = backlog
+        self._wait_seconds = _IDLE_WAIT_SECONDS
+        self._head: Path | None = None
+        self._head_attempts = 0
+        self._stop = Event()
+        self._thread: Thread | None = None
+        event_bus.subscribe(RecordingSplit, self._on_recording_split)
+        logger.debug("Backlog controller active")
+
+    @property
+    def wait_seconds(self) -> float:
+        """Return how long the worker waits before its next pass."""
+        return self._wait_seconds
+
+    @property
+    def is_running(self) -> bool:
+        """Return whether the worker thread is alive."""
+        return self._thread is not None and self._thread.is_alive()
+
+    def start(self) -> None:
+        """Start the worker thread that drains the backlog."""
+        if self.is_running:
+            return
+        self._stop.clear()
+        self._thread = Thread(target=self._worker, daemon=True)
+        self._thread.start()
+        logger.info(
+            "Backlog worker started with %d segments pending", self._backlog.size()
+        )
+
+    def run_once(self) -> None:
+        """Perform exactly one pass over the backlog.
+
+        Reclaims space first, so that a pass which cannot upload anything still
+        keeps the card usable, then uploads the oldest segment.
+        """
+        self._reclaim_space()
+
+        if self._upload is None:
+            self._wait_seconds = _IDLE_WAIT_SECONDS
+            return
+
+        segment = self._backlog.oldest()
+        if segment is None:
+            self._reset_head()
+            self._wait_seconds = _IDLE_WAIT_SECONDS
+            return
+
+        if segment != self._head:
+            self._reset_head(segment)
+
+        try:
+            result = self._upload.upload(segment)
+        except Exception as exc:
+            self._on_upload_failed(segment, exc)
+            return
+
+        self._backlog.remove(segment)
+        self._event_bus.enqueue(result.to_upload_event())
+        self._backlog.count_uploaded()
+        self._reset_head()
+        self._wait_seconds = _INITIAL_WAIT_SECONDS
+
+    def close(self) -> None:
+        """Stop the worker thread, giving the current upload time to finish."""
+        self._stop.set()
+        if self._thread is not None:
+            self._thread.join(timeout=_CLOSE_TIMEOUT_SECONDS)
+
+    def _on_recording_split(self, event: RecordingSplit) -> None:
+        """Accept the finished segment into the backlog.
+
+        This runs on the camera thread and must never raise: nothing upstream
+        retries the handover, and the recording has to go on undisturbed. A
+        failure is therefore logged and costs that one segment its upload.
+
+        Args:
+            event (RecordingSplit): The event announcing the finished segment.
+        """
+        try:
+            self._backlog.add(Path(event.filename))
+        except Exception:
+            logger.exception("Could not accept %s for upload", event.filename)
+
+    def _reset_head(self, segment: Path | None = None) -> None:
+        """Track `segment` as the one being retried and clear its attempt count.
+
+        Args:
+            segment (Path | None): The segment the next passes will retry, or
+                None when there is nothing to retry.
+        """
+        self._head = segment
+        self._head_attempts = 0
+
+    def _reclaim_space(self) -> None:
+        """Delete the oldest segments until there is room to keep recording.
+
+        This runs on every pass, including a pass whose upload failed, so a
+        segment the server will never accept is eventually cleared too.
+
+        The loop also stops when the backlog runs empty.
+        """
+        while self._backlog.is_below_floor():
+            oldest = self._backlog.oldest()
+            if oldest is None:
+                return
+            self._backlog.remove(oldest)
+            self._backlog.count_dropped()
+            logger.warning(
+                "Dropped %s to keep recording; it was never uploaded", oldest.name
+            )
+
+    def _on_upload_failed(self, segment: Path, exc: Exception) -> None:
+        """Back off and keep the segment for the next pass.
+
+        A segment's first failure sets the wait to the retry interval and each
+        further failure doubles it, up to a cap, so a long outage is retried at
+        a slow steady pace instead of at full speed.
+
+        Args:
+            segment (Path): The segment that will be retried unchanged.
+            exc (Exception): The failure the backend reported.
+        """
+        self._head_attempts += 1
+        logger.warning(
+            "Upload of %s failed (attempt %d): %s",
+            segment.name,
+            self._head_attempts,
+            exc,
+        )
+        if self._head_attempts == 1:
+            self._wait_seconds = _INITIAL_WAIT_SECONDS_FOR_RETRY
+        else:
+            self._wait_seconds = min(self._wait_seconds * 2, _MAX_WAIT_SECONDS)
+
+    def _worker(self) -> None:
+        """Run one pass per wait interval until the controller is closed."""
+        while not self._stop.wait(self._wait_seconds):
+            try:
+                self.run_once()
+            except Exception:
+                logger.exception("Upload pass failed unexpectedly")

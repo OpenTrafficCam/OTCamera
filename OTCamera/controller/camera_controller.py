@@ -1,15 +1,12 @@
 """Camera recording orchestration."""
 
 import base64
-import errno
 import logging
-import os
 from datetime import datetime as dt
 from pathlib import Path
 from time import sleep
 from typing import cast
 
-import psutil
 import requests
 import urllib3
 
@@ -32,8 +29,6 @@ from OTCamera.domain.led import LED
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 logger = logging.getLogger(__name__)
-
-_BYTES_PER_GIB = 1024 * 1024 * 1024
 
 
 class CameraController:
@@ -75,7 +70,6 @@ class CameraController:
         if self._camera.is_recording:
             return
 
-        self.delete_old_files()
         self._set_annotation_text()
         self._current_video_file = self._video_filename()
         video = self._config.video
@@ -151,29 +145,6 @@ class CameraController:
         logger.info("Restarting camera")
         self._camera.reinitialize()
 
-    def delete_old_files(self) -> None:
-        """Delete old recordings until enough free disk space is available."""
-        video_dir = Path(self._config.video.dir).expanduser().resolve()
-        min_free_bytes = self._config.recording.min_free_space * _BYTES_PER_GIB
-        logger.debug("Checking disk space in %s", video_dir)
-
-        current = Path(self._current_video_file) if self._camera.is_recording else None
-        while psutil.disk_usage(str(video_dir)).free <= min_free_bytes:
-            with os.scandir(video_dir) as scanned:
-                entries = [
-                    entry
-                    for entry in scanned
-                    if not entry.name.endswith(".log")
-                    and (current is None or Path(entry.path) != current)
-                ]
-            if len(entries) <= 1:
-                message = f"No space and no files to delete in {video_dir}"
-                logger.error(message)
-                raise OSError(errno.ENOSPC, message)
-            oldest = min(entries, key=lambda entry: entry.stat().st_ctime)
-            os.unlink(oldest.path)
-            logger.info("Deleted %s", oldest.path)
-
     def _split(self) -> None:
         """Split recording to a new file and publish the completed segment."""
         previous_file = self._current_video_file
@@ -182,7 +153,6 @@ class CameraController:
         self._current_video_file = new_file
         logger.info("Split recording: %s", new_file)
         self._event_bus.publish(RecordingSplit(filename=previous_file))
-        self.delete_old_files()
 
     def _wait_recording(self, timeout: int | float = 0) -> None:
         """Wait while recording or sleep when the camera is idle."""

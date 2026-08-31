@@ -83,8 +83,6 @@ s3_upload:
   bucket:
   region:
   endpoint_url:
-  # Number of retry attempts for failed S3 requests.
-  retry_max_attempts: 5
   # Seconds to wait when establishing a connection to S3.
   connect_timeout: 10
   # Seconds to wait for a response from S3 after sending a request.
@@ -92,13 +90,13 @@ s3_upload:
   # Optional prefix prepended to the S3 object key, e.g. "project/site/camera".
   key_prefix: ""
 
-# Delete local video files after a successful upload.
-delete_after_upload: false
-
 # Seconds to wait for in-flight uploads to finish when shutting down.
 upload_grace_timeout: 60
 
 video:
+  # Directory the camera records into. Finished videos are moved into
+  # <dir>/pending and stay there until they have been uploaded, so a camera
+  # with no upload backend keeps its footage in <dir>/pending.
   dir: ~/videos/
   format: h264
   resolution:
