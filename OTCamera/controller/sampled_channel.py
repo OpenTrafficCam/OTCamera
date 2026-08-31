@@ -8,7 +8,7 @@ from OTCamera.domain.adc import ADC, ADCTimeoutError
 logger = logging.getLogger(__name__)
 
 
-class SampledChannel:
+class SampledAdcChannel:
     """Reads one ADC channel at most once per interval, keeping a window of Samples.
 
     Use this from the main loop only. There is no locking, so reading and writing

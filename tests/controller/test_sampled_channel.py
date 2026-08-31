@@ -1,6 +1,6 @@
 import pytest
 
-from OTCamera.controller.sampled_channel import SampledChannel
+from OTCamera.controller.sampled_channel import SampledAdcChannel
 from OTCamera.domain.adc import ADC, ADCTimeoutError
 from tests.conftest import FakeClock
 
@@ -31,7 +31,7 @@ def adc() -> FakeADC:
 
 
 def test_empty_channel_has_no_samples(adc: FakeADC, clock: FakeClock) -> None:
-    channel = SampledChannel(
+    channel = SampledAdcChannel(
         adc=adc,
         channel=2,
         divider_ratio=3.0,
@@ -47,7 +47,7 @@ def test_first_call_is_always_due_and_scales_by_divider_ratio(
     clock: FakeClock,
 ) -> None:
     adc.voltage = 1.1
-    channel = SampledChannel(
+    channel = SampledAdcChannel(
         adc=adc,
         channel=2,
         divider_ratio=3.0,
@@ -65,7 +65,7 @@ def test_second_call_before_interval_elapses_does_not_read_again(
     clock: FakeClock,
 ) -> None:
     adc.voltage = 1.1
-    channel = SampledChannel(
+    channel = SampledAdcChannel(
         adc=adc,
         channel=2,
         divider_ratio=3.0,
@@ -86,7 +86,7 @@ def test_call_after_interval_elapses_reads_again(
     clock: FakeClock,
 ) -> None:
     adc.voltage = 1.1
-    channel = SampledChannel(
+    channel = SampledAdcChannel(
         adc=adc,
         channel=2,
         divider_ratio=3.0,
@@ -107,7 +107,7 @@ def test_window_evicts_oldest_sample_beyond_window_size(
     adc: FakeADC,
     clock: FakeClock,
 ) -> None:
-    channel = SampledChannel(
+    channel = SampledAdcChannel(
         adc=adc,
         channel=2,
         divider_ratio=1.0,
@@ -128,7 +128,7 @@ def test_timeout_appends_nothing_and_preserves_held_samples(
     clock: FakeClock,
 ) -> None:
     adc.voltage = 1.1
-    channel = SampledChannel(
+    channel = SampledAdcChannel(
         adc=adc,
         channel=2,
         divider_ratio=3.0,
@@ -145,7 +145,7 @@ def test_timeout_appends_nothing_and_preserves_held_samples(
 
 
 def test_timeout_does_not_propagate(adc: FakeADC, clock: FakeClock) -> None:
-    channel = SampledChannel(
+    channel = SampledAdcChannel(
         adc=adc,
         channel=2,
         divider_ratio=3.0,
@@ -164,7 +164,7 @@ def test_every_failed_read_logs_one_warning(
     clock: FakeClock,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    channel = SampledChannel(
+    channel = SampledAdcChannel(
         adc=adc,
         channel=2,
         divider_ratio=3.0,
@@ -188,7 +188,7 @@ def test_successful_read_logs_no_warning(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     adc.voltage = 1.1
-    channel = SampledChannel(
+    channel = SampledAdcChannel(
         adc=adc,
         channel=2,
         divider_ratio=3.0,

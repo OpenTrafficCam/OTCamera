@@ -8,7 +8,7 @@ from datetime import timedelta
 from subprocess import call
 
 from OTCamera.config import Config
-from OTCamera.controller.sampled_channel import SampledChannel
+from OTCamera.controller.sampled_channel import SampledAdcChannel
 from OTCamera.domain.adc import ADC, ADCConfig, ADCTimeoutError
 from OTCamera.domain.events import (
     BatteryLow,
@@ -61,13 +61,13 @@ class PowerController:
         self._external_power_connected = False
         self._battery_is_low = False
         self._power_off_time: dt | None = None
-        self._battery_channel: SampledChannel | None = None
+        self._battery_channel: SampledAdcChannel | None = None
 
         event_bus.subscribe(ButtonPressed, self._on_button_pressed)
         event_bus.subscribe(ButtonReleased, self._on_button_released)
 
         if adc is not None and adc_config is not None:
-            self._battery_channel = SampledChannel(
+            self._battery_channel = SampledAdcChannel(
                 adc=adc,
                 channel=adc_config.channel_battery,
                 divider_ratio=adc_config.divider_ratio_battery,
