@@ -1,0 +1,37 @@
+---
+name: test-unit
+#
+# Fast feedback level: no external services, no containers.
+#
+# Documentation:
+# https://help.github.com/en/articles/workflow-syntax-for-github-actions
+#
+
+on:
+  # Run on each PR, and allow other workflows (e.g. release) to call this one.
+  pull_request:
+  workflow_call:
+
+permissions: read-all
+
+jobs:
+  test-unit:
+    name: unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      # setup-uv publishes no floating major tag, so this must be an exact pin.
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v10.0.1
+
+      # Separate from the test step so a stale uv.lock fails loudly and early.
+      - name: Install dependencies
+        run: uv sync --locked --dev
+
+      # `just` comes from PyPI via uv rather than a dedicated action: one less
+      # third-party action, and it keeps the job runnable under `act`.
+      - name: Run unit tests
+        run: uvx --from rust-just@1.58.0 just test-unit
