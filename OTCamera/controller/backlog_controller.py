@@ -10,7 +10,8 @@ from OTCamera.domain.upload import Upload
 
 logger = logging.getLogger(__name__)
 
-_INITIAL_WAIT_SECONDS = 5.0
+_INITIAL_WAIT_SECONDS = 0.0
+_INITIAL_WAIT_SECONDS_FOR_RETRY = 5.0
 _MAX_WAIT_SECONDS = 300.0
 _IDLE_WAIT_SECONDS = 5.0
 _CLOSE_TIMEOUT_SECONDS = 10.0
@@ -27,6 +28,9 @@ class BacklogController:
     Uploading and deleting belong to the same controller because both take
     segments out of the backlog, so keeping them together means they never
     compete over the same segment.
+
+    A pass that uploaded a segment is followed by the next one right away, so
+    a backlog that has built up drains as fast as the server accepts it.
 
     Every failure is treated the same way: back off and retry the same segment,
     for as long as it takes. Nothing is skipped and nothing is set aside. A
@@ -167,9 +171,9 @@ class BacklogController:
     def _on_upload_failed(self, segment: Path, exc: Exception) -> None:
         """Back off and keep the segment for the next pass.
 
-        A segment's first failure sets the wait back to its starting value and
-        each further failure doubles it, up to a cap, so a long outage is
-        retried at a slow steady pace instead of at full speed.
+        A segment's first failure sets the wait to the retry interval and each
+        further failure doubles it, up to a cap, so a long outage is retried at
+        a slow steady pace instead of at full speed.
 
         Args:
             segment (Path): The segment that will be retried unchanged.
@@ -183,7 +187,7 @@ class BacklogController:
             exc,
         )
         if self._head_attempts == 1:
-            self._wait_seconds = _INITIAL_WAIT_SECONDS
+            self._wait_seconds = _INITIAL_WAIT_SECONDS_FOR_RETRY
         else:
             self._wait_seconds = min(self._wait_seconds * 2, _MAX_WAIT_SECONDS)
 

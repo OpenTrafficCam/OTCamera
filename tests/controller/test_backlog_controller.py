@@ -151,6 +151,17 @@ class TestSuccessfulPass:
 
         assert upload.uploaded_files == [oldest, newest]
 
+    def test_the_next_pass_follows_without_waiting(
+        self, bus: EventBus, backlog: Backlog, tmp_path: Path
+    ) -> None:
+        controller = BacklogController(bus, FakeUpload(), backlog)
+        backlog.add(_record_segment(tmp_path, "2026-08-12_10-00-00"))
+        backlog.add(_record_segment(tmp_path, "2026-08-12_12-00-00"))
+
+        controller.run_once()
+
+        assert controller.wait_seconds == 0
+
     def test_an_empty_backlog_uploads_nothing(
         self, bus: EventBus, backlog: Backlog
     ) -> None:
@@ -232,18 +243,18 @@ class TestFailingPass:
 
         assert controller.wait_seconds == 5
 
-    def test_a_success_resets_the_wait(
+    def test_a_success_clears_the_wait(
         self, bus: EventBus, backlog: Backlog, tmp_path: Path
     ) -> None:
         controller = BacklogController(bus, FlakyUpload(failures=2), backlog)
         backlog.add(_record_segment(tmp_path, "2026-08-12_10-00-00"))
         controller.run_once()
         controller.run_once()
-        grown = controller.wait_seconds
+        assert controller.wait_seconds == 10
 
         controller.run_once()
 
-        assert controller.wait_seconds < grown
+        assert controller.wait_seconds == 0
 
 
 class TestReclaimingSpace:
