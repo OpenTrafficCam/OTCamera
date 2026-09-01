@@ -12,10 +12,15 @@ wait-rabbitmq:
         ('rabbitmq-diagnostics', '-q', 'check_running'),
         ('rabbitmq-diagnostics', '-q', 'check_port_listener', '5672'),
     )
+    # Output is captured: while the broker boots, the checks fail and
+    # rabbitmq-diagnostics prints a long report every second. On timeout the
+    # container logs are the more useful source anyway (CI dumps them).
     deadline = time.time() + 60
     while time.time() < deadline:
         if all(
-            subprocess.run(('docker', 'exec', 'rabbitmq') + check).returncode == 0
+            subprocess.run(
+                ('docker', 'exec', 'rabbitmq') + check, capture_output=True
+            ).returncode == 0
             for check in checks
         ):
             sys.exit(0)
