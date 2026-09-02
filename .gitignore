@@ -172,3 +172,6 @@ Thumbs.db
 
 # Vim
 .vim/coc-settings.json
+
+# super-linter results
+.super-linter
