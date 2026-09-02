@@ -216,7 +216,7 @@ def _timestamp_of(name: str) -> dt | None:
 
 
 def _sort_key(name: str) -> tuple[int, dt | str]:
-    """Return an oldest-first sort key that tolerates unparseable names.
+    """Return an oldest-first sort key that tolerates unparsable names.
 
     Args:
         name (str): The filename to build a key for.
