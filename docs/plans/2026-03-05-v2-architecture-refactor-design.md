@@ -1,3 +1,5 @@
+<!-- @generated -->
+
 # OTCamera v2 Architecture Refactor — Design
 
 **Date:** 2026-03-05
@@ -17,23 +19,23 @@ Modern Python syntax (`X | Y`, `tuple[int, int]`, `match/case`) can be used dire
 
 ### Layers
 
-| Layer | Responsibility | Dependencies |
-|-------|---------------|-------------|
-| `domain/` | ABCs, events, errors | None |
-| `bsl/` | Board Support Layer — PCB-determined hardware (LEDs, Buttons, ADC) | domain |
-| `module/` | Pluggable hardware modules — camera (picamera2) | domain |
-| `plugin/` | Swappable software components — upload (FTP) | domain |
-| `controller/` | Orchestration logic | domain (via injection) |
-| `config.py` | Nested Config dataclass, validated from YAML | None |
-| `__main__.py` | Wiring + OTCamera main loop | Everything |
+| Layer         | Responsibility                                                     | Dependencies           |
+| ------------- | ------------------------------------------------------------------ | ---------------------- |
+| `domain/`     | ABCs, events, errors                                               | None                   |
+| `bsl/`        | Board Support Layer — PCB-determined hardware (LEDs, Buttons, ADC) | domain                 |
+| `module/`     | Pluggable hardware modules — camera (picamera2)                    | domain                 |
+| `plugin/`     | Swappable software components — upload (FTP)                       | domain                 |
+| `controller/` | Orchestration logic                                                | domain (via injection) |
+| `config.py`   | Nested Config dataclass, validated from YAML                       | None                   |
+| `__main__.py` | Wiring + OTCamera main loop                                        | Everything             |
 
 ### Component Classification
 
-| Category | What lives here | Selection mechanism |
-|----------|----------------|---------------------|
-| `bsl/` | Soldered, PCB-determined components (LEDs, Buttons, ADC) | `hardware.pcb_version` selects a board profile via `BoardProvider` |
-| `module/` | Pluggable hardware modules (camera, future: GNSS, LTE) | Individual provider per component |
-| `plugin/` | Swappable software components (upload, future: message broker) | Individual provider per component |
+| Category  | What lives here                                                | Selection mechanism                                                |
+| --------- | -------------------------------------------------------------- | ------------------------------------------------------------------ |
+| `bsl/`    | Soldered, PCB-determined components (LEDs, Buttons, ADC)       | `hardware.pcb_version` selects a board profile via `BoardProvider` |
+| `module/` | Pluggable hardware modules (camera, future: GNSS, LTE)         | Individual provider per component                                  |
+| `plugin/` | Swappable software components (upload, future: message broker) | Individual provider per component                                  |
 
 ### Directory Structure
 
@@ -109,6 +111,7 @@ OTCamera/
 ### Hardware Abstractions
 
 All hardware behind ABCs in `domain/`. All hardware ABCs declare `close()` for resource cleanup. Functional API per ABC:
+
 - `Camera` — existing ABC. Type literals for exposure/AWB/DRC/meter modes.
 - `ADC` — existing ABC + `ADCConfig` frozen dataclass for board-specific parameters (channels, divider ratios).
 - `LED` — models individual LED: `on()`, `off()`, `blink(on_time, off_time, n, background)`, `pulse(fade_in_time, fade_out_time, n, background)`. Pattern logic (blink 2x for external power) lives in controllers, not LED implementation.
@@ -119,11 +122,11 @@ All hardware behind ABCs in `domain/`. All hardware ABCs declare `close()` for r
 
 Custom error classes live in `domain/` next to the corresponding ABC. Only defined when controllers or main need to react specifically. Otherwise, standard exceptions (`ValueError`, `OSError`) suffice.
 
-| Error | File | Trigger |
-|-------|------|---------|
-| `CameraClosedError` | `domain/camera.py` | Method called on closed camera |
-| `ADCTimeoutError` | `domain/adc.py` | I2C error or conversion timeout |
-| `UploadError` | `domain/upload.py` | Upload failed (connection, transfer) |
+| Error               | File               | Trigger                              |
+| ------------------- | ------------------ | ------------------------------------ |
+| `CameraClosedError` | `domain/camera.py` | Method called on closed camera       |
+| `ADCTimeoutError`   | `domain/adc.py`    | I2C error or conversion timeout      |
+| `UploadError`       | `domain/upload.py` | Upload failed (connection, transfer) |
 
 ### Resource Cleanup
 
@@ -140,6 +143,7 @@ Custom error classes live in `domain/` next to the corresponding ABC. Only defin
 Board definitions are frozen dataclasses in `bsl/boards/` — pure data, no logic. A `Board` Protocol enforces the structural typing contract. Only PCB v2 is supported.
 
 BSL implementations are generic — they implement domain ABCs and receive board-specific parameters via constructor injection:
+
 - `PwmLed(pin: int)` — generic PWM LED using gpiozero.PWMLED
 - `GpioButton(pin: int, pull_up: bool, hold_time: float)` — generic GPIO button using gpiozero.Button
 - `TLA2024(i2c_address: int, fsr: float)` — TLA2024 ADC using smbus2. I2C errors wrapped as `ADCTimeoutError`.
@@ -157,6 +161,7 @@ API: `publish()`, `enqueue()`, `process_pending()`, `subscribe()`, `unsubscribe(
 - `process_pending()` — dispatches all queued events. Called once at the start of each main loop iteration.
 
 **Event types:**
+
 ```
 RecordingStarted(filename: str)
 RecordingStopped()
@@ -181,6 +186,7 @@ ShutdownRequested(source: str)  # "battery", "button", "ui", "messagebroker"
 ### Recording Pipeline (direct method calls)
 
 The recording loop in `__main__.py` uses direct method calls for everything that affects video recording:
+
 - `schedule_controller.should_record()` — determines if now is recording time.
 - `camera_controller.start_recording()` / `stop_recording()` / `split_if_interval_ends()`
 - `power_controller.check_power_status()` — direct call, emits events for listeners
@@ -297,8 +303,8 @@ YAML file (see `user_config.example.yaml`). Board-specific parameters (GPIO pins
 
 ```yaml
 hardware:
-  pcb_version: v2       # selects board profile
-  use_leds: true         # enable/disable toggles
+  pcb_version: v2 # selects board profile
+  use_leds: true # enable/disable toggles
   use_buttons: true
   use_adc: true
 
@@ -310,7 +316,7 @@ camera:
 
 server_upload:
   enable: true
-  scheme: ftp            # selects plugin implementation
+  scheme: ftp # selects plugin implementation
   host: example.com
 ```
 
@@ -319,6 +325,7 @@ ADC thresholds remain in user config (deployment-specific, not board-specific).
 ## Future Extensibility
 
 ### New BSL component (e.g., accelerometer)
+
 1. Add ABC in `domain/`
 2. Add implementation in `bsl/`
 3. Add fields to board definition (use `Optional` with `None` default for boards that lack it)
@@ -327,6 +334,7 @@ ADC thresholds remain in user config (deployment-specific, not board-specific).
 6. Wire in `__main__.py`
 
 ### New hardware module (e.g., GNSS)
+
 1. Add ABC in `domain/`
 2. Add implementation in `module/`
 3. Add provider in `module/`
@@ -334,6 +342,7 @@ ADC thresholds remain in user config (deployment-specific, not board-specific).
 5. Wire in `__main__.py`
 
 ### New software plugin (e.g., message broker)
+
 1. Add ABC in `domain/` if needed
 2. Add implementation in `plugin/`
 3. Add provider in `plugin/`
@@ -341,6 +350,7 @@ ADC thresholds remain in user config (deployment-specific, not board-specific).
 5. Wire in `__main__.py`
 
 ### New PCB version
+
 1. Add board definition in `bsl/boards/v3.py` (must satisfy `Board` protocol)
 2. Register in `_BOARD_REGISTRY` in `board_provider.py`
 3. No changes to BSL implementations, controllers, or domain
