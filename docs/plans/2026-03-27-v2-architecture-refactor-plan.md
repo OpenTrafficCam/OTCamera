@@ -1,3 +1,5 @@
+<!-- @generated -->
+
 # v2 Architecture Refactor — Implementation Plan
 
 > **For agentic workers:** REQUIRED: Use superpowers:subagent-driven-development (if subagents available) or superpowers:executing-plans to implement this plan. Steps use checkbox (`- [ ]`) syntax for tracking.
@@ -15,6 +17,7 @@
 ### Task 1: Create branch and project scaffolding
 
 **Files:**
+
 - Create: `OTCamera/controller/__init__.py`
 - Create: `OTCamera/bsl/__init__.py`
 - Create: `OTCamera/bsl/boards/__init__.py`
@@ -60,6 +63,7 @@ git commit -m "chore: scaffold new package directories for refactor"
 ### Task 2: Hybrid Event Bus (domain/events.py)
 
 **Files:**
+
 - Create: `OTCamera/domain/events.py`
 - Create: `tests/domain/test_events.py`
 
@@ -417,6 +421,7 @@ git commit -m "feat: add hybrid event bus with publish/enqueue dispatch"
 ### Task 3: LED domain ABC
 
 **Files:**
+
 - Create: `OTCamera/domain/led.py`
 - Create: `tests/domain/test_led.py`
 
@@ -564,6 +569,7 @@ git commit -m "feat: add LED abstract interface"
 ### Task 4: Button domain ABC
 
 **Files:**
+
 - Create: `OTCamera/domain/button.py`
 - Create: `tests/domain/test_button.py`
 
@@ -710,6 +716,7 @@ git commit -m "feat: add Button abstract interface with callback pattern"
 ### Task 5: Upload domain ABC
 
 **Files:**
+
 - Create: `OTCamera/domain/upload.py`
 - Create: `tests/domain/test_upload.py`
 
@@ -810,6 +817,7 @@ git commit -m "feat: add Upload abstract interface with UploadError"
 ### Task 6: Merge CameraClosedError into camera.py, add ADCConfig and ADCTimeoutError
 
 **Files:**
+
 - Modify: `OTCamera/domain/camera.py`
 - Modify: `OTCamera/domain/adc.py`
 - Delete: `OTCamera/domain/camera_errors.py`
@@ -899,10 +907,13 @@ class ADCConfig:
 - [ ] **Step 5: Update import in hardware/camera_controller.py**
 
 Change:
+
 ```python
 from OTCamera.domain.camera_errors import CameraClosedError
 ```
+
 To:
+
 ```python
 from OTCamera.domain.camera import CameraClosedError
 ```
@@ -937,6 +948,7 @@ git commit -m "feat: add ADCConfig, ADCTimeoutError; merge CameraClosedError int
 ### Task 7: Config dataclass
 
 **Files:**
+
 - Rewrite: `OTCamera/config.py`
 - Create: `tests/test_config.py`
 
@@ -1351,6 +1363,7 @@ git commit -m "refactor: rewrite config as validated dataclass hierarchy"
 ### Task 8: Board Protocol and board definition
 
 **Files:**
+
 - Create: `OTCamera/bsl/boards/board.py`
 - Create: `OTCamera/bsl/boards/v2.py`
 - Create: `tests/bsl/test_board_definitions.py`
@@ -1490,6 +1503,7 @@ git commit -m "feat: add Board protocol and v2 board definition"
 ### Task 9: BSL implementations (LED, Button, ADC)
 
 **Files:**
+
 - Create: `OTCamera/bsl/led/pwm_led.py`
 - Create: `OTCamera/bsl/button/gpio_button.py`
 - Create: `OTCamera/bsl/adc/tla2024.py`
@@ -1709,6 +1723,7 @@ git commit -m "feat: add BSL implementations (PwmLed, GpioButton, TLA2024)"
 ### Task 10: BoardProvider
 
 **Files:**
+
 - Create: `OTCamera/bsl/board_provider.py`
 - Create: `tests/bsl/test_board_provider.py`
 
@@ -1910,6 +1925,7 @@ git commit -m "feat: add BoardProvider as single entry point for BSL components"
 ### Task 11: Camera module (drop picamerax, update provider)
 
 **Files:**
+
 - Create: `OTCamera/module/camera/camera_provider.py`
 - Create: `OTCamera/module/camera/picamera2.py` (copy from plugin, decouple from config)
 - Delete: `OTCamera/plugin/camera/picamerax.py`
@@ -1966,6 +1982,7 @@ class CameraProvider:
 Copy `OTCamera/plugin/camera/picamera2.py` to `OTCamera/module/camera/picamera2.py`.
 
 Apply these changes:
+
 - Remove `from OTCamera import config` import
 - Remove all `config.*` default parameter values from `__init__` — all values are passed explicitly by `CameraProvider`
 - Replace `from OTCamera.helpers import log` with `import logging` and use `logger = logging.getLogger(__name__)`
@@ -1992,6 +2009,7 @@ git commit -m "feat: add camera module with decoupled picamera2 provider"
 ### Task 12: Upload plugin (FTP)
 
 **Files:**
+
 - Create: `OTCamera/plugin/upload/ftp_upload.py`
 - Create: `OTCamera/plugin/upload/upload_provider.py`
 
@@ -2120,6 +2138,7 @@ git commit -m "feat: add Upload plugin with FTP and UploadProvider"
 ### Task 13: ScheduleController
 
 **Files:**
+
 - Create: `OTCamera/controller/schedule_controller.py`
 - Create: `tests/controller/test_schedule_controller.py`
 
@@ -2329,6 +2348,7 @@ git commit -m "feat: add ScheduleController with overnight window support"
 ### Task 14: PowerController
 
 **Files:**
+
 - Create: `OTCamera/controller/power_controller.py`
 
 - [ ] **Step 1: Implement PowerController**
@@ -2698,6 +2718,7 @@ git commit -m "feat: add PowerController with ADC monitoring and shutdown countd
 ### Task 15: WifiController
 
 **Files:**
+
 - Create: `OTCamera/controller/wifi_controller.py`
 
 - [ ] **Step 1: Implement WifiController**
@@ -2983,6 +3004,7 @@ git commit -m "feat: add WifiController with delayed off timer"
 ### Task 16: CameraController
 
 **Files:**
+
 - Create: `OTCamera/controller/camera_controller.py`
 
 - [ ] **Step 1: Implement CameraController**
@@ -3446,6 +3468,7 @@ git commit -m "feat: add CameraController with recording orchestration"
 ### Task 17: UploadController
 
 **Files:**
+
 - Create: `OTCamera/controller/upload_controller.py`
 
 - [ ] **Step 1: Implement UploadController**
@@ -3493,6 +3516,7 @@ git commit -m "feat: add UploadController subscribing to RecordingSplit events"
 ### Task 18: Logging module (OTCamera/log.py)
 
 **Files:**
+
 - Create: `OTCamera/log.py`
 
 - [ ] **Step 1: Implement log.py**
@@ -3603,12 +3627,13 @@ git commit -m "feat: add logging module with setup_logging and MsTeamsHandler"
 
 ---
 
-### Task 19: Rewrite __main__.py (wiring + main loop)
+### Task 19: Rewrite **main**.py (wiring + main loop)
 
 **Files:**
+
 - Rewrite: `OTCamera/__main__.py`
 
-- [ ] **Step 1: Rewrite __main__.py**
+- [ ] **Step 1: Rewrite **main**.py**
 
 ```python
 # OTCamera/__main__.py
@@ -4019,6 +4044,7 @@ git commit -m "refactor: rewrite __main__.py with BSL/module/plugin wiring and h
 ### Task 20: Update run.py
 
 **Files:**
+
 - Modify: `run.py`
 
 - [ ] **Step 1: Rewrite run.py**
@@ -4083,6 +4109,7 @@ git commit -m "refactor: update run.py for new config and entry points"
 ### Task 21: Update usb_flash_drive_copy.py
 
 **Files:**
+
 - Modify: `usb_flash_drive_copy.py`
 
 - [ ] **Step 1: Update imports**
@@ -4269,6 +4296,7 @@ git commit -m "refactor: update usb_flash_drive_copy for new config and BoardPro
 ### Task 22: Cleanup — delete old files and directories
 
 **Files to delete:**
+
 - `OTCamera/hardware/` (entire directory)
 - `OTCamera/plugin/adc/` (entire directory)
 - `OTCamera/plugin/camera/picamerax.py` (if not already deleted)
@@ -4313,7 +4341,7 @@ grep -r "from OTCamera.domain.camera_errors" OTCamera/ tests/
 
 Fix all found references. In particular: `html_updater.py` imports `from OTCamera.helpers import log` — replace with `import logging` / `logger = logging.getLogger(__name__)` and replace all `log.write()` calls with `logger.info()` / `logger.warning()` etc.
 
-- [ ] **Step 3: Remove empty plugin/camera directory if only __init__.py remains**
+- [ ] **Step 3: Remove empty plugin/camera directory if only **init**.py remains**
 
 Check `OTCamera/plugin/camera/` — if only `__init__.py` and `camera_provider.py` remain (old provider), delete them. The new provider is in `module/camera/`.
 
@@ -4324,6 +4352,7 @@ rm -rf OTCamera/plugin/camera/
 - [ ] **Step 4: Update example and test config files**
 
 Update `user_config.example.yaml` and `tests/test_user_config.yaml`:
+
 - `hardware.pcb_version`: `v1` → `v2`
 - `leds.enable` / `buttons.enable` → `hardware.use_leds` / `hardware.use_buttons`
 - `server_upload.upload` → `server_upload.enable`
@@ -4349,9 +4378,10 @@ git commit -m "refactor: delete old files, update config examples for new archit
 ### Task 23: Update existing tests
 
 **Files:**
+
 - Delete: `tests/helpers/name_test.py` (logic moved to CameraController)
 - Delete: `tests/helpers/filesystem_test.py` (logic moved to CameraController)
-- Delete: `tests/record_test.py` (logic moved to __main__.py)
+- Delete: `tests/record_test.py` (logic moved to **main**.py)
 - Modify: `tests/hardware/camera_test.py` (update imports)
 - Modify: `tests/html_updater_test.py` (fix constructor and method signatures)
 - Modify: `tests/conftest.py` (if needed)
@@ -4369,6 +4399,7 @@ rm -rf tests/helpers/
 - [ ] **Step 2: Update camera_test.py imports**
 
 Update `tests/hardware/camera_test.py` to import from new locations:
+
 - `from OTCamera.module.camera.camera_provider import CameraProvider`
 - `from OTCamera.domain.camera import CameraClosedError`
 - Add `pytest.importorskip("picamera2")` at top of file so tests are skipped on non-Pi machines
@@ -4380,6 +4411,7 @@ Update the `StatusWebsiteUpdater` constructor call to match the current signatur
 - [ ] **Step 4: Add testpaths to pyproject.toml**
 
 Add to `pyproject.toml`:
+
 ```toml
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -4402,12 +4434,14 @@ git commit -m "test: update tests for new architecture, add testpaths config"
 ### Task 24: Rename hardware_test.py to hardware_check.py
 
 **Files:**
+
 - Delete: `hardware_test.py`
 - Create: `hardware_check.py`
 
 - [ ] **Step 1: Rename and rewrite**
 
 Rewrite `hardware_test.py` as `hardware_check.py`:
+
 - Replace `picamerax.PiCamera()` with `CameraProvider.provide(config)`
 - Replace direct GPIO with `BoardProvider.provide(config)` for LEDs, buttons, ADC
 - Load config via `parse_user_config()`
@@ -4458,11 +4492,13 @@ git commit -m "chore: final cleanup and lint fixes"
 ### Task 26: Rename CLAUDE.md to AGENTS.md and update
 
 **Files:**
+
 - Rename: `CLAUDE.md` → `AGENTS.md`
 
 - [ ] **Step 1: Rename and update**
 
 Rename `CLAUDE.md` to `AGENTS.md`. Update to reflect the new architecture:
+
 - Directory structure (domain/, bsl/, module/, plugin/, controller/)
 - New entry points (run.py branching, usb_flash_drive_copy with BoardProvider)
 - New config structure (nested dataclasses, hardware toggles)

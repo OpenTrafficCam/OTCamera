@@ -54,13 +54,13 @@ class NetworkMonitor(Thread):
         """Create a new NetworkMonitor.
 
         Subclasses threading.Thread and registers itself as a daemon thread.
-        Sets the inital state to UNKNOWN. Actual monitoring activity is started
+        Sets the initial state to UNKNOWN. Actual monitoring activity is started
         by calling `run()`
 
         Args:
             probe (NetworkProbe): The probe that checks the network connection.
             wait (int): The wait time between individual probes.
-            success_threshold (int): The number of sucessful probes in sequence
+            success_threshold (int): The number of successful probes in sequence
                 after which the status changes to ONLINE
             fail_threshold (int): Analogously, the number of sequential failed probes
                 that result in an OFFLINE status.

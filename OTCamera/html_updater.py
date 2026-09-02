@@ -414,8 +414,8 @@ class StatusWebsiteUpdater:
 
         Args:
             soup (BeautifulSoup): Represents the root of html tree.
-            currently_recording(bool): Wether OTCamera is currently recording.
-            always_recording(bool): Wether OTCamera is set to always record without
+            currently_recording(bool): Whether OTCamera is currently recording.
+            always_recording(bool): Whether OTCamera is set to always record without
             breaks.
         """
         banner_section_tag = soup.find(id=BannerHtmlId.RECORDING_BANNER.value)

@@ -5,7 +5,7 @@ OTCamera is part of the [OpenTrafficCam](https://opentrafficcam.org) project and
 
 On the left side you can see the main module [record](record) along with the [config](config) and [status](status) module, which contain variables used across the entire code.
 
-It is build completly automatically using:
+It is build completely automatically using:
 
 - [MkDocs](https://www.mkdocs.org/) and
 - [mkdocstrings](https://github.com/pawamoy/mkdocstrings) and

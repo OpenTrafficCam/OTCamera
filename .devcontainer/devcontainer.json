@@ -9,6 +9,9 @@
         "OTC_TEST_RABBITMQ_HOST": "rabbitmq",
         "CLAUDE_CONFIG_DIR": "/claude"
     },
+    "remoteEnv": {
+        "LOCAL_WORKSPACE_FOLDER": "${localWorkspaceFolder}"
+    },
     "postCreateCommand": "uv sync",
     "initializeCommand": "docker compose -f container/compose.yml up -d",
     "runArgs": ["--network=ot-camera"],
