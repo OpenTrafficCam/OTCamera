@@ -1,11 +1,5 @@
 ---
-name: test-unit
-#
-# Fast feedback level: no external services, no containers.
-#
-# Documentation:
-# https://help.github.com/en/articles/workflow-syntax-for-github-actions
-#
+name: test
 
 on:
   # Run on each PR, and allow other workflows (e.g. release) to call this one.
@@ -16,9 +10,9 @@ permissions: read-all
 
 jobs:
   test-unit:
-    name: unit tests
+    name: tests
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
@@ -33,5 +27,13 @@ jobs:
 
       # `just` comes from PyPI via uv rather than a dedicated action: one less
       # third-party action, and it keeps the job runnable under `act`.
-      - name: Run unit tests
-        run: uvx --from rust-just@1.58.0 just test-unit
+      - name: Run tests
+        run: uvx --from rust-just@1.58.0 just test
+
+      - name: Dump container logs on failure
+        if: failure()
+        run: docker compose -f container/compose.yml logs --no-color
+
+      - name: Stop containers
+        if: always()
+        run: docker compose -f container/compose.yml down -v
