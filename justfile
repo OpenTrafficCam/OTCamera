@@ -56,6 +56,7 @@ super-lint:
         -e SUPER_LINTER_OUTPUT_DIRECTORY_NAME=.super-linter \
         -e SUPER_LINTER_SUMMARY_FILE_NAME=SUMMARY.md \
         --env-file .github/super-linter.env \
+        --env-file .github/super-linter-fix.env \
         -v {{ host_workspace }}:/tmp/lint ghcr.io/super-linter/super-linter@sha256:c95c714f746edc70e54926a69e229c834ffcdec2450bd3475f7865164d749a56 # slim-v8.7.0
 
 lint:
