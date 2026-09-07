@@ -56,6 +56,24 @@ class Upload(ABC):
         """
         raise NotImplementedError
 
+    def describe(self, file_path: Path) -> UploadResult:
+        """Return where this backend stores the given file.
+
+        The answer is worked out from the path and the backend's settings
+        alone, without contacting the server, and is the same before and
+        after the upload. A caller that has only the file left can therefore
+        still say where it went, which decouples uploading a file from
+        notifying _about_ the upload.
+
+        Args:
+            file_path (Path): File path of the file that was or will be
+                uploaded.
+
+        Returns:
+            UploadResult: Where the file is stored.
+        """
+        return UploadResult(local_path=file_path)
+
     @abstractmethod
     def is_available(self) -> bool:
         """Return whether the upload backend is reachable."""

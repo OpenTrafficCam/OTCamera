@@ -23,13 +23,32 @@ logger = logging.getLogger(__name__)
 
 
 class RecordingConfig(BaseModel):
-    """Recording schedule and disk-space settings."""
+    """Recording schedule and disk-space settings.
+
+    Free space is given up in a fixed order. Segments that are uploaded but
+    not announced yet go first, from `min_free_space` plus
+    `min_free_space_margin` downwards, and only once none of those are left
+    does recorded footage go, from `min_free_space` downwards. Expressing the
+    first as a margin on top of the second keeps that order whatever the two
+    are set to.
+    """
 
     start_hour: int = 6
     end_hour: int = 22
     interval_length: int = 15
     num_intervals: int = 0
     min_free_space: int = 1
+    min_free_space_margin: int = 1
+
+    @property
+    def min_free_space_notifications(self) -> int:
+        """Return the free space in GiB below which notifications are given up.
+
+        Never below `min_free_space`, so footage is never dropped while there
+        are still notifications to give up instead. A margin of zero puts both
+        at the same level, and then either may go first.
+        """
+        return self.min_free_space + self.min_free_space_margin
 
 
 class CameraConfig(BaseModel):
@@ -138,17 +157,22 @@ class AdcConfig(BaseModel):
 
 
 class RabbitMqConfig(BaseModel):
-    """RabbitMQ connection and exchange settings."""
+    """RabbitMQ connection and exchange settings.
+
+    Where a message goes has no sensible default: the camera must be told
+    the exchange, the routing key and the queue, so a missing one is
+    reported instead of silently publishing nowhere.
+    """
 
     host: StrFromYaml
+    exchange: StrFromYaml
+    routing_key: StrFromYaml
+    queue_name: StrFromYaml
     port: int = 5671
     user: StrFromYaml = "guest"
     password: StrFromYaml = "guest"
     vhost: StrFromYaml = "/"
-    exchange: StrFromYaml = ""
     exchange_type: StrFromYaml = "direct"
-    routing_key: StrFromYaml = ""
-    queue_name: StrFromYaml = ""
     durable: bool = True
     ssl: bool = True
 
@@ -171,8 +195,8 @@ class Config(BaseModel):
     preview: PreviewConfig = Field(default_factory=PreviewConfig)
     upload: Literal["ftp", "s3"] | None = None
     notification: Literal["rabbitmq"] | None = None
-    ftp_upload: FtpUploadConfig | None = None
-    s3_upload: S3Config | None = None
+    ftp: FtpUploadConfig | None = None
+    s3: S3Config | None = None
     video: VideoConfig = Field(default_factory=VideoConfig)
     wifi: WifiConfig = Field(default_factory=WifiConfig)
     hardware: HardwareConfig = Field(default_factory=HardwareConfig)
@@ -188,9 +212,9 @@ class Config(BaseModel):
 
     @model_validator(mode="after")
     def _validate_upload_config(self) -> "Config":
-        if self.upload == "ftp" and self.ftp_upload is None:
+        if self.upload == "ftp" and self.ftp is None:
             raise ValueError("ftp_upload config is required when upload is 'ftp'")
-        if self.upload == "s3" and self.s3_upload is None:
+        if self.upload == "s3" and self.s3 is None:
             raise ValueError("s3_upload config is required when upload is 's3'")
         if self.notification == "rabbitmq":
             if self.rabbitmq is None:

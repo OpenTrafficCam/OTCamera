@@ -1,45 +1,61 @@
 import dataclasses
 import json
+from datetime import datetime, timezone
 
 from OTCamera.config import OTCloudSettings
-from OTCamera.controller.notification_controller import PayloadFactory
-from OTCamera.domain.events import Event, S3FileUploaded
+from OTCamera.domain.notifier import UploadPayloadFactory
+from OTCamera.domain.upload import S3UploadResult, UploadResult
 from OTCamera.plugin.upload_notifier.payloads import (
     CameraIdPayload,
     S3FileUploadedPayload,
 )
 
+# fills the timestamp field on its way out. OTCloud still expects one and
+# validates it, so it gets the epoch: parseable, and far enough off to be
+# recognised as a placeholder rather than read as a real time.
+_PLACEHOLDER_TIME = datetime.fromtimestamp(0, tz=timezone.utc)
 
-class RabbitMQS3UploadToOTCloudPayloadFactory(PayloadFactory):
-    """Builds a JSON-encoded S3FileUploadedPayload from an S3FileUploaded event."""
+
+class RabbitMQS3UploadToOTCloudPayloadFactory(UploadPayloadFactory[str]):
+    """Builds a JSON-encoded S3FileUploadedPayload from an S3 upload."""
 
     def __init__(self, ot_cloud_settings: OTCloudSettings):
         self.ot_cloud_settings = ot_cloud_settings
 
-    def create(self, event: Event) -> str:
-        """Serialize an S3FileUploaded event to a JSON string for OTCloud."""
-        # The EventBus subscription in EventNotificationController already
-        # filters to S3FileUploaded events, so this assert should never fire.
-        # It is kept as a safety net against accidental misconfiguration at
-        # the wiring site (e.g. wrong event_type passed to the controller).
-        assert isinstance(event, S3FileUploaded)
+    def create(self, upload: UploadResult) -> str:
+        """Serialize an S3 upload to a JSON string for OTCloud.
 
-        filename = event.local_path.name
+        Args:
+            upload (UploadResult): Where the file was stored. It has to be an
+                S3 upload, because OTCloud is told a bucket and a key.
+
+        Returns:
+            str: The JSON-encoded message for OTCloud.
+        """
+        # the caller decides which upload backend it hands over, so a mismatch
+        # is a wiring mistake rather than something that can happen at runtime.
+        assert isinstance(upload, S3UploadResult)
+
+        filename = upload.local_path.name
 
         payload = S3FileUploadedPayload(
-            s3_key=event.key,
+            s3_key=upload.key,
             camera_id=CameraIdPayload(
                 camera_id=self.ot_cloud_settings.camera_id,
                 project_id=self.ot_cloud_settings.project_id,
                 site_id=self.ot_cloud_settings.site_id,
             ),
-            timestamp=event.timestamp.isoformat(),
+            # TODO: drop the field once OTCloud no longer expects it. It
+            # cannot hold anything meaningful in the meantime: a message can go
+            # out long after its upload, so the moment it is built is not the
+            # moment the file was uploaded.
+            timestamp=_PLACEHOLDER_TIME.isoformat(),
             # TODO: original_filename and new_filename are currently the same for
             # compatibility reasons (OTCloud expects both fields at the moment).
             # Rename or remove fields once they are no longer needed.
             original_filename=filename,
             new_filename=filename,
-            bucket_name=event.bucket,
+            bucket_name=upload.bucket,
         )
 
         return json.dumps(dataclasses.asdict(payload))

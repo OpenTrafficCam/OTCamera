@@ -1,15 +1,20 @@
-"""Fixtures for the integration tests that talk to a local S3 server."""
+"""Fixtures for the integration tests that talk to a local S3 server and broker."""
 
+import json
 import os
+import socket
 from pathlib import Path
 from typing import Any, Iterator
 
 import boto3
+import pika
+import pika.adapters.blocking_connection
+import pika.exchange_type
 import pytest
 from botocore.config import Config as Boto3Config
 from botocore.exceptions import ClientError
 
-from OTCamera.config import S3Config
+from OTCamera.config import RabbitMqConfig, S3Config
 
 EXAMPLE_VIDEOS_FOLDER = Path(__file__).parent.parent / "data" / "example_videos_folder"
 
@@ -115,3 +120,73 @@ def body_of(s3client: Any, bucket: str, key: str) -> bytes:
         key (str): Key the object is stored under.
     """
     return bytes(s3client.get_object(Bucket=bucket, Key=key)["Body"].read())
+
+
+EXCHANGE = "test_otcamera"
+ROUTING_KEY = "file_uploaded"
+QUEUE = "test_otcamera_queue"
+
+
+@pytest.fixture
+def local_rabbitmq_config() -> RabbitMqConfig:
+    return RabbitMqConfig(
+        host=os.getenv("OTC_TEST_RABBITMQ_HOST", "127.0.0.1"),
+        port=int(os.getenv("OTC_TEST_RABBITMQ_PORT", 5672)),
+        exchange=EXCHANGE,
+        routing_key=ROUTING_KEY,
+        queue_name=QUEUE,
+        durable=False,
+        ssl=False,
+    )
+
+
+@pytest.fixture
+def rabbitmq_channel(
+    local_rabbitmq_config: RabbitMqConfig,
+) -> Iterator[pika.adapters.blocking_connection.BlockingChannel]:
+    """Yield a channel with a bound queue; clean up after the test."""
+    credentials = pika.PlainCredentials(
+        local_rabbitmq_config.user, local_rabbitmq_config.password
+    )
+    parameters = pika.ConnectionParameters(
+        host=local_rabbitmq_config.host,
+        port=local_rabbitmq_config.port,
+        virtual_host=local_rabbitmq_config.vhost,
+        credentials=credentials,
+    )
+    connection = pika.BlockingConnection(parameters)
+    channel = connection.channel()
+    channel.exchange_declare(
+        exchange=EXCHANGE,
+        exchange_type=pika.exchange_type.ExchangeType.direct,
+        durable=False,
+    )
+    channel.queue_declare(queue=QUEUE, durable=False)
+    channel.queue_bind(queue=QUEUE, exchange=EXCHANGE, routing_key=ROUTING_KEY)
+
+    yield channel
+
+    channel.queue_delete(queue=QUEUE)
+    channel.exchange_delete(exchange=EXCHANGE)
+    connection.close()
+
+
+def closed_port() -> int:
+    """Return a port on localhost that nothing listens on."""
+    with socket.socket() as probe:
+        probe.bind(("127.0.0.1", 0))
+        return int(probe.getsockname()[1])
+
+
+def messages_in_queue(
+    channel: pika.adapters.blocking_connection.BlockingChannel, count: int
+) -> list[dict]:
+    """Take the given number of messages off the queue, in arrival order."""
+    bodies = []
+    for _ in range(count):
+        method, _, body = channel.basic_get(queue=QUEUE, auto_ack=True)
+        assert method is not None and body is not None, (
+            "Expected a message but the queue was empty"
+        )
+        bodies.append(json.loads(body))
+    return bodies
