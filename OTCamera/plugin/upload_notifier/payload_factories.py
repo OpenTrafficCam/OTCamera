@@ -28,6 +28,9 @@ class RabbitMQS3UploadToOTCloudPayloadFactory(UploadPayloadFactory[str]):
         Args:
             upload (UploadResult): Where the file was stored. It has to be an
                 S3 upload, because OTCloud is told a bucket and a key.
+
+        Returns:
+            str: The JSON-encoded message for OTCloud.
         """
         # the caller decides which upload backend it hands over, so a mismatch
         # is a wiring mistake rather than something that can happen at runtime.

@@ -25,7 +25,19 @@ _STACK_TIMEOUT_SECONDS = 6.0
 
 
 def _connect(config: RabbitMqConfig) -> BlockingConnection:
-    """Establish a connection based on the user config."""
+    """Open a connection to the broker described by the config.
+
+    Args:
+        config (RabbitMqConfig): The connection settings, including whether to
+            wrap the connection in TLS.
+
+    Returns:
+        BlockingConnection: The open connection.
+
+    Raises:
+        AMQPConnectionError: When the broker cannot be reached, or does not
+            accept the credentials, within the configured timeouts.
+    """
     credentials = PlainCredentials(config.user, config.password)
 
     ssl_options = None
@@ -56,7 +68,23 @@ def _setup_channel(
     connection: BlockingConnection,
     config: RabbitMqConfig,
 ) -> BlockingChannel:
-    """Setup a channel, declare the exchange and queue."""
+    """Open a channel and declare the exchange, the queue and their binding.
+
+    Declaring is repeated on every new channel, because the broker may have
+    been restarted or reset in the meantime.
+
+    Args:
+        connection (BlockingConnection): The open connection to the broker.
+        config (RabbitMqConfig): The exchange, queue and routing settings.
+
+    Returns:
+        BlockingChannel: The channel to publish on.
+
+    Raises:
+        AMQPError: When the broker refuses the channel or one of the
+            declarations, e.g. because the exchange already exists with
+            different settings.
+    """
     channel = connection.channel()
 
     channel.exchange_declare(
@@ -137,7 +165,15 @@ class RabbitNotifier(Notifier[str]):
         logger.info("Closed RabbitMQ notifier.")
 
     def _publish(self, payload: str) -> None:
-        """Publish one message and wait until the broker confirms it."""
+        """Publish one message and wait until the broker confirms it.
+
+        Args:
+            payload (str): The JSON-encoded message to publish.
+
+        Raises:
+            AMQPError: When the connection or channel cannot be opened, the
+                message reaches no queue, or the broker does not confirm it.
+        """
         channel = self._ensure_channel()
         properties = BasicProperties(
             content_type="application/json",
@@ -161,7 +197,15 @@ class RabbitNotifier(Notifier[str]):
         )
 
     def _ensure_channel(self) -> BlockingChannel:
-        """Return a usable channel, connecting or reconnecting if needed."""
+        """Return a usable channel, connecting or reconnecting if needed.
+
+        Returns:
+            BlockingChannel: A channel that publishes with confirmations
+                switched on.
+
+        Raises:
+            AMQPError: When the connection or the channel cannot be opened.
+        """
         if (
             self._connection is None
             or self._connection.is_closed
@@ -175,7 +219,11 @@ class RabbitNotifier(Notifier[str]):
         return self._channel
 
     def _reset(self) -> None:
-        """Drop the current connection so the next publish starts fresh."""
+        """Drop the current connection so the next publish starts fresh.
+
+        A connection that fails to close is let go of anyway, because it is
+        never used again either way.
+        """
         connection = self._connection
         self._connection = None
         self._channel = None

@@ -12,6 +12,9 @@ class UploadPayloadFactory[T](ABC):
 
         Args:
             upload (UploadResult): Where the file was stored.
+
+        Returns:
+            T: The payload to hand to a notifier.
         """
         raise NotImplementedError
 

@@ -58,7 +58,10 @@ class S3Upload(Upload):
         ``{filename}`` otherwise.
 
         Args:
-            file_path: Path to the local file.
+            file_path (Path): Path to the local file.
+
+        Returns:
+            S3UploadResult: The bucket and key the file is stored under.
         """
         name = Path(file_path).name
         key = f"{self.key_prefix}/{name}" if self.key_prefix else name

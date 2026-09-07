@@ -16,21 +16,28 @@ _TIMESTAMP_PATTERN = re.compile(r"_(\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2})")
 
 
 class Backlog:
-    """The files that have left one directory but not yet finished their work.
+    """A backlog of files that still wait for a processing step.
 
-    A backlog is a plain directory. There is no index and no sidecar file: a
-    file is in the backlog if it is in that directory. Files get there by being
-    renamed out of the source directory, which only stays atomic while both
-    directories are on one filesystem; the constructor checks that.
+    The step can be an upload or a notification, for example.
 
-    Two threads use a backlog without a lock. The producer only adds, and
-    always the newest file; the worker only removes, and always the oldest. The
-    two therefore never touch the same file.
+    A backlog is a plain directory of files forming a queue of items to be
+    processed. There is no index and no sidecar file: a file is in the backlog if
+    it is in that directory. Files get there by being renamed out of the source
+    directory, which only stays atomic while both directories are on one filesystem;
+    the constructor checks that.
 
-    A backlog has a floor: free space it gives up its oldest files for rather
-    than let the card fill. Stores with different floors give up their files in
-    order, the highest floor first, without either of them knowing about the
-    other.
+    Two threads use a backlog without a lock:
+    - only the producer thread adds _new_ files, and
+    - only the worker thread removes _old_ files.
+    The two therefore never touch the same file.
+
+    A backlog has a floor, i. e. it guarantees a minimum amount of free space on the
+    device its files are stored on. If the files take up more space, the files
+    are deleted oldest-first rather than let the card fill up more.
+
+    If multiple stores with different floors are used, they give up their files in
+    order: the highest floor (i. e. the one having more min_free_bytes) first,
+    without either of them knowing about the other.
     """
 
     # what is lost when a file is dropped to reclaim space, for the log.
@@ -42,8 +49,8 @@ class Backlog:
         """Create both directories if they do not exist yet.
 
         Args:
-            source_dir (Path): Directory the files arrive in.
-            target_dir (Path): Directory the backlog keeps the files in.
+            source_dir (Path): Directory the files arrive in and are moved _from_.
+            target_dir (Path): Directory the files are moved _into_ and wait in.
             min_free_bytes (int): Free space below which the oldest files are
                 dropped. Zero never drops anything.
 
@@ -116,9 +123,8 @@ class Backlog:
     def remove(self, file: Path) -> None:
         """Delete a file from the backlog.
 
-        Only the worker draining the backlog may call this. A file that is
-        already gone is not an error: the point is that it is no longer in the
-        backlog.
+        Only the worker draining the backlog, i. e. processing the containing files,
+        may call this.
 
         Args:
             file (Path): The file to delete.
@@ -201,8 +207,12 @@ class UploadBacklog(Backlog):
     Segments arrive in the video directory the camera records into and wait in
     `<video_dir>/pending` until the upload worker has them on the server.
 
-    Dropping a segment from here loses its footage, so this store has the
-    lowest floor of all: everything else gives up its files first.
+    Dropping a segment from here loses its footage without having it uploaded
+    remotely, so this store should have the lowest floor of all backlogs.
+
+    The reasoning: a missing _notification_ can be made up for manually, while
+    a deleted segment is gone for good, or at least cannot be restored without
+    considerable effort.
     """
 
     _DROP_COST = "it was never uploaded"
@@ -247,10 +257,16 @@ class UploadBacklog(Backlog):
     def recover_unfinished_segments(self) -> int:
         """Accept every video file left directly in the video directory.
 
-        This runs at startup, before recording begins, so anything still lying
-        in the video directory is from a recording that was cut short. Such a
-        segment is incomplete but holds footage, and how much footage depends on
-        the configured segment length, so it is uploaded rather than dropped.
+        The camera thread writes recordings into the video directory. When
+        the recording process is interrupted before a segment is finished,
+        a partial file might remain in the video dir without having been
+        moved to the pending directory.
+
+        This method is supposed to run at startup, before recording begins,
+        so anything still lying in the video directory is from a recording
+        that was cut short. Such a segment is incomplete but holds footage,
+        and how much footage depends on the configured segment length,
+        so it is uploaded rather than dropped.
 
         The backlog is untouched, because the listing does not recurse, and so
         are logs and the preview image, because only the video suffix is moved.

@@ -47,6 +47,9 @@ class NotificationBacklogController:
 
         The worker thread is not started here; call `start` for that.
 
+        Check the docstring of BacklogWorker for an explanation how
+        Backlog, BacklogWorker and Controller work together.
+
         Args:
             backlog (NotificationBacklog): The store of uploaded segments that
                 are waiting to be announced.

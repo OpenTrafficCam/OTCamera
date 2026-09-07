@@ -52,6 +52,9 @@ class UploadBacklogController:
         Subscribes to the `RecordingSplit` event on the `EventBus`. The worker
         thread is not started here; call `start` for that.
 
+        Check the docstring of BacklogWorker for an explanation how
+        Backlog, BacklogWorker and Controller work together.
+
         Args:
             event_bus (EventBus): The global event bus.
             upload (Upload | None): The upload backend to use, or None when none

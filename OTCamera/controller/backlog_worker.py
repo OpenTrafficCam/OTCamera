@@ -14,22 +14,18 @@ CLOSE_TIMEOUT_SECONDS = 10.0
 
 
 class BacklogWorker:
-    """Make one pass over a backlog per wait interval, on a thread of its own.
+    """Processes a backlog of files on a thread of its own.
 
-    How long the worker waits depends on what its passes report. A pass that
-    finds nothing left waits the idle interval. The first failure on an item
-    waits five seconds and each further failure on that same item doubles the
-    wait, up to a cap, so a long outage is retried at a slow steady pace
-    instead of at full speed. Reaching a different item starts that item off
-    with a fresh count, so it is not held back by the one before it.
-
-    A successful pass is followed by the next one right away, so
-    a backlog that has built up drains fast.
-
-    A pass that raises is logged and does not stop the worker: the next
-    interval tries again.
+    In a loop, make a processing pass over a backlog of files
+    (oldest first) and (depending on success or failure),
+    adjust the waiting time before the next pass.
 
     The thread is a daemon, so it ends with the process.
+
+    Should be used by a BacklogController and a corresponding Backlog class:
+    The backlog handles the "queue" of files to be processed, the worker (this class)
+    provides common functionality on processing a backlog, while the
+    controller defines the concrete action to be performed on each pass.
     """
 
     def __init__(self, name: str, run_once: Callable[[], None]) -> None:
@@ -118,6 +114,9 @@ class BacklogWorker:
             self._head_attempts,
             exc,
         )
+        # Set the waiting seconds to _INITIAL_WAIT_SECONDS_FOR_RETRY.
+        # This value should be different from 0 and will be doubled in the
+        # following iterations, should they also be failing.
         if self._head_attempts == 1:
             self._wait_seconds = _INITIAL_WAIT_SECONDS_FOR_RETRY
         else:
