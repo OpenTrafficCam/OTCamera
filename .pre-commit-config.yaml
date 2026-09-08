@@ -36,6 +36,7 @@ repos:
         entry: >
           --rm --platform linux/amd64
           --env-file .github/super-linter.env
+          --env-file .github/super-linter-fix.env
           -e DEFAULT_WORKSPACE=/src
           -e RUN_LOCAL=true
           -e SAVE_SUPER_LINTER_SUMMARY=true
