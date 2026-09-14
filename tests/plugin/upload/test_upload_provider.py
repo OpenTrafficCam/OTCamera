@@ -21,7 +21,7 @@ def test_s3_upload_config_required_when_upload_is_s3() -> None:
 
 def test_provide_ignores_ftp_config_when_upload_not_set() -> None:
     config = Config()
-    config.ftp_upload = FtpUploadConfig(
+    config.ftp = FtpUploadConfig(
         host="localhost", port=21, user="user", password="pass"
     )
     assert UploadProvider.provide(config) is None
@@ -29,5 +29,5 @@ def test_provide_ignores_ftp_config_when_upload_not_set() -> None:
 
 def test_provide_ignores_s3_config_when_upload_not_set() -> None:
     config = Config()
-    config.s3_upload = S3Config(access_key="foo", secret_key="bar", bucket="bucket")
+    config.s3 = S3Config(access_key="foo", secret_key="bar", bucket="bucket")
     assert UploadProvider.provide(config) is None

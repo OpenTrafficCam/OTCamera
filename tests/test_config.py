@@ -4,7 +4,14 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from OTCamera.config import AdcConfig, Config, parse_user_config
+from OTCamera.config import (
+    AdcConfig,
+    Config,
+    OTCloudSettings,
+    RabbitMqConfig,
+    RecordingConfig,
+    parse_user_config,
+)
 
 
 def test_parse_user_config_minimal(tmp_path: Path) -> None:
@@ -94,6 +101,78 @@ def test_missing_file_returns_defaults(tmp_path: Path) -> None:
 
     assert config.camera.fps == 20
     assert config.debug_mode is False
+
+
+@pytest.mark.parametrize("missing", ["exchange", "routing_key", "queue_name"])
+def test_rabbitmq_needs_to_be_told_where_messages_go(missing: str) -> None:
+    settings = {
+        "host": "localhost",
+        "exchange": "otcamera",
+        "routing_key": "file_uploaded",
+        "queue_name": "otcamera_uploads",
+    }
+    del settings[missing]
+
+    with pytest.raises(ValidationError, match=missing):
+        RabbitMqConfig.model_validate(settings)
+
+
+def test_rabbitmq_notification_needs_a_rabbitmq_config() -> None:
+    with pytest.raises(ValidationError, match="rabbitmq config is required"):
+        Config(notification="rabbitmq")
+
+
+def test_rabbitmq_notification_needs_the_camera_identity() -> None:
+    with pytest.raises(ValidationError, match="ot_cloud config is required"):
+        Config(
+            notification="rabbitmq",
+            rabbitmq=RabbitMqConfig(
+                host="localhost",
+                exchange="otcamera",
+                routing_key="file_uploaded",
+                queue_name="otcamera_uploads",
+            ),
+        )
+
+
+def test_a_complete_rabbitmq_notification_config_is_accepted() -> None:
+    config = Config(
+        notification="rabbitmq",
+        rabbitmq=RabbitMqConfig(
+            host="localhost",
+            exchange="otcamera",
+            routing_key="file_uploaded",
+            queue_name="otcamera_uploads",
+        ),
+        ot_cloud=OTCloudSettings(camera_id=1, project_id=2, site_id=3),
+    )
+
+    assert config.rabbitmq is not None
+    assert config.rabbitmq.queue_name == "otcamera_uploads"
+
+
+@pytest.mark.parametrize(("min_free_space", "margin"), [(1, 1), (0, 1), (5, 2), (2, 0)])
+def test_notifications_are_never_given_up_after_footage(
+    min_free_space: int, margin: int
+) -> None:
+    """Footage is the last thing to go, whatever the two settings are."""
+    recording = RecordingConfig(
+        min_free_space=min_free_space, min_free_space_margin=margin
+    )
+
+    assert recording.min_free_space_notifications >= recording.min_free_space
+
+
+def test_the_notification_floor_is_the_margin_above_the_footage_floor() -> None:
+    recording = RecordingConfig(min_free_space=3, min_free_space_margin=2)
+
+    assert recording.min_free_space_notifications == 5
+
+
+def test_notifications_are_given_up_first_by_default() -> None:
+    recording = Config().recording
+
+    assert recording.min_free_space_notifications > recording.min_free_space
 
 
 def test_default_config_has_sensible_values() -> None:
