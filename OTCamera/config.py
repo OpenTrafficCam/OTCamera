@@ -132,7 +132,7 @@ class HardwareConfig(BaseModel):
 class AdcConfig(BaseModel):
     """Voltage thresholds used by power monitoring."""
 
-    threshold_external_power: float = 2.5
+    threshold_external_power: float = 4.0
     threshold_low_battery: float = 6.4
     battery_read_interval: float = Field(default=10, gt=0)
 

@@ -60,6 +60,7 @@ class PowerController:
         self._clock = clock
         self._external_power_connected = False
         self._battery_is_low = False
+        self._battery_shutdown_triggered = False
         self._power_off_time: dt | None = None
         self._battery_channel: SampledAdcChannel | None = None
 
@@ -88,7 +89,7 @@ class PowerController:
 
     @property
     def battery_is_low(self) -> bool:
-        """Return whether a low-battery state was already latched."""
+        """Return whether the batteries currently read as low."""
         return self._battery_is_low
 
     @property
@@ -123,15 +124,6 @@ class PowerController:
 
         self._battery_channel.sample_if_due(self._clock())
 
-        samples = self._battery_channel.samples
-        estimate = _battery_estimate(samples)
-        if (
-            estimate is not None
-            and estimate < self._config.adc.threshold_low_battery
-            and not self._battery_is_low
-        ):
-            self._on_low_battery(estimate, len(samples))
-
         was_connected = self._external_power_connected
         try:
             is_connected = self.is_external_power
@@ -147,6 +139,22 @@ class PowerController:
             self._external_power_connected = False
             logger.warning("External power disconnected")
             self._event_bus.publish(ExternalPowerDisconnected())
+
+        samples = self._battery_channel.samples
+        estimate = _battery_estimate(samples)
+        if estimate is None:
+            return
+
+        was_low = self._battery_is_low
+        self._battery_is_low = estimate < self._config.adc.threshold_low_battery
+        if self._battery_is_low and not was_low:
+            self._on_low_battery(estimate, len(samples))
+
+        # External power keeps the system running, no matter how empty the
+        # batteries are. The state above is still reported, only the shutdown
+        # waits until the supply is gone.
+        if self._battery_is_low and not is_connected:
+            self._trigger_battery_shutdown()
 
     def check_pending_shutdown(self) -> None:
         """Trigger shutdown once the power-off countdown has elapsed."""
@@ -208,8 +216,7 @@ class PowerController:
             power_led.blink(on_time=0.1, off_time=0.4, n=None, background=True)
 
     def _on_low_battery(self, estimate: float, sample_count: int) -> None:
-        """Latch low-battery state and request shutdown."""
-        self._battery_is_low = True
+        """Announce that the batteries just dropped below the threshold."""
         logger.warning(
             "Battery low: highest sample %.2f V < threshold %.2f V (%d samples)",
             estimate,
@@ -217,4 +224,10 @@ class PowerController:
             sample_count,
         )
         self._event_bus.publish(BatteryLow())
+
+    def _trigger_battery_shutdown(self) -> None:
+        """Shut down once on low battery without external power."""
+        if self._battery_shutdown_triggered:
+            return
+        self._battery_shutdown_triggered = True
         self.shutdown(source="battery")
