@@ -14,6 +14,7 @@ from OTCamera.controller.power_controller import (
 )
 from OTCamera.domain.adc import ADC, ADCConfig, ADCTimeoutError
 from OTCamera.domain.events import (
+    BatteryLow,
     ButtonPressed,
     ButtonReleased,
     EventBus,
@@ -128,6 +129,66 @@ def test_low_battery_detected(config: Config, adc_config: ADCConfig) -> None:
     assert controller.battery_is_low is True
     assert len(received) == 1
     assert received[0].source == "battery"
+
+
+def test_low_battery_with_external_power_does_not_shut_down(
+    config: Config,
+    adc_config: ADCConfig,
+) -> None:
+    """External power vetoes the battery shutdown, but only while it lasts."""
+    adc = FakeADC()
+    # 1.0 V * divider ratio 3.0 = 3.0 V, below the 3.3 V low-battery threshold.
+    adc.voltages[2] = 1.0
+    # 2.5 V * divider ratio 2.0 = 5.0 V, above the 2.5 V external-power threshold.
+    adc.voltages[0] = 2.5
+    bus = EventBus()
+    clock = FakeClock()
+    controller = PowerController(
+        config=config,
+        event_bus=bus,
+        leds={},
+        adc=adc,
+        adc_config=adc_config,
+        clock=clock,
+    )
+    received: list[ShutdownRequested] = []
+    bus.subscribe(ShutdownRequested, received.append)
+    battery_low_events = 0
+
+    def count_battery_low(_: BatteryLow) -> None:
+        nonlocal battery_low_events
+        battery_low_events += 1
+
+    bus.subscribe(BatteryLow, count_battery_low)
+
+    # Fill the sampling window; advancing the clock past the read interval is
+    # what makes each call take a new Sample.
+    for _ in range(_BATTERY_WINDOW_SIZE):
+        controller.check_power_status()
+        clock.advance(config.adc.battery_read_interval)
+
+    # The low state is reported even at the external supply, so the status page
+    # shows it; only the shutdown is suppressed.
+    assert controller.external_power_connected is True
+    assert controller.battery_is_low is True
+    assert battery_low_events == 1
+    assert received == []
+
+    # Pull the external supply. The window still holds the low Samples taken
+    # above, so the verdict lands on the very next check without refilling it.
+    adc.voltages[0] = 0.0
+    controller.check_power_status()
+
+    assert controller.battery_is_low is True
+    assert len(received) == 1
+    assert received[0].source == "battery"
+    # The state never left "low", so no second BatteryLow event is published.
+    assert battery_low_events == 1
+
+    # Further checks must not fire a second shutdown.
+    controller.check_power_status()
+
+    assert len(received) == 1
 
 
 def test_single_low_sample_does_not_trigger_low_battery(
