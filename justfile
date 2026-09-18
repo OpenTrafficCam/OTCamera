@@ -4,6 +4,10 @@ host_workspace := env("LOCAL_WORKSPACE_FOLDER", justfile_directory())
 default:
     @just --list
 
+# Install git hooks, including pre-push (not installed by plain `pre-commit install`)
+install-hooks:
+    pre-commit install --hook-type pre-commit --hook-type pre-push
+
 wait-rabbitmq:
     #!/usr/bin/env python3
     import subprocess

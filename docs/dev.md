@@ -9,8 +9,12 @@ To setup a dev environment, make sure you have `uv` installed. Then simply run
 ```bash
 uv sync
 # optional, but recommended
-pre-commit install
+just install-hooks
 ```
+
+`just install-hooks` installs both the `pre-commit` and `pre-push` git hooks. Plain `pre-commit install`
+only installs the `pre-commit` hook, silently skipping hooks configured with `stages: [pre-push]`
+(e.g. `super-linter`).
 
 Check [dependency_management.md](./dependency_management.md) for more information.
 
