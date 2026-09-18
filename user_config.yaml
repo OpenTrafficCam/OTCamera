@@ -18,6 +18,7 @@ camera:
   rotation: 180
   awb_mode: greyworld
   meter_mode: average
+  lens_position: 6.0
 
 preview:
   path: ~/OTCamera/webfiles/preview.jpg
