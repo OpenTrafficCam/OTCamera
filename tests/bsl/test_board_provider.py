@@ -40,7 +40,7 @@ class FakeButton(FakeCloseable):
         self,
         pin: int,
         bounce_time: float = 0.05,
-        pull_up: bool = True,
+        pull_up: bool | None = True,
         hold_time: float = 2.0,
         hold_repeat: bool = False,
     ) -> None:
@@ -63,15 +63,16 @@ class FakeButton(FakeCloseable):
 class FakeAdc(FakeCloseable):
     instances: list["FakeAdc"] = []
 
-    def __init__(self, i2c_address: int, fsr: float) -> None:
+    def __init__(self, i2c_address: int, fsr: float, i2c_bus: int = 1) -> None:
         super().__init__()
         self.i2c_address = i2c_address
         self.fsr = fsr
+        self.i2c_bus = i2c_bus
         self.__class__.instances.append(self)
 
 
 class FailingAdc(FakeCloseable):
-    def __init__(self, i2c_address: int, fsr: float) -> None:
+    def __init__(self, i2c_address: int, fsr: float, i2c_bus: int = 1) -> None:
         super().__init__()
         raise RuntimeError("adc init failed")
 
@@ -125,6 +126,14 @@ class TestLoadBoardDefinition:
     def test_v2_has_correct_adc_address(self) -> None:
         board = load_board_definition("v2")
         assert board.adc_i2c_address == 0x48
+
+    def test_v16b_is_an_alias_for_v2(self) -> None:
+        assert type(load_board_definition("v16b")) is type(load_board_definition("v2"))
+
+    def test_v20d_loads(self) -> None:
+        board = load_board_definition("v20d")
+        assert board.adc_i2c_bus == 3
+        assert board.button_light_pin == 16
 
 
 class TestBoardComponents:
@@ -186,3 +195,79 @@ class TestBoardProvider:
         assert components.buttons == {}
         assert components.adc is None
         assert components.adc_config is None
+
+
+class TestBoardProviderPerRevision:
+    """The provider must pass each revision's own values through unchanged."""
+
+    def _provide(
+        self, monkeypatch: pytest.MonkeyPatch, pcb_version: str
+    ) -> BoardComponents:
+        _install_fake_gpiozero(monkeypatch)
+        FakeLed.instances = []
+        FakeButton.instances = []
+        FakeAdc.instances = []
+
+        monkeypatch.setattr("OTCamera.bsl.led.pwm_led.PwmLed", FakeLed)
+        monkeypatch.setattr("OTCamera.bsl.button.gpio_button.GpioButton", FakeButton)
+        monkeypatch.setattr("OTCamera.bsl.adc.tla2024.TLA2024", FakeAdc)
+
+        config = _make_config(
+            pcb_version=pcb_version,
+            use_leds=True,
+            use_buttons=True,
+            use_adc=True,
+        )
+        return BoardProvider.provide(config)
+
+    def test_v2_keeps_three_leds_and_three_buttons(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        components = self._provide(monkeypatch, "v2")
+
+        assert sorted(components.leds) == ["power", "recording", "wifi"]
+        assert sorted(components.buttons) == ["hour", "power", "wifi"]
+
+    def test_v2_uses_the_hardware_i2c_bus(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        self._provide(monkeypatch, "v2")
+
+        assert FakeAdc.instances[0].i2c_bus == 1
+
+    def test_v2_lets_gpiozero_pull_up(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        self._provide(monkeypatch, "v2")
+
+        assert all(button.pull_up is True for button in FakeButton.instances)
+
+    def test_v20d_adds_the_intrusion_led_and_the_light_switch(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        components = self._provide(monkeypatch, "v20d")
+
+        assert sorted(components.leds) == ["intrusion", "power", "recording", "wifi"]
+        assert sorted(components.buttons) == ["hour", "light", "power", "wifi"]
+        assert components.leds["intrusion"].pin == 7  # type: ignore[attr-defined]
+
+    def test_v20d_uses_the_bit_banged_i2c_bus(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        self._provide(monkeypatch, "v20d")
+
+        assert FakeAdc.instances[0].i2c_bus == 3
+
+    def test_v20d_leaves_the_pull_to_config_txt(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        self._provide(monkeypatch, "v20d")
+
+        assert all(button.pull_up is None for button in FakeButton.instances)
+
+    @pytest.mark.parametrize("pcb_version", ["v2", "v20d"])
+    def test_the_led_enable_pin_is_never_claimed(
+        self, monkeypatch: pytest.MonkeyPatch, pcb_version: str
+    ) -> None:
+        self._provide(monkeypatch, pcb_version)
+
+        assert 10 not in [led.pin for led in FakeLed.instances]
+        assert 10 not in [button.pin for button in FakeButton.instances]

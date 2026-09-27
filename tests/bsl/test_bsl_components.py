@@ -35,13 +35,21 @@ class FakeGpioZeroButton:
     def __init__(
         self,
         pin: int,
-        pull_up: bool = True,
+        pull_up: bool | None = True,
+        active_state: bool | None = None,
         hold_time: float = 2.0,
         hold_repeat: bool = False,
         bounce_time: float | None = None,
     ) -> None:
+        # gpiozero rejects both mismatches with PinInvalidState; mirroring that here
+        # is what makes the derivation in GpioButton testable off the Pi.
+        if pull_up is None and active_state is None:
+            raise ValueError('"active_state" is not defined')
+        if pull_up is not None and active_state is not None:
+            raise ValueError('"active_state" is not None')
         self.pin = pin
         self.pull_up = pull_up
+        self.active_state = active_state
         self.hold_time = hold_time
         self.hold_repeat = hold_repeat
         self.bounce_time = bounce_time
@@ -150,6 +158,25 @@ class TestGpioButton:
         assert held == ["held"]
         assert released == ["released"]
         assert button._button.closed
+
+    def test_an_internal_pull_leaves_the_active_state_to_gpiozero(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        _install_fake_gpiozero(monkeypatch)
+
+        button = GpioButton(21, bounce_time=0.05, pull_up=True)
+
+        assert button._button.active_state is None
+
+    def test_without_an_internal_pull_a_high_level_is_active(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        _install_fake_gpiozero(monkeypatch)
+
+        button = GpioButton(16, bounce_time=0.05, pull_up=None)
+
+        assert button._button.pull_up is None
+        assert button._button.active_state is True
 
 
 class TestTLA2024:

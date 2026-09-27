@@ -6,6 +6,7 @@ from typing import Any, Optional
 
 from OTCamera.bsl.boards.board import Board
 from OTCamera.bsl.boards.v2 import BoardV2
+from OTCamera.bsl.boards.v20d import BoardV20d
 from OTCamera.config import Config
 from OTCamera.domain.adc import ADC, ADCConfig
 from OTCamera.domain.button import Button
@@ -14,7 +15,11 @@ from OTCamera.domain.led import LED
 logger = logging.getLogger(__name__)
 
 _BOARD_REGISTRY: dict[str, type] = {
+    # Ansible names the revisions v16b and v20d; "v2" is the older spelling of v16b
+    # and stays so already provisioned devices keep working.
     "v2": BoardV2,
+    "v16b": BoardV2,
+    "v20d": BoardV20d,
 }
 
 
@@ -88,6 +93,8 @@ class BoardProvider:
                     "recording": PwmLed(board.led_rec_pin),
                     "wifi": PwmLed(board.led_wifi_pin),
                 }
+                if board.led_intrusion_pin is not None:
+                    leds["intrusion"] = PwmLed(board.led_intrusion_pin)
                 created_components.extend(leds.values())
                 for led in leds.values():
                     led.off()
@@ -116,13 +123,20 @@ class BoardProvider:
                         hold_time=board.button_hold_time,
                     ),
                 }
+                if board.button_light_pin is not None:
+                    buttons["light"] = GpioButton(
+                        board.button_light_pin,
+                        bounce_time=board.button_bounce_time,
+                        pull_up=board.button_light_pull_up,
+                        hold_time=board.button_hold_time,
+                    )
                 created_components.extend(buttons.values())
                 logger.debug("Buttons initialized: %s", list(buttons.keys()))
 
             if config.hardware.use_adc:
                 from OTCamera.bsl.adc.tla2024 import TLA2024
 
-                adc = TLA2024(board.adc_i2c_address, board.adc_fsr)
+                adc = TLA2024(board.adc_i2c_address, board.adc_fsr, board.adc_i2c_bus)
                 created_components.append(adc)
                 adc_config = ADCConfig(
                     channel_usb=board.adc_channel_usb,
