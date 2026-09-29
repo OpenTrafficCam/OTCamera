@@ -21,6 +21,10 @@ class BoardV2:
     button_hour_pull_up: bool | None = True
     button_wifi_pull_up: bool | None = True
     button_light_pull_up: bool | None = None
+    button_power_active_state: bool | None = None
+    button_hour_active_state: bool | None = None
+    button_wifi_active_state: bool | None = None
+    button_light_active_state: bool | None = None
     button_hold_time: float = 2.0
     button_bounce_time: float = 0.05
 

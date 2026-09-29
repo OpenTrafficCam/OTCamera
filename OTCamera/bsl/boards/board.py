@@ -12,7 +12,10 @@ class Board(Protocol):
 
     A pin of ``None`` means the revision does not fit that part; the provider skips
     it. ``button_*_pull_up`` of ``None`` means no internal pull, for switch lines
-    that config.txt configures as ``np``.
+    that config.txt configures as ``np``. Without an internal pull, set
+    ``button_*_active_state`` to ``True`` for active-high or ``False`` for
+    active-low. With an internal pull, leave it at ``None`` so gpiozero derives
+    the active level from the pull.
     """
 
     led_power_pin: int
@@ -29,6 +32,10 @@ class Board(Protocol):
     button_hour_pull_up: bool | None
     button_wifi_pull_up: bool | None
     button_light_pull_up: bool | None
+    button_power_active_state: bool | None
+    button_hour_active_state: bool | None
+    button_wifi_active_state: bool | None
+    button_light_active_state: bool | None
     button_hold_time: float
     button_bounce_time: float
 

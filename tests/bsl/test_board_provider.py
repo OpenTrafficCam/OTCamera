@@ -1,4 +1,5 @@
 import sys
+from dataclasses import replace
 from types import ModuleType
 from typing import Any, cast
 
@@ -9,6 +10,7 @@ from OTCamera.bsl.board_provider import (
     BoardProvider,
     load_board_definition,
 )
+from OTCamera.bsl.boards.v20d import BoardV20d
 from OTCamera.config import Config
 
 
@@ -43,11 +45,13 @@ class FakeButton(FakeCloseable):
         pull_up: bool | None = True,
         hold_time: float = 2.0,
         hold_repeat: bool = False,
+        active_state: bool | None = None,
     ) -> None:
         super().__init__()
         self.pin = pin
         self.bounce_time = bounce_time
         self.pull_up = pull_up
+        self.active_state = active_state
         self.hold_time = hold_time
         self.hold_repeat = hold_repeat
         self.when_pressed = None
@@ -239,6 +243,7 @@ class TestBoardProviderPerRevision:
         self._provide(monkeypatch, "v2")
 
         assert all(button.pull_up is True for button in FakeButton.instances)
+        assert all(button.active_state is None for button in FakeButton.instances)
 
     def test_v20d_adds_the_intrusion_led_and_the_light_switch(
         self, monkeypatch: pytest.MonkeyPatch
@@ -262,6 +267,24 @@ class TestBoardProviderPerRevision:
         self._provide(monkeypatch, "v20d")
 
         assert all(button.pull_up is None for button in FakeButton.instances)
+        assert all(button.active_state is True for button in FakeButton.instances)
+
+    @pytest.mark.parametrize("name", ["power", "hour", "wifi", "light"])
+    def test_each_switch_can_invert_its_active_state(
+        self, monkeypatch: pytest.MonkeyPatch, name: str
+    ) -> None:
+        board = replace(BoardV20d(), **{f"button_{name}_active_state": False})
+        monkeypatch.setattr(
+            "OTCamera.bsl.board_provider.load_board_definition", lambda _: board
+        )
+
+        self._provide(monkeypatch, "v20d")
+
+        inverted_pin = getattr(board, f"button_{name}_pin")
+        assert len(FakeButton.instances) == 4
+        for button in FakeButton.instances:
+            assert button.pull_up is None
+            assert button.active_state is (button.pin != inverted_pin)
 
     @pytest.mark.parametrize("pcb_version", ["v2", "v20d"])
     def test_the_led_enable_pin_is_never_claimed(

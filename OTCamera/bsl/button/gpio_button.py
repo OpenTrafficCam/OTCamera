@@ -6,7 +6,11 @@ from OTCamera.domain.button import Button
 
 
 class GpioButton(Button):
-    """Physical GPIO switch backed by gpiozero."""
+    """Physical GPIO switch backed by gpiozero.
+
+    With ``pull_up=None``, ``active_state`` explicitly selects the active level.
+    Otherwise, leave ``active_state=None`` to derive it from the internal pull.
+    """
 
     def __init__(
         self,
@@ -14,13 +18,9 @@ class GpioButton(Button):
         bounce_time: float,
         pull_up: bool | None = True,
         hold_time: float = 2.0,
+        active_state: bool | None = None,
     ) -> None:
         from gpiozero import Button as GpioZeroButton
-
-        # pull_up=None disables the internal pull; gpiozero then requires an explicit
-        # active_state, and rejects one when it sets the pull itself. The switches are
-        # toggles with no idle position, so a high level is the active one.
-        active_state = True if pull_up is None else None
 
         self._button = GpioZeroButton(
             pin,

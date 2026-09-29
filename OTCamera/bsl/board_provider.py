@@ -108,18 +108,21 @@ class BoardProvider:
                         board.button_power_pin,
                         bounce_time=board.button_bounce_time,
                         pull_up=board.button_power_pull_up,
+                        active_state=board.button_power_active_state,
                         hold_time=board.button_hold_time,
                     ),
                     "hour": GpioButton(
                         board.button_hour_pin,
                         bounce_time=board.button_bounce_time,
                         pull_up=board.button_hour_pull_up,
+                        active_state=board.button_hour_active_state,
                         hold_time=board.button_hold_time,
                     ),
                     "wifi": GpioButton(
                         board.button_wifi_pin,
                         bounce_time=board.button_bounce_time,
                         pull_up=board.button_wifi_pull_up,
+                        active_state=board.button_wifi_active_state,
                         hold_time=board.button_hold_time,
                     ),
                 }
@@ -128,6 +131,7 @@ class BoardProvider:
                         board.button_light_pin,
                         bounce_time=board.button_bounce_time,
                         pull_up=board.button_light_pull_up,
+                        active_state=board.button_light_active_state,
                         hold_time=board.button_hold_time,
                     )
                 created_components.extend(buttons.values())

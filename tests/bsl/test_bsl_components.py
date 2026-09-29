@@ -42,7 +42,7 @@ class FakeGpioZeroButton:
         bounce_time: float | None = None,
     ) -> None:
         # gpiozero rejects both mismatches with PinInvalidState; mirroring that here
-        # is what makes the derivation in GpioButton testable off the Pi.
+        # lets us check parameter forwarding without Pi hardware.
         if pull_up is None and active_state is None:
             raise ValueError('"active_state" is not defined')
         if pull_up is not None and active_state is not None:
@@ -168,15 +168,22 @@ class TestGpioButton:
 
         assert button._button.active_state is None
 
-    def test_without_an_internal_pull_a_high_level_is_active(
-        self, monkeypatch: pytest.MonkeyPatch
+    @pytest.mark.parametrize("active_state", [True, False])
+    def test_without_an_internal_pull_forwards_the_active_state(
+        self, monkeypatch: pytest.MonkeyPatch, active_state: bool
     ) -> None:
         _install_fake_gpiozero(monkeypatch)
 
-        button = GpioButton(16, bounce_time=0.05, pull_up=None)
+        button = GpioButton(
+            16, bounce_time=0.05, pull_up=None, active_state=active_state
+        )
 
         assert button._button.pull_up is None
-        assert button._button.active_state is True
+        assert button._button.active_state is active_state
+        button._button.is_pressed = True
+        assert button.is_pressed
+        button._button.is_pressed = False
+        assert not button.is_pressed
 
 
 class TestTLA2024:
