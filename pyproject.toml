@@ -48,6 +48,7 @@ Issues = "https://github.com/OpenTrafficCam/OTCamera/issues"
 Changelog = "https://github.com/OpenTrafficCam/OTCamera/releases"
 
 [project.scripts]
+otcamera-diagnose = "OTCamera.diagnose.__main__:main"
 otc-netwatch = "OTCamera.netwatch.__main__:main"
 
 [tool.hatch.version]
