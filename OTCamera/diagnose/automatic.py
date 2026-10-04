@@ -45,9 +45,7 @@ def inspect(
         yield Check("board.i2c_bus", False, str(exc))
     for name, address in population:
         yield _check(f"i2c.{name}", i2c.chip, board.adc_i2c_bus, name, address)
-    yield _check(
-        "i2c.tla2024", adc_check, hardware, config.adc.threshold_low_battery
-    )
+    yield _check("i2c.tla2024", adc_check, hardware, config.adc.threshold_low_battery)
     yield _check("i2c.scan", i2c.scan, board, population)
     yield _check("rtc.hctosys", i2c.rtc_hctosys)
     yield _check("rtc.state", i2c.rtc_state)

@@ -99,9 +99,7 @@ def collect(manifest: dict[str, Any]) -> dict[str, Any]:
                 result["modem"][name] = ""
     for name in ("image", "firmware"):
         result["system"][name] = "; ".join(
-            line.strip()
-            for line in result["system"][name].splitlines()
-            if line.strip()
+            line.strip() for line in result["system"][name].splitlines() if line.strip()
         )
     result["software"] = {"otcamera": software}
     for group, field_order in (
