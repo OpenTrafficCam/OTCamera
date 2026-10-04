@@ -50,7 +50,13 @@ def test_measurement_failures_do_not_stop_independent_checks(
     checks = list(a.inspect(config, "v20d", lte, hardware))
     ids = {c.id for c in checks}
     assert len(checks) == (23 if lte else 19) == len(ids)
-    assert {"camera.present", "i2c.tla2024", "storage.free", "system.watchdog", "service.otcamera"} <= ids
+    assert {
+        "camera.present",
+        "i2c.tla2024",
+        "storage.free",
+        "system.watchdog",
+        "service.otcamera",
+    } <= ids
     assert ("gnss.nmea" in ids) == lte
     assert checks[0].ok and all(not c.ok for c in checks[2:])
     capture.assert_not_called()
@@ -94,7 +100,9 @@ def test_automatic_battery_threshold(
     checks = a.inspect(config, "v20d", False, hardware)
     # Skip unrelated I2C probes while retaining the real ADC check and config wiring.
     monkeypatch.setattr(a.i2c, "chip", Mock())
-    result = next(check for check in checks if check is not None and check.id == "i2c.tla2024")
+    result = next(
+        check for check in checks if check is not None and check.id == "i2c.tla2024"
+    )
     assert result.ok is ok
     assert result.measured["battery_voltage_v"] == battery
     assert result.measured["usb_voltage_v"] == 5.0
@@ -102,14 +110,18 @@ def test_automatic_battery_threshold(
         assert result.detail == f"Battery {battery:.2f} V below {threshold:.2f} V"
 
 
-@pytest.mark.parametrize("state", ["loaded", "not-found", "error", "bad-setting", "masked"])
+@pytest.mark.parametrize(
+    "state", ["loaded", "not-found", "error", "bad-setting", "masked"]
+)
 def test_otcamera_load_state_only(state: str, monkeypatch: pytest.MonkeyPatch) -> None:
     command = Mock(return_value=state)
     monkeypatch.setattr(a.probes, "output", command)
     check = a.probes.otcamera_loaded()
     assert check.id == "service.otcamera"
     assert check.ok == (state == "loaded")
-    command.assert_called_once_with(["systemctl", "show", "otcamera.service", "-p", "LoadState", "--value"])
+    command.assert_called_once_with(
+        ["systemctl", "show", "otcamera.service", "-p", "LoadState", "--value"]
+    )
 
 
 def test_otcamera_load_state_query_failure(monkeypatch: pytest.MonkeyPatch) -> None:

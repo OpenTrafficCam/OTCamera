@@ -338,18 +338,29 @@ def test_gnss_engine_is_read_only(
 
 def test_system_versions_are_single_line(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
-        Path, "read_text", Mock(return_value="Raspberry Pi reference 2026-09-15\nGenerated using pi-gen\n")
+        Path,
+        "read_text",
+        Mock(
+            return_value="Raspberry Pi reference 2026-09-15\nGenerated using pi-gen\n"
+        ),
     )
     monkeypatch.setattr(
-        facts, "output", Mock(return_value="Sep 15 2026\nCopyright Raspberry Pi\nversion abc123\n")
+        facts,
+        "output",
+        Mock(return_value="Sep 15 2026\nCopyright Raspberry Pi\nversion abc123\n"),
     )
     monkeypatch.setattr(facts, "at", Mock(side_effect=OSError("missing")))
     monkeypatch.setitem(
-        sys.modules, "picamera2",
+        sys.modules,
+        "picamera2",
         SimpleNamespace(Picamera2=Mock(global_camera_info=Mock(return_value=[]))),
     )
-    system = facts.collect({"provisioning": {}, "declared": {"has_lte_module": False}})["system"]
-    assert system["image"] == "Raspberry Pi reference 2026-09-15; Generated using pi-gen"
+    system = facts.collect({"provisioning": {}, "declared": {"has_lte_module": False}})[
+        "system"
+    ]
+    assert (
+        system["image"] == "Raspberry Pi reference 2026-09-15; Generated using pi-gen"
+    )
     assert system["firmware"] == "Sep 15 2026; Copyright Raspberry Pi; version abc123"
 
 
@@ -365,8 +376,12 @@ def test_system_versions_are_single_line(monkeypatch: pytest.MonkeyPatch) -> Non
     ],
 )
 def test_watchdog_runtime_state(
-    driver: str, state: str, timeout: str, ok: bool,
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+    driver: str,
+    state: str,
+    timeout: str,
+    ok: bool,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     root = tmp_path / "watchdog0"
     (root / "device").mkdir(parents=True)
@@ -391,7 +406,8 @@ def test_watchdog_runtime_state(
 
 @pytest.mark.parametrize("error", [FileNotFoundError, PermissionError])
 def test_watchdog_unreadable_is_failed(
-    error: type[OSError], monkeypatch: pytest.MonkeyPatch,
+    error: type[OSError],
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(Path, "resolve", Mock(side_effect=error("unavailable")))
     check = probes.watchdog()
@@ -406,7 +422,8 @@ def test_facts_query_modem_only_when_declared(
     monkeypatch.setattr(Path, "read_text", Mock(side_effect=OSError("missing")))
     monkeypatch.setattr(facts, "output", Mock(side_effect=OSError("missing")))
     monkeypatch.setitem(
-        sys.modules, "picamera2",
+        sys.modules,
+        "picamera2",
         SimpleNamespace(Picamera2=Mock(global_camera_info=Mock(return_value=[]))),
     )
     uart = Mock(side_effect=["12345", "firmware", "+QCCID: 67890"])
@@ -416,10 +433,14 @@ def test_facts_query_modem_only_when_declared(
     )
     if has_lte:
         assert [args.args[0] for args in uart.call_args_list] == [
-            "AT+CGSN", "AT+QGMR", "AT+QCCID"
+            "AT+CGSN",
+            "AT+QGMR",
+            "AT+QCCID",
         ]
         assert result["modem"] == {
-            "imei": "12345", "iccid": "67890", "firmware": "firmware"
+            "imei": "12345",
+            "iccid": "67890",
+            "firmware": "firmware",
         }
     else:
         uart.assert_not_called()

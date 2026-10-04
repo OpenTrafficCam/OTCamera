@@ -97,8 +97,6 @@ def test_complete_run_and_independent_power(
     assert terminal.close.called
 
 
-
-
 @pytest.mark.parametrize(
     "error,code",
     [(EOFError("EOF"), 2), (KeyboardInterrupt(), 130), (RuntimeError("hardware"), 2)],
@@ -216,7 +214,9 @@ def test_guided_accepts_actual_automatic_check_count(
     hardware.board = load_board_definition("v20d")
     monkeypatch.setattr(g.automatic, "inspect", automatic_checks)
     monkeypatch.setattr(
-        g.automatic, "_check", Mock(side_effect=lambda check_id, *a, **kw: Check(check_id, True, "ok"))
+        g.automatic,
+        "_check",
+        Mock(side_effect=lambda check_id, *a, **kw: Check(check_id, True, "ok")),
     )
     code = g.inspect(
         Config.model_validate({"hardware": {"pcb_version": "v20d"}}),
