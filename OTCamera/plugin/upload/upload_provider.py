@@ -69,14 +69,12 @@ class UploadProvider:
                 configured.
         """
         if config.upload == "ftp":
-            assert config.ftp_upload is not None
-            return UploadProvider._create_ftp_upload(config.ftp_upload)
+            assert config.ftp is not None
+            return UploadProvider._create_ftp_upload(config.ftp)
 
         if config.upload == "s3":
-            assert config.s3_upload is not None
-            return UploadProvider._create_s3_upload(
-                config.s3_upload,
-            )
+            assert config.s3 is not None
+            return UploadProvider._create_s3_upload(config.s3)
 
         logger.info(
             "No upload backend configured; recordings are kept in %s until "

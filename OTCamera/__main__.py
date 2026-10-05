@@ -12,22 +12,24 @@ from typing import Any, Iterator, Protocol
 
 from OTCamera.bsl.board_provider import BoardProvider
 from OTCamera.config import Config, parse_user_config
-from OTCamera.controller.backlog import Backlog
-from OTCamera.controller.backlog_controller import BacklogController
+from OTCamera.controller.backlog import NotificationBacklog, UploadBacklog
 from OTCamera.controller.camera_controller import CameraController
-from OTCamera.controller.notification_controller import EventNotificationController
+from OTCamera.controller.notification_backlog_controller import (
+    NotificationBacklogController,
+)
 from OTCamera.controller.power_controller import PowerController
 from OTCamera.controller.schedule_controller import ScheduleController
+from OTCamera.controller.upload_backlog_controller import UploadBacklogController
 from OTCamera.controller.wifi_controller import WifiController
 from OTCamera.domain.events import (
     ButtonHeld,
     ButtonPressed,
     ButtonReleased,
     EventBus,
-    S3FileUploaded,
     ShutdownRequested,
 )
 from OTCamera.domain.led import LED
+from OTCamera.domain.upload import Upload
 from OTCamera.html_updater import (
     ConfigDataObject,
     ConfigHtmlId,
@@ -78,7 +80,7 @@ class OTCamera:
         schedule_controller: ScheduleController,
         html_updater: StatusWebsiteUpdater,
         leds: dict[str, LED],
-        backlog: Backlog,
+        backlog: UploadBacklog,
     ) -> None:
         self._config = config
         self._event_bus = event_bus
@@ -348,7 +350,7 @@ def _get_log_files_sorted(log_files: Iterator[Path]) -> list[Path]:
     return [log_file for _, log_file in with_timestamp] + without_timestamp
 
 
-def _create_backlog(config: Config) -> Backlog:
+def _create_backlog(config: Config) -> UploadBacklog:
     """Create the backlog and take in what an interrupted recording left behind.
 
     Nothing is recording yet, so any video file lying directly in the video
@@ -360,9 +362,9 @@ def _create_backlog(config: Config) -> Backlog:
         config (Config): The parsed user configuration.
 
     Returns:
-        Backlog: The store the upload worker and the status page read.
+        UploadBacklog: The store the upload worker and the status page read.
     """
-    backlog = Backlog(
+    backlog = UploadBacklog(
         video_dir=Path(config.video.dir),
         video_format=config.video.format,
         min_free_bytes=config.recording.min_free_space * _BYTES_PER_GIB,
@@ -373,12 +375,63 @@ def _create_backlog(config: Config) -> Backlog:
     return backlog
 
 
+def _create_notification_controller(
+    config: Config, upload: Upload | None
+) -> NotificationBacklogController | None:
+    """Create the controller that announces uploaded segments, if configured.
+
+    Returns None when no notification backend is configured, and also when
+    nothing is uploaded: there is nothing to announce then.
+
+    Args:
+        config (Config): The parsed user configuration.
+        upload (Upload | None): The upload backend the segments go to.
+    """
+    notifier = UploadNotificationProvider.provide(config)
+    if notifier is None:
+        return None
+
+    if upload is None:
+        logger.warning(
+            "Notification is configured but upload is not; nothing to announce"
+        )
+        notifier.close()
+        return None
+
+    # Guaranteed by config validation
+    assert config.ot_cloud is not None
+
+    backlog = NotificationBacklog(
+        video_dir=Path(config.video.dir),
+        min_free_bytes=(config.recording.min_free_space_notifications * _BYTES_PER_GIB),
+    )
+    logger.info("Backlog holds %d segment(s) awaiting notification", backlog.size())
+
+    # TODO: make this configurable, not hardcoded.
+    # Currently supports only upload notifications to OTCloud via RabbitMQ.
+    return NotificationBacklogController(
+        backlog=backlog,
+        upload=upload,
+        notifier=notifier,
+        payload_factory=RabbitMQS3UploadToOTCloudPayloadFactory(config.ot_cloud),
+    )
+
+
 class Closable(Protocol):
     def close(self) -> None: ...
 
 
 def close_resources(*resources: Closable | None) -> None:
-    """ "Try to close all resources, ignoring errors."""
+    """Try to close all resources in the given order, ignoring errors.
+
+    Anything running a thread of its own comes first, so that what it uses is
+    only released once it has stopped using it.
+
+    Args:
+        *resources (Closable | None): What to close, in the order to close it
+            in. A None is skipped, so an object that was never created does
+            not have to be special-cased at the call site.
+    """
     for resource in resources:
         if resource is None:
             continue
@@ -400,7 +453,7 @@ def main(config: Config | None = None, config_file: str = "~/user_config.yaml") 
     camera = None
     upload = None
     backlog_controller = None
-    upload_notification_controller = None
+    notification_controller = None
     try:
         backlog = _create_backlog(config)
         camera = CameraProvider.provide(config)
@@ -417,23 +470,13 @@ def main(config: Config | None = None, config_file: str = "~/user_config.yaml") 
         )
         wifi_controller = WifiController(config, event_bus, board.leds)
         schedule_controller = ScheduleController(config, event_bus)
-        backlog_controller = BacklogController(event_bus, upload, backlog)
-
-        notifier = UploadNotificationProvider.provide(config)
-        if notifier is not None:
-            # Guaranteed by config validation
-            assert config.ot_cloud is not None
-
-            # TODO: make this configurable, not hardcoded.
-            # Currently supports only upload notifications to OTCloud via RabbitMQ.
-            upload_notification_controller = EventNotificationController(
-                event_bus,
-                S3FileUploaded,
-                notifier,
-                payload_factory=RabbitMQS3UploadToOTCloudPayloadFactory(
-                    config.ot_cloud
-                ),
-            )
+        notification_controller = _create_notification_controller(config, upload)
+        backlog_controller = UploadBacklogController(
+            event_bus,
+            upload,
+            backlog,
+            notification_controller.backlog if notification_controller else None,
+        )
 
         for name, button in board.buttons.items():
             button.on_pressed(
@@ -463,6 +506,8 @@ def main(config: Config | None = None, config_file: str = "~/user_config.yaml") 
 
         event_bus.process_pending()
         backlog_controller.start()
+        if notification_controller is not None:
+            notification_controller.start()
 
         application = OTCamera(
             config=config,
@@ -478,7 +523,7 @@ def main(config: Config | None = None, config_file: str = "~/user_config.yaml") 
         application.record()
     finally:
         close_resources(
-            camera, upload, board, backlog_controller, upload_notification_controller
+            backlog_controller, notification_controller, camera, upload, board
         )
 
 

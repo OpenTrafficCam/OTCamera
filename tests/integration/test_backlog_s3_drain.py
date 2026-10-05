@@ -7,9 +7,9 @@ from typing import Any
 import pytest
 
 from OTCamera.config import S3Config
-from OTCamera.controller import backlog_controller as backlog_controller_module
-from OTCamera.controller.backlog import Backlog
-from OTCamera.controller.backlog_controller import BacklogController
+from OTCamera.controller import backlog_worker as backlog_worker_module
+from OTCamera.controller.backlog import UploadBacklog
+from OTCamera.controller.upload_backlog_controller import UploadBacklogController
 from OTCamera.domain.events import EventBus, RecordingSplit, S3FileUploaded
 from OTCamera.plugin.upload.s3_upload import S3Upload
 from tests.integration.conftest import KEY_PREFIX, body_of, keys_in_bucket
@@ -31,8 +31,8 @@ def video_dir(tmp_path: Path) -> Path:
 
 
 @pytest.fixture
-def backlog(video_dir: Path) -> Backlog:
-    return Backlog(video_dir=video_dir, video_format="h264", min_free_bytes=0)
+def backlog(video_dir: Path) -> UploadBacklog:
+    return UploadBacklog(video_dir=video_dir, video_format="h264", min_free_bytes=0)
 
 
 @pytest.fixture
@@ -69,11 +69,11 @@ def test_a_pass_uploads_the_oldest_segment_first(
     s3client: Any,
     local_s3_config: S3Config,
     event_bus: EventBus,
-    backlog: Backlog,
+    backlog: UploadBacklog,
     video_dir: Path,
     upload: S3Upload,
 ) -> None:
-    controller = BacklogController(event_bus, upload, backlog)
+    controller = UploadBacklogController(event_bus, upload, backlog, None)
     names = [
         _record(event_bus, video_dir, timestamp)
         for timestamp in reversed(_SEGMENT_TIMESTAMPS)
@@ -92,11 +92,11 @@ def test_the_uploaded_event_names_the_bucket_and_key(
     reset_s3_bucket: Any,
     local_s3_config: S3Config,
     event_bus: EventBus,
-    backlog: Backlog,
+    backlog: UploadBacklog,
     video_dir: Path,
     upload: S3Upload,
 ) -> None:
-    controller = BacklogController(event_bus, upload, backlog)
+    controller = UploadBacklogController(event_bus, upload, backlog, None)
     received: list[S3FileUploaded] = []
     event_bus.subscribe(S3FileUploaded, received.append)
     name = _record(event_bus, video_dir, _SEGMENT_TIMESTAMPS[0])
@@ -116,11 +116,11 @@ def test_segments_survive_an_outage_and_drain_when_the_server_returns(
     s3client: Any,
     local_s3_config: S3Config,
     event_bus: EventBus,
-    backlog: Backlog,
+    backlog: UploadBacklog,
     video_dir: Path,
     upload: S3Upload,
 ) -> None:
-    controller = BacklogController(event_bus, upload, backlog)
+    controller = UploadBacklogController(event_bus, upload, backlog, None)
     names = [
         _record(event_bus, video_dir, timestamp) for timestamp in _SEGMENT_TIMESTAMPS
     ]
@@ -149,11 +149,11 @@ def test_a_segment_the_server_rejects_blocks_the_ones_behind_it(
     s3client: Any,
     local_s3_config: S3Config,
     event_bus: EventBus,
-    backlog: Backlog,
+    backlog: UploadBacklog,
     video_dir: Path,
     upload: S3Upload,
 ) -> None:
-    controller = BacklogController(event_bus, upload, backlog)
+    controller = UploadBacklogController(event_bus, upload, backlog, None)
     oldest = _record(event_bus, video_dir, _SEGMENT_TIMESTAMPS[0])
     newer = _record(event_bus, video_dir, _SEGMENT_TIMESTAMPS[1])
     # A segment that cannot be read stands in for one the server will never
@@ -185,16 +185,16 @@ def test_the_worker_thread_drains_the_backlog_on_its_own(
     s3client: Any,
     local_s3_config: S3Config,
     event_bus: EventBus,
-    backlog: Backlog,
+    backlog: UploadBacklog,
     video_dir: Path,
     upload: S3Upload,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    # Shorten the wait before the first pass; the interval itself is
-    # unit-tested, and the point here is that the worker really moves the files
-    # to the server.
-    monkeypatch.setattr(backlog_controller_module, "_IDLE_WAIT_SECONDS", 0.05)
-    controller = BacklogController(event_bus, upload, backlog)
+    # Shorten the waits between passes; the interval itself is unit-tested, and
+    # the point here is that the worker really moves the files to the server.
+    monkeypatch.setattr(backlog_worker_module, "_IDLE_WAIT_SECONDS", 0.05)
+    monkeypatch.setattr(backlog_worker_module, "_INITIAL_WAIT_SECONDS", 0.05)
+    controller = UploadBacklogController(event_bus, upload, backlog, None)
     names = [
         _record(event_bus, video_dir, timestamp) for timestamp in _SEGMENT_TIMESTAMPS
     ]

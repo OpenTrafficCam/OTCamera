@@ -6,7 +6,14 @@ recording:
   end_hour: 22
   interval_length: 15
   num_intervals: 0
+  # Free space in GiB the camera keeps for recording. Once less is left,
+  # recorded segments that were never uploaded are deleted, oldest first.
   min_free_space: 1
+  # Free space in GiB on top of min_free_space that is protected by giving up
+  # notifications first: while less than the sum is left, segments that are
+  # uploaded but not announced yet are deleted instead of footage. Their files
+  # are already on the server, so only the message about them is lost.
+  min_free_space_margin: 1
 
 camera:
   fps: 20
@@ -45,15 +52,17 @@ rabbitmq:
   password: guest
   # Virtual host to connect to.
   vhost: /
-  # Exchange to publish messages to. Use "" for the default exchange.
-  exchange: ""
+  # Where messages go. All three are required, so that a camera never
+  # publishes into nowhere: the broker hands a message back when it would
+  # reach no queue, and the camera keeps it for another attempt.
+  # Exchange to publish messages to.
+  exchange: otcamera
+  # Routing key used when publishing messages.
+  routing_key: file_uploaded
+  # Queue to declare and bind to the exchange.
+  queue_name: otcamera_uploads
   # Exchange type: direct, fanout, topic, or headers.
   exchange_type: direct
-  # Routing key used when publishing messages.
-  routing_key: ""
-  # Queue to declare and bind to the exchange.
-  # Leave empty to skip queue declaration.
-  queue_name: ""
   # Whether the exchange and messages survive broker restarts.
   durable: true
   # Whether ssl encryption should be used (default: true)
