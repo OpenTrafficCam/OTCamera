@@ -1,5 +1,6 @@
 """Public CLI, JSON and locking contracts without camera access."""
 
+import errno
 import fcntl
 import json
 import os
@@ -103,11 +104,29 @@ def test_lock_matches_wrapper_and_excludes_readers() -> None:
         with pytest.raises(ToolError):
             with cli.exclusive():
                 pass
-        with Path(f"/tmp/otcamera-guided-{os.getuid()}.lock").open() as guard:
+        with Path("/tmp/otcamera-guided.lock").open() as guard:
             with pytest.raises(BlockingIOError):
                 fcntl.flock(guard, fcntl.LOCK_SH | fcntl.LOCK_NB)
     with cli.exclusive():
         pass
+
+
+@pytest.mark.parametrize("error_number", [errno.EACCES, errno.EAGAIN, errno.EIO])
+def test_lock_errors_preserve_cause(
+    error_number: int, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    error = OSError(error_number, "Lock failed")
+    monkeypatch.setattr(fcntl, "flock", Mock(side_effect=error))
+    with pytest.raises(ToolError) as caught:
+        with cli.exclusive():
+            pytest.fail("Inspection must not start without a lock")
+    expected = (
+        "Another diagnostic inspection is running"
+        if error_number in (errno.EACCES, errno.EAGAIN)
+        else f"Cannot acquire diagnostic lock: {error}"
+    )
+    assert str(caught.value) == expected
+    assert caught.value.__cause__ is error
 
 
 def test_help_imports_no_hardware_or_config() -> None:
