@@ -1,6 +1,7 @@
 """Device diagnostics CLI: python -m OTCamera.diagnose."""
 
 import argparse
+import errno
 import fcntl
 import json
 import logging
@@ -47,15 +48,17 @@ def parser() -> Parser:
 def exclusive() -> Iterator[None]:
     """Refuse concurrent diagnostic invocations sharing the physical device."""
     fd = os.open(
-        f"/tmp/otcamera-guided-{os.getuid()}.lock",
+        "/tmp/otcamera-guided.lock",
         os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW,
         0o600,
     )
     with os.fdopen(fd, "w") as stream:
         try:
             fcntl.flock(stream, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        except BlockingIOError as exc:
-            raise ToolError("Another diagnostic inspection is running") from exc
+        except OSError as exc:
+            if exc.errno in (errno.EACCES, errno.EAGAIN):
+                raise ToolError("Another diagnostic inspection is running") from exc
+            raise ToolError(f"Cannot acquire diagnostic lock: {exc}") from exc
         yield
 
 

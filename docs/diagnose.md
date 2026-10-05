@@ -44,7 +44,3 @@ Standalone commands emit JSON. Guided inspection writes:
 
 Exit codes: `0` PASS, `1` FAIL, `2` tool error, `130` guided interruption.
 Partial results are retained; copy files from `/tmp` before reboot.
-
-The separate `otcamera-qa` downloads results, requests visual image acceptance and
-publishes successful runs to the device registry. It adds `qa.timestamp` and
-`qa.operator` to the registry manifest. See otcamera-qa README for usage.
