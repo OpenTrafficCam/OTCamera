@@ -132,7 +132,7 @@ class PiCamera2(Camera):
         self._rotation = rotation
         self._meter_mode = meter_mode
         self._lens_position = lens_position
-        self._annotation_text = ""
+        self._annotation_text: Optional[str] = None
         self._is_recording = False
         self._encoder: Optional[H264Encoder] = None
         self._splittable_output: Optional[object] = None
