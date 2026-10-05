@@ -23,11 +23,19 @@ from OTCamera.domain.events import (
 )
 from tests.conftest import FakeClock
 
+CHANNEL_USB = 0
+CHANNEL_BATTERY = 2
+
 
 class FakeADC(ADC):
+    """Fake 4-channel ADC; only the USB and battery channels are used.
+
+    Voltages are raw readings before the divider ratio is applied.
+    """
+
     def __init__(self) -> None:
-        self.voltages = {0: 0.0, 2: 0.0}
-        self.read_counts: dict[int, int] = {0: 0, 2: 0}
+        self.voltages = {CHANNEL_USB: 0.0, CHANNEL_BATTERY: 0.0}
+        self.read_counts: dict[int, int] = {CHANNEL_USB: 0, CHANNEL_BATTERY: 0}
 
     @property
     def channels(self) -> int:
@@ -44,8 +52,8 @@ class FakeADC(ADC):
 @pytest.fixture
 def adc_config() -> ADCConfig:
     return ADCConfig(
-        channel_usb=0,
-        channel_battery=2,
+        channel_usb=CHANNEL_USB,
+        channel_battery=CHANNEL_BATTERY,
         divider_ratio_usb=2.0,
         divider_ratio_battery=3.0,
     )
@@ -71,7 +79,7 @@ def test_power_controller_without_adc() -> None:
 
 def test_external_power_detected(config: Config, adc_config: ADCConfig) -> None:
     adc = FakeADC()
-    adc.voltages[0] = 2.0
+    adc.voltages[CHANNEL_USB] = 2.0
     bus = EventBus()
     controller = PowerController(
         config=config,
@@ -87,7 +95,7 @@ def test_external_power_detected(config: Config, adc_config: ADCConfig) -> None:
 
 def test_battery_ok(config: Config, adc_config: ADCConfig) -> None:
     adc = FakeADC()
-    adc.voltages[2] = 4.0
+    adc.voltages[CHANNEL_BATTERY] = 4.0
     bus = EventBus()
     clock = FakeClock()
     controller = PowerController(
@@ -108,7 +116,7 @@ def test_battery_ok(config: Config, adc_config: ADCConfig) -> None:
 
 def test_low_battery_detected(config: Config, adc_config: ADCConfig) -> None:
     adc = FakeADC()
-    adc.voltages[2] = 1.0
+    adc.voltages[CHANNEL_BATTERY] = 1.0
     bus = EventBus()
     clock = FakeClock()
     controller = PowerController(
@@ -138,9 +146,9 @@ def test_low_battery_with_external_power_does_not_shut_down(
     """External power vetoes the battery shutdown."""
     adc = FakeADC()
     # 1.0 V * divider ratio 3.0 = 3.0 V, below the 3.3 V low-battery threshold.
-    adc.voltages[2] = 1.0
+    adc.voltages[CHANNEL_BATTERY] = 1.0
     # 2.5 V * divider ratio 2.0 = 5.0 V, above the 2.5 V external-power threshold.
-    adc.voltages[0] = 2.5
+    adc.voltages[CHANNEL_USB] = 2.5
     bus = EventBus()
     clock = FakeClock()
     controller = PowerController(
@@ -182,8 +190,8 @@ def test_low_battery_without_external_power_shuts_down(
     """Without external power a low battery requests exactly one shutdown."""
     adc = FakeADC()
     # 1.0 V * divider ratio 3.0 = 3.0 V, below the 3.3 V low-battery threshold.
-    adc.voltages[2] = 1.0
-    adc.voltages[0] = 0.0
+    adc.voltages[CHANNEL_BATTERY] = 1.0
+    adc.voltages[CHANNEL_USB] = 0.0
     bus = EventBus()
     clock = FakeClock()
     controller = PowerController(
@@ -219,9 +227,9 @@ def test_low_battery_shuts_down_once_external_power_is_removed(
     """The external power veto lasts only while the supply is connected."""
     adc = FakeADC()
     # 1.0 V * divider ratio 3.0 = 3.0 V, below the 3.3 V low-battery threshold.
-    adc.voltages[2] = 1.0
+    adc.voltages[CHANNEL_BATTERY] = 1.0
     # 2.5 V * divider ratio 2.0 = 5.0 V, above the 2.5 V external-power threshold.
-    adc.voltages[0] = 2.5
+    adc.voltages[CHANNEL_USB] = 2.5
     bus = EventBus()
     clock = FakeClock()
     controller = PowerController(
@@ -252,7 +260,7 @@ def test_low_battery_shuts_down_once_external_power_is_removed(
 
     # Pull the external supply. The window still holds the low Samples taken
     # above, so the verdict lands on the very next check without refilling it.
-    adc.voltages[0] = 0.0
+    adc.voltages[CHANNEL_USB] = 0.0
     controller.check_power_status()
 
     assert controller.battery_is_low is True
@@ -287,7 +295,7 @@ def test_single_low_sample_does_not_trigger_low_battery(
     bus.subscribe(ShutdownRequested, received.append)
 
     for voltage in [4.0, 4.0, 1.0, 4.0, 4.0]:
-        adc.voltages[2] = voltage
+        adc.voltages[CHANNEL_BATTERY] = voltage
         controller.check_power_status()
         clock.advance(config.adc.battery_read_interval)
 
@@ -315,7 +323,7 @@ def test_three_low_samples_do_not_trigger_low_battery(
     bus.subscribe(ShutdownRequested, received.append)
 
     for voltage in [1.0, 4.0, 1.0, 1.0, 4.0]:
-        adc.voltages[2] = voltage
+        adc.voltages[CHANNEL_BATTERY] = voltage
         controller.check_power_status()
         clock.advance(config.adc.battery_read_interval)
 
@@ -329,7 +337,7 @@ def test_partly_filled_window_gives_no_verdict(
 ) -> None:
     """Four low Samples are not enough; the window must be full."""
     adc = FakeADC()
-    adc.voltages[2] = 1.0
+    adc.voltages[CHANNEL_BATTERY] = 1.0
     bus = EventBus()
     clock = FakeClock()
     controller = PowerController(
@@ -371,7 +379,7 @@ def test_battery_reads_gated_by_configured_interval(
         controller.check_power_status()
         clock.advance(1.0)
 
-    assert adc.read_counts[2] == 2
+    assert adc.read_counts[CHANNEL_BATTERY] == 2
 
 
 def test_external_power_event_emitted(
@@ -392,7 +400,7 @@ def test_external_power_event_emitted(
     received: list[ExternalPowerConnected] = []
     bus.subscribe(ExternalPowerConnected, received.append)
 
-    adc.voltages[0] = 2.0
+    adc.voltages[CHANNEL_USB] = 2.0
     controller.check_power_status()
 
     assert len(received) == 1
