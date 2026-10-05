@@ -135,7 +135,7 @@ def test_low_battery_with_external_power_does_not_shut_down(
     config: Config,
     adc_config: ADCConfig,
 ) -> None:
-    """External power vetoes the battery shutdown, but only while it lasts."""
+    """External power vetoes the battery shutdown."""
     adc = FakeADC()
     # 1.0 V * divider ratio 3.0 = 3.0 V, below the 3.3 V low-battery threshold.
     adc.voltages[2] = 1.0
@@ -170,6 +170,82 @@ def test_low_battery_with_external_power_does_not_shut_down(
     # The low state is reported even at the external supply, so the status page
     # shows it; only the shutdown is suppressed.
     assert controller.external_power_connected is True
+    assert controller.battery_is_low is True
+    assert battery_low_events == 1
+    assert received == []
+
+
+def test_low_battery_without_external_power_shuts_down(
+    config: Config,
+    adc_config: ADCConfig,
+) -> None:
+    """Without external power a low battery requests exactly one shutdown."""
+    adc = FakeADC()
+    # 1.0 V * divider ratio 3.0 = 3.0 V, below the 3.3 V low-battery threshold.
+    adc.voltages[2] = 1.0
+    adc.voltages[0] = 0.0
+    bus = EventBus()
+    clock = FakeClock()
+    controller = PowerController(
+        config=config,
+        event_bus=bus,
+        leds={},
+        adc=adc,
+        adc_config=adc_config,
+        clock=clock,
+    )
+    received: list[ShutdownRequested] = []
+    bus.subscribe(ShutdownRequested, received.append)
+
+    for _ in range(_BATTERY_WINDOW_SIZE):
+        controller.check_power_status()
+        clock.advance(config.adc.battery_read_interval)
+
+    assert controller.external_power_connected is False
+    assert controller.battery_is_low is True
+    assert len(received) == 1
+    assert received[0].source == "battery"
+
+    # Further checks must not fire a second shutdown.
+    controller.check_power_status()
+
+    assert len(received) == 1
+
+
+def test_low_battery_shuts_down_once_external_power_is_removed(
+    config: Config,
+    adc_config: ADCConfig,
+) -> None:
+    """The external power veto lasts only while the supply is connected."""
+    adc = FakeADC()
+    # 1.0 V * divider ratio 3.0 = 3.0 V, below the 3.3 V low-battery threshold.
+    adc.voltages[2] = 1.0
+    # 2.5 V * divider ratio 2.0 = 5.0 V, above the 2.5 V external-power threshold.
+    adc.voltages[0] = 2.5
+    bus = EventBus()
+    clock = FakeClock()
+    controller = PowerController(
+        config=config,
+        event_bus=bus,
+        leds={},
+        adc=adc,
+        adc_config=adc_config,
+        clock=clock,
+    )
+    received: list[ShutdownRequested] = []
+    bus.subscribe(ShutdownRequested, received.append)
+    battery_low_events = 0
+
+    def count_battery_low(_: BatteryLow) -> None:
+        nonlocal battery_low_events
+        battery_low_events += 1
+
+    bus.subscribe(BatteryLow, count_battery_low)
+
+    for _ in range(_BATTERY_WINDOW_SIZE):
+        controller.check_power_status()
+        clock.advance(config.adc.battery_read_interval)
+
     assert controller.battery_is_low is True
     assert battery_low_events == 1
     assert received == []
