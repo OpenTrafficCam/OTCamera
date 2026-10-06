@@ -16,6 +16,9 @@ AE_SETTLE_S = 2.0
 AF_TIMEOUT_S = 15.0
 EXPOSURE_LIMIT_RATIO = 0.95
 GAIN_LIMIT_RATIO = 0.99
+EXPECTED_FRAME_FORMAT = "YUV420"
+EXPECTED_FRAME_DTYPE = "uint8"
+EXPECTED_FRAME_NDIM = 2
 
 
 def present() -> Check:
@@ -69,17 +72,24 @@ def frame_check(
                 f"resolution {width}x{height}, expected {config.video.resolution}"
             )
         if (
-            stream["format"] != "YUV420"
-            or array.ndim != 2
-            or str(array.dtype) != "uint8"
+            stream["format"] != EXPECTED_FRAME_FORMAT
+            or array.ndim != EXPECTED_FRAME_NDIM
+            or str(array.dtype) != EXPECTED_FRAME_DTYPE
             or array.shape[0] != height * 3 // 2
             or array.shape[1] < width
         ):
             failures.append(
-                f"unexpected frame format {stream['format']}, shape {array.shape}, dtype {array.dtype}"
+                f"unexpected frame format {stream['format']} "
+                f"(expected {EXPECTED_FRAME_FORMAT}), "
+                f"shape {array.shape} (expected {EXPECTED_FRAME_NDIM} dimensions, "
+                f"{height * 3 // 2} rows, at least {width} columns), "
+                f"dtype {array.dtype} (expected {EXPECTED_FRAME_DTYPE})"
             )
         if measured["min"] == measured["max"]:
-            failures.append(f"constant image at {measured['min']}")
+            failures.append(
+                f"constant image at {measured['min']} "
+                "(expected varying pixel values, min < max)"
+            )
         if exposure_at_limit and gain_at_limit:
             failures.append(
                 f"exposure control railed at {exposure} us and gain {gain} - lens cap, bench light off or sensor not exposing"
@@ -122,7 +132,10 @@ def capture(config: Config, out: Path) -> list[Check]:
         )
         camera.configure(
             camera.create_video_configuration(
-                main={"size": config.video.resolution, "format": "YUV420"},
+                main={
+                    "size": config.video.resolution,
+                    "format": EXPECTED_FRAME_FORMAT,
+                },
                 sensor={"output_size": config.camera.resolution},
                 transform=transform,
             )
