@@ -204,14 +204,20 @@ def test_incomplete_checks_cannot_be_published_as_completed(
 
 
 @pytest.mark.parametrize("lte", [False, True])
+@pytest.mark.parametrize("extra_check", [False, True])
 def test_guided_accepts_actual_automatic_check_count(
     lte: bool,
+    extra_check: bool,
     session: tuple[Mock, Mock, Mock],
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     hardware, _, _ = session
     hardware.board = load_board_definition("v20d")
+    if extra_check:
+        plan = g.automatic.check_plan(Config(), "v20d", lte, hardware)
+        plan.append(("extra", Mock(return_value=Check("extra", True, "ok")), ()))
+        monkeypatch.setattr(g.automatic, "check_plan", Mock(return_value=plan))
     monkeypatch.setattr(g.automatic, "inspect", automatic_checks)
     monkeypatch.setattr(
         g.automatic,
@@ -225,10 +231,9 @@ def test_guided_accepts_actual_automatic_check_count(
         tmp_path / "inspection",
     )
     protocol = json.loads((tmp_path / "inspection/protocol.json").read_text())
-    # The host may lack /dev/i2c; that is a check failure, never an aborted run.
-    assert code in (0, 1)
+    assert code == 0
     assert protocol["status"] == "completed"
-    assert len(protocol["checks"]) == (28 if lte else 24)
+    assert len(protocol["checks"]) == (28 if lte else 24) + extra_check
     assert "system.watchdog" in {check["id"] for check in protocol["checks"]}
 
 

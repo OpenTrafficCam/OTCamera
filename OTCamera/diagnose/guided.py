@@ -12,10 +12,12 @@ from types import FrameType
 from typing import Any
 
 from OTCamera.config import Config
-from OTCamera.diagnose import automatic, camera, facts
+from OTCamera.diagnose import automatic, camera, facts, interaction
 from OTCamera.diagnose.hardware import Hardware
 from OTCamera.diagnose.interaction import Terminal, color, power, section, ui
 from OTCamera.diagnose.report import Check, ToolError, output
+
+ARTIFACT_CHECK_COUNT = 1
 
 
 def timestamp() -> str:
@@ -134,7 +136,19 @@ def inspect(
         released = True
         if hardware.cleanup_errors:
             raise ToolError("Hardware cleanup failed")
-        expected_count = (23 if declared["has_lte_module"] else 19) + 5
+        automatic_plan = automatic.check_plan(
+            config,
+            declared["hardware_revision"],
+            declared["has_lte_module"],
+            hardware,
+        )
+        expected_count = (
+            len(automatic_plan)
+            + interaction.UI_CHECK_COUNT
+            + interaction.POWER_CHECK_COUNT
+            + camera.CAPTURE_CHECK_COUNT
+            + ARTIFACT_CHECK_COUNT
+        )
         if len(protocol["checks"]) != expected_count:
             raise ToolError("Inspection did not produce all required checks")
         passed = all(c["ok"] for c in protocol["checks"])

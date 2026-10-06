@@ -11,6 +11,11 @@ from OTCamera.diagnose.report import Check, output
 RTC = Path("/sys/class/rtc/rtc0")
 
 
+def bus_present(path: Path) -> Check:
+    """Check whether the board's I2C device exists."""
+    return Check("board.i2c_bus", path.exists(), str(path))
+
+
 def read(
     bus: int, address: int, register: int, count: int, delay: float = 0
 ) -> list[int]:
