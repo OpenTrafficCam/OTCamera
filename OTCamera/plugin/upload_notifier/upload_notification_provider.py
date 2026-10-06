@@ -23,6 +23,20 @@ class UploadNotificationProvider:
         return RabbitNotifier(config.rabbitmq)
 
     @staticmethod
+    def provide_healthchecks(config: Config) -> Notifier[str] | None:
+        """Return a healthchecks.io notifier, or None if no ping URL is set."""
+        if config.healthchecks.ping_url is None:
+            logger.info("No healthchecks.io ping URL configured")
+            return None
+
+        from OTCamera.plugin.upload_notifier.healthchecks_notifier import (
+            HealthchecksNotifier,
+        )
+
+        logger.debug("healthchecks.io upload notification enabled")
+        return HealthchecksNotifier(config.healthchecks)
+
+    @staticmethod
     def provide(
         config: Config,
     ) -> Notifier | None:
