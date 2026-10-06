@@ -8,6 +8,7 @@ from OTCamera.bsl.board_provider import load_board_definition
 from OTCamera.config import Config
 from OTCamera.diagnose import automatic as a
 from OTCamera.diagnose.hardware import Hardware, adc_check
+from OTCamera.diagnose.report import Check
 
 
 @pytest.mark.parametrize("lte", [False, True])
@@ -49,7 +50,9 @@ def test_measurement_failures_do_not_stop_independent_checks(
     config = Config.model_validate({"hardware": {"pcb_version": "v20d"}})
     checks = list(a.inspect(config, "v20d", lte, hardware))
     ids = {c.id for c in checks}
-    assert len(checks) == (23 if lte else 19) == len(ids)
+    plan = a.check_plan(config, "v20d", lte, hardware)
+    assert len(checks) == len(plan) == len(ids)
+    assert [check.id for check in checks] == [check_id for check_id, _, _ in plan]
     assert {
         "camera.present",
         "i2c.tla2024",
@@ -70,6 +73,35 @@ def test_measurement_failures_do_not_stop_independent_checks(
 def test_board_alias_and_mismatch(configured: str, declared: str, ok: bool) -> None:
     config = Config.model_validate({"hardware": {"pcb_version": configured}})
     assert a.board_revision(config, declared).ok == ok
+
+
+def test_check_plan_defers_execution_and_keeps_checks_independent(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    hardware = Hardware(load_board_definition("v20d"))
+    first = Mock(side_effect=OSError("unavailable"))
+    second = Mock(return_value=Check("second", True, "ok"))
+    plan = [("first", first, ()), ("second", second, ())]
+    monkeypatch.setattr(a, "check_plan", Mock(return_value=plan))
+    results = a.inspect(Config(), "v20d", False, hardware)
+    first.assert_not_called()
+    second.assert_not_called()
+    failed = next(results)
+    assert failed.id == "first" and not failed.ok
+    second.assert_not_called()
+    assert next(results).ok
+
+
+def test_building_check_plan_does_not_probe_hardware(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    hardware = Hardware(load_board_definition("v20d"))
+    probe = Mock(side_effect=AssertionError("must not probe hardware"))
+    monkeypatch.setattr(a.i2c, "bus_present", probe)
+    monkeypatch.setattr(a.i2c, "chip", probe)
+    monkeypatch.setattr(hardware, "open_adc", probe)
+    a.check_plan(Config(), "v20d", True, hardware)
+    probe.assert_not_called()
 
 
 def test_adc_scaling_and_field_names() -> None:
