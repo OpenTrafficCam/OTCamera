@@ -13,6 +13,25 @@ from OTCamera.diagnose import camera, facts, i2c, probes, provisioning
 from OTCamera.diagnose.report import Check, Report, ToolError
 
 
+@pytest.mark.parametrize("initialized", [False, True])
+def test_rtc_hctosys_reports_status_without_running_commands(
+    initialized: bool, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(i2c, "RTC", tmp_path)
+    (tmp_path / "hctosys").write_text("1\n" if initialized else "0\n")
+    command = Mock(side_effect=AssertionError("must not run journalctl"))
+    monkeypatch.setattr("subprocess.run", command)
+    result = i2c.rtc_hctosys()
+    assert result.id == "rtc.hctosys"
+    assert result.ok is initialized
+    if initialized:
+        assert result.detail == "Kernel initialized time from RTC"
+    else:
+        assert "hctosys=0" in result.detail
+        assert "inspect kernel logs with journalctl -b -k" in result.detail
+    command.assert_not_called()
+
+
 @pytest.mark.parametrize(
     "declared",
     [

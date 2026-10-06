@@ -6,7 +6,7 @@ from time import sleep
 
 from OTCamera.bsl.boards.board import Board
 from OTCamera.diagnose.catalog import CHIPS
-from OTCamera.diagnose.report import Check, output
+from OTCamera.diagnose.report import Check
 
 RTC = Path("/sys/class/rtc/rtc0")
 
@@ -133,12 +133,9 @@ def rtc_hctosys() -> Check:
         ok = (RTC / "hctosys").read_text().strip() == "1"
         detail = "Kernel initialized time from RTC"
         if not ok:
-            detail = "hctosys=0; " + " | ".join(
-                line
-                for line in output(
-                    ["journalctl", "-b", "-k", "--no-pager"]
-                ).splitlines()
-                if "rtc" in line.lower()
+            detail = (
+                "hctosys=0; kernel did not initialize system time from RTC; "
+                "inspect kernel logs with journalctl -b -k"
             )
         return Check("rtc.hctosys", ok, detail)
     except Exception as exc:
@@ -146,7 +143,7 @@ def rtc_hctosys() -> Check:
 
 
 def rtc_state() -> Check:
-    """Judge oscillator and battery bits; retain clock drift only as a measurement."""
+    """Judge oscillator and battery bits; report offset from system time."""
     try:
         bus, address = rtc_address()
         raw = read(bus, address, 0, 7)
@@ -167,18 +164,18 @@ def rtc_state() -> Check:
         stamp = datetime(
             2000 + year, month, day, hour, minute, second, tzinfo=timezone.utc
         )
-        drift = (stamp - datetime.now(timezone.utc)).total_seconds()
+        offset = (stamp - datetime.now(timezone.utc)).total_seconds()
         ok = all(bits.values())
         return Check(
             "rtc.state",
             ok,
-            f"RTC drift {drift:.1f} s; "
+            f"RTC offset from system time {offset:.1f} s; "
             + (
                 "oscillator and battery enabled"
                 if ok
                 else f"invalid status bits {bits}"
             ),
-            {"drift_s": drift, **bits},
+            {"drift_s": offset, **bits},
         )
     except Exception as exc:
         return Check("rtc.state", False, str(exc))
