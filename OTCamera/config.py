@@ -13,7 +13,14 @@ except ImportError:
 from typing import Annotated, Literal
 
 import yaml
-from pydantic import BaseModel, BeforeValidator, Field, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    BeforeValidator,
+    Field,
+    HttpUrl,
+    field_validator,
+    model_validator,
+)
 
 # YAML interprets values like `off`, `on`, `yes`, `no` as booleans.
 # This type coerces any such value to str before pydantic validates it.
@@ -161,6 +168,16 @@ class OTCloudSettings(BaseModel):
     site_id: int
 
 
+class HealthchecksConfig(BaseModel):
+    """healthchecks.io ping settings.
+
+    Pinging is enabled only when `ping_url` is set.
+    """
+
+    ping_url: HttpUrl | None = None
+    timeout: float = Field(default=10, gt=0)
+
+
 class Config(BaseModel):
     """Top-level OTCamera configuration."""
 
@@ -179,6 +196,7 @@ class Config(BaseModel):
     adc: AdcConfig = Field(default_factory=AdcConfig)
     ot_cloud: OTCloudSettings | None = None
     rabbitmq: RabbitMqConfig | None = None
+    healthchecks: HealthchecksConfig = Field(default_factory=HealthchecksConfig)
     template_html_path: StrFromYaml = "~/OTCamera/webfiles/template.html"
     index_html_path: StrFromYaml = "~/OTCamera/webfiles/index.html"
     offline_html_path: StrFromYaml = "~/OTCamera/webfiles/offline.html"

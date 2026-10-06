@@ -66,6 +66,14 @@ ot_cloud:
   project_id: 0
   site_id: 0
 
+# healthchecks.io monitoring. When ping_url is set, a ping is sent after every
+# video file uploaded to S3 (requires upload: s3). Leave empty to disable.
+healthchecks:
+  # Full ping URL, e.g. https://hc-ping.com/<uuid> or a self-hosted instance.
+  ping_url:
+  # Request timeout in seconds.
+  timeout: 10
+
 # Providing ftp_upload credentials does not enable upload on its own.
 # Set upload: ftp above to activate FTP upload.
 ftp_upload:

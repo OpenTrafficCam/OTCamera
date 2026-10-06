@@ -113,3 +113,33 @@ def test_default_config_has_sensible_values() -> None:
 def test_battery_read_interval_rejects_non_positive(interval: float) -> None:
     with pytest.raises(ValidationError):
         AdcConfig(battery_read_interval=interval)
+
+
+def test_healthchecks_disabled_by_default() -> None:
+    assert Config().healthchecks.ping_url is None
+
+
+def test_parse_healthchecks_config(tmp_path: Path) -> None:
+    config_file = tmp_path / "config.yaml"
+    config_file.write_text(
+        "healthchecks:\n  ping_url: https://hc-ping.com/0a1b2c3d\n  timeout: 5\n"
+    )
+
+    config = parse_user_config(str(config_file))
+
+    assert str(config.healthchecks.ping_url) == "https://hc-ping.com/0a1b2c3d"
+    assert config.healthchecks.timeout == 5
+
+
+def test_empty_healthchecks_ping_url_disables_pinging(tmp_path: Path) -> None:
+    config_file = tmp_path / "config.yaml"
+    config_file.write_text("healthchecks:\n  ping_url:\n  timeout: 10\n")
+
+    config = parse_user_config(str(config_file))
+
+    assert config.healthchecks.ping_url is None
+
+
+def test_invalid_healthchecks_ping_url_is_rejected() -> None:
+    with pytest.raises(ValidationError):
+        Config.model_validate({"healthchecks": {"ping_url": "not a url"}})

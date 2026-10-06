@@ -41,6 +41,7 @@ from OTCamera.log import setup_logging
 from OTCamera.module.camera.camera_provider import CameraProvider
 from OTCamera.plugin.upload.upload_provider import UploadProvider
 from OTCamera.plugin.upload_notifier.payload_factories import (
+    HealthchecksS3UploadPayloadFactory,
     RabbitMQS3UploadToOTCloudPayloadFactory,
 )
 from OTCamera.plugin.upload_notifier.upload_notification_provider import (
@@ -401,6 +402,7 @@ def main(config: Config | None = None, config_file: str = "~/user_config.yaml") 
     upload = None
     backlog_controller = None
     upload_notification_controller = None
+    healthchecks_controller = None
     try:
         backlog = _create_backlog(config)
         camera = CameraProvider.provide(config)
@@ -433,6 +435,15 @@ def main(config: Config | None = None, config_file: str = "~/user_config.yaml") 
                 payload_factory=RabbitMQS3UploadToOTCloudPayloadFactory(
                     config.ot_cloud
                 ),
+            )
+
+        healthchecks_notifier = UploadNotificationProvider.provide_healthchecks(config)
+        if healthchecks_notifier is not None:
+            healthchecks_controller = EventNotificationController(
+                event_bus,
+                S3FileUploaded,
+                healthchecks_notifier,
+                payload_factory=HealthchecksS3UploadPayloadFactory(),
             )
 
         for name, button in board.buttons.items():
@@ -478,7 +489,12 @@ def main(config: Config | None = None, config_file: str = "~/user_config.yaml") 
         application.record()
     finally:
         close_resources(
-            camera, upload, board, backlog_controller, upload_notification_controller
+            camera,
+            upload,
+            board,
+            backlog_controller,
+            upload_notification_controller,
+            healthchecks_controller,
         )
 
 

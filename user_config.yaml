@@ -47,6 +47,10 @@ ot_cloud:
   project_id: 0
   site_id: 0
 
+healthchecks:
+  ping_url:
+  timeout: 10
+
 ftp_upload:
   host: localhost
   port: 21
