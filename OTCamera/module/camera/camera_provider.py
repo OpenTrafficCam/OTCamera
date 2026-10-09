@@ -39,6 +39,7 @@ class CameraProvider:
             drc_strength=camera_config.drc_strength,
             rotation=camera_config.rotation,
             meter_mode=camera_config.meter_mode,
+            lens_position=camera_config.lens_position,
         )
         logger.info("Camera initialized: picamera2")
         return camera
