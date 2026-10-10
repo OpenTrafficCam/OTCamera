@@ -119,6 +119,8 @@ wifi:
   delay: 900
 
 hardware:
+  # Board revision: v16b (formerly spelled v2) or v20d. Selects the pin mapping,
+  # so a wrong value puts LEDs, switches and the ADC on the wrong pins.
   pcb_version: v2
   use_leds: true
   use_buttons: true
