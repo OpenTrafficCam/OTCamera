@@ -4,7 +4,13 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from OTCamera.config import AdcConfig, CameraConfig, Config, parse_user_config
+from OTCamera.config import (
+    AdcConfig,
+    CameraConfig,
+    Config,
+    RabbitMqConfig,
+    parse_user_config,
+)
 
 
 def test_parse_user_config_minimal(tmp_path: Path) -> None:
@@ -158,3 +164,8 @@ def test_empty_healthchecks_ping_url_disables_pinging(tmp_path: Path) -> None:
 def test_invalid_healthchecks_ping_url_is_rejected() -> None:
     with pytest.raises(ValidationError):
         Config.model_validate({"healthchecks": {"ping_url": "not a url"}})
+
+
+def test_rabbitmq_config_rejects_unknown_exchange_type() -> None:
+    with pytest.raises(ValidationError):
+        RabbitMqConfig.model_validate({"host": "localhost", "exchange_type": "Direct"})
