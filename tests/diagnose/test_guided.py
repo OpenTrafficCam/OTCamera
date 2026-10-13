@@ -61,7 +61,13 @@ def session(monkeypatch: pytest.MonkeyPatch) -> tuple[Mock, Mock, Mock]:
 def run(path: Path, hardware: Mock) -> int:
     return g.inspect(
         Config(),
-        {"declared": {"hardware_revision": "v20d", "has_lte_module": False}},
+        {
+            "declared": {
+                "hardware_revision": "v20d",
+                "has_lte_module": False,
+                "fitted_switches": ["PWR", "WIFI"],
+            }
+        },
         hardware,
         path,
     )
@@ -80,6 +86,8 @@ def test_complete_run_and_independent_power(
     monkeypatch.setattr(g, "power", power)
     directory = tmp_path / "inspection"
     assert run(directory, hardware) == (0 if ui_ok else 1)
+    assert isinstance(g.ui, Mock)
+    g.ui.assert_called_once_with(hardware, terminal, ["PWR", "WIFI"])
     protocol = json.loads((directory / "protocol.json").read_text())
     manifest = json.loads((directory / "manifest.json").read_text())
     assert protocol["status"] == "completed" and protocol["result"] == (
@@ -226,7 +234,13 @@ def test_guided_accepts_actual_automatic_check_count(
     )
     code = g.inspect(
         Config.model_validate({"hardware": {"pcb_version": "v20d"}}),
-        {"declared": {"hardware_revision": "v20d", "has_lte_module": lte}},
+        {
+            "declared": {
+                "hardware_revision": "v20d",
+                "has_lte_module": lte,
+                "fitted_switches": ["PWR", "WIFI"],
+            }
+        },
         hardware,
         tmp_path / "inspection",
     )
@@ -272,3 +286,27 @@ def test_automatic_output_is_deferred_but_checkpointed(
     if not abort:
         assert after.index("power.switchover:") < after.index("AUTOMATIC CHECKS")
         assert after.index("PASS auto.18: ok") < after.index("CAMERA CHECK")
+
+
+@pytest.mark.parametrize("population", [None, [], ["PWR", "WIFI"]])
+def test_switch_default_does_not_change_manifest(
+    population: list[str] | None,
+    session: tuple[Mock, Mock, Mock],
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    hardware, _, terminal = session
+    declared: dict[str, Any] = {"hardware_revision": "v20d", "has_lte_module": False}
+    if population is not None:
+        declared["fitted_switches"] = population
+    manifest = {"provisioning": {}, "declared": declared}
+    expected_manifest = json.loads(json.dumps(manifest))
+    monkeypatch.setattr(g.facts, "collect", lambda data: {"provisioning": data})
+    directory = tmp_path / "inspection"
+    assert g.inspect(Config(), manifest, hardware, directory) == 0
+    assert isinstance(g.ui, Mock)
+    expected = ["PWR", "WIFI", "REC", "LIGHT"] if population is None else population
+    g.ui.assert_called_once_with(hardware, terminal, expected)
+    assert manifest == expected_manifest
+    saved = json.loads((directory / "manifest.json").read_text())
+    assert saved["provisioning"] == expected_manifest

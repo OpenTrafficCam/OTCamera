@@ -11,10 +11,13 @@ from OTCamera.bsl.button import gpio_button
 from OTCamera.diagnose import hardware as h
 
 
+@pytest.mark.parametrize("fitted", [[], ["REC"], ["WIFI", "PWR"], list(h.SWITCHES)])
 @pytest.mark.parametrize("partial", [False, True])
 def test_gpio_factory_polarity_and_cleanup_order(
-    partial: bool, monkeypatch: pytest.MonkeyPatch
+    fitted: list[str], partial: bool, monkeypatch: pytest.MonkeyPatch
 ) -> None:
+    if partial and len(fitted) < 2:
+        pytest.skip("Partial acquisition requires two switches")
     previous = object()
     device = SimpleNamespace(pin_factory=previous)
     factory = Mock()
@@ -44,15 +47,24 @@ def test_gpio_factory_polarity_and_cleanup_order(
     hardware = h.Hardware(board)
     if partial:
         with pytest.raises(OSError, match="busy"):
-            hardware.open_gpio()
+            hardware.open_gpio(fitted)
     else:
-        hardware.open_gpio()
-        assert len(hardware.buttons) == len(hardware.leds) == 4
-        assert (
-            build.call_args_list[0].kwargs["active_state"]
-            == board.button_power_active_state
-        )
-        assert build.call_args_list[0].kwargs["pull_up"] == board.button_power_pull_up
+        hardware.open_gpio(fitted)
+        names = [name for name in h.SWITCHES if name in fitted]
+        assert list(hardware.buttons) == names
+        assert len(hardware.leds) == 4
+        assert build.call_count == len(names)
+        for invocation, label in zip(build.call_args_list, names, strict=True):
+            name = h.SWITCHES[label]
+            assert invocation.args[0] == getattr(board, f"button_{name}_pin")
+            assert invocation.kwargs["active_state"] == getattr(
+                board, f"button_{name}_active_state"
+            )
+            assert invocation.kwargs["pull_up"] == getattr(
+                board, f"button_{name}_pull_up"
+            )
+        button.is_pressed = True
+        assert hardware.switches() == (True,) * len(names)
     assert device.pin_factory is factory
     hardware.close()
     assert device.pin_factory is previous
