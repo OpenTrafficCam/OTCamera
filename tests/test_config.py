@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from OTCamera.config import AdcConfig, Config, parse_user_config
+from OTCamera.config import AdcConfig, Config, RabbitMqConfig, parse_user_config
 
 
 def test_parse_user_config_minimal(tmp_path: Path) -> None:
@@ -113,3 +113,8 @@ def test_default_config_has_sensible_values() -> None:
 def test_battery_read_interval_rejects_non_positive(interval: float) -> None:
     with pytest.raises(ValidationError):
         AdcConfig(battery_read_interval=interval)
+
+
+def test_rabbitmq_config_rejects_unknown_exchange_type() -> None:
+    with pytest.raises(ValidationError):
+        RabbitMqConfig.model_validate({"host": "localhost", "exchange_type": "Direct"})

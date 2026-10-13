@@ -146,7 +146,7 @@ class RabbitMqConfig(BaseModel):
     password: StrFromYaml = "guest"
     vhost: StrFromYaml = "/"
     exchange: StrFromYaml = ""
-    exchange_type: StrFromYaml = "direct"
+    exchange_type: Literal["direct", "fanout", "headers", "topic"] = "direct"
     routing_key: StrFromYaml = ""
     queue_name: StrFromYaml = ""
     durable: bool = True
