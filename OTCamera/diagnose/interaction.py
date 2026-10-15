@@ -11,20 +11,20 @@ from time import monotonic, sleep
 from typing import Any
 
 from OTCamera.config import Config
-from OTCamera.diagnose.hardware import Hardware
+from OTCamera.diagnose.hardware import SWITCHES, Hardware
 from OTCamera.diagnose.report import Check
 
 STAGE_SECONDS = 30.0
 SWITCH_STABLE_SECONDS = 0.2
 SUPPLY_STABLE_SECONDS = 1.0
-LED_SLOT_SECONDS = 0.1
+LED_SLOT_SECONDS = 0.15
 POLL_SECONDS = 0.02
 UI_CHECK_COUNT = 1
 POWER_CHECK_COUNT = 1
 
 
 class Terminal:
-    """Restore terminal state while allowing X without Enter and signal interrupts."""
+    """Restore terminal state while allowing immediate keys and signal interrupts."""
 
     def __init__(self) -> None:
         self.fd = sys.stdin.fileno()
@@ -44,14 +44,18 @@ class Terminal:
         """Discard pending input at every stage boundary."""
         termios.tcflush(self.fd, termios.TCIFLUSH)
 
-    def rejected(self) -> bool:
-        """Read immediately available keys; EOF/disconnection aborts the run."""
+    def key(self) -> str:
+        """Read one available key; EOF/disconnection aborts the run."""
         if not select.select([self.fd], [], [], 0)[0]:
-            return False
-        keys = os.read(self.fd, 1024)
-        if not keys or b"\x04" in keys:
+            return ""
+        key = os.read(self.fd, 1)
+        if not key or key == b"\x04":
             raise EOFError("Terminal disconnected or EOF")
-        return b"x" in keys.lower()
+        return key.decode("ascii", errors="ignore").lower()
+
+    def rejected(self) -> bool:
+        """Allow immediate rejection during the initial supply measurement."""
+        return self.key() == "x"
 
 
 def color(text: str, code: str) -> str:
@@ -80,6 +84,8 @@ def stage(
     stable_seconds: float,
     tick: Callable[[], None],
     unexpected: Callable[[Any], bool] | None = None,
+    *,
+    confirmation: bool = False,
 ) -> str | None:
     """Wait for a stable result, stopping immediately on rejection or failure."""
     terminal.flush()
@@ -102,8 +108,11 @@ def stage(
                 sys.stdout.write(f"\r[{bar}] {seconds:2d} s")
                 sys.stdout.flush()
                 displayed = seconds
-            if terminal.rejected():
+            key = terminal.key()
+            if key == "x" or (confirmation and key == "n"):
                 return f"{name}: rejected by operator"
+            if confirmation and key == "y":
+                return None
             value = sample()
             now = monotonic()
             if unexpected is not None and unexpected(value):
@@ -127,54 +136,57 @@ def stage(
         terminal.flush()
 
 
-def ui(hardware: Hardware, terminal: Terminal) -> Check:
-    """Stop the UI sequence at its first failure and prepare the supply test."""
-    active = 0
+def ui(hardware: Hardware, terminal: Terminal, fitted_switches: list[str]) -> Check:
+    """Test fitted switches and confirm LED behavior independently by keyboard."""
+    names = [name for name in SWITCHES if name in fitted_switches]
 
     def running_light() -> None:
-        slot = int(monotonic() / LED_SLOT_SECONDS) % 4
-        hardware.lights(slot if slot < active else None)
+        hardware.lights(int(monotonic() / LED_SLOT_SECONDS) % 4)
 
     def sequence() -> str | None:
-        nonlocal active
-        reason = stage(
-            terminal,
-            "Baseline",
-            "[1] Switch all buttons OFF",
-            hardware.switches,
-            lambda s: not any(s),
-            SWITCH_STABLE_SECONDS,
-            running_light,
-        )
-        if reason:
-            return reason
-        for index, name in enumerate(("PWR", "WIFI", "REC", "LIGHT")):
-            before = tuple(i < index for i in range(4))
-            after = tuple(i <= index for i in range(4))
+        step = 1
+        if names:
             reason = stage(
                 terminal,
-                name,
-                f"[{index + 2}] Switch {name}_Button ON",
+                "Baseline",
+                f"[{step}] Switch all buttons ON",
                 hardware.switches,
-                lambda s: s == after,
+                lambda s: all(s),
                 SWITCH_STABLE_SECONDS,
-                running_light,
-                lambda s: any(s[i] != before[i] for i in range(4) if i != index),
+                lambda: None,
             )
             if reason:
                 return reason
-            active = index + 1
+            step += 1
+        for index, name in enumerate(names):
+            before = tuple(i >= index for i in range(len(names)))
+            after = tuple(i > index for i in range(len(names)))
+            reason = stage(
+                terminal,
+                f"{name} OFF",
+                f"[{step}] Switch {name}_Button OFF",
+                hardware.switches,
+                lambda s: s == after,
+                SWITCH_STABLE_SECONDS,
+                lambda: None,
+                lambda s: any(
+                    s[i] != before[i] for i in range(len(names)) if i != index
+                ),
+            )
+            if reason:
+                return reason
+            step += 1
         reason = stage(
             terminal,
             "running light",
-            "[6] Are all four LEDs blinking in order?\n"
+            f"[{step}] Are all four LEDs blinking in order?\n"
             "PWR_RPI -> WIFI_EN -> RECORD -> INTRUSION\n\n"
-            "YES: Switch LIGHT_Button OFF only.\n NO: Press X.",
-            hardware.switches,
-            lambda s: s == (True, True, True, False),
-            SWITCH_STABLE_SECONDS,
+            "YES: Press Y.\n NO: Press N or X.",
+            lambda: None,
+            lambda _: False,
+            0,
             running_light,
-            lambda s: not all(s[:3]),
+            confirmation=True,
         )
         if reason:
             return reason
@@ -185,16 +197,17 @@ def ui(hardware: Hardware, terminal: Terminal) -> Check:
         return stage(
             terminal,
             "LED enable",
-            "[7] Are ALL LEDs OFF?\n\nYES: Switch all buttons OFF.\n NO: Press X.",
-            hardware.switches,
-            lambda s: not any(s),
-            SWITCH_STABLE_SECONDS,
+            f"[{step + 1}] Are ALL LEDs OFF?\n\nYES: Press Y.\n NO: Press N or X.",
             lambda: None,
+            lambda _: False,
+            0,
+            lambda: None,
+            confirmation=True,
         )
 
     reason = None
     try:
-        hardware.open_gpio()
+        hardware.open_gpio(fitted_switches)
         hardware.dark()
         reason = sequence()
     except EOFError:
@@ -211,7 +224,8 @@ def ui(hardware: Hardware, terminal: Terminal) -> Check:
     return Check(
         "ui",
         reason is None,
-        reason or "All switches, running light and LED enable verified",
+        reason or "Fitted switches, running light and LED enable verified",
+        {"fitted_switches": names},
     )
 
 
@@ -256,9 +270,9 @@ def power(hardware: Hardware, terminal: Terminal, config: Config) -> Check:
         first = stage(
             terminal,
             "Supply transition",
-            "[8] Disconnect external supply"
+            "[1] Disconnect external supply"
             if initial_on
-            else "[8] Connect external supply",
+            else "[1] Connect external supply",
             sample,
             lambda s: s != initial_on,
             SUPPLY_STABLE_SECONDS,
@@ -281,9 +295,9 @@ def power(hardware: Hardware, terminal: Terminal, config: Config) -> Check:
         second = stage(
             terminal,
             "Supply return",
-            "[9] Reconnect external supply"
+            "[2] Reconnect external supply"
             if initial_on
-            else "[9] Disconnect external supply to restore initial state",
+            else "[2] Disconnect external supply to restore initial state",
             sample,
             lambda s: s == initial_on,
             SUPPLY_STABLE_SECONDS,

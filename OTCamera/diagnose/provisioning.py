@@ -6,6 +6,7 @@ from typing import Any
 
 import yaml
 
+from OTCamera.diagnose.hardware import SWITCHES
 from OTCamera.diagnose.report import ToolError
 
 PROVISIONING_PATH = Path("/boot/firmware/otcamera-provisioning.yml")
@@ -26,6 +27,17 @@ def load_provisioning() -> dict[str, Any]:
             raise ValueError("declared.hardware_revision must be a nonempty string")
         if not isinstance(declared.get("has_lte_module"), bool):
             raise ValueError("declared.has_lte_module must be a boolean")
+        switches = declared.get("fitted_switches", [])
+        if (
+            not isinstance(switches, list)
+            or any(
+                not isinstance(name, str) or name not in SWITCHES for name in switches
+            )
+            or len(switches) != len(set(switches))
+        ):
+            raise ValueError(
+                "declared.fitted_switches must be a list of unique names: PWR, WIFI, REC, LIGHT"
+            )
         # YAML timestamps are represented as strings in the JSON manifest.
         return json.loads(
             json.dumps({"provisioning": provenance, "declared": declared}, default=str)

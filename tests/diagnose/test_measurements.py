@@ -464,3 +464,47 @@ def test_facts_query_modem_only_when_declared(
     else:
         uart.assert_not_called()
         assert result["modem"] == {"imei": "", "iccid": "", "firmware": ""}
+
+
+@pytest.mark.parametrize(
+    "field,expected",
+    [
+        ("", None),
+        ("fitted_switches: []", []),
+        ("fitted_switches: [PWR, WIFI]", ["PWR", "WIFI"]),
+        ("fitted_switches: [LIGHT, REC]", ["LIGHT", "REC"]),
+    ],
+)
+def test_provisioning_switch_population(
+    field: str,
+    expected: list[str] | None,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    path = tmp_path / "provisioning.yml"
+    original = "provisioning: {}\ndeclared:\n  hardware_revision: v20d\n  has_lte_module: false\n"
+    original += f"  {field}\n" if field else ""
+    path.write_text(original)
+    monkeypatch.setattr(provisioning, "PROVISIONING_PATH", path)
+    declared = provisioning.load_provisioning()["declared"]
+    if expected is None:
+        assert "fitted_switches" not in declared
+    else:
+        assert declared["fitted_switches"] == expected
+    assert path.read_text() == original
+
+
+@pytest.mark.parametrize(
+    "value", ["null", "false", "PWR", "{}", "[PWR, PWR]", "[UNKNOWN]", "[1]", "[{}]"]
+)
+def test_provisioning_rejects_invalid_switch_population(
+    value: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    path = tmp_path / "provisioning.yml"
+    path.write_text(
+        "provisioning: {}\ndeclared:\n  hardware_revision: v20d\n  has_lte_module: false\n"
+        f"  fitted_switches: {value}\n"
+    )
+    monkeypatch.setattr(provisioning, "PROVISIONING_PATH", path)
+    with pytest.raises(ToolError, match="fitted_switches"):
+        provisioning.load_provisioning()

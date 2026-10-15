@@ -8,7 +8,7 @@ from OTCamera.diagnose.report import Check, output
 from OTCamera.domain.adc import ADC
 from OTCamera.domain.button import Button
 
-SWITCHES = ("power", "wifi", "hour", "light")
+SWITCHES = {"PWR": "power", "WIFI": "wifi", "REC": "hour", "LIGHT": "light"}
 LED_NAMES = ("power", "wifi", "rec", "intrusion")
 
 
@@ -59,7 +59,7 @@ class Hardware:
             * self.board.adc_divider_ratio_battery,
         )
 
-    def open_gpio(self) -> None:
+    def open_gpio(self, fitted_switches: list[str]) -> None:
         """Acquire switches using application polarity contracts and raw LED outputs."""
         from gpiozero import Device, OutputDevice
         from gpiozero.pins.lgpio import LGPIOFactory
@@ -70,8 +70,10 @@ class Hardware:
         self.resources.callback(setattr, Device, "pin_factory", Device.pin_factory)
         Device.pin_factory = factory
         self.gpio_touched = True
-        for name in SWITCHES:
-            self.buttons[name] = self._keep(
+        for label, name in SWITCHES.items():
+            if label not in fitted_switches:
+                continue
+            self.buttons[label] = self._keep(
                 GpioButton(
                     getattr(self.board, f"button_{name}_pin"),
                     bounce_time=self.board.button_bounce_time,
@@ -100,7 +102,7 @@ class Hardware:
 
     def switches(self) -> tuple[bool, ...]:
         """Read logical ON/OFF, including REC on the hour input."""
-        return tuple(self.buttons[name].is_pressed for name in SWITCHES)
+        return tuple(button.is_pressed for button in self.buttons.values())
 
     def lights(self, slot: int | None = None) -> None:
         """Keep at most the selected LED output high."""
