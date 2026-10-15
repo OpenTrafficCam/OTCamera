@@ -48,15 +48,17 @@ class TLA2024(ADC):
         3: 0x7,
     }
 
-    def __init__(self, i2c_address: int = 0x48, fsr: float = 4.096) -> None:
+    def __init__(
+        self, i2c_address: int = 0x48, fsr: float = 4.096, i2c_bus: int = 1
+    ) -> None:
         self._address = i2c_address
         self._fsr = fsr
         try:
             import smbus2
 
-            self._bus = smbus2.SMBus(1)
+            self._bus = smbus2.SMBus(i2c_bus)
         except OSError as exc:
-            raise ADCTimeoutError(f"Failed to open I2C bus: {exc}") from exc
+            raise ADCTimeoutError(f"Failed to open I2C bus {i2c_bus}: {exc}") from exc
 
     @property
     def channels(self) -> int:
