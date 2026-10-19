@@ -90,6 +90,9 @@ pre-commit run --all-files
 - `OTCamera/__main__.py` is the composition root for recorder mode.
 - `usb_flash_drive_copy.py` contains the USB export path.
 - `hardware_check.py` is the standalone hardware verification script.
+- `otcamera-diagnose` (`OTCamera/diagnose/`) provides JSON device diagnostics and the interactive `guided` inspection; see
+  [`docs/diagnose.md`](docs/diagnose.md). Hardware imports stay lazy, and each
+  check retains its own failures so `auto` can return a complete report.
 
 ### Layering
 
