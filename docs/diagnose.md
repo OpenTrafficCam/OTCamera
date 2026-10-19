@@ -13,7 +13,9 @@ otcamera-diagnose guided --out-dir /tmp/qa-001
 ## Configuration
 
 `/boot/firmware/otcamera-provisioning.yml` declares the board revision and LTE
-population. Automatic and guided checks support v20d. Application settings come
+population. Optional `declared.fitted_switches` selects from `PWR`, `WIFI`, `REC`,
+`LIGHT`: omitted means all four, `[]` means none.
+Automatic and guided checks support v20d. Application settings come
 from `~/user_config.yaml`; use `-c PATH` before the subcommand to override it.
 `facts` does not read application settings.
 
@@ -31,6 +33,7 @@ Stop `otcamera.service` before standalone commands. `guided` manages the service
 and requires a terminal, a new output directory with an existing parent, a charged
 battery and a camera aimed at the test target. Service control requires passwordless
 `sudo`. Tasks allow 30 seconds; `X` fails the current area, Ctrl-C aborts.
+Follow switch prompts and confirm LED checks with `Y`/`N` without Enter.
 A UI failure skips remaining UI tasks. Other checks continue independently.
 The service stays stopped after the inspection; the Pi remains running for result retrieval. After GPIO release, `pinctrl` explicitly sets LED enable and the PWR LED output HIGH.
 

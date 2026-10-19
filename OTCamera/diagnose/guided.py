@@ -13,7 +13,7 @@ from typing import Any
 
 from OTCamera.config import Config
 from OTCamera.diagnose import automatic, camera, facts, interaction
-from OTCamera.diagnose.hardware import Hardware
+from OTCamera.diagnose.hardware import SWITCHES, Hardware
 from OTCamera.diagnose.interaction import Terminal, color, power, section, ui
 from OTCamera.diagnose.report import Check, ToolError, output
 
@@ -113,7 +113,7 @@ def inspect(
         terminal.open()
         section("GUIDED CHECKS")
         sys.stdout.write("X = fail current area    Ctrl-C = abort\n")
-        record(ui(hardware, terminal))
+        record(ui(hardware, terminal, declared.get("fitted_switches", list(SWITCHES))))
         section("POWER CHECK")
         record(power(hardware, terminal, config))
         terminal.close()
