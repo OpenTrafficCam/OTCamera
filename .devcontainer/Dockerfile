@@ -1,6 +1,6 @@
 FROM mcr.microsoft.com/devcontainers/python:3-3.14-trixie
 
-ARG UV_VERSION=0.11.26
+ARG UV_VERSION=0.13.4
 
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
     && apt-get -y install --no-install-recommends \
