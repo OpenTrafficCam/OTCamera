@@ -167,7 +167,32 @@ Pytest test discovery is configured in `pyproject.toml` via `testpaths =
 ### General
 
 - Type-annotate all function signatures, including private helpers.
-- Use Google-style docstrings on public modules, classes, and functions.
+- Use complete Google-style docstrings on public modules, classes, methods
+  (including `__init__`), and functions. A one-line summary alone is not
+  enough when there is something to document:
+  - `Args:` lists every parameter as `name (type): description`.
+  - `Returns:` describes the return value as `type: description`, unless the
+    function returns `None`.
+  - `Raises:` lists every exception the function raises on purpose.
+  - `Attributes:` documents the fields of config models and dataclasses.
+  - Private helpers need at least a one-line summary; add `Args:` when the
+    parameters are not obvious from their names and types.
+  - `just lint` does not enforce these sections yet, so check them yourself.
+
+  ```python
+  def provide(config: Config) -> Notifier[str] | None:
+      """Return a notifier, or None if none is configured.
+
+      Args:
+          config (Config): The parsed user configuration.
+
+      Returns:
+          Notifier[str] | None: The notifier, or None when it is disabled.
+
+      Raises:
+          ValueError: If the configured URL is malformed.
+      """
+  ```
 - No wildcard imports (`from x import *`).
 - Import only what is needed: prefer `from module import Name` over importing the whole module when only specific names are used.
 - Raise specific exceptions and preserve context with `raise ... from`.
@@ -188,6 +213,8 @@ Before considering work complete:
 
 - run the relevant tests via `just test-unit` (or `just test`),
 - keep `just lint` and `just typecheck` clean in touched code,
+- check that new or changed public functions have complete docstrings
+  (`Args:`, `Returns:`, `Raises:`),
 - add regression tests for bug fixes,
 - avoid shell injection and unsafe subprocess use,
 - update docs if public behavior or architecture changes,
