@@ -37,7 +37,7 @@ FILES = [
     },
 ]
 
-OT_CLOUD = OTCloudSettings(camera_id=2, project_id=0, site_id=1)
+OT_CLOUD = OTCloudSettings(project_id=0, site_id=1, point_of_view_id=2)
 
 
 @pytest.fixture
@@ -124,6 +124,6 @@ def test_rabbitmq_notification(
     }
     assert {msg["bucket_name"] for msg in received} == {"my-bucket"}
     assert all(
-        msg["camera_id"] == {"camera_id": 2, "project_id": 0, "site_id": 1}
+        msg["point_of_view"] == {"project_id": 0, "site_id": 1, "point_of_view_id": 2}
         for msg in received
     )

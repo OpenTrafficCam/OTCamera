@@ -66,12 +66,12 @@ rabbitmq:
   # Whether ssl encryption should be used (default: true)
   ssl: true
 
-# OTCloud camera identity used in upload notification payloads.
+# OTCloud point of view identity used in upload notification payloads.
 # Required when notification: rabbitmq is set.
 ot_cloud:
-  camera_id: 0
   project_id: 0
   site_id: 0
+  point_of_view_id: 0
 
 # Providing ftp_upload credentials does not enable upload on its own.
 # Set upload: ftp above to activate FTP upload.

@@ -166,9 +166,9 @@ class RabbitMqConfig(BaseModel):
 class OTCloudSettings(BaseModel):
     """Settings that are specific to OTCloud."""
 
-    camera_id: int
     project_id: int
     site_id: int
+    point_of_view_id: int
 
 
 class Config(BaseModel):
