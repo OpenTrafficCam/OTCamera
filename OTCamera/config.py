@@ -182,6 +182,10 @@ class HealthchecksConfig(BaseModel):
     """healthchecks.io ping settings.
 
     Pinging is enabled only when `ping_url` is set.
+
+    Attributes:
+        ping_url: The healthchecks.io check URL to ping after each upload.
+        timeout: Seconds to wait for the ping endpoint before giving up.
     """
 
     ping_url: HttpUrl | None = None

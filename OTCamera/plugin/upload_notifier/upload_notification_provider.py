@@ -24,7 +24,15 @@ class UploadNotificationProvider:
 
     @staticmethod
     def provide_healthchecks(config: Config) -> Notifier[str] | None:
-        """Return a healthchecks.io notifier, or None if no ping URL is set."""
+        """Return a healthchecks.io notifier, or None if no ping URL is set.
+
+        Args:
+            config (Config): The parsed user configuration.
+
+        Returns:
+            Notifier[str] | None: The notifier, or None when
+                `config.healthchecks.ping_url` is unset.
+        """
         if config.healthchecks.ping_url is None:
             logger.info("No healthchecks.io ping URL configured")
             return None
