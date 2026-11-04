@@ -5,7 +5,7 @@ from OTCamera.config import OTCloudSettings
 from OTCamera.controller.notification_controller import PayloadFactory
 from OTCamera.domain.events import Event, S3FileUploaded
 from OTCamera.plugin.upload_notifier.payloads import (
-    CameraIdPayload,
+    PointOfViewPayload,
     S3FileUploadedPayload,
 )
 
@@ -28,10 +28,10 @@ class RabbitMQS3UploadToOTCloudPayloadFactory(PayloadFactory):
 
         payload = S3FileUploadedPayload(
             s3_key=event.key,
-            camera_id=CameraIdPayload(
-                camera_id=self.ot_cloud_settings.camera_id,
+            point_of_view=PointOfViewPayload(
                 project_id=self.ot_cloud_settings.project_id,
                 site_id=self.ot_cloud_settings.site_id,
+                point_of_view_id=self.ot_cloud_settings.point_of_view_id,
             ),
             timestamp=event.timestamp.isoformat(),
             # TODO: original_filename and new_filename are currently the same for

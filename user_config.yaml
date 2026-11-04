@@ -44,9 +44,9 @@ rabbitmq:
   durable: true
 
 ot_cloud:
-  camera_id: 0
   project_id: 0
   site_id: 0
+  point_of_view_id: 0
 
 ftp_upload:
   host: localhost
