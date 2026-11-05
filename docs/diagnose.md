@@ -15,7 +15,7 @@ otcamera-diagnose guided --out-dir /tmp/qa-001
 `/boot/firmware/otcamera-provisioning.yml` declares the board revision and LTE
 population. Optional `declared.fitted_switches` selects from `PWR`, `WIFI`, `REC`,
 `LIGHT`: omitted means all four, `[]` means none.
-Automatic and guided checks support v20d. Application settings come
+Automatic and guided checks support v20d and v21d. Application settings come
 from `~/user_config.yaml`; use `-c PATH` before the subcommand to override it.
 `facts` does not read application settings.
 

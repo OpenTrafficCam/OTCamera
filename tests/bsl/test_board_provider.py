@@ -139,6 +139,11 @@ class TestLoadBoardDefinition:
         assert board.adc_i2c_bus == 3
         assert board.button_light_pin == 16
 
+    def test_v21d_loads(self) -> None:
+        board = load_board_definition("v21d")
+        assert board.adc_i2c_bus == 3
+        assert board.button_power_pin == 21
+
 
 class TestBoardComponents:
     def test_close_with_empty_dicts(self) -> None:
@@ -286,7 +291,7 @@ class TestBoardProviderPerRevision:
             assert button.pull_up is None
             assert button.active_state is (button.pin != inverted_pin)
 
-    @pytest.mark.parametrize("pcb_version", ["v2", "v20d"])
+    @pytest.mark.parametrize("pcb_version", ["v2", "v20d", "v21d"])
     def test_the_led_enable_pin_is_never_claimed(
         self, monkeypatch: pytest.MonkeyPatch, pcb_version: str
     ) -> None:

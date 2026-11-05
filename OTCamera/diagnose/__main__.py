@@ -111,7 +111,8 @@ def main(argv: list[str] | None = None) -> int:
                 and revision not in EXPECTED_POPULATION
             ):
                 raise ToolError(
-                    f"Automatic/guided inspection does not support {revision}; expected v20d"
+                    f"Automatic/guided inspection does not support {revision}; "
+                    f"expected one of {', '.join(sorted(EXPECTED_POPULATION))}"
                 )
             hardware = Hardware(board)
             if is_guided:

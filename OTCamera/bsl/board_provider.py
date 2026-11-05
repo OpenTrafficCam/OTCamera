@@ -7,6 +7,7 @@ from typing import Any, Optional
 from OTCamera.bsl.boards.board import Board
 from OTCamera.bsl.boards.v2 import BoardV2
 from OTCamera.bsl.boards.v20d import BoardV20d
+from OTCamera.bsl.boards.v21d import BoardV21d
 from OTCamera.config import Config
 from OTCamera.domain.adc import ADC, ADCConfig
 from OTCamera.domain.button import Button
@@ -15,11 +16,12 @@ from OTCamera.domain.led import LED
 logger = logging.getLogger(__name__)
 
 _BOARD_REGISTRY: dict[str, type] = {
-    # Ansible names the revisions v16b and v20d; "v2" is the older spelling of v16b
+    # Ansible names the revisions v16b, v20d and v21d; "v2" is the older spelling of v16b
     # and stays so already provisioned devices keep working.
     "v2": BoardV2,
     "v16b": BoardV2,
     "v20d": BoardV20d,
+    "v21d": BoardV21d,
 }
 
 
