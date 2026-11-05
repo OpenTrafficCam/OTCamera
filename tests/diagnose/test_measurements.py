@@ -200,7 +200,7 @@ def test_capture_keeps_image_on_focus_failure_and_releases_resources(
     focus: bool, save: bool, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     enums = SimpleNamespace(
-        Normal=0, CentreWeighted=0, Auto=0, Start=1, Focused=2, Failed=3
+        Normal=0, CentreWeighted=0, Auto=0, Start=1, Focused=2, Failed=3, Full=2
     )
     controls = SimpleNamespace(
         **{
@@ -210,6 +210,7 @@ def test_capture_keeps_image_on_focus_failure_and_releases_resources(
                 "AeMeteringModeEnum",
                 "AwbModeEnum",
                 "AfModeEnum",
+                "AfRangeEnum",
                 "AfTriggerEnum",
                 "AfStateEnum",
             )
@@ -260,6 +261,13 @@ def test_capture_keeps_image_on_focus_failure_and_releases_resources(
         ("camera.focus", focus),
         ("camera.snap", save),
     ]
+    device.set_controls.assert_any_call(
+        {
+            "AfMode": controls.AfModeEnum.Auto,
+            "AfRange": controls.AfRangeEnum.Full,
+            "AfTrigger": controls.AfTriggerEnum.Start,
+        }
+    )
     request.release.assert_called_once()
     device.close.assert_called_once()
     convert.assert_called_once_with(request.make_array.return_value, 101)

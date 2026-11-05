@@ -29,6 +29,11 @@ from `~/user_config.yaml`; use `-c PATH` before the subcommand to override it.
 - `snap`: autofocus and color JPEG capture using the configured rotation.
 - `guided`: automatic checks, switch/LED tasks, supply switching and camera capture.
 
+Camera capture in `snap` and `guided` uses the full autofocus range (normal and
+macro) with a 15-second timeout, so close test targets are not clipped by the
+normal autofocus range. The recording application's configured manual focus
+is unchanged.
+
 Stop `otcamera.service` before standalone commands. `guided` manages the service
 and requires a terminal, a new output directory with an existing parent, a charged
 battery and a camera aimed at the test target. Service control requires passwordless
