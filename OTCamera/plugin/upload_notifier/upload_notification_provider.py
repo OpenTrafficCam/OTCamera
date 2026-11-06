@@ -4,6 +4,9 @@ import logging
 
 from OTCamera.config import Config
 from OTCamera.domain.notifier import Notifier
+from OTCamera.plugin.upload_notifier.healthchecks_notifier import (
+    HealthchecksNotifier,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -36,10 +39,6 @@ class UploadNotificationProvider:
         if config.healthchecks.ping_url is None:
             logger.info("No healthchecks.io ping URL configured")
             return None
-
-        from OTCamera.plugin.upload_notifier.healthchecks_notifier import (
-            HealthchecksNotifier,
-        )
 
         logger.debug("healthchecks.io upload notification enabled")
         return HealthchecksNotifier(config.healthchecks)
