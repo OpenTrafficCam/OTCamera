@@ -5,6 +5,7 @@ from pathlib import Path
 
 import boto3
 from botocore.config import Config as Boto3Config
+from botocore.handlers import validate_bucket_name
 
 from OTCamera.config import Config, FtpUploadConfig, S3Config
 from OTCamera.domain.upload import Upload
@@ -47,6 +48,11 @@ class UploadProvider:
                 connect_timeout=s3config.connect_timeout,
                 read_timeout=s3config.read_timeout,
             ),
+        )
+        # Ceph addresses buckets of other tenants as "<tenant>:<bucket>", which
+        # botocore's client-side bucket name validation rejects.
+        s3client.meta.events.unregister(
+            "before-parameter-build.s3", validate_bucket_name
         )
         return S3Upload(
             s3client=s3client,
