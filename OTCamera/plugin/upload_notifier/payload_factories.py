@@ -43,3 +43,18 @@ class RabbitMQS3UploadToOTCloudPayloadFactory(PayloadFactory):
         )
 
         return json.dumps(dataclasses.asdict(payload))
+
+
+class HealthchecksS3UploadPayloadFactory(PayloadFactory[S3FileUploaded, str]):
+    """Builds a short human-readable ping body from an S3FileUploaded event."""
+
+    def create(self, event: S3FileUploaded) -> str:
+        """Describe which object was uploaded to which bucket.
+
+        Args:
+            event (S3FileUploaded): The completed upload.
+
+        Returns:
+            str: The ping body naming the uploaded key and its bucket.
+        """
+        return f"Uploaded {event.key} to bucket {event.bucket}"

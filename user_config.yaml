@@ -48,6 +48,10 @@ ot_cloud:
   site_id: 0
   point_of_view_id: 0
 
+healthchecks:
+  ping_url:
+  timeout: 10
+
 ftp_upload:
   host: localhost
   port: 21
