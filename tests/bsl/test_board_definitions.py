@@ -3,6 +3,7 @@ import pytest
 from OTCamera.bsl.boards.board import Board
 from OTCamera.bsl.boards.v2 import BoardV2
 from OTCamera.bsl.boards.v20d import BoardV20d
+from OTCamera.bsl.boards.v21d import BoardV21d
 
 REQUIRED_FIELDS = [
     "led_power_pin",
@@ -35,20 +36,20 @@ REQUIRED_FIELDS = [
 
 
 class TestBoardDefinitions:
-    @pytest.mark.parametrize("board_cls", [BoardV2, BoardV20d])
+    @pytest.mark.parametrize("board_cls", [BoardV2, BoardV20d, BoardV21d])
     def test_satisfies_protocol(self, board_cls: type) -> None:
         board = board_cls()
         assert isinstance(board, Board)
         assert board.led_power_pin >= 0
         assert board.adc_fsr > 0
 
-    @pytest.mark.parametrize("board_cls", [BoardV2, BoardV20d])
+    @pytest.mark.parametrize("board_cls", [BoardV2, BoardV20d, BoardV21d])
     def test_is_frozen(self, board_cls: type) -> None:
         board = board_cls()
         with pytest.raises(AttributeError):
             board.led_power_pin = 99
 
-    @pytest.mark.parametrize("board_cls", [BoardV2, BoardV20d])
+    @pytest.mark.parametrize("board_cls", [BoardV2, BoardV20d, BoardV21d])
     def test_has_all_required_fields(self, board_cls: type) -> None:
         board = board_cls()
         for field_name in REQUIRED_FIELDS:
@@ -80,3 +81,11 @@ class TestBoardDefinitions:
         assert board.led_intrusion_pin == 7
         assert board.led_enable_pin == 10
         assert board.button_light_pin == 16
+
+    def test_v21d_reads_the_power_switch_on_gpio_21(self) -> None:
+        assert BoardV21d().button_power_pin == 21
+
+    def test_v21d_matches_v20d_apart_from_the_power_switch(self) -> None:
+        v20d = vars(BoardV20d())
+        v21d = vars(BoardV21d())
+        assert {k for k in v20d if v20d[k] != v21d[k]} == {"button_power_pin"}

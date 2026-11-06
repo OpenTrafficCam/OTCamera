@@ -165,6 +165,7 @@ def capture(config: Config, out: Path) -> list[Check]:
             camera.set_controls(
                 {
                     "AfMode": controls.AfModeEnum.Auto,
+                    "AfRange": controls.AfRangeEnum.Full,
                     "AfTrigger": controls.AfTriggerEnum.Start,
                 }
             )

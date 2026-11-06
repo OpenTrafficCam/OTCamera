@@ -9,4 +9,5 @@ CHIPS = {
 }
 EXPECTED_POPULATION = {
     "v20d": (("lis2dw12", 0x18), ("sht40", 0x44), ("lps22hh", 0x5C), ("bq25883", 0x6B)),
+    "v21d": (("lis2dw12", 0x18), ("sht40", 0x44), ("lps22hh", 0x5C), ("bq25883", 0x6B)),
 }

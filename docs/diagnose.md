@@ -15,7 +15,7 @@ otcamera-diagnose guided --out-dir /tmp/qa-001
 `/boot/firmware/otcamera-provisioning.yml` declares the board revision and LTE
 population. Optional `declared.fitted_switches` selects from `PWR`, `WIFI`, `REC`,
 `LIGHT`: omitted means all four, `[]` means none.
-Automatic and guided checks support v20d. Application settings come
+Automatic and guided checks support v20d and v21d. Application settings come
 from `~/user_config.yaml`; use `-c PATH` before the subcommand to override it.
 `facts` does not read application settings.
 
@@ -28,6 +28,11 @@ from `~/user_config.yaml`; use `-c PATH` before the subcommand to override it.
   No image capture or interactive tasks.
 - `snap`: autofocus and color JPEG capture using the configured rotation.
 - `guided`: automatic checks, switch/LED tasks, supply switching and camera capture.
+
+Camera capture in `snap` and `guided` uses the full autofocus range (normal and
+macro) with a 15-second timeout, so close test targets are not clipped by the
+normal autofocus range. The recording application's configured manual focus
+is unchanged.
 
 Stop `otcamera.service` before standalone commands. `guided` manages the service
 and requires a terminal, a new output directory with an existing parent, a charged
