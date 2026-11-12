@@ -76,6 +76,20 @@ class TestBoardDefinitions:
         assert board.button_wifi_pull_up is None
         assert board.button_light_pull_up is None
 
+    def test_v20d_switches_are_active_high(self) -> None:
+        board = BoardV20d()
+        assert board.button_power_active_state is True
+        assert board.button_hour_active_state is True
+        assert board.button_wifi_active_state is True
+        assert board.button_light_active_state is True
+
+    def test_v21d_hour_and_light_switches_are_active_low(self) -> None:
+        board = BoardV21d()
+        assert board.button_power_active_state is True
+        assert board.button_hour_active_state is False
+        assert board.button_wifi_active_state is True
+        assert board.button_light_active_state is False
+
     def test_v20d_fits_the_extra_parts(self) -> None:
         board = BoardV20d()
         assert board.led_intrusion_pin == 7
@@ -85,7 +99,11 @@ class TestBoardDefinitions:
     def test_v21d_reads_the_power_switch_on_gpio_21(self) -> None:
         assert BoardV21d().button_power_pin == 21
 
-    def test_v21d_matches_v20d_apart_from_the_power_switch(self) -> None:
+    def test_v21d_matches_v20d_apart_from_the_switch_fixes(self) -> None:
         v20d = vars(BoardV20d())
         v21d = vars(BoardV21d())
-        assert {k for k in v20d if v20d[k] != v21d[k]} == {"button_power_pin"}
+        assert {k for k in v20d if v20d[k] != v21d[k]} == {
+            "button_power_pin",
+            "button_hour_active_state",
+            "button_light_active_state",
+        }
