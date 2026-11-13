@@ -274,6 +274,22 @@ class TestBoardProviderPerRevision:
         assert all(button.pull_up is None for button in FakeButton.instances)
         assert all(button.active_state is True for button in FakeButton.instances)
 
+    def test_v21d_inverts_the_hour_and_light_switches(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        components = self._provide(monkeypatch, "v21d")
+
+        active_states = {
+            name: button.active_state  # type: ignore[attr-defined]
+            for name, button in components.buttons.items()
+        }
+        assert active_states == {
+            "power": True,
+            "hour": False,
+            "wifi": True,
+            "light": False,
+        }
+
     @pytest.mark.parametrize("name", ["power", "hour", "wifi", "light"])
     def test_each_switch_can_invert_its_active_state(
         self, monkeypatch: pytest.MonkeyPatch, name: str
