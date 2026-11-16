@@ -22,7 +22,7 @@ camera:
   # Autofocus is disabled; the lens is parked here at startup so recordings are
   # defocussed by default. 6.0 dioptres ~= 17 cm focus distance -> traffic
   # is blurred. Lower values focus farther (0.0 would be infinity, sharp).
-  # Range 4.0-10.0; the 4.0 lower bound guards against accidental
+  # Minimum 4.0; this lower bound guards against accidental
   # misconfigurations that would bring traffic into focus.
   lens_position: 6.0
 

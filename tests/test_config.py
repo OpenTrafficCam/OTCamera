@@ -119,13 +119,13 @@ def test_default_lens_position() -> None:
     assert Config().camera.lens_position == 6.0
 
 
-@pytest.mark.parametrize("lens_position", [4.0, 10.0])
-def test_lens_position_accepts_bounds(lens_position: float) -> None:
+@pytest.mark.parametrize("lens_position", [4.0, 10.0, 15.0])
+def test_lens_position_accepts_lower_bound_and_above(lens_position: float) -> None:
     assert CameraConfig(lens_position=lens_position).lens_position == lens_position
 
 
-@pytest.mark.parametrize("lens_position", [0.0, 3.9, 10.1])
-def test_lens_position_rejects_out_of_range(lens_position: float) -> None:
+@pytest.mark.parametrize("lens_position", [0.0, 3.9])
+def test_lens_position_rejects_below_lower_bound(lens_position: float) -> None:
     with pytest.raises(ValidationError):
         CameraConfig(lens_position=lens_position)
 

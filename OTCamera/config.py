@@ -46,8 +46,7 @@ class CameraConfig(BaseModel):
         lens_position: Fixed lens position in dioptres (1/metres). Autofocus
             is disabled and the lens is parked here at startup. Higher values
             focus nearer; 6.0 dioptres is approximately 17 cm, 0.0 is infinity
-            (sharp). The 10.0 upper bound is the Camera Module 3's
-            close-focus limit. The 4.0 lower bound exists to avoid
+            (sharp). The 4.0 lower bound exists to avoid
             accidental misconfigurations.
     """
 
@@ -58,7 +57,7 @@ class CameraConfig(BaseModel):
     rotation: int = 180
     awb_mode: StrFromYaml = "auto"
     meter_mode: StrFromYaml = "average"
-    lens_position: float = Field(default=6.0, ge=4.0, le=10.0)
+    lens_position: float = Field(default=6.0, ge=4.0)
 
     @field_validator("resolution", mode="before")
     @classmethod
