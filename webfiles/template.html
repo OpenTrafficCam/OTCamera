@@ -14,13 +14,72 @@
         <!-- Bootstrap CSS -->
         <link href="css/bootstrap.min.css" rel="stylesheet" />
         <title>OTCamera</title>
+        <style>
+            /* Crosshair through the image centre, to aim the camera at installation. */
+            .preview-frame {
+                position: relative;
+                display: inline-block;
+                max-width: 100%;
+                overflow: hidden;
+            }
+            .preview-frame > img {
+                display: block;
+            }
+            .crosshair {
+                position: absolute;
+                top: 0;
+                right: 0;
+                bottom: 0;
+                left: 0;
+                pointer-events: none;
+            }
+            .crosshair > span {
+                position: absolute;
+                background: #00ff00;
+                box-shadow: 0 0 0 1px #000;
+            }
+            .crosshair .x {
+                top: 50%;
+                height: 2px;
+                margin-top: -1px;
+            }
+            .crosshair .y {
+                left: 50%;
+                width: 2px;
+                margin-left: -1px;
+            }
+            .crosshair .left {
+                left: 0;
+                right: calc(50% + 9px);
+            }
+            .crosshair .right {
+                left: calc(50% + 9px);
+                right: 0;
+            }
+            .crosshair .top {
+                top: 0;
+                bottom: calc(50% + 9px);
+            }
+            .crosshair .bottom {
+                top: calc(50% + 9px);
+                bottom: 0;
+            }
+        </style>
     </head>
 
     <body>
         <div class="container-fluid" id="recording-banner"></div>
         <div class="container-fluid" id="ext-power-supply-banner"></div>
         <div class="container-fluid">
-            <img class="img-fluid gy-5" alt="Vorschau" src="preview.jpg" />
+            <div class="preview-frame">
+                <img class="img-fluid gy-5" alt="Vorschau" src="preview.jpg" />
+                <div aria-hidden="true" class="crosshair">
+                    <span class="x left"></span>
+                    <span class="x right"></span>
+                    <span class="y top"></span>
+                    <span class="y bottom"></span>
+                </div>
+            </div>
         </div>
         <br />
         <div class="container-fluid" id="status-info" style="display: none">
