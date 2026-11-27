@@ -19,8 +19,9 @@ def setup_logging(config: Config) -> None:
     root_logger.setLevel(level)
     root_logger.handlers.clear()
 
-    # reduce pika noise - only report warnings or higher
-    logging.getLogger("pika").setLevel(logging.WARNING)
+    # pika logs every failed connection attempt at ERROR with a traceback; the
+    # RabbitMQ notifier reports each failure itself, so only keep pika's criticals
+    logging.getLogger("pika").setLevel(logging.CRITICAL)
 
     file_handler = logging.FileHandler(str(log_path), mode="a")
     file_handler.setFormatter(formatter)

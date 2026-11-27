@@ -1,8 +1,9 @@
-"""Non-blocking RabbitMQ publisher using a background daemon thread."""
+"""RabbitMQ notifier that publishes each message on its own confirmed connection."""
 
 import logging
 import ssl
-from threading import Event, Thread
+from queue import Queue
+from threading import Thread
 
 from pika import (
     BasicProperties,
@@ -12,32 +13,38 @@ from pika import (
     exchange_type,
 )
 from pika.adapters.blocking_connection import BlockingChannel, BlockingConnection
-from pika.exceptions import AMQPError, ConnectionWrongStateError
+from pika.exceptions import AMQPError
 
 from OTCamera.config import RabbitMqConfig
 from OTCamera.domain.notifier import Notifier
 
 logger = logging.getLogger(__name__)
 
-INITIAL_RECONNECT_DELAY_S = 1.0
-MAX_RECONNECT_DELAY_S = 60.0
-INITIAL_CONNECT_TIMEOUT_S = 10.0
+# Upper bound for reaching the broker, completing the TLS/AMQP handshake, and
+# waiting while the broker blocks publishers (e.g. on a resource alarm).
+CONNECT_TIMEOUT_S = 10
+# Bounds the wait for a publisher confirm if the link dies mid-publish.
+HEARTBEAT_S = 10
+CLOSE_TIMEOUT_S = 5.0
+LOGGED_PAYLOAD_PREVIEW_LENGTH = 50
 
 
-def _connect(config: RabbitMqConfig) -> BlockingConnection:
-    """Establish a blocking connection to the configured RabbitMQ broker.
+class _Stop:
+    """Sentinel that tells the worker thread to exit."""
+
+
+_STOP = _Stop()
+
+
+def _connection_parameters(config: RabbitMqConfig) -> ConnectionParameters:
+    """Build connection parameters that fail within bounded time.
 
     Args:
-        config: Connection settings for the broker.
+        config (RabbitMqConfig): Connection settings for the broker.
 
     Returns:
-        An open blocking connection.
-
-    Raises:
-        AMQPConnectionError: If the broker cannot be reached or rejects the login.
+        ConnectionParameters: Parameters for a single connection attempt.
     """
-    credentials = PlainCredentials(config.user, config.password)
-
     ssl_options = None
     if config.ssl:
         # TODO: we only support the default SSL context for now
@@ -46,34 +53,55 @@ def _connect(config: RabbitMqConfig) -> BlockingConnection:
         context = ssl.create_default_context()
         ssl_options = SSLOptions(context=context, server_hostname=config.host)
 
-    parameters = ConnectionParameters(
+    return ConnectionParameters(
         host=config.host,
         port=config.port,
         virtual_host=config.vhost,
-        credentials=credentials,
+        credentials=PlainCredentials(config.user, config.password),
+        connection_attempts=1,
+        socket_timeout=CONNECT_TIMEOUT_S,
+        stack_timeout=CONNECT_TIMEOUT_S,
+        blocked_connection_timeout=CONNECT_TIMEOUT_S,
+        heartbeat=HEARTBEAT_S,
         # this is actually correct, mypy is confused
         ssl_options=ssl_options,  # type: ignore
     )
-    return BlockingConnection(parameters)
+
+
+def _connect(config: RabbitMqConfig) -> BlockingConnection:
+    """Open a blocking connection to the configured RabbitMQ broker.
+
+    Args:
+        config (RabbitMqConfig): Connection settings for the broker.
+
+    Returns:
+        BlockingConnection: An open blocking connection.
+
+    Raises:
+        AMQPConnectionError: If the broker cannot be reached or rejects the login.
+    """
+    return BlockingConnection(_connection_parameters(config))
 
 
 def _setup_channel(
     connection: BlockingConnection,
     config: RabbitMqConfig,
 ) -> BlockingChannel:
-    """Open a channel and declare the configured exchange and optional queue.
+    """Open a confirming channel and declare the exchange and optional queue.
 
     Args:
-        connection: The open connection to create the channel on.
-        config: Exchange, queue and routing settings.
+        connection (BlockingConnection): The open connection to create the
+            channel on.
+        config (RabbitMqConfig): Exchange, queue and routing settings.
 
     Returns:
-        The channel used for publishing.
+        BlockingChannel: A channel in confirm mode, used for publishing.
 
     Raises:
         AMQPError: If the channel cannot be opened or a declaration fails.
     """
     channel = connection.channel()
+    channel.confirm_delivery()
 
     channel.exchange_declare(
         exchange=config.exchange,
@@ -89,23 +117,16 @@ def _setup_channel(
             routing_key=config.routing_key,
         )
 
-    logger.info(
-        "Setup RabbitMQ channel: exchange='%s', routing_key='%s', queue='%s'",
-        config.exchange,
-        config.routing_key,
-        config.queue_name or "(none)",
-    )
-
     return channel
 
 
-def _close_quietly(connection: BlockingConnection | None) -> None:
+def _close_quietly(connection: BlockingConnection) -> None:
     """Close the connection if it is open, ignoring errors.
 
     Args:
-        connection: The connection to close, or None.
+        connection (BlockingConnection): The connection to close.
     """
-    if connection is None or not connection.is_open:
+    if not connection.is_open:
         return
     try:
         connection.close()
@@ -113,230 +134,126 @@ def _close_quietly(connection: BlockingConnection | None) -> None:
         logger.debug("Ignoring error while closing connection: %r", exc)
 
 
-class RabbitMqJsonPublisher(Thread):
-    """A long-running publisher thread that publishes json-encoded payloads to RabbitMQ.
+def _publish_once(config: RabbitMqConfig, payload: str) -> None:
+    """Publish one payload on a new connection and wait for the broker's confirm.
 
-    The thread connects lazily and reconnects with exponential backoff whenever the
-    connection is lost. Payloads published while disconnected are dropped.
+    Args:
+        config (RabbitMqConfig): Connection, exchange and routing settings.
+        payload (str): The JSON-encoded message body.
 
-    Adapted from
-    https://github.com/pika/pika/blob/main/examples/long_running_publisher.py
-
-    Attributes:
-        shutdown_event: Event that stops the thread once it is set.
-        connected: Event that is set while a connection is established.
-        connection: The current connection, or None while disconnected.
-        channel: The current channel, or None while disconnected.
+    Raises:
+        AMQPConnectionError: If the broker cannot be reached.
+        UnroutableError: If no queue is bound for the routing key.
+        NackError: If the broker refuses the message.
+        AMQPError: If any other broker operation fails.
     """
-
-    def __init__(
-        self,
-        config: RabbitMqConfig,
-        shutdown_event: Event,
-        initial_reconnect_delay_s: float = INITIAL_RECONNECT_DELAY_S,
-        max_reconnect_delay_s: float = MAX_RECONNECT_DELAY_S,
-    ) -> None:
-        """Initialize the publisher thread without connecting.
-
-        Args:
-            config: Connection, exchange and routing settings.
-            shutdown_event: Event that stops the thread once it is set.
-            initial_reconnect_delay_s: Delay before the first reconnect attempt.
-            max_reconnect_delay_s: Upper bound for the exponential backoff delay.
-        """
-        super().__init__(name="rabbitmq-publisher", daemon=True)
-
-        self.shutdown_event = shutdown_event
-        self.connected = Event()
-
-        self.connection: BlockingConnection | None = None
-        self.channel: BlockingChannel | None = None
-
-        self._config = config
-        self._initial_reconnect_delay_s = initial_reconnect_delay_s
-        self._max_reconnect_delay_s = max_reconnect_delay_s
-        self._reconnect_delay_s = initial_reconnect_delay_s
-
-    def run(self) -> None:
-        """Keep the connection alive and dispatch publish callbacks until shutdown."""
-        while not self.shutdown_event.is_set():
-            if self.connection is None:
-                self._connect_or_back_off()
-            else:
-                self._dispatch_events(self.connection)
-
-        logger.debug("Received signal to stop publisher thread.")
-        self._stop()
-
-    def _connect_or_back_off(self) -> None:
-        """Try to connect; on failure, wait and double the reconnect delay."""
-        if self._try_connect():
-            self._reconnect_delay_s = self._initial_reconnect_delay_s
-            return
-
-        # wait for the current reconnect delay, but wake up early on shutdown
-        self.shutdown_event.wait(self._reconnect_delay_s)
-        self._reconnect_delay_s = min(
-            self._reconnect_delay_s * 2, self._max_reconnect_delay_s
+    connection = _connect(config)
+    try:
+        channel = _setup_channel(connection, config)
+        channel.basic_publish(
+            exchange=config.exchange,
+            routing_key=config.routing_key,
+            body=payload,
+            properties=BasicProperties(
+                content_type="application/json",
+                delivery_mode=2 if config.durable else 1,
+            ),
+            mandatory=True,
         )
-
-    def _dispatch_events(self, connection: BlockingConnection) -> None:
-        """Dispatch pending publish callbacks and heartbeats for up to a second.
-
-        Args:
-            connection: The open connection to process events on.
-        """
-        try:
-            connection.process_data_events(time_limit=1)
-        except (AMQPError, OSError) as exc:
-            logger.warning("Lost connection to RabbitMQ, reconnecting: %r", exc)
-            self._discard_connection()
-        except Exception:
-            logger.exception("Unexpected error in RabbitMQ publisher, reconnecting.")
-            self._discard_connection()
-
-    def _try_connect(self) -> bool:
-        """Connect to the broker and set up the channel.
-
-        Returns:
-            True if the connection was established, False otherwise.
-        """
-        connection = None
-        try:
-            connection = _connect(self._config)
-            channel = _setup_channel(connection, self._config)
-        except (AMQPError, OSError) as exc:
-            logger.warning("Failed to connect to RabbitMQ: %r", exc)
-            _close_quietly(connection)
-            return False
-        except Exception:
-            logger.exception("Unexpected error while connecting to RabbitMQ.")
-            _close_quietly(connection)
-            return False
-
-        self.connection = connection
-        self.channel = channel
-        logger.info("Connected to RabbitMQ at %s.", self._config.host)
-        self.connected.set()
-        return True
-
-    def _discard_connection(self) -> None:
-        """Close the current connection on a best-effort basis and forget it."""
-        self.connected.clear()
-        connection = self.connection
-        self.connection = None
-        self.channel = None
+    finally:
         _close_quietly(connection)
 
-    def _publish(self, payload: str) -> None:
-        """Publish a payload on the current channel.
 
-        Must run on the publisher thread, so it is enqueued as a callback by
-        `publish`.
+def _preview(payload: str) -> str:
+    """Shorten a payload for informational log messages.
+
+    Args:
+        payload (str): The JSON-encoded message body.
+
+    Returns:
+        str: The payload, truncated with an ellipsis if it is long.
+    """
+    if len(payload) > LOGGED_PAYLOAD_PREVIEW_LENGTH:
+        return payload[:LOGGED_PAYLOAD_PREVIEW_LENGTH] + "..."
+    return payload
+
+
+class RabbitNotifier(Notifier[str]):
+    """Publish JSON messages to a RabbitMQ exchange from a background worker.
+
+    Each message is published on its own short-lived connection, with publisher
+    confirms and `mandatory=True`, so a message is only logged as published once
+    the broker has routed it to a queue and acknowledged it. A failed message is
+    logged with its full body and dropped; there is no retry. The next message
+    simply connects again, so no reconnect or backoff logic is needed, and the
+    broker never has to be reachable for the camera to start.
+
+    This relies on the low message rate: one notification per uploaded video
+    segment, i.e. at most about one per minute, plus short bursts while a
+    backlog is uploaded. Re-evaluate the design if the rate increases
+    considerably: every message pays a full TCP, TLS and AMQP handshake, which
+    is cheap at that rate but not at many messages per second.
+
+    `notify()` is called on the main recording loop, so it only enqueues the
+    payload; a single worker thread does the network I/O, keeping messages in
+    order and keeping an unreachable broker from stalling recording.
+    """
+
+    def __init__(self, config: RabbitMqConfig) -> None:
+        """Start the worker thread without connecting to the broker.
 
         Args:
-            payload: The JSON-encoded message body.
+            config (RabbitMqConfig): Connection, exchange and routing settings.
         """
-        if self.channel is None:
-            logger.warning("RabbitMQ channel is gone, dropping notification.")
+        self._config = config
+        self._queue: Queue[str | _Stop] = Queue()
+        self._thread = Thread(target=self._worker, name="rabbitmq", daemon=True)
+        self._thread.start()
+
+    def notify(self, payload: str) -> None:
+        """Queue a message for publishing and return immediately.
+
+        Args:
+            payload (str): The JSON-encoded message body.
+        """
+        self._queue.put(payload)
+
+    def close(self) -> None:
+        """Publish queued messages, then stop the worker thread.
+
+        Waits at most `CLOSE_TIMEOUT_S` for the worker; messages still queued
+        after that are lost.
+        """
+        self._queue.put(_STOP)
+        self._thread.join(timeout=CLOSE_TIMEOUT_S)
+        if self._thread.is_alive():
+            logger.warning(
+                "RabbitMQ worker did not finish within %.0f s, "
+                "queued notifications are lost.",
+                CLOSE_TIMEOUT_S,
+            )
+        logger.info("Closed RabbitMQ notifier.")
+
+    def _worker(self) -> None:
+        """Publish queued messages until the stop sentinel arrives."""
+        while not isinstance(payload := self._queue.get(), _Stop):
+            self._publish(payload)
+
+    def _publish(self, payload: str) -> None:
+        """Publish one message, logging rather than raising any failure.
+
+        Args:
+            payload (str): The JSON-encoded message body.
+        """
+        try:
+            _publish_once(self._config, payload)
+        except Exception as exc:
+            # the full body is logged so the notification can be re-sent by hand
+            logger.warning("Dropping RabbitMQ notification (%r): %s", exc, payload)
             return
-        properties = BasicProperties(
-            content_type="application/json",
-            delivery_mode=2 if self._config.durable else 1,
-        )
-        self.channel.basic_publish(
-            exchange=self._config.exchange,
-            routing_key=self._config.routing_key,
-            body=payload,
-            properties=properties,
-        )
         logger.info(
             "Published '%s' to exchange='%s', routing_key='%s'",
-            payload[:50] + "..." if len(payload) > 50 else payload,
+            _preview(payload),
             self._config.exchange,
             self._config.routing_key,
         )
-
-    def publish(self, payload: str) -> None:
-        """Publish a payload to the configured RabbitMQ exchange.
-
-        This method is threadsafe and can be called from any thread. If there is
-        currently no open connection, the payload is dropped with a warning.
-
-        Args:
-            payload: The JSON-encoded message body.
-
-        Raises:
-            ConnectionWrongStateError: If the connection closes between the
-                connection check and enqueuing the callback.
-        """
-        connection = self.connection
-        if connection is None or not connection.is_open:
-            logger.warning("Not connected to RabbitMQ, dropping notification.")
-            return
-        connection.add_callback_threadsafe(lambda: self._publish(payload))
-
-    def _stop(self) -> None:
-        """Flush pending callbacks and close the connection."""
-        if self.connection is not None:
-            try:
-                # Wait until all the data events have been processed
-                self.connection.process_data_events(time_limit=1)
-            except (AMQPError, OSError) as exc:
-                logger.warning("Failed to flush pending RabbitMQ messages: %r", exc)
-            self._discard_connection()
-            logger.debug("Closed connection to RabbitMQ.")
-        logger.debug("Stopped RabbitMQ publisher thread.")
-
-
-class RabbitNotifier(Notifier):
-    """Publish JSON messages to a RabbitMQ exchange via a publisher thread.
-
-    Attributes:
-        shutdown_event: Event that stops the publisher thread once it is set.
-    """
-
-    def __init__(
-        self,
-        config: RabbitMqConfig,
-        connect_timeout_s: float = INITIAL_CONNECT_TIMEOUT_S,
-    ) -> None:
-        """Start the publisher thread and wait briefly for the first connection.
-
-        Waiting keeps notifications sent right after startup from being dropped
-        while the broker is reachable, without blocking startup indefinitely
-        when it is not.
-
-        Args:
-            config: Connection, exchange and routing settings.
-            connect_timeout_s: How long to wait for the first connection.
-        """
-        self.shutdown_event = Event()
-        self._publisher = RabbitMqJsonPublisher(
-            config, shutdown_event=self.shutdown_event
-        )
-        self._publisher.start()
-        if not self._publisher.connected.wait(connect_timeout_s):
-            logger.warning(
-                "Not connected to RabbitMQ after %.0f s, retrying in background.",
-                connect_timeout_s,
-            )
-
-    def notify(self, payload: str) -> None:
-        """Publish a notification to RabbitMQ without raising on failure.
-
-        Args:
-            payload: The JSON-encoded message body.
-        """
-        try:
-            self._publisher.publish(payload)
-        except ConnectionWrongStateError as exc:
-            logger.warning("Connection to RabbitMQ is not open: %s", exc)
-        except Exception as exc:
-            logger.warning("Failed to publish to RabbitMQ: %s", exc)
-
-    def close(self) -> None:
-        """Stop the publisher thread and close the connection."""
-        self.shutdown_event.set()
-        self._publisher.join(timeout=5)
-        logger.info("Closed RabbitMQ notifier.")
